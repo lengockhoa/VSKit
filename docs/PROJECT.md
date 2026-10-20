@@ -19,8 +19,8 @@ under `src/core/` + selected `src/ui/*Model|Messages` modules, keeping tests run
 booting the VS Code extension host or connecting to a database.
 
 The identity-conversion artifact was version `1.55.7`; patch package `1.55.8` passed local
-verification, and the project-owner GitHub ship steps are pending. No Marketplace listing is
-asserted. See `docs/RELEASE.md` before choosing a distribution path.
+verification and is available as the GitHub release asset. Marketplace listing availability
+is unverified. See `docs/RELEASE.md` before choosing a distribution path.
 
 ## Key Modules
 

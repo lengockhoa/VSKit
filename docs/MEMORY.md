@@ -26,8 +26,8 @@
 ## Active Constraints
 
 <!-- Rules AI must respect during implementation. Non-obvious limits not visible in the code. -->
-- **Distribution status:** Marketplace publishing remains paused. Package identity is `lengockhoa.vskit`, repository `lengockhoa/VSKit`; patch package `1.55.8` passed local verification, and its GitHub ship steps are pending. The latest released version is `v1.55.7`; no Marketplace listing is verified.
-- **Installer behavior:** `scripts/install-vskit.sh --local <file.vsix>` installs a supplied artifact. The no-argument path queries the latest GitHub release; the currently released `v1.55.7` has a matching asset. Verify the new release asset before relying on that path.
+- **Distribution status:** Marketplace publishing remains paused. Package identity is `lengockhoa.vskit`, repository `lengockhoa/VSKit`; GitHub release `v1.55.8` carries `vskit-1.55.8.vsix`. No Marketplace listing is verified.
+- **Installer behavior:** `scripts/install-vskit.sh --local <file.vsix>` installs a supplied artifact. The no-argument path queries the latest GitHub release; `v1.55.8` has a matching asset. Verify future latest-release assets before relying on this path.
 - **Persistence boundary:** VSKit does not import extension-scoped state or secrets from other installations. Configure connections and credentials in VSKit as needed; never read VS Code storage directories or create credential export files.
 - **Build verification order:** typecheck → compile → tests → VSIX package. Compile first because some tests read generated `dist` bundles during module initialization. Inspect VSIX contents before distribution; do not install it or reload VS Code unless explicitly requested.
 - **Release automation:** `.github/workflows/ci.yml` is verification-only. Follow the project-owner Git commit/push and versioned tag/release steps after local verification; Marketplace publishing remains paused. Do not treat package verification as a publish action.
@@ -57,7 +57,7 @@
   postgres.ts connect()) — runQuery still holds ONE client per multi-statement script and
   beginTransaction() pins its own, so metadata lands on independent sessions. Regression test:
 ## Session Handoff
-- Previous session completed the VSKit identity conversion; GitHub release `v1.55.7` and its VSIX asset are verified. Current follow-up prepares patch `1.55.8`; after local verification, commit/push and create its versioned tag/release per project-owner instructions. Keep Marketplace paused; do not install the VSIX or reload VS Code.
+- Previous session completed the VSKit identity conversion and released `v1.55.7`; this follow-up shipped `v1.55.8` to GitHub. Marketplace remains paused. No VS Code install/reload or database service changes were performed.
 
 
 - [2026-09-09] Decision: Keep the SQL Console editor dependency-free by layering `webview/sqlHighlight.ts` spans under a transparent native textarea. Reason: preserves native selection, clipboard, autocomplete, draft persistence, and keyboard behavior while adding file-like syntax coloring without introducing a heavyweight editor runtime.

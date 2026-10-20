@@ -2,12 +2,12 @@
 
 Track session-level execution details.
 
-## 2026-10-20 — VSKit v1.55.8 package preparation
+## 2026-10-20 — VSKit v1.55.8 patch ship
 
 - Removed the unreferenced broken icon generator; the generic 48×48 RGBA icon remains unchanged. Stabilized the webview filter test with both event-driven success and debounce-window negative checks; made the installer help artifact example version-neutral and guarded README/user-guide package paths. No runtime behavior, dependencies, extension storage, or Docker volumes changed.
 - Verification: typecheck, compile, and full suite passed (319 files; 4,812 tests passed, 5 skipped); focused release-hygiene/asset guards passed (23/23), and reviewer-fix filter/installer tests passed (17/17). The VSIX contains 23 files (2.17 MB), including the manifest, entrypoint, README, user guide, icon, and SQL grammar; no source maps, dependencies, secrets, or agent files were packaged.
 - One full-suite attempt exceeded the parser's 50 ms timing guard (88 ms); the isolated parser suite passed 14/14, and a subsequent full-suite run passed. This patch does not modify the parser source or its test.
-- Distribution: local artifact `dist/vskit-1.55.8.vsix`; final review and GitHub ship steps are pending. Marketplace publication, VS Code installation/reload, and database-service changes were not performed.
+- Distribution: commit `528b279` pushed to `origin/main`; tag `v1.55.8` and its GitHub release are created with asset `vskit-1.55.8.vsix` (`https://github.com/lengockhoa/VSKit/releases/download/v1.55.8/vskit-1.55.8.vsix`). Marketplace publication, VS Code installation/reload, and database-service changes were not performed; user-owned `PROJECT_IMPORTANT.md` remains uncommitted.
 
 
 ## 2026-10-20 — VSKit standalone conversion

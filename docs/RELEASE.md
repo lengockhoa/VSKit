@@ -2,9 +2,10 @@
 
 ## Current distribution status
 
-The existing GitHub `v1.55.6` release still carries `UnicDB-1.55.6.vsix`; that historical asset remains untouched. The current VSKit release `v1.55.7` carries `vskit-1.55.7.vsix`; patch package `1.55.8` is built and locally verified. Its Git ship steps are pending. Marketplace listing availability is unverified; publication is paused.
+The existing GitHub `v1.55.6` release still carries `UnicDB-1.55.6.vsix`; that historical asset remains untouched. The VSKit `v1.55.7` release carries `vskit-1.55.7.vsix`; the current `v1.55.8` release carries `vskit-1.55.8.vsix`. Marketplace listing availability is unverified; publication is paused.
 
 The package command created only the local VSIX. The separate ship sequence pushed commit `bbab82b` to `main`, pushed tag `v1.55.7`, and created the GitHub release with the VSIX asset. Marketplace publishing, VS Code installation, and reload were not performed.
+The v1.55.8 ship sequence pushed commit `528b279` to `main`, pushed tag `v1.55.8`, and created the GitHub release with the VSIX asset. Marketplace publishing, VS Code installation/reload, and database integration were not performed.
 The release workflow is `.github/workflows/ci.yml`; it runs verification only and does not publish a package.
 
 ## Build and install a local VSIX
@@ -24,8 +25,9 @@ code --install-extension "$(pwd)/dist/vskit-1.55.8.vsix"
 ```
 
 The package identity is `lengockhoa.vskit`; the package name is lowercase
-`vskit`. A local VSIX is a test artifact, not a claim that a Marketplace
-listing exists. The GitHub ship steps for `1.55.8` are pending.
+`vskit`. The `vskit-1.55.8.vsix` artifact is attached to GitHub release
+`v1.55.8`. Marketplace listing availability remains unverified; publication
+is paused.
 
 ## Version policy during this conversion
 
