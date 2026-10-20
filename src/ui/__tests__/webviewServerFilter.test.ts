@@ -66,11 +66,11 @@ beforeAll(() => {
 const distPath = resolve(process.cwd(), "dist", "webview.js");
 const bundleSrc = existsSync(distPath) ? readFileSync(distPath, "utf8") : null;
 
-interface UnicDBGlobals {
+interface VSKitGlobals {
   gridApi?: GridApi;
 }
 
-interface UnicDBApi {
+interface VSKitApi {
   postMessage: (msg: unknown) => void;
 }
 
@@ -83,15 +83,15 @@ function loadBundle(): {
     );
   }
 
-  document.body.innerHTML = '<div id="UnicDB-root" class="UnicDB-webview"></div>';
+  document.body.innerHTML = '<div id="VSKit-root" class="VSKit-webview"></div>';
 
   const received: Array<Record<string, unknown>> = [];
-  const api: UnicDBApi = {
+  const api: VSKitApi = {
     postMessage: (msg) => {
       received.push(msg as Record<string, unknown>);
     },
   };
-  (globalThis as unknown as { acquireVsCodeApi: () => UnicDBApi }).acquireVsCodeApi =
+  (globalThis as unknown as { acquireVsCodeApi: () => VSKitApi }).acquireVsCodeApi =
     () => api;
 
   (0, eval)(bundleSrc);
@@ -104,8 +104,8 @@ function dispatchState(msg: Record<string, unknown>): void {
 }
 
 function getGridApi(): GridApi | null {
-  const w = window as unknown as { __UnicDB?: UnicDBGlobals };
-  return w.__UnicDB?.gridApi ?? null;
+  const w = window as unknown as { __VSKit?: VSKitGlobals };
+  return w.__VSKit?.gridApi ?? null;
 }
 
 function selectState(args: {
@@ -216,8 +216,8 @@ describeIfBundle("webview/main.ts bundle — TASK-005 server-side filter", () =>
       received.length = 0;
 
       const hook = (window as unknown as {
-        __UnicDBCheckLoadMoreForHost?: () => void;
-      }).__UnicDBCheckLoadMoreForHost;
+        __VSKitCheckLoadMoreForHost?: () => void;
+      }).__VSKitCheckLoadMoreForHost;
       expect(typeof hook).toBe("function");
       hook!();
 

@@ -81,7 +81,7 @@ describe("AdminTreeProvider", () => {
     const root = await tree.getChildren();
     expect(root).toHaveLength(1);
     expect(root[0].label).toBe(
-      "UnicDB: Admin tools are not supported by this connection's database.",
+      "VSKit: Admin tools are not supported by this connection's database.",
     );
     expect(root[0].contextValue).not.toBe("admin_category");
     tree.dispose();
@@ -165,7 +165,7 @@ describe("AdminTreeProvider", () => {
 // =============================================================================
 describe("AdminTreeProvider — DBX-08 declared admin capability", () => {
   const UNSUPPORTED_LABEL =
-    "UnicDB: Admin tools are not supported by this connection's database.";
+    "VSKit: Admin tools are not supported by this connection's database.";
 
   function makeAdminApi(): AdminApi {
     return {

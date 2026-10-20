@@ -68,10 +68,10 @@ beforeAll(() => {
 const distPath = resolve(process.cwd(), "dist", "webview.js");
 const bundleSrc = existsSync(distPath) ? readFileSync(distPath, "utf8") : null;
 
-interface UnicDBGlobals {
+interface VSKitGlobals {
   gridApi?: GridApi;
 }
-interface UnicDBApi {
+interface VSKitApi {
   postMessage: (msg: unknown) => void;
 }
 interface SetFilterGui extends HTMLElement {
@@ -87,15 +87,15 @@ function loadBundle(): {
     );
   }
 
-  document.body.innerHTML = '<div id="UnicDB-root" class="UnicDB-webview"></div>';
+  document.body.innerHTML = '<div id="VSKit-root" class="VSKit-webview"></div>';
 
   const received: Array<Record<string, unknown>> = [];
-  const api: UnicDBApi = {
+  const api: VSKitApi = {
     postMessage: (msg) => {
       received.push(msg as Record<string, unknown>);
     },
   };
-  (globalThis as unknown as { acquireVsCodeApi: () => UnicDBApi }).acquireVsCodeApi =
+  (globalThis as unknown as { acquireVsCodeApi: () => VSKitApi }).acquireVsCodeApi =
     () => api;
 
   (0, eval)(bundleSrc);
@@ -108,8 +108,8 @@ function dispatchState(msg: Record<string, unknown>): void {
 }
 
 function getGridApi(): GridApi | null {
-  const w = window as unknown as { __UnicDB?: UnicDBGlobals };
-  return w.__UnicDB?.gridApi ?? null;
+  const w = window as unknown as { __VSKit?: VSKitGlobals };
+  return w.__VSKit?.gridApi ?? null;
 }
 
 function rowsState(
@@ -156,8 +156,8 @@ async function openFilter(
 }
 
 function entryLabels(gui: SetFilterGui): string[] {
-  return Array.from(gui.querySelectorAll(".UnicDB-setfilter-entry")).map((e) =>
-    (e.querySelector(".UnicDB-setfilter-label") as HTMLElement | null)?.textContent ?? "",
+  return Array.from(gui.querySelectorAll(".VSKit-setfilter-entry")).map((e) =>
+    (e.querySelector(".VSKit-setfilter-label") as HTMLElement | null)?.textContent ?? "",
   );
 }
 
@@ -552,7 +552,7 @@ describeIfBundle(
         });
         await flushGridEvents();
 
-        const status = gui.querySelector(".UnicDB-setfilter-status") as HTMLElement;
+        const status = gui.querySelector(".VSKit-setfilter-status") as HTMLElement;
         expect(status).toBeTruthy();
         expect(status.textContent).toContain("permission denied for table t");
         // Values stay absent: the error fallback (loaded rows) is untouched.
@@ -590,12 +590,12 @@ describeIfBundle(
         expect(entryLabels(gui)).toContain("v0");
         expect(entryLabels(gui)).toContain("v999");
         // …and the footer states the bounded list.
-        const status = gui.querySelector(".UnicDB-setfilter-status") as HTMLElement;
+        const status = gui.querySelector(".VSKit-setfilter-status") as HTMLElement;
         expect(status.textContent).toMatch(/first 1000/i);
         // The truncation note must not have displaced the entries' checkbox
         // state machinery (Select All still present).
         expect(
-          gui.querySelector(".UnicDB-setfilter-selectall"),
+          gui.querySelector(".VSKit-setfilter-selectall"),
         ).toBeTruthy();
       },
     );
@@ -639,7 +639,7 @@ describeIfBundle(
         });
         await flushGridEvents();
         expect(
-          (gui.querySelector(".UnicDB-setfilter-status") as HTMLElement).textContent,
+          (gui.querySelector(".VSKit-setfilter-status") as HTMLElement).textContent,
         ).toContain("boom one");
 
         // Statement replaced → cache cleared, live filter re-requests; the
@@ -658,7 +658,7 @@ describeIfBundle(
         });
         await flushGridEvents();
         const statusAfter =
-          gui.querySelector(".UnicDB-setfilter-status") as HTMLElement;
+          gui.querySelector(".VSKit-setfilter-status") as HTMLElement;
         expect(statusAfter.textContent).not.toContain("boom one");
       },
     );

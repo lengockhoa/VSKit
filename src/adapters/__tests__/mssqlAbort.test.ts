@@ -28,8 +28,8 @@ function cfg(): ConnectionConfig {
     driver: "mssql",
     host: "127.0.0.1",
     port: 1433,
-    user: "UnicDB",
-    database: "UnicDB",
+    user: "VSKit",
+    database: "VSKit",
   };
 }
 

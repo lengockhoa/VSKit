@@ -40,7 +40,7 @@ const compiled = execFileSync(
   { encoding: "utf8" },
 ).toString();
 
-interface UnicDBApi {
+interface VSKitApi {
   postMessage: (msg: unknown) => void;
 }
 
@@ -51,16 +51,16 @@ interface Harness {
 
 function makeHarness(): Harness {
   const received: Array<Record<string, unknown>> = [];
-  const api: UnicDBApi = {
+  const api: VSKitApi = {
     postMessage: (msg: unknown) => {
       received.push(msg as Record<string, unknown>);
     },
   };
-  (globalThis as unknown as { acquireVsCodeApi: () => UnicDBApi })
+  (globalThis as unknown as { acquireVsCodeApi: () => VSKitApi })
     .acquireVsCodeApi = () => api;
 
   document.body.innerHTML =
-    '<div id="UnicDB-root" class="UnicDB-form-body"></div>';
+    '<div id="VSKit-root" class="VSKit-form-body"></div>';
 
   const originalAdd = window.addEventListener.bind(window);
   let latestMessageHandler: ((ev: MessageEvent) => void) | null = null;
@@ -101,20 +101,20 @@ function sendBtnEl(): HTMLButtonElement {
 }
 
 function mentionDropdown(): HTMLDivElement | null {
-  return document.getElementById("UnicDBMentionDropdown") as HTMLDivElement | null;
+  return document.getElementById("VSKitMentionDropdown") as HTMLDivElement | null;
 }
 
 function mentionRows(): HTMLDivElement[] {
   const dd = mentionDropdown();
   if (!dd) return [];
   return Array.from(
-    dd.querySelectorAll<HTMLDivElement>(".UnicDB-chat-mention-row"),
+    dd.querySelectorAll<HTMLDivElement>(".VSKit-chat-mention-row"),
   );
 }
 
 function activeRow(): HTMLDivElement | null {
   for (const r of mentionRows()) {
-    if (r.classList.contains("UnicDB-chat-mention-row-active")) return r;
+    if (r.classList.contains("VSKit-chat-mention-row-active")) return r;
   }
   return null;
 }
@@ -182,7 +182,7 @@ describe("AiChatPanelWebview — mention_miss inline notice (TASK-005 #8)", () =
     const harness = makeHarness();
     harness.dispatch({ type: "init", hasHistory: false });
     harness.dispatch({ type: "mention_miss", token: "public.nope" });
-    const miss = document.querySelector(".UnicDB-chat-mention-miss");
+    const miss = document.querySelector(".VSKit-chat-mention-miss");
     expect(miss).not.toBeNull();
     expect(miss?.textContent).toContain("Could not resolve @public.nope");
     expect(miss?.textContent).not.toContain("<script>");

@@ -18,7 +18,7 @@ Define `AiEngineName = "builtin"|"omp"|"claude-code"|"codex"`, `CapabilityStatus
 
 Implement a pure `resolveEngineCapabilities(input: EngineCapabilityInput): EngineCapabilitySnapshot`. Input combines selected engine, actual adapter availability/runtime state, configured role metadata and effective host policy. Use an explicit exhaustive switch; compile-time `never` guard for unknown literals. Frozen/readonly returned arrays prevent webview-side mutation assumptions.
 
-The baseline audit is authoritative. At minimum, Claude Code and Codex native resume remain false until adapter code proves otherwise; saved UnicDB transcript resume is independent. Image support requires both adapter and active-model vision. Bypass requires engine support AND effective policy; it never alters destructive SQL/workspace-trust gates. Commands are descriptors supplied only for implemented semantic handlers, not raw CLI command strings.
+The baseline audit is authoritative. At minimum, Claude Code and Codex native resume remain false until adapter code proves otherwise; saved transcript resume is independent. Image support requires both adapter and active-model vision. Bypass requires engine support AND effective policy; it never alters destructive SQL/workspace-trust gates. Commands are descriptors supplied only for implemented semantic handlers, not raw CLI command strings.
 
 No secrets, paths, credentials, permission IDs, raw provider data or trace detail are fields. `reasonUnavailable` is safe mapped user copy <=160 chars. Display names are fixed allowlisted labels. Do not modify adapters merely to make a matrix cell true.
 

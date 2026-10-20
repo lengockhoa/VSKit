@@ -89,7 +89,7 @@ function makeHandler(
           result: {
             protocolVersion: MCP_PROTOCOL_VERSION,
             capabilities: { tools: {} },
-            serverInfo: { name: "UnicDB", version: "1.0.0" },
+            serverInfo: { name: "VSKit", version: "1.0.0" },
           },
         };
 
@@ -162,7 +162,7 @@ function makeHostMcpHandler(
           result: {
             protocolVersion: MCP_PROTOCOL_VERSION,
             capabilities: { tools: {} },
-            serverInfo: { name: "UnicDB", version: "1.0.0" },
+            serverInfo: { name: "VSKit", version: "1.0.0" },
           },
         };
 
@@ -304,7 +304,7 @@ export async function createMcpBridge(
   return {
     descriptor: {
       type: "http",
-      name: "UnicDB",
+      name: "VSKit",
       url: `http://127.0.0.1:${port}`,
       headers: [{ name: "Authorization", value: `Bearer ${token}` }],
     },

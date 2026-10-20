@@ -34,7 +34,7 @@ Four user-reported defects/requests on the AIChat V2 surface
    body)`), re-rendering every tool item and reasoning text the keyed
    transcript already paints — duplicate content. (b) The legacy `#thread`
    (`aiChatPanelMain.ts:216-220`) is appended inside `shell.transcript` and
-   carries `.UnicDB-chat-thread` (`webview/styles.css:1145-1157`:
+   carries `.VSKit-chat-thread` (`webview/styles.css:1145-1157`:
    `flex:1 1 auto; overflow-y:auto`) — a **nested scroller** inside the V2
    scroll region with its own `scroll-behavior:smooth` and its own
    scroll-driving code (`aiChatPanelMain.ts:615-633` fights
@@ -101,22 +101,22 @@ Four user-reported defects/requests on the AIChat V2 surface
   `styles.css` — root grid `grid-template-rows` becomes
   `40px auto minmax(0,1fr) auto` (4 rows); root `padding` becomes
   `10px 12px 5px`; delete the `-hint` rule block; add `-footnote`
-  (11px/16 muted, `padding: 0 var(--UnicDB-ai-chat-v2-space-4)
-  var(--UnicDB-ai-chat-v2-space-2)`, `text-align: right`).
+  (11px/16 muted, `padding: 0 var(--VSKit-ai-chat-v2-space-4)
+  var(--VSKit-ai-chat-v2-space-2)`, `text-align: right`).
 - **FR-002 (header stats):** `shell.ts` `buildHeader` — append, in order:
-  `-engine-state` span (`id="UnicDB-ai-chat-v2-engine-state"`, `hidden`),
-  `-usage` span (`id="UnicDB-ai-chat-v2-usage"`, `hidden`), then the
+  `-engine-state` span (`id="VSKit-ai-chat-v2-engine-state"`, `hidden`),
+  `-usage` span (`id="VSKit-ai-chat-v2-usage"`, `hidden`), then the
   existing overflow button. CSS: `-usage`/`-engine-state` are 11px/16
   muted, `white-space: nowrap`; `-usage` gets `margin-left: auto` (right
   zone). `aiChatPanelMain.ts` — `applyUsage` retargets host to
-  `document.getElementById("UnicDB-ai-chat-v2-usage")` (create-if-missing
+  `document.getElementById("VSKit-ai-chat-v2-usage")` (create-if-missing
   inside `shell.header` fallback dropped: if the span is absent, append to
-  `#UnicDB-root .UnicDB-ai-chat-v2-header`); chip keeps `id="usageChip"`
+  `#VSKit-root .VSKit-ai-chat-v2-header`); chip keeps `id="usageChip"`
   textContent-only contract but renders INTO the `-usage` span
   (`usageEl.hidden = false` on first frame; `chip.textContent` unchanged:
   `Turn: <in> in / <out> out — Session: <in> in / <out> out` +
   optional ` — <policyNotice>`). `applyEngineState` same retarget to
-  `#UnicDB-ai-chat-v2-engine-state` (`hidden=false` on first frame).
+  `#VSKit-ai-chat-v2-engine-state` (`hidden=false` on first frame).
   Neither function may append to `rootEl` anymore.
 - **FR-003 (steer queue):** `keyboard.ts` — new decision
   `{ kind: "steer" }`; `canSteerDraft({phase,draftText,hasUnresolvedContext})`
@@ -154,7 +154,7 @@ Four user-reported defects/requests on the AIChat V2 surface
   `ActivityToolState` (controller imports `phaseCopyLabel`; tests pin the
   rest). `styles.css` — delete the `-activity-*` rule block
   (~lines 1382-1662); add
-  `.UnicDB-ai-chat-v2-transcript > .UnicDB-chat-thread { flex: 0 0 auto;
+  `.VSKit-ai-chat-v2-transcript > .VSKit-chat-thread { flex: 0 0 auto;
   overflow: visible; scroll-behavior: auto; margin-bottom: 0; }` —
   `#thread` becomes a normal flow child (single scroll owner).
 - **FR-005 (tree steps):** `transcript.ts` `render()` — after the
@@ -240,8 +240,8 @@ on the same frames that reset `state.transcript` (hydrate/session frames).
 export interface ChatShellRefs {
   // …unchanged fields…
   readonly footnote: HTMLElement;    // inside composer, under composer-bottom
-  readonly usage: HTMLElement;       // header right zone, id UnicDB-ai-chat-v2-usage
-  readonly engineState: HTMLElement; // header right zone, id UnicDB-ai-chat-v2-engine-state
+  readonly usage: HTMLElement;       // header right zone, id VSKit-ai-chat-v2-usage
+  readonly engineState: HTMLElement; // header right zone, id VSKit-ai-chat-v2-engine-state
   // REMOVED: readonly hint: HTMLElement;
 }
 ```
@@ -293,10 +293,10 @@ export const COMPOSER_QUEUE_SUFFIX = "sends when this turn ends";
   `formatDuration`, `deriveEngineState`, `engineStateLabel`,
   `isActivePhase`, `ActivityToolState`.
 
-### 8.7 CSS selectors (all under `.UnicDB-ai-chat-v2`)
+### 8.7 CSS selectors (all under `.VSKit-ai-chat-v2`)
 
 New: `-footnote`, `-usage`, `-engine-state`,
-`-transcript > .UnicDB-chat-thread` override, `-item-tool::after`,
+`-transcript > .VSKit-chat-thread` override, `-item-tool::after`,
 `-item-reasoning::before`/`::after`, `[data-tree]` rail variants.
 Removed: `-hint` rule, entire `-activity-*` block.
 Modified: root `grid-template-rows` + `padding`, `-reasoning-body`,
@@ -334,7 +334,7 @@ Modified: root `grid-template-rows` + `padding`, `-reasoning-body`,
 | Area | Cases | Test file |
 |------|-------|-----------|
 | Footer/shell | no `-hint` element/ref; footnote inside composer w/ copy; grid rows = `40px auto minmax(0,1fr) auto`; root padding-bottom 5px; `-usage`/`-engine-state` in header, hidden initially | `webview/aiChat/__tests__/shell.test.ts`, `shellGrid.test.ts` (modify) |
-| Stats retarget | `applyUsage` writes into `#UnicDB-ai-chat-v2-usage` (not root); `applyEngineState` into `#UnicDB-ai-chat-v2-engine-state`; no implicit grid children after composer | `src/ui/__tests__/aiChatPanel.test.ts` (modify/extend) |
+| Stats retarget | `applyUsage` writes into `#VSKit-ai-chat-v2-usage` (not root); `applyEngineState` into `#VSKit-ai-chat-v2-engine-state`; no implicit grid children after composer | `src/ui/__tests__/aiChatPanel.test.ts` (modify/extend) |
 | Steering | Enter busy+valid → `steer` decision; STEER_ENQUEUED snapshots+clears draft; cap 8 → `steer` + STEER_ENQUEUED no-op (draft kept, no newline); flush on turn_finished → one `submit_turn` per queued item FIFO; stopping→queued→flush after close; unresolved context → native | `webview/aiChat/__tests__/keyboard.test.ts`, `store.test.ts`, `controller.test.ts`, `composer.test.ts` (modify) |
 | Overlap | mounted controller: transcript has NO `-activity-header`/`-activity-body`; each tool id → exactly one `[data-chat-key]` node; `#thread` CSS override present (no nested scroller) | `webview/aiChat/__tests__/transcript.test.ts`, `controllerSurfaces.test.ts`, `shellGrid.test.ts` (modify) |
 | Tree | consecutive tool run → `data-tree` first / (no attr) / last; single → `first last`; reasoning in run joins tree; rail CSS data-tree variants exist; reasoning-body 12px | `webview/aiChat/__tests__/transcript.test.ts`, `shellGrid.test.ts` (extend) |
@@ -348,7 +348,7 @@ Modified: root `grid-template-rows` + `padding`, `-reasoning-body`,
 - [ ] `npm test` — full suite PASS at each wave boundary.
 - [ ] No `-hint` element/rule; no `-activity-*` DOM or CSS; no
       `createActivityTimeline` reference outside `activity.test.ts` history.
-- [ ] `applyUsage`/`applyEngineState` never append to `#UnicDB-root`.
+- [ ] `applyUsage`/`applyEngineState` never append to `#VSKit-root`.
 - [ ] Enter-while-busy produces `steer`, never `submit`/`native` on a
       valid draft; queue drains FIFO on `turn_finished`.
 

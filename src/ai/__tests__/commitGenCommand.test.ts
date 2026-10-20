@@ -46,7 +46,7 @@ function fakeConfig(s: AiSettings = fakeSettings()): AiConfig {
 
 function fakeDiff(): CommitDiffInputLike {
   return {
-    repoName: "UnicDB",
+    repoName: "VSKit",
     branch: "main",
     files: ["src/a.ts"],
     diffText: "+// new",
@@ -254,7 +254,7 @@ describe("ai/commitGenCommand — Test #2 omp happy path", () => {
     expect(promptArg).toContain("You generate git commit messages");
     expect(promptArg).toContain("Conventional Commits");
     expect(promptArg).toContain("tiếng Việt");
-    expect(promptArg).toContain("Repo: UnicDB");
+    expect(promptArg).toContain("Repo: VSKit");
     expect(promptArg).toContain("src/a.ts");
     expect(promptArg).toContain("+// new");
     expect(promptArg).not.toContain("[object Object]");
@@ -304,7 +304,7 @@ describe("ai/commitGenCommand — Test #3 lite model not configured", () => {
 
     expect(showSettingsToast).toHaveBeenCalledTimes(1);
     expect(showSettingsToast).toHaveBeenCalledWith(
-      "Configure the Lite Model in UnicDB AI Settings to use Generate Commit Message",
+      "Configure the Lite Model in VSKit AI Settings to use Generate Commit Message",
       "Open Settings",
     );
 

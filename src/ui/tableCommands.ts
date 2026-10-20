@@ -1,21 +1,21 @@
 // src/ui/tableCommands.ts
 // TASK-005 — Wires 6 schema-tree commands:
-//   UnicDB.newTable          — open NewTableForm (create mode) on schema/category/table node
-//   UnicDB.modifyTable       — open NewTableForm (modify mode) on table node
-//   UnicDB.copyCreateDdl     — introspect table → generateCreateTable → clipboard
-//   UnicDB.generateSampleData — TASK-UX1-003: open the UnicDB Console with typed
+//   VSKit.newTable          — open NewTableForm (create mode) on schema/category/table node
+//   VSKit.modifyTable       — open NewTableForm (modify mode) on table node
+//   VSKit.copyCreateDdl     — introspect table → generateCreateTable → clipboard
+//   VSKit.generateSampleData — TASK-UX1-003: open the VSKit Console with typed
 //                             INSERT templates (manual execution). The
 //                             AI-driven flow is preserved as a module
 //                             export (`aiGenerateSampleData` in
 //                             src/ui/sampleDataAi.ts) for power users;
 //                             only the menu default changed.
-//   UnicDB.analyzeTable      — ANALYZE <schema>.<table>
-//   UnicDB.vacuumTable       — VACUUM ANALYZE <schema>.<table>
+//   VSKit.analyzeTable      — ANALYZE <schema>.<table>
+//   VSKit.vacuumTable       — VACUUM ANALYZE <schema>.<table>
 //
 // All commands share the same guards:
 //   1. node.meta hợp lệ → resolve {conn, schema, table?}
 //   2. DBX-08 — resolved adapter declares tableDdl (hasAdapterCapability,
-//      fail-closed) → else concise `UnicDB: <Title> is not supported…` message
+//      fail-closed) → else concise `VSKit: <Title> is not supported…` message
 //      BEFORE any form/SQL/AI/clipboard side effect
 //   3. category hợp lệ (newTable requires "tables") → else showInformationMessage mentioning "Tables"
 //   4. Run DDL qua mgr.getAdapterFor(conn).runQuery, never QueryRunner
@@ -38,7 +38,7 @@ import {
 import { alwaysQuote } from "../core/ddl/alterTable";
 import { rowsToSpec } from "../core/ddl/pgIntrospect";
 import type { SqlDialect } from "../core/statementParser";
-// TASK-UX1-003 — the menu default for UnicDB.generateSampleData no longer
+// TASK-UX1-003 — the menu default for VSKit.generateSampleData no longer
 // routes through the AI config / provider / orchestrator. The AI module
 // (sampleDataAi.ts) stays importable + unit-tested; we still use
 // `pickInsertableColumns` for the upstream identity/sequence filter so
@@ -57,15 +57,15 @@ import {
   revealTableNode,
   revealSchemaNode,
   registerSchemaTreeProvider,
-  type UnicDBNode,
+  type VSKitNode,
 } from "./schemaTree";
 // TASK-UX1-003 — the console-seeding seam is an optional `openConsoleWithTemplate`
 // field on RegisterDeps (injected by extension.ts at activate time). This
 // avoids a circular import (extension.ts depends on tableCommands via
 // `registerTableCommands`; the reverse direction would create a load-time
 // cycle that resolves to `undefined`). The seam calls the same singleton +
-// onRun + draft/autocomplete path that `UnicDB.openConsole` /
-// `UnicDB.openConsoleForObject` already use.
+// onRun + draft/autocomplete path that `VSKit.openConsole` /
+// `VSKit.openConsoleForObject` already use.
 interface ResolvedTableNode {
   conn: ConnectionConfig;
   schema: string;
@@ -140,10 +140,10 @@ interface RegisterDeps {
   onSchemaDdl?: (statements: readonly string[], dialect?: SqlDialect) => void;
   /**
    * TASK-UX1-003 — console-seeding seam. Optional injected helper that opens
-   * the UnicDB Console singleton (or its seeded tab in an existing instance)
+   * the VSKit Console singleton (or its seeded tab in an existing instance)
    * pre-filled with `buffer`. Wired by extension.ts to call the same
    * `commandOpenConsole` + `consolePanel.seedTab(name, buffer)` + `show()`
-   * pattern already used by `UnicDB.openConsole` / `UnicDB.openConsoleForObject`.
+   * pattern already used by `VSKit.openConsole` / `VSKit.openConsoleForObject`.
    * Optional: callers (tests) that omit it keep the console template path
    * silent — the menu default still produces the SQL buffer (assertable via
    * the `buildInsertTemplate` pure export) but does not open the Console.
@@ -186,7 +186,7 @@ async function guardPostgres(
   const title = COMMAND_TITLE[command];
   // DBX-08 — admission is the DECLARED tableDdl capability of the exact
   // target adapter, never `driver === "postgres"`. Resolve the adapter first;
-  // false/missing declaration → concise UnicDB message, zero side effects.
+  // false/missing declaration → concise VSKit message, zero side effects.
   let adapter: DbAdapter | null = null;
   try {
     adapter = await mgr.getAdapterFor(resolved.conn);
@@ -195,7 +195,7 @@ async function guardPostgres(
   }
   if (!hasAdapterCapability(adapter, "tableDdl")) {
     void vscode.window.showInformationMessage(
-      `UnicDB: ${title} is not supported by this connection's database.`,
+      `VSKit: ${title} is not supported by this connection's database.`,
     );
     return null;
   }
@@ -383,7 +383,7 @@ export function buildInsertTemplate(
   // describe different conditions and the user needs the right one.
   const noInsertable = columns.length === 0;
   const header = [
-    `-- UnicDB: Insert Sample Data template for ${qSchema}.${qTable}`,
+    `-- VSKit: Insert Sample Data template for ${qSchema}.${qTable}`,
     `-- Edit values, then run. ${
       noInsertable
         ? "No insertable columns detected."
@@ -414,9 +414,9 @@ export function registerTableCommands(deps: RegisterDeps): void {
   const { mgr, tree, treeView, context, onSchemaDdl, openConsoleWithTemplate } = deps;
   registerSchemaTreeProvider(tree);
 
-  // UnicDB.newTable — schema/category (tables only)/table node.
+  // VSKit.newTable — schema/category (tables only)/table node.
   context.subscriptions.push(
-    vscode.commands.registerCommand("UnicDB.newTable", async (arg?: unknown) => {
+    vscode.commands.registerCommand("VSKit.newTable", async (arg?: unknown) => {
       const resolved = resolveTableNode(arg);
       if (!resolved) return;
       // Category check: accept "tables" (Tables category node) HOẶC "columns"
@@ -467,9 +467,9 @@ export function registerTableCommands(deps: RegisterDeps): void {
     }),
   );
 
-  // UnicDB.modifyTable — table nodes only.
+  // VSKit.modifyTable — table nodes only.
   context.subscriptions.push(
-    vscode.commands.registerCommand("UnicDB.modifyTable", async (arg?: unknown) => {
+    vscode.commands.registerCommand("VSKit.modifyTable", async (arg?: unknown) => {
       const resolved = resolveTableNode(arg);
       if (!resolved) return;
       const guarded = await guardPostgres(mgr, resolved, "modifyTable");
@@ -509,9 +509,9 @@ export function registerTableCommands(deps: RegisterDeps): void {
     }),
   );
 
-  // UnicDB.copyCreateDdl — table nodes only.
+  // VSKit.copyCreateDdl — table nodes only.
   context.subscriptions.push(
-    vscode.commands.registerCommand("UnicDB.copyCreateDdl", async (arg?: unknown) => {
+    vscode.commands.registerCommand("VSKit.copyCreateDdl", async (arg?: unknown) => {
       const resolved = resolveTableNode(arg);
       if (!resolved) return;
       const guarded = await guardPostgres(mgr, resolved, "copyCreateDdl");
@@ -529,7 +529,7 @@ export function registerTableCommands(deps: RegisterDeps): void {
         const spec = rowsToSpec(schema, table, columns, constraints);
         const ddl = generateCreateTable(spec);
         await vscode.env.clipboard.writeText(ddl);
-        void vscode.window.setStatusBarMessage("UnicDB: DDL copied", 2000);
+        void vscode.window.setStatusBarMessage("VSKit: DDL copied", 2000);
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         void vscode.window.showErrorMessage(`Copy Create Query failed: ${msg}`);
@@ -537,14 +537,14 @@ export function registerTableCommands(deps: RegisterDeps): void {
     }),
   );
 
-  // UnicDB.generateSampleData — TASK-UX1-003: open the UnicDB Console with a
+  // VSKit.generateSampleData — TASK-UX1-003: open the VSKit Console with a
   // pre-filled buffer of typed INSERT templates (default 5 rows). The user
   // reviews + edits + runs manually — no AI config / provider / row-count
   // prompt on the default path. The AI-driven module (sampleDataAi.ts)
   // remains importable for power users; only the menu default changed.
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "UnicDB.generateSampleData",
+      "VSKit.generateSampleData",
       async (arg?: unknown) => {
         const resolved = resolveTableNode(arg);
         if (!resolved) return;
@@ -586,7 +586,7 @@ export function registerTableCommands(deps: RegisterDeps): void {
     `${alwaysQuote(schema)}.${alwaysQuote(table)}`;
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("UnicDB.analyzeTable", async (arg?: unknown) => {
+    vscode.commands.registerCommand("VSKit.analyzeTable", async (arg?: unknown) => {
       const resolved = resolveTableNode(arg);
       if (!resolved) return;
       const guarded = await guardPostgres(mgr, resolved, "analyzeTable");
@@ -607,7 +607,7 @@ export function registerTableCommands(deps: RegisterDeps): void {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("UnicDB.vacuumTable", async (arg?: unknown) => {
+    vscode.commands.registerCommand("VSKit.vacuumTable", async (arg?: unknown) => {
       const resolved = resolveTableNode(arg);
       if (!resolved) return;
       const guarded = await guardPostgres(mgr, resolved, "vacuumTable");
@@ -627,9 +627,9 @@ export function registerTableCommands(deps: RegisterDeps): void {
     }),
   );
 
-  // DBX-06 — UnicDB.renameTable: safe rename dialog (table nodes, PG only).
+  // DBX-06 — VSKit.renameTable: safe rename dialog (table nodes, PG only).
   context.subscriptions.push(
-    vscode.commands.registerCommand("UnicDB.renameTable", async (arg?: unknown) => {
+    vscode.commands.registerCommand("VSKit.renameTable", async (arg?: unknown) => {
       const resolved = resolveTableNode(arg);
       if (!resolved) return;
       const guarded = await guardPostgres(mgr, resolved, "renameTable");
@@ -653,11 +653,11 @@ export function registerTableCommands(deps: RegisterDeps): void {
     }),
   );
 
-  // DBX-06 — UnicDB.renameColumn:
+  // DBX-06 — VSKit.renameColumn:
   //   - column-tree node: resolved.column → use directly (no QuickPick).
   //   - table-tree node / palette: introspectTable + QuickPick (fallback).
   context.subscriptions.push(
-    vscode.commands.registerCommand("UnicDB.renameColumn", async (arg?: unknown) => {
+    vscode.commands.registerCommand("VSKit.renameColumn", async (arg?: unknown) => {
       const resolved = resolveTableNode(arg);
       if (!resolved) return;
       const guarded = await guardPostgres(mgr, resolved, "renameColumn");
@@ -694,12 +694,12 @@ export function registerTableCommands(deps: RegisterDeps): void {
       }
     }),
   );
-  // TASK-003 — UnicDB.createSchema: open SchemaForm on connection/schema node.
+  // TASK-003 — VSKit.createSchema: open SchemaForm on connection/schema node.
   // node arg meta.connection (connection node) → that conn; schema node passes
   // meta.connection too (schema meta = {connection, schema}). palette (no arg)
   // → fall back to mgr.getActive(); null → info message.
   context.subscriptions.push(
-    vscode.commands.registerCommand("UnicDB.createSchema", async (arg?: unknown) => {
+    vscode.commands.registerCommand("VSKit.createSchema", async (arg?: unknown) => {
       // Resolve target conn.
       let conn: ConnectionConfig | null = null;
       if (arg && typeof arg === "object") {
@@ -724,7 +724,7 @@ export function registerTableCommands(deps: RegisterDeps): void {
       }
       if (!hasAdapterCapability(createSchemaAdapter, "tableDdl")) {
         void vscode.window.showInformationMessage(
-          `UnicDB: ${COMMAND_TITLE.createSchema} is not supported by this connection's database.`,
+          `VSKit: ${COMMAND_TITLE.createSchema} is not supported by this connection's database.`,
         );
         return;
       }
@@ -747,7 +747,7 @@ export function registerTableCommands(deps: RegisterDeps): void {
           tree.refresh();
           await revealSchemaNode(treeView, conn, name);
           void vscode.window.showInformationMessage(
-            `UnicDB: schema "${name}" created`,
+            `VSKit: schema "${name}" created`,
           );
         },
         onError: (msg) => {
@@ -757,7 +757,7 @@ export function registerTableCommands(deps: RegisterDeps): void {
       form.show();
     }),
   );
-  // TASK-008 — UnicDB.postmanPayload: copy JS object literal for table/view/
+  // TASK-008 — VSKit.postmanPayload: copy JS object literal for table/view/
   // routine node. Schema + table/view/routine name are JSON-quoted strings;
   // columns are emitted as `jsKey: this.workingObj.<col>` (bracket-access for
   // non-identifier keys). MySQL/MSSQL → info message, no clipboard write.
@@ -766,7 +766,7 @@ export function registerTableCommands(deps: RegisterDeps): void {
   // (information_schema covers view output columns).
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "UnicDB.postmanPayload",
+      "VSKit.postmanPayload",
       async (arg?: unknown) => {
         if (!arg || typeof arg !== "object") return;
         const node = arg as { contextValue?: string; meta?: { connection?: ConnectionConfig; schema?: string; objectName?: string } };
@@ -791,7 +791,7 @@ export function registerTableCommands(deps: RegisterDeps): void {
           const payload = buildPostmanPayload(schema, name, columnNames);
           await vscode.env.clipboard.writeText(payload);
           void vscode.window.setStatusBarMessage(
-            "UnicDB: Postman payload copied",
+            "VSKit: Postman payload copied",
             2000,
           );
         } catch (err) {
@@ -807,7 +807,7 @@ export function registerTableCommands(deps: RegisterDeps): void {
   // cho node table/view. Postgres-only, giống postmanPayload guard.
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "UnicDB.exportStructure",
+      "VSKit.exportStructure",
       async (arg?: unknown) => {
         if (!arg || typeof arg !== "object") return;
         const node = arg as { contextValue?: string };
@@ -836,7 +836,7 @@ export function registerTableCommands(deps: RegisterDeps): void {
               : buildTableStructure(schema, name, columns);
           await vscode.env.clipboard.writeText(text);
           void vscode.window.setStatusBarMessage(
-            "UnicDB: structure copied",
+            "VSKit: structure copied",
             2000,
           );
         } catch (err) {
@@ -848,14 +848,14 @@ export function registerTableCommands(deps: RegisterDeps): void {
       },
     ),
   );
-  // TASK-004 — UnicDB.exportAllStructures: copy whole-DB DDL (all schemas →
+  // TASK-004 — VSKit.exportAllStructures: copy whole-DB DDL (all schemas →
   // CREATE TABLE / CREATE VIEW) to clipboard. Connection/schema node arg or
   // palette (no arg → mgr.getActive()). Postgres-only; non-PG → info guard.
   // Per-object listColumns throw → skip that object (không blank whole export).
   // Status bar reports total objects successfully copied.
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "UnicDB.exportAllStructures",
+      "VSKit.exportAllStructures",
       async (arg?: unknown) => {
         // Resolve target conn: connection node (meta.connection) | schema node
         // (meta.connection) | palette → mgr.getActive().
@@ -885,7 +885,7 @@ export function registerTableCommands(deps: RegisterDeps): void {
         }
         if (!hasAdapterCapability(exportAdapter, "tableDdl")) {
           void vscode.window.showInformationMessage(
-            `UnicDB: Export All Structures is not supported by this connection's database.`,
+            `VSKit: Export All Structures is not supported by this connection's database.`,
           );
           return;
         }
@@ -945,7 +945,7 @@ export function registerTableCommands(deps: RegisterDeps): void {
           });
           await vscode.env.clipboard.writeText(text);
           void vscode.window.setStatusBarMessage(
-            `UnicDB: database structure copied (${renderedObjects} objects)`,
+            `VSKit: database structure copied (${renderedObjects} objects)`,
             2000,
           );
         } catch (err) {
@@ -959,4 +959,4 @@ export function registerTableCommands(deps: RegisterDeps): void {
   );
 }
 
-export type { UnicDBNode };
+export type { VSKitNode };

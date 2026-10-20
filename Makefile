@@ -1,4 +1,4 @@
-# UnicDB — Makefile (TASK-001 scaffold)
+# VSKit — Makefile (TASK-001 scaffold)
 # Targets: build, watch, test, package, db-up, db-down.
 # Docker compose file is owned by TASK-003; this Makefile references it read-only.
 

@@ -63,7 +63,7 @@ class FakeWebviewView {
   webview = new FakeWebview();
   description: string | undefined;
   title: string | undefined;
-  viewType = "UnicDB.results";
+  viewType = "VSKit.results";
   visible = true;
   private didDisposeHandlers: Array<() => void> = [];
   onDidDispose(h: () => void) {
@@ -137,7 +137,7 @@ vi.mock("vscode", () => {
 
     commands: {
       executeCommand: vi.fn(async (cmd: string, ..._rest: unknown[]) => {
-        if (cmd === "UnicDB.results.focus" && providerStore.length > 0) {
+        if (cmd === "VSKit.results.focus" && providerStore.length > 0) {
           if (lastView.current && !(lastView.current as unknown as { isDisposed?: boolean }).isDisposed) {
             return undefined;
           }
@@ -360,7 +360,7 @@ describe("ResultsPanel — handleRequery adopts batched cursor (Fix R1 critical 
     // composeRequery wraps + adds WHERE + ORDER BY. With the R2 fix, the
     // inner statement is verbatim — no `;` split.
     expect(recorded[0]?.sql).toBe(
-      "SELECT * FROM (SELECT id FROM t) UnicDB_sub WHERE id > 5 ORDER BY id DESC",
+      "SELECT * FROM (SELECT id FROM t) VSKit_sub WHERE id > 5 ORDER BY id DESC",
     );
 
     const states = stateMessages(fake);
@@ -1117,7 +1117,7 @@ describe("ResultsPanel — handleRequery strips one leading clause keyword (TASK
     await waitForTerminal(fake);
 
     expect(recorded[0]?.sql).toBe(
-      "SELECT * FROM (SELECT a FROM t) UnicDB_sub WHERE a>1",
+      "SELECT * FROM (SELECT a FROM t) VSKit_sub WHERE a>1",
     );
     // Critical: the composed SQL contains "WHERE a>1" exactly once and
     // MUST NOT contain the substring "WHERE WHERE".

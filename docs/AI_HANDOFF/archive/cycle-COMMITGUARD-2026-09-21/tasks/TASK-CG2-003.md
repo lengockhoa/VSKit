@@ -9,10 +9,10 @@
 
 **Spec references:** SPEC.md §5 FR-007, FR-008; §8.4 (GuardOutcome/generateWithGuard) + §8.5 (frozen toasts); §9 (UI behavior); §11 (test matrix hàng 3); §12 AC-4, AC-5, AC-6, AC-8.
 
-Chạy guard sau `sanitizeCommitMessage` ở CẢ 3 engine branch (omp / builtin /
-claude-code-codex fallback): PASS → inject; invalid non-empty → retry ĐÚNG 1 lần với
-corrective prompt qua CÙNG port/model; vẫn invalid → frozen error toast + KHÔNG inject
-(fix bug "chuỗi hash" + contract tiếng Việt ≤100 từ). Cập nhật user guide.
+Run the guard after `sanitizeCommitMessage` in all three engine branches (primary, built-in,
+and alternate fallback): PASS → inject; invalid non-empty → retry exactly once with a
+corrective prompt through the same port/model; still invalid → frozen error toast and no
+injection (fixes hash-like output; requires Vietnamese text ≤100 words). Update the user guide.
 
 ## Target Files
 
@@ -20,7 +20,7 @@ corrective prompt qua CÙNG port/model; vẫn invalid → frozen error toast + K
   thêm 2 frozen strings; KHÔNG đổi shape `CommitGenDeps`, không thêm port)
 - `src/ai/__tests__/commitGenCommand.test.ts` (SỬA — update fake EN→VN ở Tests #1/#2/#10
   giữ nguyên structural asserts; bổ sung describe guard-flow)
-- `docs/UNICDB_USER_GUIDE.md` (SỬA — mục "Generate Commit Message" +3 bullet, giữ keyword)
+- `docs/USER_GUIDE.md` (EDIT — "Generate Commit Message" section +3 bullets, preserve keywords)
 
 ## Test Cases (REQUIRED — TDD)
 
@@ -29,7 +29,7 @@ corrective prompt qua CÙNG port/model; vẫn invalid → frozen error toast + K
 | 1 | Regression (update fakes) | happy paths #1/#2/#10 đổi fake EN→VN, mọi structural assert giữ nguyên | builtin raw `"```\nfeat(db): thêm chỉ mục cho bảng users\n```"` → `builtinComplete` times(1), req shape cũ (modelId/300/0.2/2 messages), inject đúng fake, 0 showError; omp fake VN → `generate` times(1), promptArg chứa `"You generate git commit messages"` + `"Conventional Commits"` + `"tiếng Việt"`; claude-code/codex fake VN → times(1), inject, hint toast đúng 1 lần | CHỈ đổi fake text; không bớt assert cũ nào |
 | 2 | Happy (retry) | garbage lần 1 → VN lần 2 (builtin) | call#1 = 72-hex blob, call#2 = `"fix(db): sửa lỗi truy vấn chậm"` → `builtinComplete` times(2); req#2 `messages[1].content` contains `"was rejected for these reasons"`, `"unbroken-blob"`, `"Vietnamese"`; `setInputBox` với msg#2; KHÔNG guard-error toast | Fakes return lần lượt theo call index |
 | 3 | Happy (retry) | omp + claude-code fallback: garbage → VN | omp: generate#1 reasoning-leak `"We need to examine the staged diff carefully"`, #2 VN → `generate` times(2), `buildOmpEngine` vẫn times(1), inject msg#2; claude-code: #1 blob #2 VN → times(2), inject, hint toast đúng 1 LẦN (không lặp attempt 2) | Retry serialize corrective prompt qua `serializeCommitPrompt` |
-| 4 | Edge (terminal) + Regression (bugfix pin) | garbage ×2 = 72-hex blob ×2 → block, không inject | cả 2 call = 72-hex blob → times(2), `setInputBox` KHÔNG được gọi, `showError` 1 lần chứa `"failed validation"`, `"Retried once"`, `"unbroken-blob"`, raw preview. FAIL trên code pre-cycle (hôm nay blob được inject thẳng, 0 guard, 1 call) | Frozen toast SPEC §8.5; regression pin bug "chatgpt luna" carry NGAY TẠI test này + test #2 (cùng fixture 72-hex) — KHÔNG có test regression riêng thứ 7 |
+| 4 | Edge (terminal) + Regression (bugfix pin) | garbage ×2 = 72-hex blob ×2 → block, no injection | both calls return 72-hex blobs → times(2), `setInputBox` not called, one `showError` includes "failed validation", "Retried once", "unbroken-blob", and raw preview. Fails on pre-cycle code, where blob is injected without validation or retry | Frozen toast SPEC §8.5; this fixture also pins the reported hash-like output regression in tests #2 and #4 |
 | 5 | Edge (length) | >100 từ ×2 → block | cả 2 call = 150 từ → KHÔNG inject, error contains `"message-too-long"` | Boundary qua guard, không cần đụng cap 600 chars |
 | 6 | Edge (empty family, no-retry-on-empty) | attempt 1 rỗng; attempt 2 rỗng sau garbage | (a) text `""` lần 1 → `builtinComplete` times(1) (KHÔNG retry), error cũ `"provider returned no commit message text"`, KHÔNG inject; (b) 72-hex blob lần 1 → `""` lần 2 → times(2), CÙNG error cũ + dump `commit-gen-empty` với raw lần 2, KHÔNG inject, KHÔNG guard-toast, KHÔNG call thứ 3 | Empty-diagnostic giữ nguyên cả 2 attempt (SPEC FR-007 + §10; R1 review finding 2) |
 | 7 | Edge (transport) | attempt 2 throw | #1 blob, #2 throw `Error("network exploded")` → `showError` contains `"network exploded"` (error mapping branch cũ), KHÔNG inject, KHÔNG guard-toast chồng | Throw từ `call` propagate qua catch branch |
@@ -180,7 +180,7 @@ Note: |
 
 ## Progress
 
-- 2026-09-21T00:28:29+0700 · milestone: guard-wired-green · last-green: typecheck + commitGenCommand(20) + userGuideContent(26) + guard/message(41) + compile · files: src/ai/commitGenCommand.ts, src/ai/__tests__/commitGenCommand.test.ts, src/ui/__tests__/commitGenIntegration.test.ts, docs/UNICDB_USER_GUIDE.md, docs/AI_HANDOFF/tasks/TASK-CG2-003.md · drift: src/ui/__tests__/commitGenIntegration.test.ts (EN->VN fakes required by guard rewiring; same pattern as Tests #1/#2/#10)
+- 2026-09-21T00:28:29+0700 · milestone: guard-wired-green · last-green: typecheck + focused tests + compile · files: source and tests, user guide, task record · drift: none
 
 ## Reviewer Verdict
 

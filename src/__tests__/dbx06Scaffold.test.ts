@@ -75,9 +75,9 @@ describe("DBX-06 — package.json contributions", () => {
   const commands = new Set(
     pkg.contributes.commands.map((c) => c.command),
   );
-  it("declares UnicDB.renameTable + UnicDB.renameColumn", () => {
-    expect(commands.has("UnicDB.renameTable")).toBe(true);
-    expect(commands.has("UnicDB.renameColumn")).toBe(true);
+  it("declares VSKit.renameTable + VSKit.renameColumn", () => {
+    expect(commands.has("VSKit.renameTable")).toBe(true);
+    expect(commands.has("VSKit.renameColumn")).toBe(true);
   });
 });
 

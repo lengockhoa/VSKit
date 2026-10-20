@@ -3,10 +3,10 @@
 //
 // Asserts that `package.json` declares:
 //   - `contributes.commands` contains
-//     { command: "UnicDB.generateCommitMessage", title: "Generate Commit Message",
-//       category: "UnicDB", icon: "$(sparkle)" }
+//     { command: "VSKit.generateCommitMessage", title: "Generate Commit Message",
+//       category: "VSKit", icon: "$(sparkle)" }
 //   - `contributes.menus["scm/title"]` contains
-//     { command: "UnicDB.generateCommitMessage", group: "navigation",
+//     { command: "VSKit.generateCommitMessage", group: "navigation",
 //       when: "scmProvider == git && scmProviderHasChanges" }
 //   - The full set of locked command ids is still fully present (superset guard, not a
 //     frozen count — unrelated command churn must not false-fail).
@@ -14,8 +14,8 @@
 //   - Every command referenced in any `menus` block resolves to a declared command id.
 //
 // TASK-013 — manifest contribution: four engines and two agent commands.
-//   - `UnicDB.ai.engine` enum exposes builtin, omp, claude-code, codex (default builtin).
-//   - `UnicDB.ai.useWithClaudeCode` and `UnicDB.ai.useWithCodex` commands are
+//   - `VSKit.ai.engine` enum exposes builtin, omp, claude-code, codex (default builtin).
+//   - `VSKit.ai.useWithClaudeCode` and `VSKit.ai.useWithCodex` commands are
 //     contributed and activated exactly once each, with no duplicates creeping into
 //     activationEvents.
 
@@ -36,65 +36,65 @@ type Manifest = {
 };
 
 const LOCKED_COMMAND_IDS: ReadonlyArray<string> = [
-  "UnicDB.addConnection",
-  "UnicDB.editConnection",
-  "UnicDB.deleteConnection",
-  "UnicDB.selectConnection",
-  "UnicDB.runQuery",
-  "UnicDB.cancelQuery",
-  "UnicDB.generateSelect",
-  "UnicDB.copyQualifiedName",
-  "UnicDB.refreshSchema",
-  "UnicDB.runStatement",
-  "UnicDB.filterSchemaTree",
-  "UnicDB.clearSchemaTreeFilter",
-  "UnicDB.runScript",
-  "UnicDB.newTable",
-  "UnicDB.modifyTable",
-  "UnicDB.renameTable",
-  "UnicDB.renameColumn",
-  "UnicDB.copyCreateDdl",
-  "UnicDB.generateSampleData",
-  "UnicDB.analyzeTable",
-  "UnicDB.vacuumTable",
-  "UnicDB.openAiSettings",
-  "UnicDB.aiChat",
-  "UnicDB.ai.useWithOmp",
-  "UnicDB.ai.refreshDbContext",
-  "UnicDB.ai.showPolicy",
-  "UnicDB.ai.exportTrace",
-  "UnicDB.ai.clearTrace",
-  "UnicDB.browseTableData",
-  "UnicDB.createSchema",
-  "UnicDB.postmanPayload",
-  "UnicDB.exportStructure",
-  "UnicDB.exportAllStructures",
-  "UnicDB.openConsole",
-  "UnicDB.consoleNewTab",
-  "UnicDB.openConsoleForObject",
-  "UnicDB.openUserGuide",
-  "UnicDB.openHelpGrid",
-  "UnicDB.refreshAdmin",
-  "UnicDB.openSessionsPanel",
-  "UnicDB.killSession",
-  "UnicDB.terminateSession",
-  "UnicDB.runGrantSql",
-  "UnicDB.importCsv",
-  "UnicDB.importJson",
-  "UnicDB.openFormView",
-  "UnicDB.editLargeValue",
-  "UnicDB.compareTables",
-  "UnicDB.relationshipExplorer",
-  "UnicDB.diagnostics.show",
-  "UnicDB.diagnostics.clear",
-  "UnicDB.generateViewDdl",
-  "UnicDB.generateFunctionDdl",
-  "UnicDB.openSettings",
-  "UnicDB.ai.useWithClaudeCode",
-  "UnicDB.ai.useWithCodex",
+  "VSKit.addConnection",
+  "VSKit.editConnection",
+  "VSKit.deleteConnection",
+  "VSKit.selectConnection",
+  "VSKit.runQuery",
+  "VSKit.cancelQuery",
+  "VSKit.generateSelect",
+  "VSKit.copyQualifiedName",
+  "VSKit.refreshSchema",
+  "VSKit.runStatement",
+  "VSKit.filterSchemaTree",
+  "VSKit.clearSchemaTreeFilter",
+  "VSKit.runScript",
+  "VSKit.newTable",
+  "VSKit.modifyTable",
+  "VSKit.renameTable",
+  "VSKit.renameColumn",
+  "VSKit.copyCreateDdl",
+  "VSKit.generateSampleData",
+  "VSKit.analyzeTable",
+  "VSKit.vacuumTable",
+  "VSKit.openAiSettings",
+  "VSKit.aiChat",
+  "VSKit.ai.useWithOmp",
+  "VSKit.ai.refreshDbContext",
+  "VSKit.ai.showPolicy",
+  "VSKit.ai.exportTrace",
+  "VSKit.ai.clearTrace",
+  "VSKit.browseTableData",
+  "VSKit.createSchema",
+  "VSKit.postmanPayload",
+  "VSKit.exportStructure",
+  "VSKit.exportAllStructures",
+  "VSKit.openConsole",
+  "VSKit.consoleNewTab",
+  "VSKit.openConsoleForObject",
+  "VSKit.openUserGuide",
+  "VSKit.openHelpGrid",
+  "VSKit.refreshAdmin",
+  "VSKit.openSessionsPanel",
+  "VSKit.killSession",
+  "VSKit.terminateSession",
+  "VSKit.runGrantSql",
+  "VSKit.importCsv",
+  "VSKit.importJson",
+  "VSKit.openFormView",
+  "VSKit.editLargeValue",
+  "VSKit.compareTables",
+  "VSKit.relationshipExplorer",
+  "VSKit.diagnostics.show",
+  "VSKit.diagnostics.clear",
+  "VSKit.generateViewDdl",
+  "VSKit.generateFunctionDdl",
+  "VSKit.openSettings",
+  "VSKit.ai.useWithClaudeCode",
+  "VSKit.ai.useWithCodex",
 ];
 
-const NEW_COMMAND_ID = "UnicDB.generateCommitMessage";
+const NEW_COMMAND_ID = "VSKit.generateCommitMessage";
 
 function loadManifest(): Manifest {
   const pkgPath = resolve(process.cwd(), "package.json");
@@ -111,8 +111,8 @@ describe("TASK-GC-004 — package.json manifest guards for the Generate Commit M
     expect(entry).toBeDefined();
     expect(entry).toEqual({
       command: NEW_COMMAND_ID,
-      title: "UnicDB: Generate Commit Message",
-      category: "UnicDB",
+      title: "VSKit: Generate Commit Message",
+      category: "VSKit",
       icon: { light: "media/commit-spark.svg", dark: "media/commit-spark.svg" },
     });
   });
@@ -168,36 +168,36 @@ describe("TASK-GC-004 — package.json manifest guards for the Generate Commit M
   // ===== TASK-013: four engines and two agent commands ====================
 
   // ---- Case 1 (TASK-013) — happy ------------------------------------------
-  it("TASK-013 case 1: UnicDB.ai.engine enum exposes four values (builtin, omp, claude-code, codex); default 'omp' (fresh install picks agent engine)", () => {
+  it("TASK-013 case 1: VSKit.ai.engine enum exposes four values (builtin, omp, claude-code, codex); default 'omp' (fresh install picks agent engine)", () => {
     const json = loadManifest();
     const properties = json.contributes.configuration?.properties ?? {};
-    const engine = properties["UnicDB.ai.engine"];
-    expect(engine, "UnicDB.ai.engine phải tồn tại trong configuration.properties").toBeDefined();
+    const engine = properties["VSKit.ai.engine"];
+    expect(engine, "VSKit.ai.engine phải tồn tại trong configuration.properties").toBeDefined();
     expect(engine!.type).toBe("string");
     expect(engine!.enum).toEqual(["builtin", "omp", "claude-code", "codex"]);
     expect(engine!.default).toBe("omp");
   });
 
   // ---- Case 2 (TASK-013) — happy ------------------------------------------
-  it("TASK-013 case 2: UnicDB.ai.useWithClaudeCode & useWithCodex are contributed and activated", () => {
+  it("TASK-013 case 2: VSKit.ai.useWithClaudeCode & useWithCodex are contributed and activated", () => {
     const json = loadManifest();
 
     const commands = json.contributes.commands ?? [];
     const ids = commands.map((c) => c.command as string);
 
-    expect(ids).toContain("UnicDB.ai.useWithClaudeCode");
-    expect(ids).toContain("UnicDB.ai.useWithCodex");
+    expect(ids).toContain("VSKit.ai.useWithClaudeCode");
+    expect(ids).toContain("VSKit.ai.useWithCodex");
 
-    const claudeEntry = commands.find((c) => c.command === "UnicDB.ai.useWithClaudeCode");
-    const codexEntry = commands.find((c) => c.command === "UnicDB.ai.useWithCodex");
+    const claudeEntry = commands.find((c) => c.command === "VSKit.ai.useWithClaudeCode");
+    const codexEntry = commands.find((c) => c.command === "VSKit.ai.useWithCodex");
     expect(claudeEntry).toBeDefined();
     expect(claudeEntry!.title).toBe("Use with Claude Code");
     expect(codexEntry).toBeDefined();
     expect(codexEntry!.title).toBe("Use with Codex");
 
     const events: string[] = Array.isArray(json.activationEvents) ? json.activationEvents : [];
-    expect(events).toContain("onCommand:UnicDB.ai.useWithClaudeCode");
-    expect(events).toContain("onCommand:UnicDB.ai.useWithCodex");
+    expect(events).toContain("onCommand:VSKit.ai.useWithClaudeCode");
+    expect(events).toContain("onCommand:VSKit.ai.useWithCodex");
   });
 
   // ---- Case 3 (TASK-013) — edge (duplicate) -------------------------------
@@ -206,8 +206,8 @@ describe("TASK-GC-004 — package.json manifest guards for the Generate Commit M
     const events: string[] = Array.isArray(json.activationEvents) ? json.activationEvents : [];
 
     const newEvents = [
-      "onCommand:UnicDB.ai.useWithClaudeCode",
-      "onCommand:UnicDB.ai.useWithCodex",
+      "onCommand:VSKit.ai.useWithClaudeCode",
+      "onCommand:VSKit.ai.useWithCodex",
     ];
     for (const e of newEvents) {
       const count = events.filter((x) => x === e).length;
@@ -215,7 +215,7 @@ describe("TASK-GC-004 — package.json manifest guards for the Generate Commit M
     }
 
     // Sanity: a few preexisting activation events keep their original single count.
-    const preexisting = ["onLanguage:sql", "onCommand:UnicDB.aiChat", "onCommand:UnicDB.ai.useWithOmp"];
+    const preexisting = ["onLanguage:sql", "onCommand:VSKit.aiChat", "onCommand:VSKit.ai.useWithOmp"];
     for (const e of preexisting) {
       const count = events.filter((x) => x === e).length;
       expect(count, `${e} phải giữ nguyên count = 1`).toBe(1);

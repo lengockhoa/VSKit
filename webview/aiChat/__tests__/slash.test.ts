@@ -283,7 +283,7 @@ describe("slashExecution", () => {
     }
   });
 
-  it("never claims native provider resume: /resume lists saved UnicDB sessions", () => {
+  it("never claims native provider resume: /resume lists saved VSKit sessions", () => {
     const action = run("/resume");
     expect(action.kind).toBe("list-sessions");
     expect(JSON.stringify(action)).not.toMatch(/native|session\/load|provider/i);

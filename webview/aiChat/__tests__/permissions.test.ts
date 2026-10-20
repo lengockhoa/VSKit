@@ -36,7 +36,7 @@ import {
   OVERLAY_MODAL_MARKER,
 } from "../overlays";
 
-const ROOT_CLASS = "UnicDB-ai-chat-v2";
+const ROOT_CLASS = "VSKit-ai-chat-v2";
 
 function request(overrides: Partial<PermissionRequestInput> = {}): PermissionRequestInput {
   return {

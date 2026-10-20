@@ -406,7 +406,7 @@ function mountController(options: ChatControllerOptions): ChatController {
       callbacks: {
         onRetry: (request) => requestRetry(request),
         onChangeEngine: () => {
-          const engine = shell.header.querySelector<HTMLElement>("#UnicDB-ai-chat-v2-engine");
+          const engine = shell.header.querySelector<HTMLElement>("#VSKit-ai-chat-v2-engine");
           try {
             engine?.focus();
           } catch {

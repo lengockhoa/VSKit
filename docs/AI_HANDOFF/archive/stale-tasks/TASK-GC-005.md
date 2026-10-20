@@ -7,15 +7,14 @@
 
 ## Goal
 
-DOC-ONLY task: documentation plus its scanner test — no source files. Document the three
-user-facing surfaces in `docs/UNICDB_USER_GUIDE.md` (Vietnamese, matching the guide's
-existing tone/structure): the Source Control sparkle button, the new "Lite model" section in
-AI Settings (model ID + engine, omp default), and the now-visible global Engine dropdown.
-Locked strings come from PLAN §1 so the docs cannot drift from the code.
+DOC-ONLY task: update the user guide plus its scanner test — no source files. Document the three
+user-facing surfaces in the guide (Vietnamese, matching its existing tone/structure): the
+Source Control sparkle button, the "Lite model" section in AI Settings, and the global Engine
+dropdown. Locked strings come from PLAN §1 so the docs cannot drift from the code.
 
 ## Target Files
 
-- `docs/UNICDB_USER_GUIDE.md` — add a "Generate Commit Message" section (button location in
+- User guide — add a "Generate Commit Message" section (button location in
   the Source Control title bar, requires git changes, fills the commit input, uses the Lite
   Model), a "Lite model" subsection under the AI Settings content (model ID optional = feature
   disabled; Engine dropdown `omp` (default) / `builtin`; when omp is unavailable the command
@@ -29,7 +28,7 @@ Locked strings come from PLAN §1 so the docs cannot drift from the code.
 
 | # | Type | Test name | Expected | Pre-state / Fixture |
 |---|------|-----------|----------|---------------------|
-| 1 | happy | GC section keywords present | content contains all of: "Generate Commit Message", "Source Control", "Lite model", "Conventional Commits", "Open AI Settings" | docs/UNICDB_USER_GUIDE.md |
+| 1 | happy | GC section keywords present | content contains all of: "Generate Commit Message", "Source Control", "Lite model", "Conventional Commits", "Open AI Settings" | user guide |
 | 2 | happy | engine dropdown documented | content contains "Engine" and both literals "builtin" and "omp" | same file |
 | 3 | edge (empty) | guide stays non-empty / structure intact | file length still > 200 chars and all pre-existing requiredKeywords still match (existing asserts unchanged) | same file |
 | 4 | edge (malformed) | command title mentioned exactly once | `content.split("Generate Commit Message").length - 1 === 1` — the guide introduces the button by its title once and refers to "the sparkle button" afterwards | same file |
@@ -91,7 +90,7 @@ RED_OUTPUT: |
 
   ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/7]⎯
 
-   FAIL  src/ui/__tests__/userGuideContent.test.ts > TASK-GC-005 — docs/UNICDB_USER_GUIDE.md (Generate Commit + Lite Model + Engine) > GC#4 'Generate Commit Message' command title appears exactly once
+   FAIL  src/ui/__tests__/userGuideContent.test.ts > TASK-GC-005 — user guide (Generate Commit + Lite Model + Engine) > GC#4 'Generate Commit Message' command title appears exactly once
   AssertionError: expected +0 to be 1 // Object.is equality
 
   - Expected
@@ -115,7 +114,7 @@ RED_OUTPUT: |
      Start at  14:06:42
      Duration  150ms (transform 16ms, setup 0ms, collect 12ms, tests 6ms, environment 0ms, prepare 39ms)
 Verification Output: |
-   > UnicDB@1.51.7 typecheck
+   > extension@1.51.7 typecheck
    > tsc --noEmit
    (no errors)
 

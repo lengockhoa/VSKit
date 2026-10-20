@@ -33,7 +33,7 @@ holding. These tests are the contract every later wave must keep green.
 | 2 | happy | `2x2 rectangle copies rows tab-joined, lines newline-joined` | 1 `copy` msg; `text` === `"1\talpha\n2\tbeta"` | same state; mousedown (0,id) then mousemove to (1,name) then window mouseup |
 | 3 | happy | `checkbox row selection copies 2 rows` | 1 `copy` msg; 2 `\n`-lines each containing `\t` | `api.forEachNode` setSelected rows 0-1 (pattern: `webviewBundle.test.ts` #3) |
 | 4 | happy | `single-column strip drag copies one column` | `text` === `"alpha\nbeta\ngamma"` (1 line per row, no `\t`) | mousedown (0,name), mousemove (2,name), mouseup |
-| 5 | edge (shape) | `hidden column excluded from range copy` | `text` === `"alpha\nbeta"` — col `id` values never leak | 2×2 range then `__UnicDB.debugSetSpecs` with `id` hidden (`webview/main.ts:4510`) |
+| 5 | edge (shape) | `hidden column excluded from range copy` | `text` === `"alpha\nbeta"` — col `id` values never leak | 2×2 range then `__app.debugSetSpecs` with `id` hidden (`webview/main.ts:4510`) |
 | 6 | edge (empty) | `Cmd+C with no selection and no focused cell posts nothing` | zero `copy` messages | fresh bundle, state dispatched, no selection/focus; guard `webview/main.ts:4065` |
 | 7 | edge (boundary) | `range clipped to displayed rows` | copy contains only displayed rows (drag end row beyond `getDisplayedRowCount()-1` clamps) | 3-row state; range endRow = 9 via Shift+Arrow ×N or direct mousemove past grid |
 | 8 | regression | existing `webviewBundle.test.ts` #3 + `webviewExport.test.ts` #3 copy cases | unchanged GREEN | existing files |
@@ -65,9 +65,9 @@ npx vitest run src/ui/__tests__/webviewClipboardCopy.test.ts src/ui/__tests__/re
 ## Interfaces
 
 - Consumes:
-  - `copySelectionToHost()` / `copyCellRangeToHost(range)` — existing, `webview/main.ts:4031/4090`, triggered by capture-phase Cmd/Ctrl+C keydown on `.UnicDB-grid-host`.
-  - `__UnicDB.debugSetSpecs(specs: readonly ColumnSpec[]): void` — existing seam, `webview/main.ts:4510`.
-  - `window.__UnicDB` debug object + stubbed `acquireVsCodeApi` sink (pattern: `webviewKeybinding.test.ts:106-120`).
+  - `copySelectionToHost()` / `copyCellRangeToHost(range)` — existing, `webview/main.ts:4031/4090`, triggered by capture-phase Cmd/Ctrl+C keydown on `.vskit-grid-host`.
+  - `__app.debugSetSpecs(specs: readonly ColumnSpec[]): void` — existing seam, `webview/main.ts:4510`.
+  - `window.__app` debug object + stubbed `acquireVsCodeApi` sink (pattern: `webviewKeybinding.test.ts:106-120`).
   - Pure: `selectionRangeToText(rows: unknown[][], range: CellRange): string` — `src/ui/resultsGridModel.ts:1352`.
 - Produces: (none) — test-only task; later waves must keep these cases GREEN.
 
@@ -109,7 +109,7 @@ VERIFICATION:
   command: npm run typecheck
   result: exit 0
   output_excerpt: |
-    > UnicDB@1.53.42 typecheck
+    > VSKit@1.53.42 typecheck
     > tsc --noEmit
     Wall time: 1.42s
   command: npm run compile
@@ -146,7 +146,7 @@ VERIFICATION_RERUN:
   result: exit 0; dist/webview.js freshly built (no bundle-test self-skip — copy suite ran 7 tests, not 0)
   command: npx vitest run src/ui/__tests__/webviewClipboardCopy.test.ts src/ui/__tests__/resultsGridModelEdit.test.ts
   result: 41 pass / 0 fail, exit 0 (7 copy-shape + 34 pure-model)
-TEST_PLAN_COVERAGE: all-followed — §4 cases #1-#7 implemented with behavior-level assertions through the real DOM/event path (mousedown/mousemove/capture-phase Ctrl+C keydown on .UnicDB-grid-host); pure-model column-strip case added (resultsGridModelEdit.test.ts:313). RED_OUTPUT contains a real failing run (AssertionError 'alpha' vs 'not-alpha', exit 1), proving the sentinel assertion executes.
+TEST_PLAN_COVERAGE: all-followed — §4 cases #1-#7 implemented with behavior-level assertions through the real DOM/event path (mousedown/mousemove/capture-phase Ctrl+C keydown on .vskit-grid-host); pure-model column-strip case added (resultsGridModelEdit.test.ts:313). RED_OUTPUT contains a real failing run (AssertionError 'alpha' vs 'not-alpha', exit 1), proving the sentinel assertion executes.
 FINDINGS:
   critical:
     - (none)

@@ -190,7 +190,7 @@ vague-ban exit=0
 DOCS-ONLY-OK
 typecheck exit=0
 
-> UnicDB@1.53.46 typecheck
+> VSKit@1.53.46 typecheck
 > tsc --noEmit
 ```
 

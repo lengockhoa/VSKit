@@ -35,7 +35,7 @@ import {
   type TranscriptRenderer,
 } from "../transcript";
 
-const PREFIX = "UnicDB-ai-chat-v2";
+const PREFIX = "VSKit-ai-chat-v2";
 
 // ---------------------------------------------------------------------------
 // State builders (real reducer)
@@ -551,11 +551,11 @@ describe("transcript — TASK-CHATFIX-003 tool activity timeline", () => {
 
     // Polish bar is pinned by the scoped stylesheet: bold high-contrast label,
     // muted summary line, connector line between the step dots.
-    const labelRule = /\.UnicDB-ai-chat-v2-tool-label\s*\{([^}]*)\}/.exec(css);
+    const labelRule = /\.VSKit-ai-chat-v2-tool-label\s*\{([^}]*)\}/.exec(css);
     expect(labelRule?.[1] ?? "").toContain("font-weight");
-    const summaryRule = /\.UnicDB-ai-chat-v2-tool-summary\s*\{([^}]*)\}/.exec(css);
-    expect(summaryRule?.[1] ?? "").toContain("var(--UnicDB-ai-chat-v2-muted)");
-    expect(css).toMatch(/\.UnicDB-ai-chat-v2-item-tool::before[^{]*\{[^}]*border-left/);
+    const summaryRule = /\.VSKit-ai-chat-v2-tool-summary\s*\{([^}]*)\}/.exec(css);
+    expect(summaryRule?.[1] ?? "").toContain("var(--VSKit-ai-chat-v2-muted)");
+    expect(css).toMatch(/\.VSKit-ai-chat-v2-item-tool::before[^{]*\{[^}]*border-left/);
   });
 
   it("case 2 (happy): live indicator appears while the turn is open, leaves on turn_finished", () => {
@@ -590,17 +590,17 @@ describe("transcript — TASK-CHATFIX-003 tool activity timeline", () => {
     const long = "x".repeat(2000);
     const tool = runToolTurn(undefined, long);
     expect(tool.querySelector('[data-tool-block="out"]')?.textContent).toBe(long);
-    const rule = /\.UnicDB-ai-chat-v2-tool-io-text\[data-tool-block="out"\]\s*\{([^}]*)\}/.exec(css);
+    const rule = /\.VSKit-ai-chat-v2-tool-io-text\[data-tool-block="out"\]\s*\{([^}]*)\}/.exec(css);
     expect(rule).not.toBeNull();
     expect(rule![1]!).toContain("max-height");
     expect(rule![1]!).toContain("overflow-y: auto");
   });
 
   it("case 6 (regression): running status gains a namespaced pulse rule", () => {
-    const rule = /\.UnicDB-ai-chat-v2-tool-status\[data-status="running"\]\s*\{([^}]*)\}/.exec(css);
+    const rule = /\.VSKit-ai-chat-v2-tool-status\[data-status="running"\]\s*\{([^}]*)\}/.exec(css);
     expect(rule).not.toBeNull();
-    expect(rule![1]!).toMatch(/animation:[^;]*UnicDB-ai-chat-v2-[\w-]+/);
-    expect(css).toMatch(/@keyframes UnicDB-ai-chat-v2-[\w-]+\s*\{/);
+    expect(rule![1]!).toMatch(/animation:[^;]*VSKit-ai-chat-v2-[\w-]+/);
+    expect(css).toMatch(/@keyframes VSKit-ai-chat-v2-[\w-]+\s*\{/);
   });
 });
 
@@ -679,7 +679,7 @@ describe("transcript — scoped CSS keeps the PLAN §6 geometry", () => {
 
   it("user bubble: 70% max-width, 6x10px padding, asymmetric radius", () => {
     expect(css).not.toBe("");
-    const rule = /\.UnicDB-ai-chat-v2-item-user\s*\{([^}]*)\}/.exec(css);
+    const rule = /\.VSKit-ai-chat-v2-item-user\s*\{([^}]*)\}/.exec(css);
     expect(rule).not.toBeNull();
     const body = rule![1]!;
     expect(body).toContain("max-width: 70%");
@@ -688,7 +688,7 @@ describe("transcript — scoped CSS keeps the PLAN §6 geometry", () => {
   });
 
   it("assistant answer: unboxed 92% max-width, no fixed width, 4px 0", () => {
-    const rule = /\.UnicDB-ai-chat-v2-item-text,\s*\.UnicDB-ai-chat-v2-item-reasoning\s*\{([^}]*)\}/.exec(css);
+    const rule = /\.VSKit-ai-chat-v2-item-text,\s*\.VSKit-ai-chat-v2-item-reasoning\s*\{([^}]*)\}/.exec(css);
     expect(rule).not.toBeNull();
     const body = rule![1]!;
     expect(body).toContain("max-width: 92%");
@@ -698,15 +698,15 @@ describe("transcript — scoped CSS keeps the PLAN §6 geometry", () => {
   });
 
   it("action buttons are 28x28 and visible at rest (no opacity gate)", () => {
-    const rule = /\.UnicDB-ai-chat-v2-action\s*\{([^}]*)\}/.exec(css);
+    const rule = /\.VSKit-ai-chat-v2-action\s*\{([^}]*)\}/.exec(css);
     expect(rule).not.toBeNull();
     expect(rule![1]!).toContain("width: 28px");
     expect(rule![1]!).toContain("height: 28px");
     expect(rule![1]!).not.toContain("opacity: 0");
     // TASK-CHATUX-003: the hover/focus-within reveal rule is gone — actions
     // stay visible (muted) at rest.
-    expect(css).not.toMatch(/\.UnicDB-ai-chat-v2-item:hover\s+\.UnicDB-ai-chat-v2-action/);
-    expect(css).not.toMatch(/\.UnicDB-ai-chat-v2-item:focus-within\s+\.UnicDB-ai-chat-v2-action/);
+    expect(css).not.toMatch(/\.VSKit-ai-chat-v2-item:hover\s+\.VSKit-ai-chat-v2-action/);
+    expect(css).not.toMatch(/\.VSKit-ai-chat-v2-item:focus-within\s+\.VSKit-ai-chat-v2-action/);
   });
 });
 

@@ -119,9 +119,9 @@ describe("ActiveSchemaStore", () => {
 
   it("hydrates from existing memento keys", () => {
     const mem = fakeMemento({
-      "unicDb.activeSchema.conn-1": "analytics",
-      "unicDb.activeSchema.conn-2": "reporting",
-      "unicDb.schemaFilter.conn-3": ["x"], // unrelated key — ignored
+      "vskit.activeSchema.conn-1": "analytics",
+      "vskit.activeSchema.conn-2": "reporting",
+      "vskit.schemaFilter.conn-3": ["x"], // unrelated key — ignored
     });
     const s = new ActiveSchemaStore(mem as never);
     expect(s.get("conn-1")).toBe("analytics");
@@ -133,9 +133,9 @@ describe("ActiveSchemaStore", () => {
     const mem = fakeMemento();
     const s = new ActiveSchemaStore(mem as never);
     await s.set("conn-1", "analytics");
-    expect(mem.get("unicDb.activeSchema.conn-1")).toBe("analytics");
+    expect(mem.get("vskit.activeSchema.conn-1")).toBe("analytics");
     await s.set("conn-1", undefined);
-    expect(mem.get("unicDb.activeSchema.conn-1")).toBeUndefined();
+    expect(mem.get("vskit.activeSchema.conn-1")).toBeUndefined();
   });
 
   it("dispose detaches listeners without throwing", () => {

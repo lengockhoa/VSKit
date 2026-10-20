@@ -42,7 +42,7 @@ function makeRepo(overrides: {
   workingTreeChanges?: { uri: { fsPath: string } }[];
   mergeChanges?: { uri: { fsPath: string } }[];
 }): GitRepositoryLike {
-  const root = overrides.rootFsPath ?? "/repo/UnicDB";
+  const root = overrides.rootFsPath ?? "/repo/VSKit";
   const staged = overrides.staged;
   const unstaged = overrides.unstaged;
   return {
@@ -67,22 +67,22 @@ function makeRepo(overrides: {
 describe("gitDiff — collectCommitDiff: staged preferred", () => {
   it("returns staged text, deduped files, repoName, branch", async () => {
     const repo = makeRepo({
-      rootFsPath: "/home/dev/UnicDB",
+      rootFsPath: "/home/dev/VSKit",
       staged: "diff --git a/src/a.ts\n+staged line\n",
       unstaged: "diff --git a/src/b.ts\n+unstaged line\n",
       headName: "main",
       indexChanges: [
-        { uri: { fsPath: "/home/dev/UnicDB/src/a.ts" } },
-        { uri: { fsPath: "/home/dev/UnicDB/src/shared.ts" } },
+        { uri: { fsPath: "/home/dev/VSKit/src/a.ts" } },
+        { uri: { fsPath: "/home/dev/VSKit/src/shared.ts" } },
       ],
       workingTreeChanges: [
-        { uri: { fsPath: "/home/dev/UnicDB/src/shared.ts" } }, // dup
-        { uri: { fsPath: "/home/dev/UnicDB/src/b.ts" } },
+        { uri: { fsPath: "/home/dev/VSKit/src/shared.ts" } }, // dup
+        { uri: { fsPath: "/home/dev/VSKit/src/b.ts" } },
       ],
     });
     const result = await collectCommitDiff(repo);
     expect(result).not.toBeNull();
-    expect(result!.repoName).toBe("UnicDB");
+    expect(result!.repoName).toBe("VSKit");
     expect(result!.branch).toBe("main");
     expect(result!.diffText).toBe("diff --git a/src/a.ts\n+staged line\n");
     // Only files represented by the selected staged diff are included.
@@ -114,13 +114,13 @@ describe("gitDiff — collectCommitDiff: fall back to unstaged", () => {
       staged: "",
       unstaged: "diff --git a/x.ts\n+line\n",
       indexChanges: [
-        { uri: { fsPath: "/repo/UnicDB/staged-only.ts" } },
+        { uri: { fsPath: "/repo/VSKit/staged-only.ts" } },
       ],
       workingTreeChanges: [
-        { uri: { fsPath: "/repo/UnicDB/x.ts" } },
+        { uri: { fsPath: "/repo/VSKit/x.ts" } },
       ],
       mergeChanges: [
-        { uri: { fsPath: "/repo/UnicDB/merge.ts" } },
+        { uri: { fsPath: "/repo/VSKit/merge.ts" } },
       ],
     });
     const result = await collectCommitDiff(repo);
@@ -134,10 +134,10 @@ describe("gitDiff — collectCommitDiff: fall back to unstaged", () => {
       staged: "diff --git a/staged.ts\n+line\n",
       unstaged: "diff --git a/unstaged.ts\n+line\n",
       indexChanges: [
-        { uri: { fsPath: "/repo/UnicDB/staged.ts" } },
+        { uri: { fsPath: "/repo/VSKit/staged.ts" } },
       ],
       workingTreeChanges: [
-        { uri: { fsPath: "/repo/UnicDB/unstaged.ts" } },
+        { uri: { fsPath: "/repo/VSKit/unstaged.ts" } },
       ],
     });
 
@@ -152,12 +152,12 @@ describe("gitDiff — collectCommitDiff: fall back to unstaged", () => {
       staged: "",
       unstaged: "diff --git a/working.ts\n+line\n",
       workingTreeChanges: [
-        { uri: { fsPath: "/repo/UnicDB/shared.ts" } },
-        { uri: { fsPath: "/repo/UnicDB/working.ts" } },
+        { uri: { fsPath: "/repo/VSKit/shared.ts" } },
+        { uri: { fsPath: "/repo/VSKit/working.ts" } },
       ],
       mergeChanges: [
-        { uri: { fsPath: "/repo/UnicDB/shared.ts" } },
-        { uri: { fsPath: "/repo/UnicDB/merge.ts" } },
+        { uri: { fsPath: "/repo/VSKit/shared.ts" } },
+        { uri: { fsPath: "/repo/VSKit/merge.ts" } },
       ],
     });
 

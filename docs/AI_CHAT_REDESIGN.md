@@ -1,4 +1,4 @@
-# UnicDB AI Chat — Research-complete implementation specification
+# VSKit AI Chat — Research-complete implementation specification
 
 Status: **Research-complete final specification — consolidated 2026-09-15** (replaces the earlier draft-in-progress header). This is a proposed redesign and the frozen input to the next implementation cycle. It is not an implemented feature, and it is not a verified comparison of the extensions the original draft alluded to. External claims carry an explicit evidence label; every source anchor in §12 was re-checked against the current tree by the automated anchor gate in this cycle.
 
@@ -53,7 +53,7 @@ A single composer keyboard controller owns submission and autocomplete and is th
 | `RUNNING` | a turn is streaming; composer stays editable for the next draft | none | running |
 | `COMPOSING` | IME composition active — a high-priority overlay that can coexist with any state above | unchanged | unchanged |
 
-`COMPOSING` is an overlay, not a peer: it is entered on `compositionstart` from whatever state was held and releases back to that state on `compositionend`. No upstream page documents IME composition handling, so this rule carries no external safety net and is UnicDB-original (per Q22).
+`COMPOSING` is an overlay, not a peer: it is entered on `compositionstart` from whatever state was held and releases back to that state on `compositionend`. No upstream page documents IME composition handling, so this rule carries no external safety net and is VSKit-original (per Q22).
 
 Transitions (event → from → to, with action):
 
@@ -83,7 +83,7 @@ Transitions (event → from → to, with action):
 - **Escape** — closes the topmost menu and preserves the draft; it never cancels generation implicitly. Stop remains an explicit button; external precedent treats stop as explicit and separate from queue/steer (per Q10).
 - **Tab** — selects a valid active result only while a menu is open; otherwise it follows the ordinary focus order.
 
-Prefixing a message with `!` to run a terminal command is documented upstream as available only in Agent Host sessions (per Q07, Verified-with-URL). UnicDB must treat `!` as a provider-native, capability-gated behavior, never a universal composer rule.
+Prefixing a message with `!` to run a terminal command is documented upstream as available only in Agent Host sessions (per Q07, Verified-with-URL). VSKit must treat `!` as a provider-native, capability-gated behavior, never a universal composer rule.
 
 **Running-turn policy.** While a turn runs the textarea remains editable for the next draft, but Enter does not enqueue or send. An inline hint reads exactly "AI is responding. Your draft is kept." Stop is an explicit button. Queueing and steering are separate future capabilities, never inferred from typing. This mirrors the upstream separation where queue/steer are explicit dropdown actions — **Add to Queue**, **Steer with Message**, **Stop and Send** — with `chat.requestQueuing.defaultAction` choosing the default (per Q10, Verified-with-URL).
 
@@ -95,7 +95,7 @@ Prefixing a message with `!` to run a terminal command is documented upstream as
 
 Typing `/` opens the local command menu when the trimmed input starts with `/` and the first token contains no whitespace. A slash inside a URL, file path, code fence, or ordinary sentence must not open it. The toolbar slash button focuses the composer and opens this same menu through the controller; it must not merely mutate the textarea value without notifying the controller — today the composer-local handler does exactly that at `webview/aiChatPanelComposer.ts:449`, while the main-side fill path at `webview/aiChatPanelMain.ts:864–866` pairs the DOM write with `composer.setValue`. If prose already exists, the button opens command browsing without silently replacing that prose.
 
-Upstream, "Type `/` in the chat input to see all available commands" mixes built-in prompts and contributed commands in one surface (per Q08, Verified-with-URL), and per-participant registration bounds the command set (per Q02, Verified-with-URL). Continue's shipped flow — type `/`, select the prompt, then type additional instructions — confirms select-then-execute as a real pattern (per Q15, Verified-with-URL). UnicDB's rule that selection never executes and a second Enter runs follows this.
+Upstream, "Type `/` in the chat input to see all available commands" mixes built-in prompts and contributed commands in one surface (per Q08, Verified-with-URL), and per-participant registration bounds the command set (per Q02, Verified-with-URL). Continue's shipped flow — type `/`, select the prompt, then type additional instructions — confirms select-then-execute as a real pattern (per Q15, Verified-with-URL). VSKit's rule that selection never executes and a second Enter runs follows this.
 
 **Supersedes.** The draft's "at the beginning of an otherwise empty command line" is superseded by "start of the trimmed input, first command token with no whitespace". Rationale: the existing filter already matches a partial command word (`webview/aiChatPanelMain.ts:607–616`), so "otherwise empty" was never the actual trigger and could not be tested as written.
 
@@ -132,9 +132,9 @@ Provider-native commands form a separately labelled, capability-gated group; do 
 
 **Categories.** The initial categories are Files, Editor selection, and Database objects. Existing database-object mention behavior remains supported. Optional folders, diagnostics, git diff, and terminal output are later capabilities and stay hidden until implemented with explicit content and privacy rules. This mirrors the upstream context model where `@` selects scoped context (per Q09, Verified-with-URL) and a single sigil attaches files, folders and selection everywhere (per Q22, Verified-with-URL). Cline's `@/path` file and trailing-slash folder convention is the closest token-grammar comparator (per Q14, Verified-with-URL).
 
-**Result disambiguation (per kind).** Each result has a kind icon, a name, a secondary disambiguating identifier, and an availability state. Two files named `index.ts` must show distinct workspace-relative paths. Two tables with the same name must show distinct connection/schema identifiers. A database mention initially includes metadata, not table rows; obtaining rows remains a separate governed tool action. Continue's deprecated `@Database` provider stops at "table schemas", evidence that the metadata-only boundary is reasonable (per Q14, Verified-with-URL), while the rows-via-tool-action rule is UnicDB-original (per Q22). The duplicate-disambiguation rule has no fetched upstream wording and stays a UnicDB-original requirement (per Q09, Could-not-verify sub-part).
+**Result disambiguation (per kind).** Each result has a kind icon, a name, a secondary disambiguating identifier, and an availability state. Two files named `index.ts` must show distinct workspace-relative paths. Two tables with the same name must show distinct connection/schema identifiers. A database mention initially includes metadata, not table rows; obtaining rows remains a separate governed tool action. Continue's deprecated `@Database` provider stops at "table schemas", evidence that the metadata-only boundary is reasonable (per Q14, Verified-with-URL), while the rows-via-tool-action rule is VSKit-original (per Q22). The duplicate-disambiguation rule has no fetched upstream wording and stays a VSKit-original requirement (per Q09, Could-not-verify sub-part).
 
-**Async correlation and timing.** Debounce remote/host search by 150 ms. Every request and result carries a `requestId` plus a draft revision; stale results must not replace a newer query or reopen a dismissed menu. Today the request is query-only at `webview/aiChatPanelMain.ts:930` and the reply handler caches the last-arrived list unconditionally at `webview/aiChatPanelMain.ts:2027–2032`, so late replies cannot be discarded. Show "Searching…" only if the request is still pending after 200 ms. Empty results say "No matching context"; an error says "Could not search context" with Retry that preserves the query. No result, error, or loading row is selectable. The combined `requestId` + draft-revision staleness guard is UnicDB-original; upstream docs describe search but not this correlation contract (per Q22, Verified-with-URL).
+**Async correlation and timing.** Debounce remote/host search by 150 ms. Every request and result carries a `requestId` plus a draft revision; stale results must not replace a newer query or reopen a dismissed menu. Today the request is query-only at `webview/aiChatPanelMain.ts:930` and the reply handler caches the last-arrived list unconditionally at `webview/aiChatPanelMain.ts:2027–2032`, so late replies cannot be discarded. Show "Searching…" only if the request is still pending after 200 ms. Empty results say "No matching context"; an error says "Could not search context" with Retry that preserves the query. No result, error, or loading row is selectable. The combined `requestId` + draft-revision staleness guard is VSKit-original; upstream docs describe search but not this correlation contract (per Q22, Verified-with-URL).
 
 **Keyboard behavior.** Up/Down changes selection; Enter/Tab/click inserts the selected reference without submitting. Escape preserves literal text. Shift+Enter inserts a newline and closes the menu. Replacement affects only the active `@` token, never the rest of the draft. Preserve text after the caret and restore focus and caret after insertion. Pasting text and editing with mouse selection must trigger the same detector as typing. Type-ahead is required for lists over seven options, and Up/Down/Home/End navigation follows the APG listbox guidance (per Q20, Verified-with-URL).
 
@@ -194,7 +194,7 @@ One streaming primitive exists today: the host→webview `delta` frame (`src/ui/
 
 **Per-engine delta route (all four already converge today):** builtin runs `runAgent` → `provider.streamComplete`, panel `onText` posts `delta` (`src/ui/aiChatPanel.ts:2358`, route at `src/ai/agent.ts:243`); omp maps ACP `session/update` → `agent_message_chunk` → `onDelta` (`src/ai/omp/ompChatEngine.ts:273`); claudeCode carries subprocess stdout through the omp-shaped callbacks (`src/ai/claudeCode/claudeCodeChatEngine.ts:48`), forwarded by `runImageCapableEngineTurn` (`src/ui/aiChatPanel.ts:2754`); codex carries subprocess stdout over stdin (`src/ai/codex/codexChatEngine.ts:64`). All three external routes are redacted at the wire boundary (`src/ui/aiChatPanel.ts:2586`, `src/ui/aiChatPanel.ts:2782`). **The target contract keeps this: no raw engine byte reaches the webview unredacted, and `thought` is redacted the same way.**
 
-### 2.2 Render coalescing policy (target-state; UnicDB-original)
+### 2.2 Render coalescing policy (target-state; VSKit-original)
 
 Today each `delta` appends one raw text node and markdown is re-parsed on fence close (`webview/aiChatPanelMain.ts:1272–1320`). At provider chunk rates this re-parses far more often than the display needs. Target rule:
 
@@ -214,7 +214,7 @@ Today text is appended as a text node and markdown re-renders once a complete fe
 - Incomplete inline spans (an unclosed `**`, backtick, or `[`) render as **literal text** until the closing token arrives; tail characters are never swallowed and never render as a broken emphasis node.
 - On `assistant`, the full text renders once through the canonical `appendAssistant(text, markdown)` path with SQL highlighting and copy buttons (`webview/aiChatPanelMain.ts:1223–1248`). If the terminal render throws, the bubble keeps the last good streamed render and the render-failure class in §6 fires.
 
-### 2.4 Stick-to-bottom scroll rule (target-state; concrete px threshold, UnicDB-original)
+### 2.4 Stick-to-bottom scroll rule (target-state; concrete px threshold, VSKit-original)
 
 No scroll-lock constant exists in current source. Target rule:
 
@@ -272,7 +272,7 @@ Per-engine content rules, honest about what each backend supplies:
 
 ### 4.1 Current storage mechanism (facts)
 
-- **The extension persists nothing to disk.** Conversation state is the per-panel in-memory history array (`absent in current source` for any extension-owned session store; the only durable policy surface is `UnicDB.ai.showPolicy`, `package.json:282`).
+- **The extension persists nothing to disk.** Conversation state is the per-panel in-memory history array (`absent in current source` for any extension-owned session store; the only durable policy surface is `VSKit.ai.showPolicy`, `package.json:282`).
 - **Session persistence belongs to the omp child process.** Listing is ACP `session/list` (`src/ai/omp/acp.ts:213`); loading is `session/load` (`src/ai/omp/acp.ts:252`).
 - The host filters the list by `cwd`, excludes the current session, sorts by `updatedAt` descending, and caps at 20 (`RESUME_PICKER_CAP`, `src/ui/aiChatPanel.ts:1154`, applied at `src/ui/aiChatPanel.ts:4051`).
 - **Resume is omp-only.** Both list and pick post `"Resume requires the omp engine."` for any other engine (`src/ui/aiChatPanel.ts:4020`, `src/ui/aiChatPanel.ts:4072`). `builtin` has no session id at all.
@@ -333,7 +333,7 @@ The extension owns a thin session index; engine-owned transcripts stay with the 
 | Timeout | Default deny after 60 s (`DEFAULT_PERMISSION_TIMEOUT_MS`) | Verified (`src/ui/aiChatPanel.ts:123`, `src/ui/aiChatPanel.ts:3629`) |
 | Bypass | Session-scoped, default OFF, never persisted; when ON the webview receives no card | Verified (`src/ui/aiChatPanel.ts:1727`, `src/ui/aiChatPanel.ts:3599`, `src/ui/aiChatPanel.ts:2933`) |
 | Plan approval | Separate consent path: `plan_approve`/`plan_reject` on the `change_plan` card, re-validated against the live schema via `confirmDangerousStatements` | Verified (`src/ui/aiChatPanelMessages.ts:241`, `src/ui/aiChatPanelMessages.ts:253`, `src/ui/aiChatPanelMessages.ts:258`, `src/ui/aiChatPanel.ts:4357`) |
-| Durable policy surface | `UnicDB.ai.showPolicy` is the only durable policy view | Verified (`package.json:282`) |
+| Durable policy surface | `VSKit.ai.showPolicy` is the only durable policy view | Verified (`package.json:282`) |
 
 **Codex caveat (stated honestly).** The HostMcp gate is constructed and bridged for the codex lane, but the codex CLI route passes no `--mcp-config` in `codex exec` mode, so the gate is **not reachable by the documented CLI route** (`src/extension.ts:2491`, `src/extension.ts:2479`). The codex permissions cell in §7 therefore stays `Unverified-internal`.
 
@@ -442,7 +442,7 @@ Two anchors disagree and the redesign resolves both, not one:
 
 **Resolution rule (target-state):** `/engine` becomes **capability-gated command visibility**, not a fixed two-literal parser:
 
-- The set of engines named by `/engine` is exactly the set the host reports as available and switchable in this session. Engines wired through VS Code commands (`UnicDB.ai.useWithClaudeCode` at `package.json:264` and `UnicDB.ai.useWithCodex` at `package.json:270`) are switched through those commands; `/engine` must neither accept a literal it cannot switch to nor silently reject one it can.
+- The set of engines named by `/engine` is exactly the set the host reports as available and switchable in this session. Engines wired through VS Code commands (`VSKit.ai.useWithClaudeCode` at `package.json:264` and `VSKit.ai.useWithCodex` at `package.json:270`) are switched through those commands; `/engine` must neither accept a literal it cannot switch to nor silently reject one it can.
 - Invalid or unknown arguments keep the draft and show a corrective example; they do not create an assistant reply bubble.
 - A switch never reruns the last prompt automatically.
 - The host must acknowledge a switch before the UI claims it took effect.
@@ -662,7 +662,7 @@ All anchors below were parsed by the automated anchor gate this cycle: every fil
 | §1.2 select-then-execute flow | Type `/`, select the prompt, then add instructions | Q15, Verified-with-URL |
 | §1.3 `@`-selects-context model | `@`-mentions select participants; a single sigil attaches files/folders/selection | Q09/Q22, Verified-with-URL |
 | §1.3 database metadata-not-rows boundary | Continue `@Database` references schemas, not rows | Q14, Verified-with-URL |
-| §1.3 duplicate disambiguation (UnicDB-original) | No fetched page documents an equivalent | Q09 sub-part, Could-not-verify |
+| §1.3 duplicate disambiguation (VSKit-original) | No fetched page documents an equivalent | Q09 sub-part, Could-not-verify |
 | §1.4/§9 theme tokens and reduced-motion class | Exact theme IDs; `vscode-reduce-motion`; chat-specific tokens | Q06, Verified-with-URL |
 | §1.4 combobox/listbox/activedescendant | Editable combobox and listbox APG patterns | Q19/Q20, Verified-with-URL |
 | §1.4/§3.3 focus retention, `aria-disabled`, polite live region | Keyboard-interface and live-region practices | Q21, Verified-with-URL |
@@ -673,7 +673,7 @@ All anchors below were parsed by the automated anchor gate this cycle: every fil
 | §5.2 per-tool approval classes with base-toggle escalation | Auto-approve is evaluated per tool call | Q12, Verified-with-URL |
 | §5.2/§8.6 engine-gated policy and native commands | Auto-approve and provider escapes are harness-specific | Q22, Verified-with-URL |
 | §8.2 role vs model | Config keeps role separate from model | Q16, Verified-with-URL |
-| §2.5 stop/retry contract stated as UnicDB target | In-IDE streaming cancel/retry UI not found for Continue | Q17 sub-part, Could-not-verify |
+| §2.5 stop/retry contract stated as VSKit target | In-IDE streaming cancel/retry UI not found for Continue | Q17 sub-part, Could-not-verify |
 
 ## Appendix A — Implementation sequencing (future work; nothing here is authorized in this cycle)
 

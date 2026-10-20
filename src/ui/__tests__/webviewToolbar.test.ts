@@ -5,14 +5,14 @@
 // Loads dist/webview.js (built via `npm run compile`) into jsdom, stubs
 // acquireVsCodeApi + ResizeObserver + matchMedia, then dispatches a state
 // message and asserts:
-//   1. Every toolbar `.UnicDB-btn` renders an inline SVG icon with
+//   1. Every toolbar `.VSKit-btn` renders an inline SVG icon with
 //      `stroke="currentColor"`, an empty text body, a non-empty `title`,
 //      and a non-empty `aria-label` (presentation only — handlers intact).
-//   2. The toolbar is split into exactly 2 `.UnicDB-toolbar-row` rows
+//   2. The toolbar is split into exactly 2 `.VSKit-toolbar-row` rows
 //      (TASK-COLLAPSE-002 — split results toolbar into 2 rows, WHERE first
-//      on row 2, Search last). Row 1 ends with `.UnicDB-export-format`,
+//      on row 2, Search last). Row 1 ends with `.VSKit-export-format`,
 //      row 2 starts at WHERE.
-//   3. styles.css pins the toolbar to a column with two `.UnicDB-toolbar-row`
+//   3. styles.css pins the toolbar to a column with two `.VSKit-toolbar-row`
 //      wrappers (each `flex-wrap: nowrap` + `overflow: hidden`) so a third
 //      row can never appear (TASK-COLLAPSE-002 — 2-row column contract).
 //   4. Requery-bar `Re-Run` and `Clear` buttons are iconified; clicking
@@ -79,11 +79,11 @@ const bundleSrc = existsSync(distPath) ? readFileSync(distPath, "utf8") : null;
 const stylesPath = resolve(process.cwd(), "webview", "styles.css");
 const stylesSrc = existsSync(stylesPath) ? readFileSync(stylesPath, "utf8") : null;
 
-interface UnicDBApi {
+interface VSKitApi {
   postMessage: (msg: unknown) => void;
 }
 
-interface UnicDBDebugSurface {
+interface VSKitDebugSurface {
   simulateCellEdit?: (
     rowId: number,
     colField: string,
@@ -92,9 +92,9 @@ interface UnicDBDebugSurface {
   ) => void;
 }
 
-function UnicDBSimulateCellEdit(): UnicDBDebugSurface["simulateCellEdit"] | undefined {
+function VSKitSimulateCellEdit(): VSKitDebugSurface["simulateCellEdit"] | undefined {
   if (typeof window === "undefined") return undefined;
-  const g = (window as unknown as { __UnicDB?: UnicDBDebugSurface }).__UnicDB;
+  const g = (window as unknown as { __VSKit?: VSKitDebugSurface }).__VSKit;
   return g?.simulateCellEdit;
 }
 
@@ -108,16 +108,16 @@ function loadBundle(): {
     );
   }
 
-  document.body.innerHTML = '<div id="UnicDB-root" class="UnicDB-webview"></div>';
-  const root = document.getElementById("UnicDB-root") as HTMLDivElement;
+  document.body.innerHTML = '<div id="VSKit-root" class="VSKit-webview"></div>';
+  const root = document.getElementById("VSKit-root") as HTMLDivElement;
 
   const received: Array<Record<string, unknown>> = [];
-  const api: UnicDBApi = {
+  const api: VSKitApi = {
     postMessage: (msg) => {
       received.push(msg as Record<string, unknown>);
     },
   };
-  (globalThis as unknown as { acquireVsCodeApi: () => UnicDBApi }).acquireVsCodeApi =
+  (globalThis as unknown as { acquireVsCodeApi: () => VSKitApi }).acquireVsCodeApi =
     () => api;
 
   (0, eval)(bundleSrc);
@@ -161,7 +161,7 @@ function button(
   cls: string,
 ): HTMLButtonElement {
   const el = root.querySelector(
-    `.UnicDB-toolbar .${cls}`,
+    `.VSKit-toolbar .${cls}`,
   ) as HTMLButtonElement | null;
   if (!el) {
     throw new Error(`toolbar button .${cls} not found`);
@@ -184,37 +184,37 @@ function clickButton(b: HTMLButtonElement): void {
 // query│edit│export grouping on row 1 and WHERE-first/Search-last on
 // row 2 (TASK-COLLAPSE-002 — "Chia đôi cho tôi menu này. Từ Where là
 // đưa xuống dòng dưới. TÔi cần 2 dòng"). The toolbar is a column of
-// two `.UnicDB-toolbar-row` wrappers; each row is a nowrap flex line.
-// Row 1 owns the icon buttons + `.UnicDB-export-format` <select>. Row 2
+// two `.VSKit-toolbar-row` wrappers; each row is a nowrap flex line.
+// Row 1 owns the icon buttons + `.VSKit-export-format` <select>. Row 2
 // owns the WHERE / ORDER BY inputs, Re-Run + Clear icon buttons, the
 // header checkbox, Copy, Export-to-file, the schema chip, and the Search
-// input as the LAST child. The toolbar `.UnicDB-btn` census is 12
+// input as the LAST child. The toolbar `.VSKit-btn` census is 12
 // (descendant selector crosses row wrappers). The full row order pins
 // live in the resolvers below.
 const EXPECTED_ORDER_ROW1 = [
-  "UnicDB-btn-danger", // Cancel (query group)
-  "UnicDB-btn", // Refresh (query)
-  "UnicDB-toolbar-sep", // query│edit divider
-  "UnicDB-btn", // Add Row
-  "UnicDB-btn", // Delete Row
-  "UnicDB-btn", // Undo
-  "UnicDB-btn", // Redo
-  "UnicDB-commit", // Commit
-  "UnicDB-btn", // CSV toggle
-  "UnicDB-toolbar-sep", // edit│export divider
-  "UnicDB-export-format", // row 1 ends here
+  "VSKit-btn-danger", // Cancel (query group)
+  "VSKit-btn", // Refresh (query)
+  "VSKit-toolbar-sep", // query│edit divider
+  "VSKit-btn", // Add Row
+  "VSKit-btn", // Delete Row
+  "VSKit-btn", // Undo
+  "VSKit-btn", // Redo
+  "VSKit-commit", // Commit
+  "VSKit-btn", // CSV toggle
+  "VSKit-toolbar-sep", // edit│export divider
+  "VSKit-export-format", // row 1 ends here
 ];
 
 const EXPECTED_ORDER_ROW2 = [
-  "UnicDB-requery-where", // TASK-COLLAPSE-002: WHERE first on row 2 (split starts here)
-  "UnicDB-requery-order",
-  "UnicDB-btn", // TASK-RES-001: Re-Run icon button (toolbar slot)
-  "UnicDB-btn", // TASK-RES-001: Clear icon button (toolbar slot)
-  "UnicDB-export-header",
-  "UnicDB-export-copy",
-  "UnicDB-export-file",
-  "UnicDB-schema-chip", // ACTIVE-SCHEMA chip (row 2)
-  "UnicDB-search-input", // row 2 ends here (last child)
+  "VSKit-requery-where", // TASK-COLLAPSE-002: WHERE first on row 2 (split starts here)
+  "VSKit-requery-order",
+  "VSKit-btn", // TASK-RES-001: Re-Run icon button (toolbar slot)
+  "VSKit-btn", // TASK-RES-001: Clear icon button (toolbar slot)
+  "VSKit-export-header",
+  "VSKit-export-copy",
+  "VSKit-export-file",
+  "VSKit-schema-chip", // ACTIVE-SCHEMA chip (row 2)
+  "VSKit-search-input", // row 2 ends here (last child)
 ];
 
 // ---- tests ----------------------------------------------------------------
@@ -224,12 +224,12 @@ const describeIfBundle = describe.runIf(bundleSrc !== null);
 
 describeIfBundle("webview/main.ts icon toolbar + 2-row layout (TASK-603 / TASK-COLLAPSE-002)", () => {
   itIfBundle(
-    "1. every toolbar .UnicDB-btn has an inline svg icon, currentColor stroke, non-empty aria-label, empty text",
+    "1. every toolbar .VSKit-btn has an inline svg icon, currentColor stroke, non-empty aria-label, empty text",
     () => {
       const { root } = loadBundle();
       dispatchState(threeRowsState());
       const btns = Array.from(
-        root.querySelectorAll(".UnicDB-toolbar .UnicDB-btn"),
+        root.querySelectorAll(".VSKit-toolbar .VSKit-btn"),
       ).filter(
         (el): el is HTMLButtonElement => el.tagName === "BUTTON",
       ) as HTMLButtonElement[];
@@ -278,13 +278,13 @@ describeIfBundle("webview/main.ts icon toolbar + 2-row layout (TASK-603 / TASK-C
       await new Promise<void>((r) => setTimeout(r, 0));
 
       // Cancel — should post {type:'cancel'}.
-      clickButton(button(root, "UnicDB-btn-danger"));
+      clickButton(button(root, "VSKit-btn-danger"));
       expect(received.some((m) => m.type === "cancel")).toBe(true);
       received.length = 0;
 
       // CSV toggle — flips the formatter locally (no message posted).
       const allBtns = Array.from(
-        root.querySelectorAll(".UnicDB-toolbar .UnicDB-btn"),
+        root.querySelectorAll(".VSKit-toolbar .VSKit-btn"),
       ).filter((el): el is HTMLButtonElement => el.tagName === "BUTTON");
       const csv = allBtns.find((b) =>
         (b.title || b.getAttribute("aria-label") || "").toLowerCase().includes("csv"),
@@ -300,21 +300,21 @@ describeIfBundle("webview/main.ts icon toolbar + 2-row layout (TASK-603 / TASK-C
       // Commit — no dirty edits → no-op. With one dirty edit it posts a
       // saveEdits batch. We use the bundle's exposed simulateCellEdit
       // hook (same surface as webviewSaveEdits.test.ts).
-      const sim = UnicDBSimulateCellEdit();
+      const sim = VSKitSimulateCellEdit();
       expect(sim).toBeTruthy();
       sim!(0, "name", "x", "alpha");
       await new Promise<void>((r) => setTimeout(r, 0));
-      clickButton(button(root, "UnicDB-commit"));
+      clickButton(button(root, "VSKit-commit"));
       await new Promise<void>((r) => setTimeout(r, 0));
       const saveMsgs = received.filter((m) => m.type === "saveEdits");
       expect(saveMsgs.length, "commit icon did not post saveEdits").toBe(1);
       received.length = 0;
 
-      clickButton(button(root, "UnicDB-export-copy"));
+      clickButton(button(root, "VSKit-export-copy"));
 
       const copyMsgs = received.filter((m) => m.type === "copy");
       expect(copyMsgs.length, "copy icon did not post copy").toBe(1);
-      clickButton(button(root, "UnicDB-export-file"));
+      clickButton(button(root, "VSKit-export-file"));
 
       // Export to file.
 
@@ -324,40 +324,40 @@ describeIfBundle("webview/main.ts icon toolbar + 2-row layout (TASK-603 / TASK-C
   );
 
   itIfBundle(
-    "3. 2-row split: toolbar has exactly 2 .UnicDB-toolbar-row children; row1 ends at export-format, row2 starts at WHERE, ends at search",
+    "3. 2-row split: toolbar has exactly 2 .VSKit-toolbar-row children; row1 ends at export-format, row2 starts at WHERE, ends at search",
     () => {
       const { root } = loadBundle();
       dispatchState(threeRowsState());
 
-      const toolbar = root.querySelector(".UnicDB-toolbar") as HTMLDivElement;
+      const toolbar = root.querySelector(".VSKit-toolbar") as HTMLDivElement;
       expect(toolbar).toBeTruthy();
 
       // TASK-COLLAPSE-002 — the toolbar is a column of EXACTLY 2 rows.
       const rows = Array.from(toolbar.children) as HTMLElement[];
-      expect(rows.length, "toolbar must have exactly 2 .UnicDB-toolbar-row children").toBe(2);
-      expect(rows[0]!.classList.contains("UnicDB-toolbar-row")).toBe(true);
-      expect(rows[1]!.classList.contains("UnicDB-toolbar-row")).toBe(true);
+      expect(rows.length, "toolbar must have exactly 2 .VSKit-toolbar-row children").toBe(2);
+      expect(rows[0]!.classList.contains("VSKit-toolbar-row")).toBe(true);
+      expect(rows[1]!.classList.contains("VSKit-toolbar-row")).toBe(true);
 
       const row1 = rows[0]!;
       const row2 = rows[1]!;
 
       // Order: walk the children and assert the sequence of class
-      // predicates. Buttons that share .UnicDB-btn are matched in the
+      // predicates. Buttons that share .VSKit-btn are matched in the
       // expected position; the seq uses the predicate string.
       const walk = (children: HTMLElement[]): string[] =>
         children.map((c) => {
-          if (c.classList.contains("UnicDB-btn-danger")) return "UnicDB-btn-danger";
-          if (c.classList.contains("UnicDB-commit")) return "UnicDB-commit";
-          if (c.classList.contains("UnicDB-export-format")) return "UnicDB-export-format";
-          if (c.classList.contains("UnicDB-requery-where")) return "UnicDB-requery-where";
-          if (c.classList.contains("UnicDB-requery-order")) return "UnicDB-requery-order";
-          if (c.classList.contains("UnicDB-export-header")) return "UnicDB-export-header";
-          if (c.classList.contains("UnicDB-export-copy")) return "UnicDB-export-copy";
-          if (c.classList.contains("UnicDB-export-file")) return "UnicDB-export-file";
-          if (c.classList.contains("UnicDB-schema-chip")) return "UnicDB-schema-chip";
-          if (c.classList.contains("UnicDB-search-input")) return "UnicDB-search-input";
-          if (c.classList.contains("UnicDB-toolbar-sep")) return "UnicDB-toolbar-sep";
-          if (c.classList.contains("UnicDB-btn")) return "UnicDB-btn";
+          if (c.classList.contains("VSKit-btn-danger")) return "VSKit-btn-danger";
+          if (c.classList.contains("VSKit-commit")) return "VSKit-commit";
+          if (c.classList.contains("VSKit-export-format")) return "VSKit-export-format";
+          if (c.classList.contains("VSKit-requery-where")) return "VSKit-requery-where";
+          if (c.classList.contains("VSKit-requery-order")) return "VSKit-requery-order";
+          if (c.classList.contains("VSKit-export-header")) return "VSKit-export-header";
+          if (c.classList.contains("VSKit-export-copy")) return "VSKit-export-copy";
+          if (c.classList.contains("VSKit-export-file")) return "VSKit-export-file";
+          if (c.classList.contains("VSKit-schema-chip")) return "VSKit-schema-chip";
+          if (c.classList.contains("VSKit-search-input")) return "VSKit-search-input";
+          if (c.classList.contains("VSKit-toolbar-sep")) return "VSKit-toolbar-sep";
+          if (c.classList.contains("VSKit-btn")) return "VSKit-btn";
           return c.className;
         });
 
@@ -366,21 +366,21 @@ describeIfBundle("webview/main.ts icon toolbar + 2-row layout (TASK-603 / TASK-C
 
       // Both seps live in ROW 1 (query│edit + edit│export dividers).
       const seps = (Array.from(row1.children) as HTMLElement[]).filter(
-        (c) => c.classList.contains("UnicDB-toolbar-sep"),
+        (c) => c.classList.contains("VSKit-toolbar-sep"),
       );
-      expect(seps.length, "expected exactly 2 .UnicDB-toolbar-sep dividers, both in row 1").toBe(2);
+      expect(seps.length, "expected exactly 2 .VSKit-toolbar-sep dividers, both in row 1").toBe(2);
 
       // Search is the LAST child of row 2.
       const last = row2.lastElementChild as HTMLElement | null;
       expect(
-        last?.classList.contains("UnicDB-search-input"),
+        last?.classList.contains("VSKit-search-input"),
         "search input must be the last row-2 child",
       ).toBe(true);
     },
   );
 
   itIfBundle(
-    "4. styles.css pins .UnicDB-toolbar to a 2-row column (TASK-COLLAPSE-002): flex-direction:column, row wrapper pins flex-wrap:nowrap, requery inputs use flex:1 1 100%",
+    "4. styles.css pins .VSKit-toolbar to a 2-row column (TASK-COLLAPSE-002): flex-direction:column, row wrapper pins flex-wrap:nowrap, requery inputs use flex:1 1 100%",
     () => {
       if (!stylesSrc) {
         throw new Error("webview/styles.css missing");
@@ -388,63 +388,63 @@ describeIfBundle("webview/main.ts icon toolbar + 2-row layout (TASK-603 / TASK-C
       // TASK-COLLAPSE-002 — the toolbar is a column of two nowrap rows,
       // so the BLOCK rule must declare `flex-direction: column` and must
       // NOT carry the old single-row `flex-wrap: nowrap`.
-      const toolbarBlockRe = /\.UnicDB-toolbar\s*\{([^}]*)\}/;
+      const toolbarBlockRe = /\.VSKit-toolbar\s*\{([^}]*)\}/;
       const toolbarBlock = toolbarBlockRe.exec(stylesSrc);
-      expect(toolbarBlock, "could not locate .UnicDB-toolbar { ... } block").toBeTruthy();
+      expect(toolbarBlock, "could not locate .VSKit-toolbar { ... } block").toBeTruthy();
       const toolbarBody = toolbarBlock![1]!;
       expect(
         /flex-direction\s*:\s*column/i.test(toolbarBody),
-        `.UnicDB-toolbar { ... } must declare flex-direction:column; body was: ${toolbarBody.trim()}`,
+        `.VSKit-toolbar { ... } must declare flex-direction:column; body was: ${toolbarBody.trim()}`,
       ).toBe(true);
       expect(
         /flex-wrap\s*:\s*nowrap/i.test(toolbarBody),
-        `.UnicDB-toolbar { ... } must NOT carry flex-wrap:nowrap (TASK-COLLAPSE-002 splits into 2 rows); body was: ${toolbarBody.trim()}`,
+        `.VSKit-toolbar { ... } must NOT carry flex-wrap:nowrap (TASK-COLLAPSE-002 splits into 2 rows); body was: ${toolbarBody.trim()}`,
       ).toBe(false);
 
       // Each row wrapper pins `flex-wrap: nowrap` + `overflow: hidden`
       // so a third row can never appear and narrow widths clip inside
       // the row instead of growing a scrollbar.
-      const rowBlockRe = /\.UnicDB-toolbar-row\s*\{([^}]*)\}/;
+      const rowBlockRe = /\.VSKit-toolbar-row\s*\{([^}]*)\}/;
       const rowBlock = rowBlockRe.exec(stylesSrc);
-      expect(rowBlock, "could not locate .UnicDB-toolbar-row { ... } block").toBeTruthy();
+      expect(rowBlock, "could not locate .VSKit-toolbar-row { ... } block").toBeTruthy();
       const rowBody = rowBlock![1]!;
       expect(
         /flex-wrap\s*:\s*nowrap/i.test(rowBody),
-        `.UnicDB-toolbar-row { ... } must pin flex-wrap:nowrap; body was: ${rowBody.trim()}`,
+        `.VSKit-toolbar-row { ... } must pin flex-wrap:nowrap; body was: ${rowBody.trim()}`,
       ).toBe(true);
       expect(
         /overflow\s*:\s*hidden/i.test(rowBody),
-        `.UnicDB-toolbar-row { ... } must clip overflow:hidden; body was: ${rowBody.trim()}`,
+        `.VSKit-toolbar-row { ... } must clip overflow:hidden; body was: ${rowBody.trim()}`,
       ).toBe(true);
 
       // The requery inputs now SHARE the leftover space inside the
       // nowrap row-2 wrapper with `flex: 1 1 100%` + `min-width: 0`
       // (the old px-based `flex: 1 1 140px` is the FORBIDDEN shape).
-      const whereRe = /\.UnicDB-requery-input\.UnicDB-requery-where\s*\{[^}]*flex:\s*1\s+1\s+100\s*%/;
-      const orderRe = /\.UnicDB-requery-input\.UnicDB-requery-order\s*\{[^}]*flex:\s*1\s+1\s+100\s*%/;
+      const whereRe = /\.VSKit-requery-input\.VSKit-requery-where\s*\{[^}]*flex:\s*1\s+1\s+100\s*%/;
+      const orderRe = /\.VSKit-requery-input\.VSKit-requery-order\s*\{[^}]*flex:\s*1\s+1\s+100\s*%/;
       expect(
         whereRe.test(stylesSrc),
-        "styles.css must give .UnicDB-requery-where flex: 1 1 100% (TASK-COLLAPSE-002 row-2 sizing)",
+        "styles.css must give .VSKit-requery-where flex: 1 1 100% (TASK-COLLAPSE-002 row-2 sizing)",
       ).toBe(true);
       expect(
         orderRe.test(stylesSrc),
-        "styles.css must give .UnicDB-requery-order flex: 1 1 100% (TASK-COLLAPSE-002 row-2 sizing)",
+        "styles.css must give .VSKit-requery-order flex: 1 1 100% (TASK-COLLAPSE-002 row-2 sizing)",
       ).toBe(true);
-      const whereNoPx = /\.UnicDB-requery-input\.UnicDB-requery-where\s*\{[^}]*flex:\s*1\s+1\s+140px/;
-      const orderNoPx = /\.UnicDB-requery-input\.UnicDB-requery-order\s*\{[^}]*flex:\s*1\s+1\s+140px/;
+      const whereNoPx = /\.VSKit-requery-input\.VSKit-requery-where\s*\{[^}]*flex:\s*1\s+1\s+140px/;
+      const orderNoPx = /\.VSKit-requery-input\.VSKit-requery-order\s*\{[^}]*flex:\s*1\s+1\s+140px/;
       expect(
         whereNoPx.test(stylesSrc),
-        "styles.css must NOT use the old single-row flex: 1 1 140px on .UnicDB-requery-where",
+        "styles.css must NOT use the old single-row flex: 1 1 140px on .VSKit-requery-where",
       ).toBe(false);
       expect(
         orderNoPx.test(stylesSrc),
-        "styles.css must NOT use the old single-row flex: 1 1 140px on .UnicDB-requery-order",
+        "styles.css must NOT use the old single-row flex: 1 1 140px on .VSKit-requery-order",
       ).toBe(false);
 
       // Buttons must size SVGs at 16×16 to keep the compact 24–26px height.
       expect(
-        /\.UnicDB-btn[^}]*\.UnicDB-btn\s+svg|\.UnicDB-btn\s+svg/.test(stylesSrc),
-        "styles.css must define a .UnicDB-btn svg sizing rule",
+        /\.VSKit-btn[^}]*\.VSKit-btn\s+svg|\.VSKit-btn\s+svg/.test(stylesSrc),
+        "styles.css must define a .VSKit-btn svg sizing rule",
       ).toBe(true);
     },
   );
@@ -456,10 +456,10 @@ describeIfBundle("webview/main.ts icon toolbar + 2-row layout (TASK-603 / TASK-C
       dispatchState(threeRowsState());
 
       const runBtn = root.querySelector(
-        ".UnicDB-requery-run",
+        ".VSKit-requery-run",
       ) as HTMLButtonElement | null;
       const clearBtn = root.querySelector(
-        ".UnicDB-requery-clear",
+        ".VSKit-requery-clear",
       ) as HTMLButtonElement | null;
       expect(runBtn).toBeTruthy();
       expect(clearBtn).toBeTruthy();
@@ -477,10 +477,10 @@ describeIfBundle("webview/main.ts icon toolbar + 2-row layout (TASK-603 / TASK-C
 
       // Re-Run with values.
       const whereInput = root.querySelector(
-        ".UnicDB-requery-where",
+        ".VSKit-requery-where",
       ) as HTMLInputElement | null;
       const orderInput = root.querySelector(
-        ".UnicDB-requery-order",
+        ".VSKit-requery-order",
       ) as HTMLInputElement | null;
       expect(whereInput).toBeTruthy();
       expect(orderInput).toBeTruthy();
@@ -505,7 +505,7 @@ describeIfBundle("webview/main.ts icon toolbar + 2-row layout (TASK-603 / TASK-C
 });
 
 // TASK-RES-003 — toolbar button hover transition. The instant
-// background-color flash on .UnicDB-btn:hover must be eased with a short
+// background-color flash on .VSKit-btn:hover must be eased with a short
 // `transition` that touches ONLY composited/non-layout properties
 // (background-color, box-shadow) — never `transition: all`, never a
 // layout-triggering property (width/height/padding/margin/top/left/etc).
@@ -514,31 +514,31 @@ describeIfBundle(
   "webview/styles.css toolbar button hover transition (TASK-RES-003)",
   () => {
     itIfBundle(
-      "3. .UnicDB-btn { ... } block carries a transition rule (no instant hover swap)",
+      "3. .VSKit-btn { ... } block carries a transition rule (no instant hover swap)",
       () => {
         if (!stylesSrc) {
           throw new Error("webview/styles.css missing");
         }
-        // The transition must live inside the .UnicDB-btn { ... } block.
-        // We match the FIRST .UnicDB-btn block (the base one, lines 41-71)
+        // The transition must live inside the .VSKit-btn { ... } block.
+        // We match the FIRST .VSKit-btn block (the base one, lines 41-71)
         // and assert it contains `transition:`. Using non-greedy match on
         // the body prevents the regex from spanning across multiple blocks.
-        const re = /\.UnicDB-btn\s*\{([^}]*)\}/;
+        const re = /\.VSKit-btn\s*\{([^}]*)\}/;
         const m = re.exec(stylesSrc);
         expect(
           m,
-          "could not locate .UnicDB-btn { ... } block in styles.css",
+          "could not locate .VSKit-btn { ... } block in styles.css",
         ).toBeTruthy();
         const body = m![1];
         expect(
           /transition\s*:/i.test(body),
-          `.UnicDB-btn { ... } must declare a transition; body was: ${body.trim()}`,
+          `.VSKit-btn { ... } must declare a transition; body was: ${body.trim()}`,
         ).toBe(true);
       },
     );
 
     itIfBundle(
-      "4. the .UnicDB-btn transition lists ONLY background-color and/or box-shadow — no layout-triggering properties",
+      "4. the .VSKit-btn transition lists ONLY background-color and/or box-shadow — no layout-triggering properties",
       () => {
         if (!stylesSrc) {
           throw new Error("webview/styles.css missing");
@@ -546,7 +546,7 @@ describeIfBundle(
         // Strip CSS comments first so the regex doesn't accidentally match
         // a literal "transition: all" inside a comment block.
         const cssNoComments = stylesSrc.replace(/\/\*[\s\S]*?\*\//g, "");
-        const blockRe = /\.UnicDB-btn\s*\{([^}]*)\}/;
+        const blockRe = /\.VSKit-btn\s*\{([^}]*)\}/;
         const blockMatch = blockRe.exec(cssNoComments);
         expect(blockMatch).toBeTruthy();
         const body = blockMatch![1];
@@ -555,7 +555,7 @@ describeIfBundle(
         const trMatch = trRe.exec(body);
         expect(
           trMatch,
-          `.UnicDB-btn { ... } must declare a transition; body was: ${body.trim()}`,
+          `.VSKit-btn { ... } must declare a transition; body was: ${body.trim()}`,
         ).toBeTruthy();
         const value = trMatch![1].trim();
         // The plan FORBIDS `transition: all` — it would re-introduce
@@ -598,14 +598,14 @@ describeIfBundle(
     );
 
     itIfBundle(
-      "5. .UnicDB-btn[data-tooltip] pseudo keeps z-index: 1000 (so the tooltip floats above the toolbar)",
+      "5. .VSKit-btn[data-tooltip] pseudo keeps z-index: 1000 (so the tooltip floats above the toolbar)",
       () => {
         if (!stylesSrc) {
           throw new Error("webview/styles.css missing");
         }
         // The data-tooltip block MUST keep z-index: 1000. We match the
         // whole block (lines 78-115) to confirm it's structurally intact.
-        const re = /\.UnicDB-btn\[data-tooltip\][^{]*\{[^}]*z-index\s*:\s*1000/;
+        const re = /\.VSKit-btn\[data-tooltip\][^{]*\{[^}]*z-index\s*:\s*1000/;
         expect(
           re.test(stylesSrc),
           "styles.css must keep z-index: 1000 on the data-tooltip block",
@@ -614,7 +614,7 @@ describeIfBundle(
     );
 
     itIfBundle(
-      "7. .UnicDB-btn[data-tooltip]:not(:disabled):hover::after still defines the instant tooltip pseudo-element",
+      "7. .VSKit-btn[data-tooltip]:not(:disabled):hover::after still defines the instant tooltip pseudo-element",
       () => {
         if (!stylesSrc) {
           throw new Error("webview/styles.css missing");
@@ -623,11 +623,11 @@ describeIfBundle(
         // must contain `content: attr(data-tooltip)`. TASK-RES-003 must
         // NOT touch this block.
         const selRe =
-          /\.UnicDB-btn\[data-tooltip\]:not\(:disabled\):hover::after\s*\{([^}]*)\}/;
+          /\.VSKit-btn\[data-tooltip\]:not\(:disabled\):hover::after\s*\{([^}]*)\}/;
         const m = selRe.exec(stylesSrc);
         expect(
           m,
-          "could not locate .UnicDB-btn[data-tooltip]:not(:disabled):hover::after block",
+          "could not locate .VSKit-btn[data-tooltip]:not(:disabled):hover::after block",
         ).toBeTruthy();
         const body = m![1];
         expect(

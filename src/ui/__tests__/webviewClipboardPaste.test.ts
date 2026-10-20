@@ -4,7 +4,7 @@
 // The suite evaluates the real dist/webview.js bundle and drives the same
 // capture-phase paste listener used by the webview. It intentionally keeps
 // production seams out of the test: state, gridApi, addRow, and undoStack are
-// the existing __UnicDB debug handles exposed by webview/main.ts.
+// the existing __VSKit debug handles exposed by webview/main.ts.
 // @vitest-environment jsdom
 import type { GridApi } from "ag-grid-community";
 import { existsSync, readFileSync } from "node:fs";
@@ -43,7 +43,7 @@ interface UndoStackHandle {
   canUndo: boolean;
 }
 
-interface UnicDBDebug {
+interface VSKitDebug {
   gridApi?: GridApi;
   editState?: EditStateHandle;
   undoStack?: UndoStackHandle;
@@ -54,8 +54,8 @@ interface HostApi {
   postMessage: (msg: unknown) => void;
 }
 
-function unicDb(): UnicDBDebug | null {
-  return (window as unknown as { __UnicDB?: UnicDBDebug }).__UnicDB ?? null;
+function vskit(): VSKitDebug | null {
+  return (window as unknown as { __VSKit?: VSKitDebug }).__VSKit ?? null;
 }
 
 beforeAll(() => {
@@ -119,7 +119,7 @@ function loadBundle(): {
     window.removeEventListener(type, listener, options);
   }
   bundleListeners.length = 0;
-  document.body.innerHTML = '<div id="UnicDB-root" class="UnicDB-webview"></div>';
+  document.body.innerHTML = '<div id="VSKit-root" class="VSKit-webview"></div>';
   const received: Array<Record<string, unknown>> = [];
   const api: HostApi = {
     postMessage: (msg) => received.push(msg as Record<string, unknown>),
@@ -128,7 +128,7 @@ function loadBundle(): {
     () => api;
   (0, eval)(bundleSrc);
   return {
-    root: document.getElementById("UnicDB-root") as HTMLDivElement,
+    root: document.getElementById("VSKit-root") as HTMLDivElement,
     received,
   };
 }
@@ -170,7 +170,7 @@ async function flushGridEvents(): Promise<void> {
 }
 
 function gridHost(root: HTMLDivElement): HTMLDivElement {
-  const host = root.querySelector(".UnicDB-grid-host") as HTMLDivElement | null;
+  const host = root.querySelector(".VSKit-grid-host") as HTMLDivElement | null;
   if (!host) throw new Error("grid host was not rendered");
   return host;
 }
@@ -229,7 +229,7 @@ describe("webview/main.ts bundle (TASK-CLIP-002 paste matrix)", () => {
     dispatchState(threeRowsState());
     await flushGridEvents();
 
-    const api = unicDb()!;
+    const api = vskit()!;
     const editState = api.editState!;
     api.gridApi!.setFocusedCell(0, "id");
     dispatchPaste(gridHost(root), "10\tx\n20\ty");
@@ -251,7 +251,7 @@ describe("webview/main.ts bundle (TASK-CLIP-002 paste matrix)", () => {
     dispatchState(threeRowsState());
     await flushGridEvents();
 
-    const api = unicDb()!;
+    const api = vskit()!;
     api.gridApi!.setFocusedCell(0, "id");
     dispatchPaste(gridHost(root), "1\r\n2\r\n");
     await flushGridEvents();
@@ -270,7 +270,7 @@ describe("webview/main.ts bundle (TASK-CLIP-002 paste matrix)", () => {
     dispatchPaste(gridHost(root), "z");
     await flushGridEvents();
 
-    const editState = unicDb()!.editState!;
+    const editState = vskit()!.editState!;
     expect(editState.dirtyCount).toBe(4);
     expect(byKey(editState)).toMatchObject({
       "0:0": "z",
@@ -289,7 +289,7 @@ describe("webview/main.ts bundle (TASK-CLIP-002 paste matrix)", () => {
     dispatchPaste(gridHost(root), "a\tb\tc\nd\te\tf\ng\th\ti");
     await flushGridEvents();
 
-    const api = unicDb()!;
+    const api = vskit()!;
     const edits = byKey(api.editState!);
     expect(api.editState!.dirtyCount).toBe(4);
     expect(edits).toMatchObject({ "0:0": "a", "0:1": "b", "1:0": "d", "1:1": "e" });
@@ -307,7 +307,7 @@ describe("webview/main.ts bundle (TASK-CLIP-002 paste matrix)", () => {
     dispatchPaste(gridHost(root), "");
     await flushGridEvents();
 
-    expect(unicDb()!.editState!.dirtyCount).toBe(0);
+    expect(vskit()!.editState!.dirtyCount).toBe(0);
     expect(pasteMessageCount(received, "copy")).toBe(0);
     expect(pasteMessageCount(received, "saveEdits")).toBe(0);
   });
@@ -324,7 +324,7 @@ describe("webview/main.ts bundle (TASK-CLIP-002 paste matrix)", () => {
     dispatchPaste(input, "not-a-grid-value");
     await flushGridEvents();
 
-    expect(unicDb()!.editState!.dirtyCount).toBe(0);
+    expect(vskit()!.editState!.dirtyCount).toBe(0);
     expect(input.value).toBe("keep me");
   });
 
@@ -333,7 +333,7 @@ describe("webview/main.ts bundle (TASK-CLIP-002 paste matrix)", () => {
     dispatchState(threeRowsState());
     await flushGridEvents();
 
-    const api = unicDb()!;
+    const api = vskit()!;
     api.gridApi!.setFocusedCell(2, "id");
     dispatchPaste(gridHost(root), "bottom\nignored");
     await flushGridEvents();
@@ -348,7 +348,7 @@ describe("webview/main.ts bundle (TASK-CLIP-002 paste matrix)", () => {
     dispatchState(threeRowsState());
     await flushGridEvents();
 
-    const api = unicDb()!;
+    const api = vskit()!;
     api.addRow!();
     await flushGridEvents();
     const localData = api.gridApi!.getDisplayedRowAtIndex(3)!.data;
@@ -372,7 +372,7 @@ describe("webview/main.ts bundle (TASK-CLIP-002 paste matrix)", () => {
     dispatchState(threeRowsState());
     await flushGridEvents();
 
-    const api = unicDb()!;
+    const api = vskit()!;
     api.gridApi!.setFocusedCell(0, "id");
     dispatchPaste(gridHost(root), "10\tx\n20\ty");
     await flushGridEvents();

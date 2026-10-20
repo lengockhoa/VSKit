@@ -18,7 +18,7 @@
 //
 // Bundle tests load dist/webview.js into jsdom (built via `npm run compile`),
 // stub acquireVsCodeApi + ResizeObserver + matchMedia, dispatch state
-// messages, and interact through the `window.__UnicDB` debug object.
+// messages, and interact through the `window.__VSKit` debug object.
 // If dist/webview.js is missing, all tests are skipped.
 // @vitest-environment jsdom
 import type { ColumnSpec } from "../resultsGridModel";
@@ -99,11 +99,11 @@ interface EditStateHandle {
   isRowNew: (rowId: number) => boolean;
 }
 
-interface UnicDBApi {
+interface VSKitApi {
   postMessage: (msg: unknown) => void;
 }
 
-interface UnicDBDebug {
+interface VSKitDebug {
   gridApi?: GridApi;
   editState?: EditStateHandle;
   currentSpecs?: readonly ColumnSpec[];
@@ -116,14 +116,14 @@ interface UnicDBDebug {
   ) => void;
 }
 
-function UnicDBApi(): UnicDBDebug | null {
+function VSKitApi(): VSKitDebug | null {
   if (typeof window === "undefined") return null;
-  const maybe = (window as unknown as { __UnicDB?: UnicDBDebug }).__UnicDB;
+  const maybe = (window as unknown as { __VSKit?: VSKitDebug }).__VSKit;
   return maybe ?? null;
 }
 
 function getEditState(): EditStateHandle | null {
-  return UnicDBApi()?.editState ?? null;
+  return VSKitApi()?.editState ?? null;
 }
 
 /** Bundle handle per test. `dirtyCountAtRequery` records the webview's
@@ -144,24 +144,24 @@ function loadBundle(): BundleHandle {
     );
   }
 
-  document.body.innerHTML = '<div id="UnicDB-root" class="UnicDB-webview"></div>';
-  const root = document.getElementById("UnicDB-root") as HTMLDivElement;
+  document.body.innerHTML = '<div id="VSKit-root" class="VSKit-webview"></div>';
+  const root = document.getElementById("VSKit-root") as HTMLDivElement;
 
   const received: Array<Record<string, unknown>> = [];
   const dirtyCountAtRequery: number[] = [];
-  const api: UnicDBApi = {
+  const api: VSKitApi = {
     postMessage: (msg) => {
       const m = msg as Record<string, unknown>;
       if (m.type === "requery") {
         dirtyCountAtRequery.push(
-          ((window as unknown as { __UnicDB?: { editState?: { dirtyCount: number } } })
-            .__UnicDB?.editState?.dirtyCount) ?? -1,
+          ((window as unknown as { __VSKit?: { editState?: { dirtyCount: number } } })
+            .__VSKit?.editState?.dirtyCount) ?? -1,
         );
       }
       received.push(m);
     },
   };
-  (globalThis as unknown as { acquireVsCodeApi: () => UnicDBApi }).acquireVsCodeApi =
+  (globalThis as unknown as { acquireVsCodeApi: () => VSKitApi }).acquireVsCodeApi =
     () => api;
 
   (0, eval)(bundleSrc);
@@ -224,7 +224,7 @@ describeIfBundle("webview/main.ts post-commit requery (TASK-006)", () => {
       dispatchMsg(threeRowsState());
       await flushGridEvents();
 
-      const api = UnicDBApi()!;
+      const api = VSKitApi()!;
       api.simulateCellEdit!(0, "name", "typed", "alpha");
       await flushGridEvents();
       expect(getEditState()!.dirtyCount).toBe(1);
@@ -260,7 +260,7 @@ describeIfBundle("webview/main.ts post-commit requery (TASK-006)", () => {
         ),
       );
       await flushGridEvents();
-      const grid = UnicDBApi()!.gridApi!;
+      const grid = VSKitApi()!.gridApi!;
       expect(grid.getDisplayedRowAtIndex(0)!.data.name).toBe("typed");
       void root;
     },
@@ -274,12 +274,12 @@ describeIfBundle("webview/main.ts post-commit requery (TASK-006)", () => {
       await flushGridEvents();
 
       const whereInput = document.querySelector(
-        ".UnicDB-requery-where",
+        ".VSKit-requery-where",
       ) as HTMLInputElement | null;
       expect(whereInput).toBeTruthy();
       whereInput!.value = "id > 1";
 
-      const api = UnicDBApi()!;
+      const api = VSKitApi()!;
       api.simulateCellEdit!(0, "name", "typed", "alpha");
       await flushGridEvents();
       api.commit!();
@@ -305,12 +305,12 @@ describeIfBundle("webview/main.ts post-commit requery (TASK-006)", () => {
       // The user sorted by name DESC — the ORDER BY input is the bar's
       // sort-state surface (server-side sort composition reads this field).
       const orderInput = document.querySelector(
-        ".UnicDB-requery-order",
+        ".VSKit-requery-order",
       ) as HTMLInputElement | null;
       expect(orderInput).toBeTruthy();
       orderInput!.value = "name DESC";
 
-      const api = UnicDBApi()!;
+      const api = VSKitApi()!;
       api.simulateCellEdit!(0, "name", "typed", "alpha");
       await flushGridEvents();
       api.commit!();
@@ -333,7 +333,7 @@ describeIfBundle("webview/main.ts post-commit requery (TASK-006)", () => {
       dispatchMsg(threeRowsState());
       await flushGridEvents();
 
-      const api = UnicDBApi()!;
+      const api = VSKitApi()!;
       api.simulateCellEdit!(0, "name", "typed", "alpha");
       api.simulateCellEdit!(1, "name", "typed2", "beta");
       await flushGridEvents();
@@ -367,7 +367,7 @@ describeIfBundle("webview/main.ts post-commit requery (TASK-006)", () => {
       dispatchMsg(threeRowsState());
       await flushGridEvents();
 
-      const api = UnicDBApi()!;
+      const api = VSKitApi()!;
       api.simulateCellEdit!(0, "name", "saved", "alpha");
       api.simulateCellEdit!(1, "name", "failed", "beta");
       await flushGridEvents();

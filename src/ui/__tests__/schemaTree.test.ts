@@ -74,7 +74,7 @@ vi.mock("vscode", () => {
         },
         getConfiguration: (section?: string) => ({
           get: (key: string, fallback?: unknown) => {
-            if (section === "UnicDB" && key === "hideSystemSchemas") {
+            if (section === "VSKit" && key === "hideSystemSchemas") {
               return state.hideSystemSchemas;
             }
             return fallback;
@@ -107,8 +107,8 @@ function makeCfg(overrides: Partial<ConnectionConfig> = {}): ConnectionConfig {
     driver: overrides.driver ?? "postgres",
     host: overrides.host ?? "127.0.0.1",
     port: overrides.port ?? 5432,
-    user: overrides.user ?? "UnicDB",
-    database: overrides.database ?? "UnicDB",
+    user: overrides.user ?? "VSKit",
+    database: overrides.database ?? "VSKit",
     ...overrides,
   };
 }
@@ -691,7 +691,7 @@ describe("SchemaTreeProvider — connection node command + dialect per node", ()
     state.workspaceFolders = undefined;
   });
 
-  it("connection node có command 'UnicDB.selectConnectionFromTree' với arguments=[id]", async () => {
+  it("connection node có command 'VSKit.selectConnectionFromTree' với arguments=[id]", async () => {
     const stubMgr = {
       listConnections: () => [makeCfg({ id: "x", name: "X" })],
       getActive: () => null,
@@ -700,14 +700,14 @@ describe("SchemaTreeProvider — connection node command + dialect per node", ()
     const provider = new SchemaTreeProvider(stubMgr as never);
     const root = await provider.getChildren(undefined);
     expect(root).toHaveLength(1);
-    expect(root[0].command?.command).toBe("UnicDB.selectConnectionFromTree");
+    expect(root[0].command?.command).toBe("VSKit.selectConnectionFromTree");
     expect(root[0].command?.arguments).toEqual(["x"]);
   });
 });
 // =============================================================================
-// TASK-002 (wave 2) — table/view tree nodes wire `UnicDB.browseTableData`
-// (double-click/Enter). Routines + connection nodes keep `UnicDB.copyQualifiedName` /
-// `UnicDB.selectConnectionFromTree`. The whole UnicDBNode (with .meta) is the
+// TASK-002 (wave 2) — table/view tree nodes wire `VSKit.browseTableData`
+// (double-click/Enter). Routines + connection nodes keep `VSKit.copyQualifiedName` /
+// `VSKit.selectConnectionFromTree`. The whole VSKitNode (with .meta) is the
 // command argument so resolveBrowseNode in browseCommands.ts can read .meta.
 // =============================================================================
 describe("SchemaTreeProvider — TASK-002 browse gesture wiring", () => {
@@ -718,7 +718,7 @@ describe("SchemaTreeProvider — TASK-002 browse gesture wiring", () => {
     state.workspaceFolders = undefined;
   });
 
-  it("table node command = UnicDB.browseTableData 'Browse Data' với arguments[0]=node (case 1)", async () => {
+  it("table node command = VSKit.browseTableData 'Browse Data' với arguments[0]=node (case 1)", async () => {
     const { mgr } = setupTree({
       schemas: [{ name: "app" }],
       tables: [{ name: "users", schema: "app" }],
@@ -735,7 +735,7 @@ describe("SchemaTreeProvider — TASK-002 browse gesture wiring", () => {
     const node = tables[0];
     expect(node.contextValue).toBe("table");
     expect(node.collapsible).toBe(1); // Collapsed
-    expect(node.command?.command).toBe("UnicDB.browseTableData");
+    expect(node.command?.command).toBe("VSKit.browseTableData");
     expect(node.command?.title).toBe("Browse Data");
     expect(Array.isArray(node.command?.arguments)).toBe(true);
     expect(node.command?.arguments?.[0]).toBe(node);
@@ -756,7 +756,7 @@ describe("SchemaTreeProvider — TASK-002 browse gesture wiring", () => {
     }
   });
 
-  it("view node command = UnicDB.browseTableData 'Browse Data' với arguments[0]=node (case 2)", async () => {
+  it("view node command = VSKit.browseTableData 'Browse Data' với arguments[0]=node (case 2)", async () => {
     const { mgr } = setupTree({
       schemas: [{ name: "app" }],
       views: [{ name: "v_active_users", schema: "app" }],
@@ -778,7 +778,7 @@ describe("SchemaTreeProvider — TASK-002 browse gesture wiring", () => {
 
     const view = views[0];
     expect(view.contextValue).toBe("view");
-    expect(view.command?.command).toBe("UnicDB.browseTableData");
+    expect(view.command?.command).toBe("VSKit.browseTableData");
     expect(view.command?.title).toBe("Browse Data");
     expect(view.command?.arguments?.[0]).toBe(view);
     if (
@@ -798,11 +798,11 @@ describe("SchemaTreeProvider — TASK-002 browse gesture wiring", () => {
     }
 
     // Routines node giữ command copyQualifiedName cũ (không đổi).
-    expect(routines[0].command?.command).toBe("UnicDB.copyQualifiedName");
+    expect(routines[0].command?.command).toBe("VSKit.copyQualifiedName");
     expect(routines[0].command?.title).toBe("Copy qualified name");
   });
 
-  it("connection node giữ command UnicDB.selectConnectionFromTree với arguments=[id] (case 5)", async () => {
+  it("connection node giữ command VSKit.selectConnectionFromTree với arguments=[id] (case 5)", async () => {
     const stubMgr = {
       listConnections: () => [makeCfg({ id: "conn-x", name: "X" })],
       getActive: () => null,
@@ -810,7 +810,7 @@ describe("SchemaTreeProvider — TASK-002 browse gesture wiring", () => {
     };
     const provider = new SchemaTreeProvider(stubMgr as never);
     const root = await provider.getChildren(undefined);
-    expect(root[0].command?.command).toBe("UnicDB.selectConnectionFromTree");
+    expect(root[0].command?.command).toBe("VSKit.selectConnectionFromTree");
     expect(root[0].command?.arguments).toEqual(["conn-x"]);
   });
 });
@@ -1190,7 +1190,7 @@ describe("SchemaTreeProvider — TASK-302 row-count badges + filter engine", () 
 });
 
 // =============================================================================
-// TASK-005 — findTableNode + revealTableNode. findTableNode locates a UnicDBNode
+// TASK-005 — findTableNode + revealTableNode. findTableNode locates a VSKitNode
 // (contextValue === "table", meta.objectName) by (conn, schema, table); returns
 // null nếu absent. revealTableNode wraps treeView.reveal(node, {select:true,
 // expand:false}) và nuốt throw (node có thể đã bị dispose / tree đang refresh).
@@ -1405,7 +1405,7 @@ describe("SchemaTreeProvider — R1 regression: getParent cho TreeView.reveal", 
 
 // =============================================================================
 // TASK-003 — findSchemaNode + revealSchemaNode. findSchemaNode locates a
-// UnicDBNode (contextValue === "schema", meta.connection + meta.schema) by
+// VSKitNode (contextValue === "schema", meta.connection + meta.schema) by
 // (conn, schema); returns null when absent or adapter throw. revealSchemaNode
 // wraps treeView.reveal(node, {select:true, expand:false}) and swallows throw.
 // =============================================================================
@@ -1767,7 +1767,7 @@ describe("SchemaTreeProvider — TASK-010 D2 batch row-count + D3 collapsed conn
 //   - Connection tooltip for bigquery omits host/port/database artifacts.
 //   - Schema (dataset) tooltip uses "dataset" copy, not pg "schema" implication.
 //   - Row-count batch is SUPPRESSED for bigquery (cost-safety posture).
-//   - BigQuery table/view nodes still wire `UnicDB.browseTableData`.
+//   - BigQuery table/view nodes still wire `VSKit.browseTableData`.
 // Regression row (existing pg/mysql/mssql behavior) is implicitly pinned by
 // every other describe block remaining green verbatim.
 // =============================================================================
@@ -1995,7 +1995,7 @@ describe("SchemaTreeProvider — TASK-BQ02-003 bigquery wiring", () => {
     expect(adapter2.estimateTableRowsBatch).toHaveBeenCalled();
   });
 
-  it("bigquery table node stays wired to UnicDB.browseTableData (preview path)", async () => {
+  it("bigquery table node stays wired to VSKit.browseTableData (preview path)", async () => {
     const { mgr } = setupTree({
       schemas: [{ name: "ds1" }],
       tables: [{ name: "tbl", schema: "ds1" }],
@@ -2021,7 +2021,7 @@ describe("SchemaTreeProvider — TASK-BQ02-003 bigquery wiring", () => {
     expect(tables).toHaveLength(1);
     const t = tables[0];
     expect(t.contextValue).toBe("table");
-    expect(t.command?.command).toBe("UnicDB.browseTableData");
+    expect(t.command?.command).toBe("VSKit.browseTableData");
     expect(t.command?.title).toBe("Browse Data");
     const arg = t.command?.arguments?.[0] as { meta?: { connection?: { id?: string }; schema?: string; objectName?: string } };
     expect(arg).toBe(t);
@@ -2030,7 +2030,7 @@ describe("SchemaTreeProvider — TASK-BQ02-003 bigquery wiring", () => {
     expect(arg?.meta?.objectName).toBe("tbl");
   });
 
-  it("bigquery view node stays wired to UnicDB.browseTableData (preview path)", async () => {
+  it("bigquery view node stays wired to VSKit.browseTableData (preview path)", async () => {
     const { mgr } = setupTree({
       schemas: [{ name: "ds1" }],
       views: [{ name: "v_active", schema: "ds1" }],
@@ -2056,7 +2056,7 @@ describe("SchemaTreeProvider — TASK-BQ02-003 bigquery wiring", () => {
     expect(views).toHaveLength(1);
     const v = views[0];
     expect(v.contextValue).toBe("view");
-    expect(v.command?.command).toBe("UnicDB.browseTableData");
+    expect(v.command?.command).toBe("VSKit.browseTableData");
     expect(v.command?.title).toBe("Browse Data");
     const arg = v.command?.arguments?.[0] as { meta?: { connection?: { id?: string }; schema?: string; objectName?: string } };
     expect(arg).toBe(v);

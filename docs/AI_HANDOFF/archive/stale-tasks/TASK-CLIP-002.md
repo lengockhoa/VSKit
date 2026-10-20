@@ -32,9 +32,9 @@ are the contract the CLIP-003 Cmd/Ctrl+V wiring funnels into.
 | 3 | happy | `1x1 clipboard tiles into active 2x2 range` | all 4 range cells `"z"`; `dirtyCount === 4` | build range via mousedown/mousemove on cells, then paste `"z"` |
 | 4 | edge (shape) | `3x3 clipboard into 2x2 range clips over-paste` | `dirtyCount === 4` (not 9); values outside range bounds untouched | active 2×2 range; clipboard `"a\tb\tc\nd\te\tf\ng\th\ti"` |
 | 5 | edge (empty) | `paste with empty text/plain is a no-op` | `dirtyCount === 0`; zero `copy`/`saveEdits` posts | clipboardData returns `""` (`webview/main.ts:3306` guard) |
-| 6 | edge (target) | `paste on filter input is user typing, not a grid edit` | `dirtyCount === 0`; input value unchanged by grid handler | `<input>` appended inside `.UnicDB-grid-host`, focused; paste dispatched on it (`isFilterInput` guard `main.ts:3304`) |
+| 6 | edge (target) | `paste on filter input is user typing, not a grid edit` | `dirtyCount === 0`; input value unchanged by grid handler | `<input>` appended inside `.vskit-grid-host`, focused; paste dispatched on it (`isFilterInput` guard `main.ts:3304`) |
 | 7 | edge (boundary) | `paste 2 rows with only 1 displayed row left clips at bottom edge` | only the existing row dirtied; no dirty rowId outside the id space | paste at last row: anchor rowIndex = `getDisplayedRowCount()-1`, clipboard 2 rows (`main.ts:3348` break) |
-| 8 | edge (target) | `paste stops before locally-added rows` | rows added via `__UnicDB.addRow()` are never dirtied; walk stops (`serverIndexByRowId` miss, `main.ts:3351`) | addRow then paste spanning server row + local row |
+| 8 | edge (target) | `paste stops before locally-added rows` | rows added via `__app.addRow()` are never dirtied; walk stops (`serverIndexByRowId` miss, `main.ts:3351`) | addRow then paste spanning server row + local row |
 | 9 | regression | existing `resultsGridModelEdit.test.ts` parseTsvPaste/applyPasteToDirty/applyRangePasteToDirty describes | unchanged GREEN | existing file |
 | 10 | regression | undo parity: one `cell-edit` pushed per pasted cell, Cmd+Z reverts one | after 4-cell paste `undoStack.canUndo`; one Cmd+Z → `dirtyCount === 3`, cell reverted to server value | harness of `tests/webviewEditHighlight.test.ts` #6 (`webview/main.ts:3393`) |
 
@@ -66,7 +66,7 @@ npx vitest run src/ui/__tests__/webviewClipboardPaste.test.ts src/ui/__tests__/r
 - Consumes:
   - Capture-phase `paste` listener on `gridWrap` → `onGridPaste(ev: ClipboardEvent): void` — `webview/main.ts:1401/3300`.
   - `parseTsvPaste(text: string): string[][]` / `applyPasteToDirty(...)` / `applyRangePasteToDirty(...)` — `src/ui/resultsGridModel.ts:1226/1261/1387`.
-  - `__UnicDB.editState` / `__UnicDB.addRow` / `__UnicDB.undoStack` / `__UnicDB.gridApi` seams — `webview/main.ts:4523-4592`.
+  - `__app.editState` / `__app.addRow` / `__app.undoStack` / `__app.gridApi` seams — `webview/main.ts:4523-4592`.
   - Synthetic ClipboardEvent pattern — `aiChatPanelWebviewTask002.test.ts:780-782`.
 - Produces: (none) — test-only; TASK-CLIP-003's Cmd/Ctrl+V path MUST route into the same `onGridPaste` dispatch and keep these GREEN.
 
@@ -122,7 +122,7 @@ VERIFICATION:
   command: npm run typecheck
   result: exit 0
   output_excerpt: |
-    > UnicDB@1.53.42 typecheck
+    > VSKit@1.53.42 typecheck
     > tsc --noEmit
   command: npm run compile
   result: exit 0

@@ -107,7 +107,7 @@ VERIFICATION:
   command: npm run typecheck
   result: exit 0
   output_excerpt: |
-    > UnicDB@1.13.0 typecheck
+    > extension@1.13.0 typecheck
     > tsc --noEmit
   command: npm run compile
   result: exit 0

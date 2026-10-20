@@ -69,7 +69,7 @@ export interface EngineChoice {
 /** Input contract to `resolveEngine`. Both `engine` and `detections` are
  * optional; if both are omitted, the legacy omp-first path is used. */
 export interface ResolveEngineInput {
-  /** User's configured engine preference (raw `UnicDB.ai.engine`). */
+  /** User's configured engine preference (raw `VSKit.ai.engine`). */
   engine?: unknown;
   /** Selected-engine detections dictionary. */
   detections?: AgentDetections;

@@ -43,9 +43,9 @@ import type { OmpDetection } from "../../ai/omp/detect";
 import type { ProviderRequest, ProviderResult } from "../../ai/provider";
 
 // ---- frozen strings (mirror PLAN §1 table) --------------------------------
-const NEW_COMMAND_ID = "UnicDB.generateCommitMessage";
-const NEW_COMMAND_TITLE = "UnicDB: Generate Commit Message";
-const NEW_COMMAND_CATEGORY = "UnicDB";
+const NEW_COMMAND_ID = "VSKit.generateCommitMessage";
+const NEW_COMMAND_TITLE = "VSKit: Generate Commit Message";
+const NEW_COMMAND_CATEGORY = "VSKit";
 const NEW_COMMAND_ICON = { light: "media/commit-spark.svg", dark: "media/commit-spark.svg" };
 const SCM_GROUP = "navigation";
 const SCM_WHEN = "scmProvider == git";
@@ -89,7 +89,7 @@ function fakeConfig(s: AiSettings = fakeSettings()): AiConfig {
 
 function fakeDiff(): CommitDiffInputLike {
   return {
-    repoName: "UnicDB",
+    repoName: "VSKit",
     branch: "main",
     files: ["src/a.ts"],
     diffText: "+// new line",
@@ -237,7 +237,7 @@ describe("TASK-GC-008 #3 disabled-Lite UX contract", () => {
       ACTION_OPEN_SETTINGS,
     );
     expect(TOAST_NO_LITE).toBe(
-      "Configure the Lite Model in UnicDB AI Settings to use Generate Commit Message",
+      "Configure the Lite Model in VSKit AI Settings to use Generate Commit Message",
     );
     expect(ACTION_OPEN_SETTINGS).toBe("Open Settings");
 

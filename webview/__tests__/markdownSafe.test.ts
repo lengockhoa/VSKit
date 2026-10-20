@@ -51,10 +51,10 @@ describe("markdownSafe — renderMarkdown (case #1 happy)", () => {
 
   it("renders fenced sql block with class, lang, data-raw and Copy button", () => {
     const html = renderMarkdown("```sql\nSELECT 1\n```");
-    expect(html).toContain("UnicDB-md-code");
-    expect(html).toContain("UnicDB-md-code-lang-sql");
+    expect(html).toContain("VSKit-md-code");
+    expect(html).toContain("VSKit-md-code-lang-sql");
     expect(html).toContain('data-raw="SELECT 1"');
-    expect(html).toContain("UnicDB-md-copy");
+    expect(html).toContain("VSKit-md-copy");
     expect(html).toContain(">Copy</button>");
   });
 });
@@ -78,7 +78,7 @@ describe("markdownSafe — renderMarkdown (case #3 roundtrip via data-raw)", () 
     expect(html).toContain(
       'data-raw="SELECT * FROM t WHERE a &amp;lt; 1 AND b &amp;gt; 2"',
     );
-    expect(html).toContain("UnicDB-md-copy");
+    expect(html).toContain("VSKit-md-copy");
   });
 
   it("trims a single trailing fence newline from the raw payload", () => {

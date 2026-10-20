@@ -45,7 +45,7 @@ class FakeWebviewView {
   webview = new FakeWebview();
   description: string | undefined;
   title: string | undefined;
-  viewType = "UnicDB.results";
+  viewType = "VSKit.results";
   visible = true;
   private didDisposeHandlers: Array<() => void> = [];
   onDidDispose(h: () => void) {
@@ -112,7 +112,7 @@ vi.mock("vscode", () => {
 
     commands: {
       executeCommand: vi.fn(async (cmd: string, ..._rest: unknown[]) => {
-        if (cmd === "UnicDB.results.focus" && providerStore.length > 0) {
+        if (cmd === "VSKit.results.focus" && providerStore.length > 0) {
           if (lastView.current && !(lastView.current as unknown as { isDisposed?: boolean }).isDisposed) {
             return undefined;
           }
@@ -968,7 +968,7 @@ describe("ResultsPanel — no-PK DELETE marker goes through resolver (TASK-002 c
         {
           rowId: 1,
           colIndex: 0,
-          value: { __UnicDB_deleted__: true, __rowId: 1 },
+          value: { __VSKit_deleted__: true, __rowId: 1 },
         },
       ],
     });
@@ -994,7 +994,7 @@ describe("ResultsPanel — no-PK DELETE marker goes through resolver (TASK-002 c
 });
 
 describe("ResultsPanel — insert-only PG no-PK skips resolver (TASK-002 case 3)", () => {
-  it("PG no-PK + ONLY a __UnicDB_new_row__ marker → NO ctid lookup SQL; INSERT issued; ack ok", async () => {
+  it("PG no-PK + ONLY a __VSKit_new_row__ marker → NO ctid lookup SQL; INSERT issued; ack ok", async () => {
     const saveCtx: SaveContext = {
       getDriver: () => "postgres",
       listPkColumns: async () => [],
@@ -1038,7 +1038,7 @@ describe("ResultsPanel — insert-only PG no-PK skips resolver (TASK-002 case 3)
           rowId: 0,
           colIndex: 0,
           value: {
-            __UnicDB_new_row__: true,
+            __VSKit_new_row__: true,
             __rowId: 0,
             values: ["x"],
           },
@@ -1836,9 +1836,9 @@ describe("ResultsPanel — Add Row on no-PK postgres never triggers a ctid looku
           rowId: 0,
           colIndex: -1,
           value: {
-            __UnicDB_new_row__: true,
+            __VSKit_new_row__: true,
             __rowId: 0,
-            values: [{ __UnicDB_default__: true }],
+            values: [{ __VSKit_default__: true }],
           },
         },
         // Ordinary cell edit on the SAME (brand-new, no server row yet)

@@ -43,7 +43,7 @@ existing overlay menu.
 
 | # | Type | Test name | Expected | Pre-state / Fixture |
 |---|------|----------|----------|---------------------|
-| 1 | happy | copy user message | stub `navigator.clipboard.writeText` → click user `[data-action="copy"]` → `writeText` called with the exact message text; `.UnicDB-ai-chat-v2-toast` contains "Copied" | jsdom + stubbed clipboard |
+| 1 | happy | copy user message | stub `navigator.clipboard.writeText` → click user `[data-action="copy"]` → `writeText` called with the exact message text; `.vskit-ai-chat-v2-toast` contains "Copied" | jsdom + stubbed clipboard |
 | 2 | happy | edit puts text back in the draft | click user `[data-action="edit"]` → composer textarea value equals the message text AND textarea `=== document.activeElement` | jsdom |
 | 3 | happy | retry re-sends the message | idle controller, click user `[data-action="retry"]` → stubbed postMessage received `{kind:"submit_turn", draft:{text: <message text>}}` | jsdom |
 | 4 | happy | assistant 3-dot opens the actions menu | click assistant `[data-action="more"]` → a `[data-chat-overlay-menu]` node exists with rows "Copy message" + "Regenerate response"; Escape closes it (node removed) | jsdom |

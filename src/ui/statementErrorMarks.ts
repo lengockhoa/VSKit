@@ -29,7 +29,7 @@ export function createStatementErrorMarker(): StatementErrorMarker {
     overviewRulerLane: vscode.OverviewRulerLane.Right,
   });
 
-  const diagnostics = vscode.languages.createDiagnosticCollection("unicdb-run");
+  const diagnostics = vscode.languages.createDiagnosticCollection("vskit-run");
 
   let lastEditor: vscode.TextEditor | undefined;
   let lastUri: vscode.Uri | undefined;
@@ -67,7 +67,7 @@ export function createStatementErrorMarker(): StatementErrorMarker {
       message,
       vscode.DiagnosticSeverity.Error,
     );
-    diagnostic.source = "UnicDB";
+    diagnostic.source = "VSKit";
     diagnostics.set(doc.uri, [diagnostic]);
     lastEditor = editor;
     lastUri = doc.uri;

@@ -1,4 +1,4 @@
-// tests/install-UnicDB.test.ts — TDD for scripts/install-UnicDB.sh
+// tests/install-vskit.test.ts — TDD for scripts/install-vskit.sh
 // Spawns the bash script in --dry-run / env-override mode and asserts CLI detection.
 // Also exercises find_vsix_asset_url via the script's --local install + env-injected JSON.
 // Per TASK-008 Test Cases table.
@@ -7,8 +7,21 @@ import { describe, it, expect } from "vitest";
 import { spawnSync } from "node:child_process";
 import * as path from "node:path";
 import * as fs from "node:fs";
+import * as os from "node:os";
 
-const SCRIPT = path.resolve(__dirname, "..", "scripts", "install-UnicDB.sh");
+const SCRIPT = path.resolve(__dirname, "..", "scripts", "install-vskit.sh");
+const parsedPackage: unknown = JSON.parse(
+  fs.readFileSync(path.resolve(__dirname, "..", "package.json"), "utf8"),
+);
+if (
+  parsedPackage === null ||
+  typeof parsedPackage !== "object" ||
+  !("version" in parsedPackage) ||
+  typeof parsedPackage.version !== "string"
+) {
+  throw new Error("package.json is missing a string version");
+}
+const PACKAGE_VERSION = parsedPackage.version;
 
 function runScript(args: string[], envOverrides: Record<string, string> = {}) {
   return spawnSync("bash", [SCRIPT, ...args], {
@@ -25,31 +38,32 @@ function runScript(args: string[], envOverrides: Record<string, string> = {}) {
 const isMacDev = process.platform === "darwin";
 const platformDescribe = isMacDev ? describe : describe.skip;
 
-platformDescribe("install-UnicDB.sh — CLI detection", () => {
+platformDescribe("install-vskit.sh — CLI detection", () => {
   it("Test #1: --dry-run detects PATH code first", () => {
-    // Create a fake `code` binary on PATH
-    const fakeBin = path.resolve(__dirname, ".fake-bin");
-    fs.mkdirSync(fakeBin, { recursive: true });
-    const fakeCode = path.join(fakeBin, "code");
-    fs.writeFileSync(
-      fakeCode,
-      "#!/bin/sh\necho 'fake-code-called: $*'\nexit 0\n",
-      { mode: 0o755 }
-    );
-    const result = runScript(["--local", "fake.vsix", "--dry-run"], {
-      PATH: `${fakeBin}:${process.env.PATH || ""}`,
-      UnicDB_CODE_PATH: "",
-    });
-    expect(result.status).toBe(0);
-    // It should print the path of the resolved CLI
-    expect(result.stdout).toContain(fakeCode);
+    const fakeBin = fs.mkdtempSync(path.join(os.tmpdir(), "vskit-fake-bin-"));
+    try {
+      const fakeCode = path.join(fakeBin, "code");
+      fs.writeFileSync(
+        fakeCode,
+        "#!/bin/sh\necho 'fake-code-called: $*'\nexit 0\n",
+        { mode: 0o755 },
+      );
+      const result = runScript(["--local", "fake.vsix", "--dry-run"], {
+        PATH: `${fakeBin}:${process.env.PATH || ""}`,
+        VSKIT_CODE_PATH: "",
+      });
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain(fakeCode);
+    } finally {
+      fs.rmSync(fakeBin, { recursive: true, force: true });
+    }
   });
 
   it("Test #1b: falls back to macOS app path when PATH empty", () => {
     const macPath = "/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code";
     const result = runScript(["--local", "fake.vsix", "--dry-run"], {
       PATH: "/usr/bin:/bin",
-      UnicDB_CODE_PATH: macPath,
+      VSKIT_CODE_PATH: macPath,
     });
     expect(result.status).toBe(0);
     expect(result.stdout).toContain(macPath);
@@ -58,9 +72,9 @@ platformDescribe("install-UnicDB.sh — CLI detection", () => {
   it("Test #2: no CLI found → exit 1 with clear message", () => {
     const result = runScript(["--local", "fake.vsix", "--dry-run"], {
       PATH: "/usr/bin:/bin",
-      UnicDB_CODE_PATH: "/nonexistent/path/to/code",
-      // Override platform so the macOS app fallback doesn't kick in on this dev box.
-      UnicDB_PLATFORM: "Linux",
+      VSKIT_CODE_PATH: "/nonexistent/path/to/code",
+      // Override platform so no platform-specific fallback is assumed.
+      VSKIT_PLATFORM: "Linux",
     });
     expect(result.status).toBe(1);
     // stderr or stdout should explain the user should install code CLI
@@ -83,48 +97,65 @@ platformDescribe("install-UnicDB.sh — CLI detection", () => {
     expect(result.stdout.toLowerCase()).toContain("usage");
   });
 
-  it("Test #3b: --local install prints reload hint", () => {
-    // Fake code CLI + a real tiny .vsix so the script reaches the install-success path.
-    const fakeBin = path.resolve(__dirname, ".fake-bin");
-    fs.mkdirSync(fakeBin, { recursive: true });
-    const fakeCode = path.join(fakeBin, "code");
-    fs.writeFileSync(
-      fakeCode,
-      "#!/bin/sh\nif [[ \"$1\" == \"--install-extension\" ]]; then exit 0; fi\n" +
-        "echo 'lengockhoa.UnicDB@9.9.9'\nexit 0\n",
-      { mode: 0o755 }
-    );
-    const tmp = fs.mkdtempSync(path.join(__dirname, ".hint-"));
-    const vsix = path.join(tmp, "UnicDB-test.vsix");
-    fs.writeFileSync(vsix, "PK");
-    const result = runScript(["--local", vsix], {
-      PATH: `${fakeBin}:${process.env.PATH || ""}`,
-      UnicDB_CODE_PATH: "",
-    });
-    fs.rmSync(tmp, { recursive: true, force: true });
-    expect(result.status).toBe(0);
-    expect(result.stdout).toMatch(/Developer: Reload Window/);
+  it("Test #3b: local install reports the current VSKit version", () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "vskit-installer-"));
+    try {
+      const fakeCode = path.join(tmp, "code");
+      const log = path.join(tmp, "args.log");
+      const state = path.join(tmp, "listed-once");
+      const vsix = path.join(tmp, "vskit test.vsix");
+      fs.writeFileSync(
+        fakeCode,
+        "#!/bin/sh\nprintf '%s\\n' \"$@\" >> \"$VSKIT_TEST_LOG\"\n" +
+        "if [ \"$1\" = \"--list-extensions\" ]; then\n" +
+        "  if [ -f \"$VSKIT_TEST_STATE\" ]; then printf 'lengockhoa.vskit@%s\\n' \"$VSKIT_TEST_VERSION\"; else : > \"$VSKIT_TEST_STATE\"; printf 'lengockhoa.vskit@0.0.1\\n'; fi\n" +
+        "fi\n",
+        { mode: 0o755 },
+      );
+      fs.writeFileSync(vsix, "PK");
+      const result = runScript(["--local", vsix], {
+        VSKIT_CODE_PATH: fakeCode,
+        VSKIT_TEST_LOG: log,
+        VSKIT_TEST_STATE: state,
+        VSKIT_TEST_VERSION: PACKAGE_VERSION,
+      });
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain(`Updated lengockhoa.vskit: 0.0.1 → ${PACKAGE_VERSION}`);
+      expect(fs.readFileSync(log, "utf8").trim().split("\n")).toEqual([
+        "--list-extensions", "--show-versions",
+        "--install-extension", path.resolve(vsix), "--force",
+        "--list-extensions", "--show-versions",
+      ]);
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
   });
 });
 
-describe("install-UnicDB.sh — find_vsix_asset_url (python3 branch)", () => {
+describe("install-vskit.sh — find_vsix_asset_url (python3 branch)", () => {
   // Realistic GitHub release JSON: tag + source zip + the .vsix asset we want.
   // This fixture is exactly the kind of payload the script must parse.
   const fixtureJson = JSON.stringify({
     tag_name: "v0.1.0",
-    name: "UnicDB 0.1.0",
+    name: "VSKit 0.1.0",
     assets: [
       {
+        // Foreign-product asset exercises the installer rejection path.
+        name: "another-product-1.55.6.vsix",
+        browser_download_url: "https://example.invalid/another-product-1.55.6.vsix",
+      },
+      {
         name: "Source code (zip)",
-        browser_download_url: "https://github.com/lengockhoa/UnicDB/archive/refs/tags/v0.1.0.zip",
+        browser_download_url: "https://github.com/lengockhoa/VSKit/archive/refs/tags/v0.1.0.zip",
       },
       {
         name: "Source code (tar.gz)",
-        browser_download_url: "https://github.com/lengockhoa/UnicDB/archive/refs/tags/v0.1.0.tar.gz",
+        browser_download_url: "https://github.com/lengockhoa/VSKit/archive/refs/tags/v0.1.0.tar.gz",
       },
       {
-        name: "UnicDB-0.1.0.vsix",
-        browser_download_url: "https://github.com/lengockhoa/UnicDB/releases/download/v0.1.0/UnicDB-0.1.0.vsix",
+        name: "vskit-0.1.0.vsix",
+        browser_download_url: "https://github.com/lengockhoa/VSKit/releases/download/v0.1.0/vskit-0.1.0.vsix",
       },
     ],
   });
@@ -136,9 +167,9 @@ describe("install-UnicDB.sh — find_vsix_asset_url (python3 branch)", () => {
     set -e
     main() { return 0; }
     # Source everything up to (but not including) the real 'main() {' definition.
-    awk '/^main\\(\\) \\{/{exit} {print}' "${SCRIPT}" > /tmp/UnicDB-funcs-$$.sh
-    source /tmp/UnicDB-funcs-$$.sh
-    rm -f /tmp/UnicDB-funcs-$$.sh
+    awk '/^main\\(\\) \\{/{exit} {print}' "${SCRIPT}" > /tmp/VSKit-funcs-$$.sh
+    source /tmp/VSKit-funcs-$$.sh
+    rm -f /tmp/VSKit-funcs-$$.sh
     ${call}
   `;
 
@@ -160,8 +191,23 @@ describe("install-UnicDB.sh — find_vsix_asset_url (python3 branch)", () => {
     }
     expect(result.status).toBe(0);
     expect(result.stdout.trim()).toBe(
-      "https://github.com/lengockhoa/UnicDB/releases/download/v0.1.0/UnicDB-0.1.0.vsix"
+      "https://github.com/lengockhoa/VSKit/releases/download/v0.1.0/vskit-0.1.0.vsix"
     );
+  });
+  it("Test #4a: rejects a release containing only a foreign-product VSIX", () => {
+    const foreignOnly = JSON.stringify({
+      assets: [{
+        name: "another-product-1.55.6.vsix",
+        browser_download_url: "https://example.invalid/another-product-1.55.6.vsix",
+      }],
+    });
+    const result = spawnSync(
+      "bash",
+      ["-c", driver(`find_vsix_asset_url '${foreignOnly.replace(/'/g, "'\\''")}'`)],
+      { env: { ...process.env }, encoding: "utf8", timeout: 10000 },
+    );
+    expect(result.status).toBe(0);
+    expect(result.stdout.trim()).toBe("");
   });
 
   it("Test #4b: parses tag_name from release JSON (python3 branch)", () => {

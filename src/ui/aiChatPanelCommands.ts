@@ -321,7 +321,7 @@ const UNIVERSAL_SPECS: readonly UniversalSpec[] = Object.freeze([
   {
     id: "resume",
     name: "resume",
-    description: "Resume a saved UnicDB chat",
+    description: "Resume a saved VSKit chat",
     syntax: "/resume",
     capability: "session-resume",
     insertedTemplate: "/resume ",

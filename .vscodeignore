@@ -9,11 +9,11 @@ docs/**
 node_modules/**
 
 # Allow the User Guide to ship in the .vsix so the Schema Explorer 📖 icon
-# (UnicDB.openUserGuide → markdown.showPreview) works for installed users.
+# (VSKit.openUserGuide → markdown.showPreview) works for installed users.
 # Everything else under docs/ stays excluded (it's repo-internal cycle docs).
 # NOTE: filename is case-sensitive — must match the on-disk entry as it
 # appears on Linux/Windows (the Marketplace CI runs on ubuntu-latest).
-!docs/UNICDB_USER_GUIDE.md
+!docs/vskit-user-guide.md
 .esbuild.js.swp
 *.tsbuildinfo
 
@@ -28,6 +28,9 @@ node_modules/**
 CLAUDE.md
 AGENTS.md
 opencode.json
+NOTES.md
+PROJECT_IMPORTANT.md
+.github/**
 
 # Repo-level tool files
 .git/**
@@ -64,3 +67,11 @@ node_modules_backup/**
 # ever packaged, the Azure DevOps PAT inside `.pat` leaks to every user
 # who installs the extension — full publisher-account compromise.
 .secrets/**
+
+# General local credential and key files must not enter a distributable package.
+**/.env*
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+**/*.pat

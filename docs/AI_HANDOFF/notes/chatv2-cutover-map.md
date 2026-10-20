@@ -19,7 +19,7 @@ deletion wave. Disposition keywords are deliberately explicit: `preserve`, `repl
 | webview/aiChatPanelComposer.ts | replace | CHATV2-008 | Refactor into `webview/aiChat/composer.ts`; no competing key listeners retained. |
 | webview/aiChatPanelThread.ts | replace | CHATV2-006 | Safe render primitives reused, module replaced by `webview/aiChat/transcript.ts`. |
 | webview/aiChatPanelHeader.ts | replace | CHATV2-005 | Header rebuilt as v2 shell component. |
-| webview/styles.css | temporary | CHATV2-005 → CHATV2-017 | `.UnicDB-chat` rules kept live during migration, then deleted at CHATV2-017 in favour of `.UnicDB-ai-chat-v2`. |
+| webview/styles.css | temporary | CHATV2-005 → CHATV2-017 | `.chat` rules kept live during migration, then deleted at CHATV2-017 in favour of `.ai-chat-v2`. |
 | webview/main.ts | preserve | — | Console/results webview; chat CSS is disjoint. No chat change. |
 | esbuild.js | preserve | — | Entry `webview/aiChatPanelMain.ts` → `dist/aiChatPanel.js` (esbuild.js:88-89) unchanged. |
 | src/ui/aiChatPanel.ts | preserve | CHATV2-002 / CHATV2-003 | Host orchestration authority; extended with capabilities frame, not rewritten. |
@@ -55,15 +55,15 @@ deletion wave. Disposition keywords are deliberately explicit: `preserve`, `repl
   CHATV2-009 when the single capture-phase controller lands. Regression coverage for the
   duplicate path moves into the CHATV2-009 keyboard suite.
 - `#chatBrandMark` (webview/aiChatPanelHeader.ts:108) — **delete** at CHATV2-017.
-- `.UnicDB-chat` root rule (webview/styles.css:1104) — **temporary** until CHATV2-005 scopes
-  `.UnicDB-ai-chat-v2`, then **delete** at CHATV2-017.
+- `.chat` root rule (webview/styles.css:1104) — **temporary** until CHATV2-005 scopes
+  `.ai-chat-v2`, then **delete** at CHATV2-017.
 - Dead microphone placeholder (`micBtn`, DOM control) — **replace** by CHATV2-005; the spec
   (`docs/AI_CHAT_PROFESSIONAL_SPEC.md:315`) requires it be omitted, never shipped disabled.
 
 ## 4. Final deletion wave
 
 **TASK-CHATV2-017** is the final deletion wave. It removes the compatibility bridge (the V1
-`.UnicDB-chat` CSS tree, the V1 DOM ids/classes with no v2 consumer, and the legacy host
+`.chat` CSS tree, the V1 DOM ids/classes with no v2 consumer, and the legacy host
 frames behind the adapter) after the host/webview V2 contract tests pass (`PLAN.md:88`). Every
 row marked `temporary` above is deleted at CHATV2-017; nothing may survive it without a v2
 consumer. This cutover map is consumed by TASK-CHATV2-002 through 017.

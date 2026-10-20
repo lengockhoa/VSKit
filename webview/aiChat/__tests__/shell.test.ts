@@ -20,11 +20,11 @@ import {
   mountChatShellIfNeeded,
 } from "../shell";
 
-const ROOT_CLASSES = ["UnicDB-chat", CHAT_V2_ROOT_CLASS];
+const ROOT_CLASSES = ["VSKit-chat", CHAT_V2_ROOT_CLASS];
 
 function makeRoot(): HTMLElement {
   const root = document.createElement("div");
-  root.id = "UnicDB-root";
+  root.id = "VSKit-root";
   root.className = ROOT_CLASSES.join(" ");
   document.body.appendChild(root);
   return root;
@@ -76,7 +76,7 @@ describe("TASK-CHATV2-005 mountChatShell — semantic shell (#1)", () => {
     mountChatShell(root);
     const refs = mountChatShell(root);
     expect(refs.header.querySelector(`.${CHAT_V2_ROOT_CLASS}-mark svg`)).not.toBeNull();
-    expect(refs.header.querySelector(`.${CHAT_V2_ROOT_CLASS}-title`)?.textContent).toBe("UnicDB AI");
+    expect(refs.header.querySelector(`.${CHAT_V2_ROOT_CLASS}-title`)?.textContent).toBe("VSKit AI");
     expect(refs.header.querySelector(`.${CHAT_V2_ROOT_CLASS}-engine`)).not.toBeNull();
     expect(refs.header.querySelector(`.${CHAT_V2_ROOT_CLASS}-overflow`)).not.toBeNull();
   });
@@ -127,8 +127,8 @@ describe("TASK-CHATUX2-001 footer removal + header stats (#1, #2)", () => {
 
     // Header right zone: [engine-state] [usage] [overflow], both hidden
     // until their first frame.
-    expect(refs.engineState.id).toBe("UnicDB-ai-chat-v2-engine-state");
-    expect(refs.usage.id).toBe("UnicDB-ai-chat-v2-usage");
+    expect(refs.engineState.id).toBe("VSKit-ai-chat-v2-engine-state");
+    expect(refs.usage.id).toBe("VSKit-ai-chat-v2-usage");
     expect(refs.engineState.hidden).toBe(true);
     expect(refs.usage.hidden).toBe(true);
     const overflow = refs.header.querySelector(`.${CHAT_V2_ROOT_CLASS}-overflow`);
@@ -158,8 +158,8 @@ describe("TASK-CHATUX2-001 footer removal + header stats (#1, #2)", () => {
     const refs = mountChatShellIfNeeded(root);
     expect(root.querySelector(`.${CHAT_V2_ROOT_CLASS}-footnote`)).toBeNull();
     expect("footnote" in refs).toBe(false);
-    expect(refs.usage.id).toBe("UnicDB-ai-chat-v2-usage");
-    expect(refs.engineState.id).toBe("UnicDB-ai-chat-v2-engine-state");
+    expect(refs.usage.id).toBe("VSKit-ai-chat-v2-usage");
+    expect(refs.engineState.id).toBe("VSKit-ai-chat-v2-engine-state");
     expect("hint" in refs).toBe(false);
 
     // No duplicated nodes: exactly one of every structural element.
@@ -192,7 +192,7 @@ describe("TASK-CHATV2-005 mountChatShell — repeated mount (#3)", () => {
     const second = mountChatShell(root);
 
     expect(second).toBe(first); // same refs object
-    expect(document.querySelectorAll("#UnicDB-root").length).toBe(1);
+    expect(document.querySelectorAll("#VSKit-root").length).toBe(1);
     expect(root.querySelectorAll(`.${CHAT_V2_ROOT_CLASS}-header`).length).toBe(1);
     expect(root.querySelectorAll(`.${CHAT_V2_ROOT_CLASS}-composer`).length).toBe(1);
     expect(root.querySelectorAll("[aria-live]").length).toBe(2);
@@ -223,10 +223,10 @@ describe("TASK-CHATV2-005 V2 scoped styles (#4 leakage)", () => {
     // Legacy stylesheet must be untouched by this task's file.
     const legacyPath = resolve(process.cwd(), "webview", "styles.css");
     const legacy = existsSync(legacyPath) ? readFileSync(legacyPath, "utf8") : "";
-    expect(legacy).not.toContain(".UnicDB-ai-chat-v2");
+    expect(legacy).not.toContain(".VSKit-ai-chat-v2");
   });
 
-  it("scopes every selector to .UnicDB-ai-chat-v2 (or namespaced utility)", () => {
+  it("scopes every selector to .VSKit-ai-chat-v2 (or namespaced utility)", () => {
     // Strip comments + at-rule prelude blocks, then collect top-level and
     // nested selectors; each must be V2-scoped, a namespaced keyframe step,
     // or a namespaced keyframes/at-rule name.
@@ -250,8 +250,8 @@ describe("TASK-CHATV2-005 V2 scoped styles (#4 leakage)", () => {
         // are namespaced by their @keyframes name, not by a class.
         if (/^\d+%$|^from$|^to$/i.test(token)) continue;
         expect(
-          token.includes(".UnicDB-ai-chat-v2"),
-          `V2 stylesheet selector must be scoped to .UnicDB-ai-chat-v2: "${token}"`,
+          token.includes(".VSKit-ai-chat-v2"),
+          `V2 stylesheet selector must be scoped to .VSKit-ai-chat-v2: "${token}"`,
         ).toBe(true);
       }
     }
@@ -274,25 +274,25 @@ describe("TASK-CHATV2-005 responsive primitives (#5)", () => {
     expect(/@media\s*\(max-width:\s*419px\)/.test(css), "<420px branch").toBe(true);
     expect(/@media\s*\(max-width:\s*319px\)/.test(css), "<320px branch").toBe(true);
     // <420 hides optional labels; <320 wraps composer actions into two rows.
-    expect(/\.UnicDB-ai-chat-v2-label-optional\s*\{[^}]*display:\s*none/.test(css)).toBe(true);
+    expect(/\.VSKit-ai-chat-v2-label-optional\s*\{[^}]*display:\s*none/.test(css)).toBe(true);
     expect(/@media\s*\(max-width:\s*319px\)[\s\S]*grid-template-rows/.test(css)).toBe(true);
   });
 
   it("declares 32px control minima and a 32x32 send slot", () => {
-    const control = css.match(/\.UnicDB-ai-chat-v2-control\s*\{([^}]*)\}/);
-    expect(control, ".UnicDB-ai-chat-v2-control rule must exist").not.toBeNull();
+    const control = css.match(/\.VSKit-ai-chat-v2-control\s*\{([^}]*)\}/);
+    expect(control, ".VSKit-ai-chat-v2-control rule must exist").not.toBeNull();
     expect(/min-width:\s*32px/.test(control![1])).toBe(true);
     expect(/min-height:\s*32px/.test(control![1])).toBe(true);
 
-    const send = css.match(/\.UnicDB-ai-chat-v2-send\s*\{([^}]*)\}/);
-    expect(send, ".UnicDB-ai-chat-v2-send rule must exist").not.toBeNull();
+    const send = css.match(/\.VSKit-ai-chat-v2-send\s*\{([^}]*)\}/);
+    expect(send, ".VSKit-ai-chat-v2-send rule must exist").not.toBeNull();
     expect(/width:\s*32px/.test(send![1])).toBe(true);
     expect(/height:\s*32px/.test(send![1])).toBe(true);
   });
 
   it("implements the PLAN §3 grid: 40px header, minmax(0,1fr) transcript, min-width:0 boundaries", () => {
-    const rootRule = css.match(/\.UnicDB-ai-chat-v2\s*\{([^}]*)\}/);
-    expect(rootRule, ".UnicDB-ai-chat-v2 root rule must exist").not.toBeNull();
+    const rootRule = css.match(/\.VSKit-ai-chat-v2\s*\{([^}]*)\}/);
+    expect(rootRule, ".VSKit-ai-chat-v2 root rule must exist").not.toBeNull();
     expect(/grid-template-rows:[^;]*40px/.test(rootRule![1])).toBe(true);
     expect(/minmax\(0,\s*1fr\)/.test(rootRule![1])).toBe(true);
     expect(/min-width:\s*0/.test(rootRule![1])).toBe(true);

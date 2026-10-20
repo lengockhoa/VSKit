@@ -115,7 +115,7 @@ export function serializeSessionToMarkdown(record: AiChatSessionRecord): string 
     lines.push(`- Diagnostics: ${record.diagnosticIds.map((d) => `\`${d}\``).join(", ")}`);
   }
   lines.push("");
-  lines.push("> Saved UnicDB chat transcript. This is not a provider-native session export.");
+  lines.push("> Saved VSKit chat transcript. This is not a provider-native session export.");
   lines.push("");
 
   for (const message of record.messages) {
@@ -151,7 +151,7 @@ export function serializeSessionToMarkdown(record: AiChatSessionRecord): string 
 /** Structured JSON payload. `schemaVersion` is mandatory and first-class. */
 export interface AiChatSessionExportJson {
   readonly schemaVersion: typeof AI_CHAT_EXPORT_SCHEMA_VERSION;
-  readonly kind: "UnicDB.aiChat.session";
+  readonly kind: "VSKit.aiChat.session";
   readonly session: {
     readonly id: string;
     readonly title: string;
@@ -173,7 +173,7 @@ export interface AiChatSessionExportJson {
 export function serializeSessionToJson(record: AiChatSessionRecord): AiChatSessionExportJson {
   return {
     schemaVersion: AI_CHAT_EXPORT_SCHEMA_VERSION,
-    kind: "UnicDB.aiChat.session",
+    kind: "VSKit.aiChat.session",
     session: {
       id: record.id,
       title: record.title,
@@ -216,7 +216,7 @@ export function exportFileName(record: AiChatSessionRecord, format: AiChatExport
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "")
-      .slice(0, 60) || "unicdb-chat";
+      .slice(0, 60) || "vskit-chat";
   return `${slug}.${format === "json" ? "json" : "md"}`;
 }
 

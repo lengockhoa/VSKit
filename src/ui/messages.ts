@@ -71,7 +71,7 @@ export type HostMessage =
 
 /** ACTIVE-SCHEMA chip — host → webview. Posted whenever the active
  *  connection's pinned schema changes (either via the existing
- *  `UnicDB.selectActiveSchema` command, or when the user switches
+ *  `VSKit.selectActiveSchema` command, or when the user switches
  *  connections). The webview renders this in the toolbar chip so the
  *  user can switch schemas while working, not just at register-connection
  *  time. Absent / undefined `schema` means "no pin — server default". */

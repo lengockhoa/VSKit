@@ -124,7 +124,7 @@ $ npm test
    Duration  9.34s
 
 $ npm run typecheck
-> UnicDB@1.6.3 typecheck
+> extension@1.6.3 typecheck
 > tsc --noEmit
 (exit 0, clean)
 ```

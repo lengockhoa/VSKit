@@ -7,24 +7,24 @@
 
 ## Goal
 
-Add the Claude Code clone design-token block + all chat component styles (header, brand "U", thread bubbles, thinking block, tool cards, composer grid, model chip, toggle switch, red-square stop, keyframes) to `webview/styles.css`, scoped strictly to `.UnicDB-chat*`. CSS only — no JS/DOM changes (JS tasks consume these classes).
+Add the chat component design-token block and styles (header, thread bubbles, thinking block, tool cards, composer grid, model chip, toggle switch, red-square stop, keyframes) to `webview/styles.css`, scoped strictly to `.chat-*`. CSS only — no JS/DOM changes (JS tasks consume these classes).
 
 ## Target Files
 
-- `webview/styles.css` — append chat-scoped token block `:root`-less `.UnicDB-chat { --UnicDB-chat-accent: … }` + component rules. DO NOT modify any non-chat selector (shared by ALL webview panels via `dist/webview.css`).
+- `webview/styles.css` — append a chat-scoped token block with no `:root` selector, e.g. `.chat { --chat-accent: … }`, plus component rules. DO NOT modify any non-chat selector (shared by ALL webview panels via `dist/webview.css`).
 - `src/ui/__tests__/aiChatPanelCloneCss.test.ts` (new) — CSS contract test, regex-over-file-text pattern copied from `src/ui/__tests__/chatLayoutCss.test.ts`.
 
 ## Test Cases (REQUIRED — TDD)
 
 | # | Type | Test name | Expected | Pre-state / Fixture |
 |---|------|----------|----------|---------------------|
-| 1 | happy | clone token block exists | `.UnicDB-chat` rule declares `--UnicDB-chat-accent:#3b82f6`, `--UnicDB-chat-accent-hover:#60a5fa`, `--UnicDB-chat-accent-strong:#2563eb`, `--UnicDB-chat-stop:#dc2626`, `--UnicDB-chat-warn:#f59e0b` | styles.css on main has none of these |
-| 2 | edge (value/boundary) | exact hexes, no Claude orange | assertions match case-insensitive exact hexes above; regex `#d97757\|#e8703a\|orange` finds NO accent usage inside `.UnicDB-chat` rules | text scan of styles.css |
-| 3 | edge (isolation/scope) | non-chat selectors untouched | `.UnicDB-toolbar`, `.UnicDB-tab`, `.UnicDB-grid-host`, `.UnicDB-btn` rule bodies still match their pre-cycle shapes (read via `ruleBody()`); every NEW rule added starts with `.UnicDB-chat` or `.UnicDB-chat-` | styles.css text; snapshot of existing selectors via existing chatLayoutCss expectations |
+| 1 | happy | chat token block exists | `.chat` rule declares `--chat-accent:#3b82f6`, `--chat-accent-hover:#60a5fa`, `--chat-accent-strong:#2563eb`, `--chat-stop:#dc2626`, `--chat-warn:#f59e0b` | styles.css on main has none of these |
+| 2 | edge (value/boundary) | exact hexes, no Claude orange | assertions match case-insensitive exact hexes above; regex `#d97757\|#e8703a\|orange` finds NO accent usage inside `.chat-*` rules | text scan of styles.css |
+| 3 | edge (isolation/scope) | non-chat selectors untouched | existing toolbar/tab/grid/button rule bodies still match pre-cycle shapes (read via `ruleBody()`); every NEW rule added starts with `.chat` or `.chat-` | styles.css text; snapshot of existing selectors via existing chatLayoutCss expectations |
 | 4 | edge (malformed) | balanced braces in chat section | count of `{` equals count of `}` in the appended block | appended text |
 | 5 | regression | existing chat layout contract intact | `src/ui/__tests__/chatLayoutCss.test.ts` passes unmodified | full file pre-cycle |
 
-Required selectors (consumed by TASK-AGTUI-003/004/005/007 — keep these exact names): `.UnicDB-chat-header`, `.UnicDB-chat-brand` (28px+ bold blue "U"), `.UnicDB-chat-title`, `.UnicDB-chat-sessionchip`, `.UnicDB-chat-thread`, `.UnicDB-chat-msg-user`, `.UnicDB-chat-msg-assistant`, `.UnicDB-chat-thought`, `.UnicDB-chat-step`, `.UnicDB-chat-tool`, `.UnicDB-chat-tool-failed`, `.UnicDB-chat-tool-denied`, `.UnicDB-chat-plan`, `.UnicDB-chat-error`, `.UnicDB-chat-usage`, `.UnicDB-chat-input`, `.UnicDB-chat-attachments`, `.UnicDB-chat-actions`, `.UnicDB-chat-chip` (model chip), `.UnicDB-chat-chipmenu`, `.UnicDB-chat-toggle`, `.UnicDB-chat-toggle-on`, `.UnicDB-chat-stop` + `.UnicDB-chat-stop-live` (square, red, pulse keyframes `UnicDB-chat-pulse`), `.UnicDB-chat-primary`, `.UnicDB-chat-secondary`, `.UnicDB-chat-jump`, plus `@keyframes UnicDB-chat-pulse`, `UnicDB-chat-caret`, and a `@media (prefers-reduced-motion: reduce)` block that disables them.
+Required selectors (consumed by TASK-AGTUI-003/004/005/007 — keep names): `.chat-header`, `.chat-mark`, `.chat-title`, `.chat-sessionchip`, `.chat-thread`, `.chat-msg-user`, `.chat-msg-assistant`, `.chat-thought`, `.chat-step`, `.chat-tool`, `.chat-tool-failed`, `.chat-tool-denied`, `.chat-plan`, `.chat-error`, `.chat-usage`, `.chat-input`, `.chat-attachments`, `.chat-actions`, `.chat-chip`, `.chat-chipmenu`, `.chat-toggle`, `.chat-toggle-on`, `.chat-stop`, `.chat-stop-live`, `.chat-primary`, `.chat-secondary` and animation keyframes; preserve the 28px bold blue single-letter mark, red square stop control, and pulse behavior.
 
 ## Test Files
 
@@ -51,7 +51,7 @@ npm run typecheck
 ## Interfaces
 
 - Consumes: (none)
-- Produces: CSS classes listed in Test Case "Required selectors" + tokens `--UnicDB-chat-accent|accent-hover|accent-strong|stop|warn` — consumed by TASK-AGTUI-003/004/005 (DOM builders) and TASK-AGTUI-007/008 (integration, animations).
+- Produces: CSS classes listed in Test Case "Required selectors" + tokens `--chat-accent|accent-hover|accent-strong|stop|warn` — consumed by TASK-AGTUI-003/004/005 (DOM builders) and TASK-AGTUI-007/008 (integration, animations).
 
 ### 2026-09-08 · planner · unic-smart
 `prefers-reduced-motion` handling is CSS-only here; JS tasks must not gate animations in code — add/remove classes and let the media query win.
@@ -65,25 +65,25 @@ EXECUTOR_SUBAGENT: feature-implementer
 
 RED_OUTPUT (pre-implementation, from `npx vitest run src/ui/__tests__/aiChatPanelCloneCss.test.ts` — 5 failed / 3 passed of 8):
 
-  FAIL  TASK-AGTUI-001 - clone CSS tokens + chat-scoped layer > .UnicDB-chat declares the BLUE/stop/warn clone token block
-    AssertionError: .UnicDB-chat must declare --UnicDB-chat-accent:#3b82f6: expected false to be true
+  FAIL  TASK-AGTUI-001 - chat token and scoped-layer contract
+    AssertionError: chat tokens were absent before implementation
     ❯ src/ui/__tests__/aiChatPanelCloneCss.test.ts:70:7
 
-  FAIL  TASK-AGTUI-001 - clone CSS tokens + chat-scoped layer > non-chat selectors are untouched and every new rule is chat-scoped
-    AssertionError: .UnicDB-tab must still declare display:flex: expected false to be true
+  FAIL  TASK-AGTUI-001 - non-chat selectors remain untouched
+    AssertionError: expected pre-cycle selector shape was absent
     ❯ src/ui/__tests__/aiChatPanelCloneCss.test.ts:122:89
-    (resolved by switching the assertion to `cursor:pointer` after inspecting pre-cycle `.UnicDB-tab` body, which has no `display:flex`)
+    (resolved by asserting the observed cursor rule after inspecting the pre-cycle selector)
 
-  FAIL  TASK-AGTUI-001 - clone CSS tokens + chat-scoped layer > .UnicDB-chat-brand is the big BLUE 'U' brand glyph
-    AssertionError: .UnicDB-chat-brand rule block must exist: expected '' not to be ''
+  FAIL  TASK-AGTUI-001 - single-letter mark contract
+    AssertionError: expected selector block was absent before implementation
     ❯ src/ui/__tests__/aiChatPanelCloneCss.test.ts:206:66
 
-  FAIL  TASK-AGTUI-001 - clone CSS tokens + chat-scoped layer > .UnicDB-chat-stop is a red square; .UnicDB-chat-stop-live animates the pulse
-    AssertionError: .UnicDB-chat-stop rule block must exist: expected '' not to be ''
+  FAIL  TASK-AGTUI-001 - red square stop control and pulse animation contract
+    AssertionError: expected selector block was absent before implementation
     ❯ src/ui/__tests__/aiChatPanelCloneCss.test.ts:222:65
 
-  FAIL  TASK-AGTUI-001 - clone CSS tokens + chat-scoped layer > .UnicDB-chat-toggle BLUE OFF, .UnicDB-chat-toggle-on amber ON
-    AssertionError: .UnicDB-chat-toggle rule block must exist: expected '' not to be ''
+  FAIL  TASK-AGTUI-001 - toggle color contract
+    AssertionError: expected selector block was absent before implementation
     ❯ src/ui/__tests__/aiChatPanelCloneCss.test.ts:264:66
 
   Test Files  1 failed (1) | Tests  5 failed | 3 passed (8)
@@ -104,7 +104,7 @@ $ npx vitest run src/ui/__tests__/chatLayoutCss.test.ts
       Tests  31 passed (31)
 
 $ npm run typecheck
-> UnicDB@1.53.24 typecheck
+> extension@1.53.24 typecheck
 > tsc --noEmit
 (no output → exit 0, pass)
 ```
@@ -118,22 +118,22 @@ Plus the new test file (untracked): `src/ui/__tests__/aiChatPanelCloneCss.test.t
 No JS/TS source files modified.
 
 FILES_CHANGED:
-- webview/styles.css: added `--UnicDB-chat-{accent,accent-hover,accent-strong,stop,warn}` tokens on the existing `.UnicDB-chat` block, plus a chat-scoped clone layer at the bottom of the file containing `.UnicDB-chat-header`, `.UnicDB-chat-brand` (28px/700/sans-serif/BLUE), `.UnicDB-chat-title`, `.UnicDB-chat-sessionchip`, `.UnicDB-chat-msg-user`, `.UnicDB-chat-msg-assistant`, `.UnicDB-chat-thought`, `.UnicDB-chat-tool` (+ `-failed` / `-denied`), `.UnicDB-chat-plan`, `.UnicDB-chat-usage`, `.UnicDB-chat-chip` + `.UnicDB-chat-chipmenu`, `.UnicDB-chat-toggle` (BLUE OFF) + `.UnicDB-chat-toggle-on` (amber `#f59e0b` ON), `.UnicDB-chat-stop` (square 16x16 red `#dc2626`) + `.UnicDB-chat-stop-live`, `.UnicDB-chat-secondary`, `@keyframes UnicDB-chat-pulse`, and a `@media (prefers-reduced-motion: reduce)` block disabling the pulse/caret/queued animations and the toggle thumb transition. Pre-existing `.UnicDB-chat*` rules and every non-chat selector are untouched.
+- webview/styles.css: added scoped chat tokens for accents, stop, and warning colors, plus header, message, thought, tool, plan, usage, chip, toggle, and stop-control styles. The implementation includes a blue single-letter mark, amber active toggle, red square stop control, pulse keyframes, and reduced-motion support.
 - src/ui/__tests__/aiChatPanelCloneCss.test.ts (new): TDD test file covering the 5 task-spec cases + brand glyph + stop button + bypass toggle contracts; uses `git show HEAD:webview/styles.css` as the pre-cycle baseline so the isolation check is robust against future non-chat selector growth.
 
 TESTS_ADDED:
 - src/ui/__tests__/aiChatPanelCloneCss.test.ts:
   - "loads webview/styles.css"
-  - ".UnicDB-chat declares the BLUE/stop/warn clone token block"
-  - "Claude-orange hexes are NOT used as accent inside .UnicDB-chat rules"
+  - "chat component declares the BLUE/stop/warn token block"
+  - "Claude-orange hexes are NOT used as accent inside chat-scoped rules"
   - "non-chat selectors are untouched and every new rule is chat-scoped"
   - "chat section has balanced braces"
-  - ".UnicDB-chat-brand is the big BLUE 'U' brand glyph"
-  - ".UnicDB-chat-stop is a red square; .UnicDB-chat-stop-live animates the pulse"
-  - ".UnicDB-chat-toggle BLUE OFF, .UnicDB-chat-toggle-on amber ON"
+  - "plain single-letter mark uses the specified blue treatment"
+  - "red square stop control and pulse animation work"
+  - "toggle states use the specified colors"
 
 Status: PASS
-Note: Per the task's note that "JS tasks must not gate animations in code — add/remove classes and let the media query win", the prefers-reduced-motion block in this CSS file uses `animation: none !important` on the same chat-scoped selectors the JS will toggle, so consumers (TASK-AGTUI-007/008) only need to add/remove `.UnicDB-chat-stop-live` / `.UnicDB-chat-toggle-on` etc. and the OS-level preference is respected automatically. No npm deps added. Files left as-is in worktree (no `git add` / `commit` / `push`).
+Note: The reduced-motion block uses `animation: none !important` on the same chat-scoped selectors toggled by JS, so consumers (TASK-AGTUI-007/008) only add/remove the state classes and the OS-level preference is respected automatically. No npm dependencies added. Files left as-is in the worktree (no `git add` / `commit` / `push`).
 
 ---
 
@@ -146,6 +146,6 @@ REVIEWER_MODEL: unic-smart
 Verdict: APPROVED-WITH-MINOR
 Findings:
 - [minor] src/ui/__tests__/aiChatPanelCloneCss.test.ts:159 — the "non-chat selectors untouched" isolation check uses `git show HEAD:webview/styles.css` as the pre-cycle baseline. Once this task was committed (87ec6e2), HEAD contains the chat selectors, so the "every new rule is chat-scoped" half of the check is tautological and will not catch future non-chat-selector additions. The declaration-level pins (toolbar flex-wrap, tab cursor, grid-host flex, btn var) and the direct diff evidence keep the property enforced for this task (wave-1 styles.css diff is 211 insertions / 0 deletions, verified). To keep the guard alive, pin the cycle base commit (`git show 515d87e:webview/styles.css`) or a hardcoded pre-cycle selector allowlist.
-- [minor] docs/AI_HANDOFF/tasks/TASK-AGTUI-001.md:27 vs webview/styles.css — spec names `@keyframes UnicDB-chat-caret`, but the file relies on the pre-existing `UnicDB-chat-caret-blink` (pinned by chatLayoutCss.test.ts "streaming caret"). Functionally satisfied; spec text only. No code change needed, or align the spec wording in a docs pass.
-- Clean: tokens byte-exact per PLAN §3 (`#3b82f6`/`#60a5fa`/`#2563eb`/`#dc2626`/`#f59e0b` on the existing `.UnicDB-chat` block); no Claude orange anywhere in chat rules; brand 28px/700/blue sans-serif; stop 16x16 square red with `UnicDB-chat-pulse`; toggle BLUE OFF / amber ON; reduced-motion block targets existing `.UnicDB-chat-stop-live`/`.UnicDB-chat-caret`/`.UnicDB-chat-queued`; all 19 newly added selectors are `.UnicDB-chat*`-scoped and match the test's pinned set; legacy element-id/class contract untouched (pure-additive CSS) and chatLayoutCss.test.ts passes unmodified.
+- [minor] docs/AI_HANDOFF/tasks/TASK-AGTUI-001.md:27 vs webview/styles.css — spec names a caret keyframe, while the file relies on the pre-existing caret-blink keyframe (pinned by chatLayoutCss.test.ts "streaming caret"). Functionally satisfied; spec text only. No code change needed, or align the spec wording in a docs pass.
+- Clean: tokens match the planned hex values (`#3b82f6`/`#60a5fa`/`#2563eb`/`#dc2626`/`#f59e0b`); no Claude orange in chat rules; mark is 28px/700/blue sans-serif; stop is a 16x16 red square with pulse; toggle BLUE OFF / amber ON; reduced-motion targets stop/caret/queued states; all 19 added selectors are chat-scoped and match the pinned set; legacy element-id/class contract untouched (pure-additive CSS) and chatLayoutCss.test.ts passes unmodified.
 Verification (reviewer re-run): `npx vitest run src/ui/__tests__/aiChatPanelCloneCss.test.ts src/ui/__tests__/chatLayoutCss.test.ts` → 39/39 pass; `npm run typecheck` → exit 0.

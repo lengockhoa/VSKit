@@ -75,7 +75,7 @@ interface Harness {
 
 function makeHarness(): Harness {
   const root = document.createElement("div");
-  root.className = "UnicDB-ai-chat-v2";
+  root.className = "VSKit-ai-chat-v2";
   document.body.appendChild(root);
 
   const composer = renderComposerV2(root, {
@@ -261,10 +261,10 @@ describe("geometry constants on the rendered listbox", () => {
     const h = makeHarness();
     h.view.setRows(rows(), 0);
     const listbox = h.composer.root.querySelector<HTMLElement>(`[${AUTOCOMPLETE_LISTBOX_MARKER}]`)!;
-    expect(listbox.style.getPropertyValue("--UnicDB-row-h")).toBe("44px");
-    expect(listbox.style.getPropertyValue("--UnicDB-list-min")).toBe("280px");
-    expect(listbox.style.getPropertyValue("--UnicDB-list-max")).toBe("420px");
-    expect(listbox.style.getPropertyValue("--UnicDB-list-pad")).toBe("12px");
+    expect(listbox.style.getPropertyValue("--VSKit-row-h")).toBe("44px");
+    expect(listbox.style.getPropertyValue("--VSKit-list-min")).toBe("280px");
+    expect(listbox.style.getPropertyValue("--VSKit-list-max")).toBe("420px");
+    expect(listbox.style.getPropertyValue("--VSKit-list-pad")).toBe("12px");
     expect(listbox.dataset.rowHeight).toBe("44");
   });
 });

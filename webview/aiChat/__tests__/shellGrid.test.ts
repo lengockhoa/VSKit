@@ -32,10 +32,10 @@ function ruleBodyHas(selector: string, declaration: string): boolean {
 describe("TASK-CHATFIX-001 explicit shell grid placement", () => {
   it("pins all four shell children to explicit grid-row 1..4", () => {
     const cases: Array<[string, number]> = [
-      ["\\.UnicDB-ai-chat-v2-header", 1],
-      ["\\.UnicDB-ai-chat-v2-banner", 2],
-      ["\\.UnicDB-ai-chat-v2-main", 3],
-      ["\\.UnicDB-ai-chat-v2-composer", 4],
+      ["\\.VSKit-ai-chat-v2-header", 1],
+      ["\\.VSKit-ai-chat-v2-banner", 2],
+      ["\\.VSKit-ai-chat-v2-main", 3],
+      ["\\.VSKit-ai-chat-v2-composer", 4],
     ];
     for (const [selector, row] of cases) {
       expect(
@@ -44,45 +44,45 @@ describe("TASK-CHATFIX-001 explicit shell grid placement", () => {
       ).toBe(true);
     }
     // The bottom info bar is gone — no -hint rule may remain.
-    expect(/\.UnicDB-ai-chat-v2-hint\s*\{/.test(stripped())).toBe(false);
+    expect(/\.VSKit-ai-chat-v2-hint\s*\{/.test(stripped())).toBe(false);
   });
 
   it("keeps the composer on a content-sized track that cannot be crushed", () => {
-    const root = ruleBody("\\.UnicDB-ai-chat-v2");
-    expect(root, "root .UnicDB-ai-chat-v2 rule must exist").toBeDefined();
+    const root = ruleBody("\\.VSKit-ai-chat-v2");
+    expect(root, "root .VSKit-ai-chat-v2 rule must exist").toBeDefined();
     expect(root).toMatch(/grid-template-rows:[^;]*minmax\(0,\s*1fr\)/);
-    expect(ruleBodyHas("\\.UnicDB-ai-chat-v2-composer", "grid-row:\\s*4")).toBe(true);
+    expect(ruleBodyHas("\\.VSKit-ai-chat-v2-composer", "grid-row:\\s*4")).toBe(true);
   });
 
   it("makes the transcript the sole scroll region via a flex main", () => {
-    const main = ruleBody("\\.UnicDB-ai-chat-v2-main");
-    expect(main, ".UnicDB-ai-chat-v2-main rule must exist").toBeDefined();
+    const main = ruleBody("\\.VSKit-ai-chat-v2-main");
+    expect(main, ".VSKit-ai-chat-v2-main rule must exist").toBeDefined();
     expect(main).toMatch(/display:\s*flex/);
     expect(main).toMatch(/flex-direction:\s*column/);
     expect(main).toMatch(/min-width:\s*0/);
     expect(main).toMatch(/min-height:\s*0/);
-    const transcript = ruleBody("\\.UnicDB-ai-chat-v2-transcript");
-    expect(transcript, ".UnicDB-ai-chat-v2-transcript rule must exist").toBeDefined();
+    const transcript = ruleBody("\\.VSKit-ai-chat-v2-transcript");
+    expect(transcript, ".VSKit-ai-chat-v2-transcript rule must exist").toBeDefined();
     expect(transcript).toMatch(/overflow-y:\s*auto/);
     expect(transcript).toMatch(/min-height:\s*0/);
   });
 
   it("clips at the root only — main never hides overflow", () => {
-    const root = ruleBody("\\.UnicDB-ai-chat-v2");
+    const root = ruleBody("\\.VSKit-ai-chat-v2");
     expect(root).toMatch(/overflow:\s*hidden/);
-    const main = ruleBody("\\.UnicDB-ai-chat-v2-main");
+    const main = ruleBody("\\.VSKit-ai-chat-v2-main");
     expect(main).toBeDefined();
     expect(main).not.toMatch(/overflow:\s*hidden/);
   });
 
   it("keeps every new placement rule V2-scoped with balanced braces", () => {
     const selectors = [
-      "\\.UnicDB-ai-chat-v2-header",
-      "\\.UnicDB-ai-chat-v2-banner",
-      "\\.UnicDB-ai-chat-v2-main",
-      "\\.UnicDB-ai-chat-v2-composer",
-      "\\.UnicDB-ai-chat-v2-usage",
-      "\\.UnicDB-ai-chat-v2-engine-state",
+      "\\.VSKit-ai-chat-v2-header",
+      "\\.VSKit-ai-chat-v2-banner",
+      "\\.VSKit-ai-chat-v2-main",
+      "\\.VSKit-ai-chat-v2-composer",
+      "\\.VSKit-ai-chat-v2-usage",
+      "\\.VSKit-ai-chat-v2-engine-state",
     ];
     const withoutComments = stripped();
     const opens = (withoutComments.match(/\{/g) ?? []).length;
@@ -92,35 +92,35 @@ describe("TASK-CHATFIX-001 explicit shell grid placement", () => {
 
   it("lets a hidden banner keep its explicit track", () => {
     expect(
-      /\.UnicDB-ai-chat-v2-banner\[hidden\]\s*\{[^}]*display:\s*none/.test(stripped()),
+      /\.VSKit-ai-chat-v2-banner\[hidden\]\s*\{[^}]*display:\s*none/.test(stripped()),
     ).toBe(true);
-    expect(ruleBodyHas("\\.UnicDB-ai-chat-v2-banner", "grid-row:\\s*2")).toBe(true);
+    expect(ruleBodyHas("\\.VSKit-ai-chat-v2-banner", "grid-row:\\s*2")).toBe(true);
   });
 });
 
 describe("TASK-CHATUX-001 layout stabilization contract", () => {
   it("keeps minmax(0,1fr) transcript track and transcript as sole overflow-y:auto region", () => {
-    const root = ruleBody("\\.UnicDB-ai-chat-v2");
-    expect(root, "root .UnicDB-ai-chat-v2 rule must exist").toBeDefined();
+    const root = ruleBody("\\.VSKit-ai-chat-v2");
+    expect(root, "root .VSKit-ai-chat-v2 rule must exist").toBeDefined();
     expect(root).toMatch(
       /grid-template-rows:\s*40px\s+auto\s+minmax\(0,\s*1fr\)\s+auto\s*;/,
     );
 
-    const transcript = ruleBody("\\.UnicDB-ai-chat-v2-transcript");
-    expect(transcript, ".UnicDB-ai-chat-v2-transcript rule must exist").toBeDefined();
+    const transcript = ruleBody("\\.VSKit-ai-chat-v2-transcript");
+    expect(transcript, ".VSKit-ai-chat-v2-transcript rule must exist").toBeDefined();
     const scrollDecls = transcript!.match(/overflow-y:\s*auto/g) ?? [];
     expect(scrollDecls).toHaveLength(1);
 
     // Context strip scrolls horizontally only — never a second vertical region.
-    const context = ruleBody("\\.UnicDB-ai-chat-v2-context");
-    expect(context, ".UnicDB-ai-chat-v2-context rule must exist").toBeDefined();
+    const context = ruleBody("\\.VSKit-ai-chat-v2-context");
+    expect(context, ".VSKit-ai-chat-v2-context rule must exist").toBeDefined();
     expect(context).toMatch(/overflow-x:\s*auto/);
     expect(context).not.toMatch(/overflow-y:\s*auto/);
   });
 
   it("TASK-CHATUX2-001: 4-row root grid, 5px bottom padding, header stat rules (footnote removed)", () => {
-    const root = ruleBody("\\.UnicDB-ai-chat-v2");
-    expect(root, "root .UnicDB-ai-chat-v2 rule must exist").toBeDefined();
+    const root = ruleBody("\\.VSKit-ai-chat-v2");
+    expect(root, "root .VSKit-ai-chat-v2 rule must exist").toBeDefined();
     // Exactly four tracks: header · banner · main · composer.
     expect(root).toMatch(
       /grid-template-rows:\s*40px\s+auto\s+minmax\(0,\s*1fr\)\s+auto\s*;/,
@@ -130,21 +130,21 @@ describe("TASK-CHATUX-001 layout stabilization contract", () => {
 
     // The keyboard-hint footnote was removed per product decision — the rule
     // must NOT exist anymore.
-    expect(ruleBody("\\.UnicDB-ai-chat-v2-footnote")).toBeUndefined();
+    expect(ruleBody("\\.VSKit-ai-chat-v2-footnote")).toBeUndefined();
 
     // Header stats: muted 11/16, nowrap; usage pinned to the right zone.
     for (const sel of [
-      "\\.UnicDB-ai-chat-v2-usage",
-      "\\.UnicDB-ai-chat-v2-engine-state",
+      "\\.VSKit-ai-chat-v2-usage",
+      "\\.VSKit-ai-chat-v2-engine-state",
     ]) {
       const body = ruleBody(sel);
       expect(body, `${sel} rule must exist`).toBeDefined();
       expect(body).toMatch(/font-size:\s*11px/);
       expect(body).toMatch(/line-height:\s*16px/);
-      expect(body).toMatch(/color:\s*var\(--UnicDB-ai-chat-v2-muted\)/);
+      expect(body).toMatch(/color:\s*var\(--VSKit-ai-chat-v2-muted\)/);
       expect(body).toMatch(/white-space:\s*nowrap/);
     }
-    expect(ruleBody("\\.UnicDB-ai-chat-v2-usage")).toMatch(
+    expect(ruleBody("\\.VSKit-ai-chat-v2-usage")).toMatch(
       /margin-left:\s*auto/,
     );
   });
@@ -152,7 +152,7 @@ describe("TASK-CHATUX-001 layout stabilization contract", () => {
   it("TASK-CHATUX2-001: tree rail + branch stubs + dimmed reasoning", () => {
     // The rail extends to reasoning items (shared ::before selector).
     const rail = stripped().match(
-      /\.UnicDB-ai-chat-v2-item-tool::before\s*,\s*\.UnicDB-ai-chat-v2-item-reasoning::before\s*\{([^}]*)\}/,
+      /\.VSKit-ai-chat-v2-item-tool::before\s*,\s*\.VSKit-ai-chat-v2-item-reasoning::before\s*\{([^}]*)\}/,
     );
     expect(rail, "shared -item-tool/-item-reasoning ::before rail must exist").not.toBeNull();
     expect(rail![1]).toMatch(/left:\s*9px/);
@@ -160,24 +160,24 @@ describe("TASK-CHATUX-001 layout stabilization contract", () => {
     expect(rail![1]).toMatch(/bottom:\s*0/);
 
     // Reasoning items anchor their rail/stub like tool items.
-    const reasoningItem = ruleBody("\\.UnicDB-ai-chat-v2-item-reasoning");
+    const reasoningItem = ruleBody("\\.VSKit-ai-chat-v2-item-reasoning");
     expect(reasoningItem).toMatch(/position:\s*relative/);
 
     // data-tree variants trim the rail at run boundaries.
     const first = stripped().match(
-      /\.UnicDB-ai-chat-v2-item-tool\[data-tree~="first"\]::before\s*,\s*\.UnicDB-ai-chat-v2-item-reasoning\[data-tree~="first"\]::before\s*\{([^}]*)\}/,
+      /\.VSKit-ai-chat-v2-item-tool\[data-tree~="first"\]::before\s*,\s*\.VSKit-ai-chat-v2-item-reasoning\[data-tree~="first"\]::before\s*\{([^}]*)\}/,
     );
     expect(first, 'data-tree="first" rail variant must exist').not.toBeNull();
     expect(first![1]).toMatch(/top:\s*14px/);
     const last = stripped().match(
-      /\.UnicDB-ai-chat-v2-item-tool\[data-tree~="last"\]::before\s*,\s*\.UnicDB-ai-chat-v2-item-reasoning\[data-tree~="last"\]::before\s*\{([^}]*)\}/,
+      /\.VSKit-ai-chat-v2-item-tool\[data-tree~="last"\]::before\s*,\s*\.VSKit-ai-chat-v2-item-reasoning\[data-tree~="last"\]::before\s*\{([^}]*)\}/,
     );
     expect(last, 'data-tree="last" rail variant must exist').not.toBeNull();
     expect(last![1]).toMatch(/bottom:\s*calc\(100%\s*-\s*14px\)/);
 
     // Branch stub: 1px × 10px horizontal tick on both step kinds.
     const stub = stripped().match(
-      /\.UnicDB-ai-chat-v2-item-tool::after\s*,\s*\.UnicDB-ai-chat-v2-item-reasoning::after\s*\{([^}]*)\}/,
+      /\.VSKit-ai-chat-v2-item-tool::after\s*,\s*\.VSKit-ai-chat-v2-item-reasoning::after\s*\{([^}]*)\}/,
     );
     expect(stub, "shared ::after branch stub must exist").not.toBeNull();
     expect(stub![1]).toMatch(/left:\s*9px/);
@@ -185,13 +185,13 @@ describe("TASK-CHATUX-001 layout stabilization contract", () => {
     expect(stub![1]).toMatch(/width:\s*10px/);
 
     // Thinking text: dimmed (muted color) + smaller.
-    const body = ruleBody("\\.UnicDB-ai-chat-v2-reasoning-body");
+    const body = ruleBody("\\.VSKit-ai-chat-v2-reasoning-body");
     expect(body, "-reasoning-body rule must exist").toBeDefined();
     expect(body).toMatch(/font-size:\s*12px/);
     expect(body).toMatch(/line-height:\s*18px/);
-    expect(body).toMatch(/color:\s*var\(--UnicDB-ai-chat-v2-muted\)/);
+    expect(body).toMatch(/color:\s*var\(--VSKit-ai-chat-v2-muted\)/);
 
-    const toggle = ruleBody("\\.UnicDB-ai-chat-v2-reasoning-toggle");
+    const toggle = ruleBody("\\.VSKit-ai-chat-v2-reasoning-toggle");
     expect(toggle, "-reasoning-toggle rule must exist").toBeDefined();
     expect(toggle).toMatch(/min-height:\s*24px/);
     expect(toggle).toMatch(/font-size:\s*11px/);
@@ -201,7 +201,7 @@ describe("TASK-CHATUX-001 layout stabilization contract", () => {
     expect(stripped()).not.toMatch(/position:\s*fixed/);
 
     const m = stripped().match(
-      /\.UnicDB-ai-chat-v2-item-text[^{]*\{([^}]*)\}/,
+      /\.VSKit-ai-chat-v2-item-text[^{]*\{([^}]*)\}/,
     );
     expect(m, "item-text/item-reasoning rule must exist").not.toBeNull();
     const body = m![1];
@@ -211,15 +211,15 @@ describe("TASK-CHATUX-001 layout stabilization contract", () => {
   });
 
   it("normalizes Markdown block spacing", () => {
-    const paragraph = ruleBody("\\.UnicDB-ai-chat-v2-md-paragraph");
+    const paragraph = ruleBody("\\.VSKit-ai-chat-v2-md-paragraph");
     expect(paragraph, "md-paragraph rule must exist").toBeDefined();
     expect(paragraph).toMatch(/margin:\s*0 0 8px/);
 
-    const heading = ruleBody("\\.UnicDB-ai-chat-v2-md-heading");
+    const heading = ruleBody("\\.VSKit-ai-chat-v2-md-heading");
     expect(heading, "md-heading rule must exist").toBeDefined();
     expect(heading).toMatch(/margin:\s*12px 0 6px/);
 
-    const code = ruleBody("\\.UnicDB-ai-chat-v2-code");
+    const code = ruleBody("\\.VSKit-ai-chat-v2-code");
     expect(code, "code rule must exist").toBeDefined();
     expect(code).toMatch(/overflow-x:\s*auto/);
     expect(code).toMatch(/white-space:\s*pre\s*;/);
@@ -229,16 +229,16 @@ describe("TASK-CHATUX-001 layout stabilization contract", () => {
 describe("TASK-CHATUX2-004 single scroll owner + activity cutover", () => {
   it("overrides the legacy #thread into a flow child — transcript stays the sole scroller", () => {
     const thread = ruleBody(
-      "\\.UnicDB-ai-chat-v2-transcript\\s*>\\s*\\.UnicDB-chat-thread",
+      "\\.VSKit-ai-chat-v2-transcript\\s*>\\s*\\.VSKit-chat-thread",
     );
-    expect(thread, "transcript > .UnicDB-chat-thread override rule must exist").toBeDefined();
+    expect(thread, "transcript > .VSKit-chat-thread override rule must exist").toBeDefined();
     expect(thread).toMatch(/flex:\s*0 0 auto/);
     expect(thread).toMatch(/overflow:\s*visible/);
     expect(thread).toMatch(/scroll-behavior:\s*auto/);
     expect(thread).toMatch(/margin-bottom:\s*0/);
 
     // The transcript remains the only vertical scroll region.
-    const transcript = ruleBody("\\.UnicDB-ai-chat-v2-transcript");
+    const transcript = ruleBody("\\.VSKit-ai-chat-v2-transcript");
     expect(transcript).toMatch(/overflow-y:\s*auto/);
   });
 

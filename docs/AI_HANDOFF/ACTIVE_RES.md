@@ -1,9 +1,9 @@
 Cycle: RES-BAR   Date: 2026-09-08   Base: main @ accf1b5
-Goal: Add WHERE / ORDER BY input boxes to the UnicDB Results toolbar; pressing Enter re-runs the original SQL with the typed fragments applied (server-side). Also fix toolbar hover polish (kill the late-appearing native title tooltip + the instant background-color flash).
+Goal: Add WHERE / ORDER BY input boxes to the Results toolbar; pressing Enter re-runs the original SQL with the typed fragments applied (server-side). Also fix toolbar hover polish (kill the late-appearing native title tooltip + the instant background-color flash).
 Tasks: 3 total planned
   - TASK-RES-001 (webview): relocate requery bar into toolbar slot; placeholder `WHERE …` / `ORDER BY …`; Enter keydown listeners with IME-composition guard
   - TASK-RES-002 (ext): stripLeadingClauseKeyword helper at handleRequery message boundary; pure logic in src/ui/queryComposer.ts
-  - TASK-RES-003 (webview, wave 2): drop btn.title from makeIconButton; add `transition: background-color 80ms ease-out, box-shadow 80ms ease-out` to .UnicDB-btn
+  - TASK-RES-003 (webview, wave 2): drop btn.title from makeIconButton; add `transition: background-color 80ms ease-out, box-shadow 80ms ease-out` to .extension-btn
 Status: review_in_progress — R4 reviewer agents dispatched (unic-smart, batch 1 = RES-001 + RES-002 in parallel). R1 (review-context scout), R2 (model isolation: executor=unic-code ≠ reviewer=unic-smart, holds), R3 (re-run verification: typecheck 0 · compile clean · targeted vitest 69/69 · full npm test 4081/4 green) all done.
   - P0 (locked): server-side re-run · free SQL fragment · in existing toolbar between tsv dropdown and Search input
   - P1: handoff context confirmed; previous cycle AGT-CLEANUP-2 fully closed (release 1.53.26)

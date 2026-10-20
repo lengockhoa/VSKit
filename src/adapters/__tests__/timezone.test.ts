@@ -194,8 +194,8 @@ function mysqlCfg(): ConnectionConfig {
     driver: "mysql",
     host: "127.0.0.1",
     port: 3306,
-    user: "UnicDB",
-    database: "UnicDB",
+    user: "VSKit",
+    database: "VSKit",
   };
 }
 
@@ -206,8 +206,8 @@ function mssqlCfg(): ConnectionConfig {
     driver: "mssql",
     host: "127.0.0.1",
     port: 1433,
-    user: "UnicDB",
-    database: "UnicDB",
+    user: "VSKit",
+    database: "VSKit",
   };
 }
 

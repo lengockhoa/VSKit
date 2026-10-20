@@ -209,7 +209,7 @@ describe("stripLeadingClauseKeyword — post-strip fragment is parser-acceptable
     expect(stripped).toBe("id > 5");
     // Compose through the same lane the host uses — no double WHERE.
     expect(composeRequery("SELECT * FROM t", stripped, "")).toBe(
-      "SELECT * FROM (SELECT * FROM t) UnicDB_sub WHERE id > 5",
+      "SELECT * FROM (SELECT * FROM t) VSKit_sub WHERE id > 5",
     );
     // And critically the assembled SQL contains exactly ONE "WHERE " — the
     // double-strip regression guard from the task brief.

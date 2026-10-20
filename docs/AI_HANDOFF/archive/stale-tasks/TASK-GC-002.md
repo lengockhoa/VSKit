@@ -43,7 +43,7 @@ Structural interfaces keep it unit-testable without the real git extension.
 
 | # | Type | Test name | Expected | Pre-state / Fixture |
 |---|------|-----------|----------|---------------------|
-| 1 | happy | staged diff preferred | `collectCommitDiff` returns `diffText` = staged text, `repoName` = "UnicDB", `branch` = "main", files deduped repo-relative | repo with staged + unstaged text |
+| 1 | happy | staged diff preferred | `collectCommitDiff` returns `diffText` = staged text, `repoName` = "repository", `branch` = "main", files deduped repo-relative | repo with staged + unstaged text |
 | 2 | edge (empty) | nothing to commit → null | staged and unstaged both whitespace → returns `null` | `diff()` returns "   \n  " |
 | 3 | edge (boundary) | falls back to unstaged | staged empty string → `diffText` = unstaged text | `diff(true)` = "", `diff()` = "diff --git …" |
 | 4 | edge (boundary) | 12 KB truncation | 20 KB staged diff → `diffText.length` ≤ 12 KB + marker, ends with "[diff truncated]" | oversized diff string |
@@ -102,14 +102,14 @@ EXECUTOR_MODEL: unic-code
 EXECUTOR_SUBAGENT: -
 RED_OUTPUT:
 ```
- RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-gc-002
+ RUN  v1.6.1 /workspace/.worktrees/task-gc-002
 
  ❯ src/adapters/__tests__/gitDiff.test.ts  (0 test)
 
 ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
 
  FAIL  src/adapters/__tests__/gitDiff.test.ts [ src/adapters/__tests__/gitDiff.test.ts ]
-Error: Failed to load url vscode (resolved id: vscode) in /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-gc-002/src/adapters/__tests__/gitDiff.test.ts. Does the file exist?
+Error: Failed to load url vscode (resolved id: vscode) in /workspace/.worktrees/task-gc-002/src/adapters/__tests__/gitDiff.test.ts. Does the file exist?
  ❯ loadAndTransform ../../node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
 
  Test Files  1 failed (1)
@@ -123,12 +123,12 @@ on `vscode`) failed with `Cannot find module '../gitDiff'`. After implementing
 Verification Output:
 ```
 $ npm run typecheck
-> UnicDB@1.51.7 typecheck
+> extension@1.51.7 typecheck
 > tsc --noEmit
 (exit 0, no output)
 
 $ npx vitest run src/adapters/__tests__/gitDiff.test.ts
- RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-gc-002
+ RUN  v1.6.1 /workspace/.worktrees/task-gc-002
  ✓ src/adapters/__tests__/gitDiff.test.ts  (12 tests) 2ms
  Test Files  1 passed (1)
       Tests  12 passed (12)

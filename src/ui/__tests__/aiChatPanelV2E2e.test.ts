@@ -17,7 +17,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 const distPath = resolve(process.cwd(), "dist", "aiChatPanel.js");
 const bundleSrc = existsSync(distPath) ? readFileSync(distPath, "utf8") : null;
 
-interface UnicDBApi {
+interface VSKitApi {
   postMessage: (msg: unknown) => void;
 }
 
@@ -55,11 +55,11 @@ function loadBundle(): BundleHandle {
     window.removeEventListener(type, listener, options);
   }
   bundleListeners.length = 0;
-  document.body.innerHTML = '<div id="UnicDB-root" class="UnicDB-form-body"></div>';
+  document.body.innerHTML = '<div id="VSKit-root" class="VSKit-form-body"></div>';
 
   const received: Array<Record<string, unknown>> = [];
-  const api: UnicDBApi = { postMessage: (msg) => received.push(msg as Record<string, unknown>) };
-  (globalThis as unknown as { acquireVsCodeApi: () => UnicDBApi }).acquireVsCodeApi = () => api;
+  const api: VSKitApi = { postMessage: (msg) => received.push(msg as Record<string, unknown>) };
+  (globalThis as unknown as { acquireVsCodeApi: () => VSKitApi }).acquireVsCodeApi = () => api;
   (0, eval)(bundleSrc);
   return { received };
 }
@@ -81,7 +81,7 @@ async function flushStreamPaint(): Promise<void> {
   await flush();
 }
 
-const root = (): HTMLElement => document.getElementById("UnicDB-root") as HTMLElement;
+const root = (): HTMLElement => document.getElementById("VSKit-root") as HTMLElement;
 const byId = <T extends HTMLElement>(id: string): T | null => document.getElementById(id) as T | null;
 
 /**
@@ -123,7 +123,7 @@ describeIfBundle("chat V2 production bundle — TASK-CHATV2-017", () => {
     const { received } = loadBundle();
     const r = root();
     // The V2 root class is authoritative.
-    expect(r.classList.contains("UnicDB-ai-chat-v2")).toBe(true);
+    expect(r.classList.contains("VSKit-ai-chat-v2")).toBe(true);
     expect(r.getAttribute("data-chat-v2-shell")).toBe("1");
     expect(byId("composerV2")).not.toBeNull();
     expect(byId("promptV2")).not.toBeNull();
@@ -188,7 +188,7 @@ describeIfBundle("chat V2 production bundle — TASK-CHATV2-017", () => {
     await bootWithOpenTurn();
     dispatch({ kind: "text_delta", protocolVersion: 2, sessionId: "s1", sequence: 3, turnId: "t1", messageId: "m1", text: "**hi** there" });
     await flushStreamPaint();
-    const transcript = root().querySelector(".UnicDB-ai-chat-v2-transcript")!;
+    const transcript = root().querySelector(".VSKit-ai-chat-v2-transcript")!;
     expect(transcript.querySelectorAll("[data-chat-key]").length).toBeGreaterThanOrEqual(1);
     expect(transcript.textContent).toContain("hi");
   });
@@ -393,7 +393,7 @@ describeIfBundle("chat V2 production bundle — TASK-CHATV2-017", () => {
     await flush();
     // Exactly ONE live surface: the V2 anchored sheet. The legacy in-thread
     // card must never mount alongside it.
-    expect(document.querySelectorAll(".UnicDB-chat-permission").length).toBe(0);
+    expect(document.querySelectorAll(".VSKit-chat-permission").length).toBe(0);
     expect(document.querySelectorAll("[data-chat-permission-request]").length).toBe(1);
     // Allow is reachable and answers EXACTLY once.
     const allow = document.querySelector<HTMLButtonElement>('[data-chat-permission-request] [data-action="allow-once"]');
@@ -461,8 +461,8 @@ describeIfBundle("chat V2 production bundle — TASK-CHATV2-017", () => {
     const cssPath = resolve(process.cwd(), "webview", "aiChat", "styles.css");
     const css = readFileSync(cssPath, "utf8");
     for (const rule of [
-      ".UnicDB-ai-chat-v2-control svg",
-      ".UnicDB-ai-chat-v2-primary svg",
+      ".VSKit-ai-chat-v2-control svg",
+      ".VSKit-ai-chat-v2-primary svg",
     ]) {
       expect(
         new RegExp(`${rule.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*\\{[^}]*pointer-events:\\s*none`).test(css),

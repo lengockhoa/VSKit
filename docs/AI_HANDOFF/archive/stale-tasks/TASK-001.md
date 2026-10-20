@@ -84,7 +84,7 @@ EXECUTOR_SUBAGENT: feature-implementer
 
 ### RED output (verbatim, before any production change)
 ```
- RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-001
+ RUN  v1.6.1 /workspace/.worktrees/task-001
 
  ❯ src/ai/__tests__/settings.test.ts > ai/settings — defaults + validation + helpers > T1#1 — valid AiSettings with engine 'claude-code' → no errors
 AssertionError: expected [ …(3) ] to deeply equal []
@@ -140,7 +140,7 @@ Tests  10 failed | 26 passed (36)
 
 ### GREEN output (after implementation)
 ```
- RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-001
+ RUN  v1.6.1 /workspace/.worktrees/task-001
 
  ✓ src/ai/__tests__/settings.test.ts  (22 tests) 4ms
  ✓ src/ai/__tests__/config.test.ts  (14 tests) 3ms
@@ -153,7 +153,7 @@ Tests  10 failed | 26 passed (36)
 
 ### VERIFICATION output (`npm run typecheck`)
 ```
-> UnicDB@1.53.23 typecheck
+> Extension@1.53.23 typecheck
 > tsc --noEmit
 
 src/ai/commitGenCommand.ts(125,9): error TS2322: Type 'AiEngine' is not assignable to type '"builtin" | "omp"'.
@@ -188,7 +188,7 @@ Verification (after fix):
 
 ```
 $ npm run typecheck
-> UnicDB@1.53.23 typecheck
+> Extension@1.53.23 typecheck
 > tsc --noEmit
 (exit 0 — no output)
 

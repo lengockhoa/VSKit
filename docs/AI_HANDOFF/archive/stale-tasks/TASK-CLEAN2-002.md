@@ -104,13 +104,13 @@ Verification Output:
   $ grep -rn "_LegacyDetectionTypes" --include="*.ts" --include="*.tsx" src/ webview/ tests/
   (no matches)
   $ npx vitest run src/ai/__tests__/engineChoice.test.ts
-  RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/clean2-002
+  RUN v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/VSKit/.worktrees/clean2-002
    ✓ src/ai/__tests__/engineChoice.test.ts  (11 tests) 2ms
    Test Files  1 passed (1)
         Tests  11 passed (11)
    Duration  195ms
   $ npm run typecheck
-  > UnicDB@1.53.25 typecheck
+  > VSKit@1.53.25 typecheck
   > tsc --noEmit
   (exit 0, no errors)
 

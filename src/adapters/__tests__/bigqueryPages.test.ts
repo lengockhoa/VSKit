@@ -37,7 +37,7 @@ import {
 // ---------------------------------------------------------------------------
 
 const JOB_REF = {
-  projectId: "UnicDB-it",
+  projectId: "VSKit-it",
   location: "US",
   jobId: "job_abc",
 } as const;

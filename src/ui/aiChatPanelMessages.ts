@@ -287,7 +287,7 @@ export type AiChatPanelHostMessage =
  *  active connection's pinned schema changes (status-bar click, the
  *  chat chip itself, or any other surface that mutates
  *  `ActiveSchemaStore`). The webview keeps the composer chip label
- *  in sync; the click handler routes back to `UnicDB.selectActiveSchema`
+ *  in sync; the click handler routes back to `VSKit.selectActiveSchema`
  *  which goes through the same store, so all chips stay coherent. */
 export interface AiChatPanelSchemaChanged {
   type: "schemaChanged";

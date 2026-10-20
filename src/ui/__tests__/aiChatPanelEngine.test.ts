@@ -1,7 +1,7 @@
 // src/ui/__tests__/aiChatPanelEngine.test.ts — Cycle AE TASK-003
 //
 // Engine routing test for AiChatPanel. Cycle AE wires the user's
-// `UnicDB.ai.engine` setting into the chat panel's per-turn dispatch:
+// `VSKit.ai.engine` setting into the chat panel's per-turn dispatch:
 //
 //   engine === "builtin" → runAgent (provider). UNCHANGED.
 //   engine === "omp"     → OmpChatEngine.send(text, events). NEW.
@@ -97,7 +97,7 @@ vi.mock("vscode", () => ({
   workspace: {
     getConfiguration: vi.fn((section: string) => ({
       get: vi.fn((key: string, defaultValue?: unknown) => {
-        if (section === "UnicDB" && key === "ai.engine") {
+        if (section === "VSKit" && key === "ai.engine") {
           return defaultValue ?? "builtin";
         }
         return defaultValue;
@@ -366,15 +366,15 @@ describe("AiChatPanel — engine routing (cycle AE TASK-003)", () => {
     // land before asserting so the test never races the config write.
     await until(() =>
       state.configUpdates.some(
-        (u) => u.key === "UnicDB.ai.engine" && u.value === "builtin",
+        (u) => u.key === "VSKit.ai.engine" && u.value === "builtin",
       ),
     );
  
      // Engine was called.
      expect(engine.send).toHaveBeenCalledTimes(1);
-    // engine flipped back to builtin via UnicDB config.
+    // engine flipped back to builtin via VSKit config.
     expect(state.configUpdates).toContainEqual({
-      key: "UnicDB.ai.engine",
+      key: "VSKit.ai.engine",
       value: "builtin",
     });
     // Next turn now runs builtin (runAgent) — proves the engine flip took.
@@ -412,7 +412,7 @@ describe("AiChatPanel — engine routing (cycle AE TASK-003)", () => {
     expect(agentState.runAgentMock).toHaveBeenCalledTimes(1);
     expect(engine.send).not.toHaveBeenCalled();
     expect(state.configUpdates).not.toContainEqual({
-      key: "UnicDB.ai.engine",
+      key: "VSKit.ai.engine",
       value: "builtin",
     });
   });
@@ -1034,7 +1034,7 @@ describe("AiChatPanel — TASK-011 engine-unavailable fallback", () => {
 // engine exactly once so production chat-engine state (HostMcp loopback
 // listener, McpBridge bearer descriptor, AcpProcess child) does not leak for
 // the panel lifetime. Claude Code additionally writes an ephemeral MCP config
-// file at `.vscode/.unicdb-claude-mcp-<pid>-<ts>.json` (see extension.ts:
+// file at `.vscode/.vskit-claude-mcp-<pid>-<ts>.json` (see extension.ts:
 // writeClaudeMcpConfigFile) — that file's lifecycle MUST be tied to the
 // panel teardown so secret-shaped artifacts cannot survive engine disposal.
 //
@@ -1099,7 +1099,7 @@ describe("AiChatPanel — TASK-012 R4.5: claude/codex engine dispose on teardown
     expect(dispose).toHaveBeenCalledTimes(1);
   });
 
-  it("claude-code: panel teardown calls claudeCodeChatEngine.disposeMcp() so .unicdb-claude-mcp-*.json is unlinked", async () => {
+  it("claude-code: panel teardown calls claudeCodeChatEngine.disposeMcp() so .vskit-claude-mcp-*.json is unlinked", async () => {
     const factory: AdapterFactory = vi.fn(async () => null);
     const dispose = vi.fn(async () => undefined);
     const disposeMcp = vi.fn(async () => undefined);

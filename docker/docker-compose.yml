@@ -1,6 +1,7 @@
-# docker/docker-compose.yml
-# 3 services test cho UnicDB: postgres, mysql, mssql.
-# TASK-003 tạo đầy đủ NGAY TỪ ĐẦU để TASK-004/005/006 reuse mà không sửa file này.
+# VSKit development test services: postgres, mysql, mssql.
+# These standalone fixture identifiers and volumes are independent of other
+# local development databases.
+# TASK-003 created these fixtures for TASK-004/005/006; keep IDs VSKit-specific.
 #
 # Khởi động:
 #   docker compose -f docker/docker-compose.yml up -d
@@ -12,61 +13,63 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: UnicDB-postgres
+    container_name: VSKit-postgres
     environment:
-      POSTGRES_USER: UnicDB
-      POSTGRES_PASSWORD: UnicDB
-      POSTGRES_DB: UnicDB
+      POSTGRES_USER: VSKit
+      POSTGRES_PASSWORD: VSKitDevPg_2026!
+      POSTGRES_DB: VSKit
     ports:
       - "5433:5432"
     volumes:
-      - UnicDB_pg_data:/var/lib/postgresql/data
+      - VSKit_pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U UnicDB -d UnicDB"]
+      test: ["CMD-SHELL", "pg_isready -U VSKit -d VSKit"]
       interval: 3s
       timeout: 5s
       retries: 20
 
   mysql:
     image: mysql:8
-    container_name: UnicDB-mysql
+    container_name: VSKit-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: UnicDB
-      MYSQL_DATABASE: UnicDB
+      MYSQL_ROOT_PASSWORD: VSKitDevMysqlRoot_2026!
+      MYSQL_DATABASE: VSKit
+      MYSQL_USER: VSKit
+      MYSQL_PASSWORD: VSKitDevMysql_2026!
     ports:
       - "3307:3306"
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
     volumes:
-      - UnicDB_mysql_data:/var/lib/mysql
+      - VSKit_mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-pUnicDB"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "VSKit", "-pVSKitDevMysql_2026!"]
       interval: 5s
       timeout: 5s
       retries: 30
 
   mssql:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: UnicDB-mssql
+    container_name: VSKit-mssql
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "UnicDBPass123!"
+      MSSQL_SA_PASSWORD: "VSKitDevSql_2026!"
       MSSQL_PID: "Developer"
     ports:
       - "1434:1433"
     volumes:
-      - UnicDB_mssql_data:/var/opt/mssql
+      - VSKit_mssql_data:/var/opt/mssql
     healthcheck:
       test:
         - "CMD-SHELL"
-        - "/opt/mssql-tools18/bin/sqlcmd -S 127.0.0.1 -U sa -P 'UnicDBPass123!' -C -No -Q 'SELECT 1' || exit 1"
+        - "/opt/mssql-tools18/bin/sqlcmd -S 127.0.0.1 -U sa -P 'VSKitDevSql_2026!' -C -No -Q 'SELECT 1' || exit 1"
       interval: 5s
       timeout: 5s
       retries: 30
       start_period: 30s
 
 volumes:
-  UnicDB_pg_data:
-  UnicDB_mysql_data:
-  UnicDB_mssql_data:
+  VSKit_pg_data:
+  VSKit_mysql_data:
+  VSKit_mssql_data:

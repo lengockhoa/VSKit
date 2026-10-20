@@ -98,7 +98,7 @@ Deliberately read-only per user P0.2 ("NO rewrite this cycle"). If you find a cr
 - [important] [refactor] — `src/ai/omp/ompChatEngine.ts:88-102` + `src/ai/omp/hostMcp.ts:64-89` — the `HostMcp` interface is DUPLICATED in both files with the engine copy being a structural subset. The new `claudeCode/` and `codex/` mirror directories already exist (`src/ai/claudeCode/`, `src/ai/codex/`, both with `detect.ts`); when `claudeCodeChatEngine.ts` and `codexChatEngine.ts` land they will each import a separate `HostMcp` (or duplicate a third copy). — next-cycle action: extract a single `AgentChatEngine` interface from `ompChatEngine.ts:119-137` into `src/ai/agentChatEngine.ts`, hoist the shared `HostMcp` / `AcpSession` / `McpServerDescriptor` types to the same file, and have `ompChatEngine`, `claudeCodeChatEngine`, `codexChatEngine` all implement / consume the shared surface (this is the natural home for the duplication this cycle's mirroring creates).
 - [important] [error-path] — `src/ai/omp/ompChatEngine.ts:253-334` — `dispatchNotification` is `async` and called as `void dispatchNotification(...)` (line 417), so any rejection escapes as an unhandled rejection. The body has a try/catch around `hostMcp.call(name, args)` only; the surrounding `emit(...)`, `events.onDelta?.(text)`, etc. are NOT guarded. If a panel-supplied `onDelta` throws (e.g. the panel disposed mid-stream), the whole turn dies. — next-cycle action: wrap the whole `dispatchNotification` body in an outer try/catch that emits `error` and continues, then add `it("onDelta throwing mid-turn does not kill the dispatcher; subsequent frames still stream")` to `src/ai/omp/__tests__/ompChatEngine.test.ts`.
 - [minor] [error-path] — `src/ai/omp/ompChatEngine.ts:312-328` — the `tool_call_update` branch fires `onToolEnd` with `result` and `isError === update.isError === true`, but the `tool_call` branch (lines 293-310) fires `onToolEnd` with `isError === out.isError` from `hostMcp.call()` — these two paths may produce DIFFERENT `isError` values for the same logical tool call (e.g. omp reports success at the protocol layer but the tool itself threw). The panel ends up showing two tool cards or a contradictory final state. — next-cycle action: reconcile via a per-toolCallId ledger (track the original `tool_call` and apply the `tool_call_update` as a final override keyed by `toolCallId`); add a regression test pinning the final `isError` to whichever update arrives LAST.
-- [minor] [quality] — `src/ai/omp/ompChatEngine.ts:187-198` — `mcpServersDescriptor` rebuilds the `{type: "http", name: "UnicDB", url, headers: []}` descriptor locally, duplicating the shape from `mcpBridge.ts:304-309` (which DOES include the bearer header). The engine's copy drops the bearer header by design ("legacy default"), but the dual-source-of-truth makes it easy for a future caller to send the wrong descriptor to omp. — next-cycle action: replace `mcpServersDescriptor` with `mcpBridge.createMcpDescriptor(hostMcp.url, hostMcp.sessionId, bearerToken)` once the bearer is threaded through `hostMcp`.
+- [minor] [quality] — `src/ai/omp/ompChatEngine.ts:187-198` — `mcpServersDescriptor` rebuilds the `{type: "http", name: "application", url, headers: []}` descriptor locally, duplicating the shape from `mcpBridge.ts:304-309` (which DOES include the bearer header). The engine's copy drops the bearer header by design ("legacy default"), but the dual-source-of-truth makes it easy for a future caller to send the wrong descriptor to omp. — next-cycle action: replace `mcpServersDescriptor` with `mcpBridge.crea... [col 122]
 
 ### src/ai/omp/mcpExtensionRegistry.ts
 - [minor] [coverage] — `src/ai/omp/mcpExtensionRegistry.ts:570-572` — `list()` returns `[...tools]` (a fresh copy per call), but there is NO test that the copy is structurally independent of the internal `tools` array (e.g. caller mutating the returned array does not affect subsequent `list()` calls, and a caller can't push into the internal array). — next-cycle action: add `it("list() returns an independent copy: mutating the result does not affect the next list() call")` in `src/ai/omp/__tests__/mcpExtensionRegistry.test.ts`.
@@ -122,7 +122,7 @@ ReadOnlyProof:
 ```
 SuiteGreenProof:
 ```
-RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB
+RUN  v1.6.1 /workspace
  ✓ src/ai/omp/__tests__/detect.test.ts  (14 tests) 3ms
  ✓ src/ai/omp/__tests__/acpProcess.test.ts  (27 tests) 2044ms
 
@@ -132,7 +132,7 @@ RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB
 ```
 TypecheckProof:
 ```
-> UnicDB@1.53.23 typecheck
+> Extension@1.53.23 typecheck
 > tsc --noEmit
 (no output — clean)
 ```

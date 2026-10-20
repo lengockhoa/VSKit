@@ -7,18 +7,18 @@
 
 ## Goal
 
-Declare `UnicDB.generateCommitMessage` in `package.json` with the `$(sparkle)` codicon and
+Declare `extension.generateCommitMessage` in `package.json` with the `$(sparkle)` codicon and
 contribute it to the Source Control title bar (`scm/title`, `navigation` group), enabled only
-when the git provider has pending changes — the Kilo-style button placement, per the vision
+when the git provider has pending changes — button placement follows the referenced design
 spec.
 
 ## Target Files
 
 - `package.json` — in `contributes.commands` add
-  `{ "command": "UnicDB.generateCommitMessage", "title": "Generate Commit Message", "category": "UnicDB", "icon": "$(sparkle)" }`
-  (matches the existing entry shape — see `UnicDB.openAiSettings`). Add a NEW
+  `{ "command": "extension.generateCommitMessage", "title": "Generate Commit Message", "category": "Extension", "icon": "$(sparkle)" }`
+  (matches the existing entry shape — see `extension.openAiSettings`). Add a NEW
   `contributes.menus["scm/title"]` array (the key does not exist yet) with
-  `{ "command": "UnicDB.generateCommitMessage", "group": "navigation", "when": "scmProvider == git && scmProviderHasChanges" }`.
+  `{ "command": "extension.generateCommitMessage", "group": "navigation", "when": "scmProvider == git && scmProviderHasChanges" }`.
 - `src/ui/__tests__/commitGenManifest.test.ts` (new) — reads `package.json` from
   `process.cwd()` (pattern: `src/ui/__tests__/resultsPanelViewManifest.test.ts`) and asserts
   the frozen strings below.
@@ -27,10 +27,10 @@ spec.
 
 | # | Type | Test name | Expected | Pre-state / Fixture |
 |---|------|-----------|----------|---------------------|
-| 1 | happy | command declared with icon + category | `contributes.commands` contains entry exactly `{command:"UnicDB.generateCommitMessage", title:"Generate Commit Message", category:"UnicDB", icon:"$(sparkle)"}` | parsed package.json |
+| 1 | happy | command declared with icon + category | `contributes.commands` contains entry exactly `{command:"extension.generateCommitMessage", title:"Generate Commit Message", category:"Extension", icon:"$(sparkle)"}` | parsed package.json |
 | 2 | happy | scm/title menu entry | `menus["scm/title"]` has entry with command id, `group === "navigation"`, `when === "scmProvider == git && scmProviderHasChanges"` | parsed package.json |
 | 3 | edge (absent before impl) | RED gate | test file #1–#2 fail BEFORE the manifest edit (TDD RED), pass after | checkout state |
-| 4 | edge (malformed) | no duplicate command ids | `contributes.commands` has exactly one `UnicDB.generateCommitMessage` entry; the set of pre-existing command ids (54 today) is still fully present — assert superset over the pre-GC id list, not a frozen total, so unrelated command churn can't false-fail | parsed package.json |
+| 4 | edge (malformed) | no duplicate command ids | `contributes.commands` has exactly one `extension.generateCommitMessage` entry; the set of pre-existing command ids (54 today) is still fully present — assert superset over the pre-GC id list, not a frozen total, so unrelated command churn can't false-fail | parsed package.json |
 | 5 | edge (consistency) | every scm/title command exists | every `command` referenced in any `menus` block resolves to a declared command id | parsed package.json |
 
 ## Test Files
@@ -50,7 +50,7 @@ npx vitest run src/ui/__tests__/commitGenManifest.test.ts
 
 - [ ] All tests #1–#5 green; `npm run typecheck` clean; `npm test` still passes for
       `src/ui/__tests__/resultsPanelViewManifest.test.ts` (sibling manifest test unbroken).
-- [ ] Command palette shows "UnicDB: Generate Commit Message" (follows from the declared
+- [ ] Command palette shows "Extension: Generate Commit Message" (follows from the declared
       entry — no extra `commandPalette` contribution needed).
 - [ ] No other manifest sections modified (commands/menus only; configuration untouched —
       settings live in globalState/SecretStorage, not `contributes.configuration`).
@@ -62,7 +62,7 @@ npx vitest run src/ui/__tests__/commitGenManifest.test.ts
 ## Interfaces
 
 - Consumes: (none) — pure manifest work.
-- Produces: the command id `UnicDB.generateCommitMessage` that GC-007 registers in
+- Produces: the command id `extension.generateCommitMessage` that GC-007 registers in
   `src/extension.ts`; the `scm/title` `when` clause `scmProvider == git &&
   scmProviderHasChanges` that the GC-008 integration scan asserts.
 
@@ -86,10 +86,10 @@ EXECUTOR_TOOL: claude-code
 EXECUTOR_MODEL: unic-code
 EXECUTOR_SUBAGENT: -
 RED_OUTPUT: |
-  > UnicDB@1.51.7 test
+  > extension@1.51.7 test
   > vitest run src/ui/__tests__/commitGenManifest.test.ts
 
-   RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-gc-004
+   RUN  v1.6.1 /workspace/.worktrees/task-gc-004
 
    ❯ src/ui/__tests__/commitGenManifest.test.ts  (4 tests | 3 failed) 33ms
      ❯ ...case 1: command declared with icon + category (exact shape)
@@ -103,18 +103,18 @@ RED_OUTPUT: |
         Tests  3 failed | 1 passed (4)
 
   Failing-for-the-right-reason gate:
-    - case 1: command entry `UnicDB.generateCommitMessage` not in `contributes.commands` (undefined).
+    - case 1: command entry `extension.generateCommitMessage` not in `contributes.commands` (undefined).
     - case 2: `contributes.menus["scm/title"]` key absent (Array.isArray → false).
     - case 4: 0 occurrences of NEW_COMMAND_ID in `contributes.commands`.
   Case 5 (menu→command consistency) already passes against the pre-existing manifest.
 Verification Output: |
   1) npm run typecheck
-     > UnicDB@1.51.7 typecheck
+     > extension@1.51.7 typecheck
      > tsc --noEmit
      (no diagnostics — clean)
 
   2) npx vitest run src/ui/__tests__/commitGenManifest.test.ts
-     RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-gc-004
+     RUN  v1.6.1 /workspace/.worktrees/task-gc-004
      ✓ src/ui/__tests__/commitGenManifest.test.ts  (4 tests) 4ms
      Test Files  1 passed (1)
           Tests  4 passed (4)

@@ -135,7 +135,7 @@ VERIFICATION:
   command: npm run typecheck && npm run compile
   result: exit 0
   output_excerpt: |
-    > UnicDB@1.54.3 typecheck
+    > VSKit@1.54.3 typecheck
     > tsc --noEmit
     (clean)
     ⚡ Done in 31ms

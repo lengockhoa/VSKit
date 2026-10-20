@@ -59,7 +59,7 @@ against them rather than silently reused.
   `location` is one of Chat view, Quick Chat, or inline chat — i.e. one participant serves three
   distinct UI surfaces. Participant disambiguation is declared via a `disambiguation` array with
   `category`, `description`, `examples`.
-- **Relevance (final-spec):** confirms UnicDB's composer/participant model maps onto a single
+- **Relevance (final-spec):** confirms the composer/participant model maps onto a single
   handler with surface-varying `location`; supports the spec's engine-boundary section and the
   `/engine` capability-negotiation requirement.
 
@@ -195,7 +195,7 @@ against them rather than silently reused.
 - **Relevance (final-spec):** the `@`-vs-`#` split is a real precedent for the spec's choice to
   keep `@` for context search; it also warns the spec not to overload one sigil. The spec's
   duplicate-disambiguation requirement ("two `index.ts` must show distinct paths") has no direct
-  upstream wording here, so it stays a UnicDB-original requirement (see Q22).
+  upstream wording here, so it stays an extension-specific requirement (see Q22).
 - **Could-not-verify (sub-part):** no fetched page documents how VS Code disambiguates two
   identically-named files in the picker; not asserted.
 
@@ -354,7 +354,7 @@ against them rather than silently reused.
   rather than asserted from memory.
 - **Relevance (final-spec):** the Apply/Insert/Copy triad is a concrete comparator for the spec's
   response-acceptance affordances; the unresolved cancel question is exactly the kind of gap the
-  spec must define for UnicDB rather than inherit.
+  spec must define for this extension rather than inherit.
 
 ### Q18
 
@@ -446,7 +446,7 @@ against them rather than silently reused.
 ### Q22
 
 - **Subject / question:** What is consistent across products, what must stay engine-gated, and what
-  is uniquely proposed for UnicDB.
+  is uniquely proposed for this extension.
 - **Query/URL:** Synthesis of all fetched sources above:
   `https://code.visualstudio.com/api/extension-guides/chat`,
   `https://code.visualstudio.com/docs/copilot/chat/copilot-chat`,
@@ -486,22 +486,22 @@ against them rather than silently reused.
   - Auto-approve modes and `autoApprove`/`allowDangerouslySkipPermissions` are harness-specific
     (VS Code enterprise policy keys vs Cline's per-tool matrix).
   - Resume semantics differ: VS Code has **External** session discovery for Claude Code/Codex, but
-    the baseline records native resume as unavailable in UnicDB's Claude Code and Codex adapters —
+    the baseline records native resume as unavailable in the Claude Code and Codex adapters —
     so the spec must gate `/resume` per backend, not assume parity.
   - Model **role** vs **model** (Continue's `chat`/`edit`/`apply`/…) is a host authority; the spec
     must not accept arbitrary model IDs.
-- **Concrete observation — proposed only for UnicDB (no upstream equivalent found):**
+- **Concrete observation — proposed only for this extension (no upstream equivalent found):**
   - Duplicate disambiguation in the mention list ("two `index.ts` show distinct workspace-relative
     paths"; two same-named tables show distinct connection/schema). No fetched page documents an
-    equivalent; keep it as a UnicDB requirement.
+    equivalent; keep it as an extension requirement.
   - The combined `requestId` + draft-revision staleness guard for async mention search (upstream
     docs describe search but not this correlation contract).
   - Database mentions carrying **metadata only, never rows** — Continue's deprecated `@Database`
     stops at "table schemas," which is evidence the boundary is reasonable, but the governed
-    "rows only via a separate tool action" rule is UnicDB's.
+    "rows only via a separate tool action" rule is specific to this extension.
   - A single keyboard controller with explicit IME `isComposing` precedence — no upstream page
-    documents composition handling; this stays a UnicDB-original, APG-informed requirement.
+    documents composition handling; this stays an extension-specific, APG-informed requirement.
 - **Relevance (final-spec):** this row is the bridge the downstream spec tasks (TASK-AICHAT-004/005/
-  006) consume: it separates (a) behaviors UnicDB can safely mirror, (b) behaviors that must be
-  capability-negotiated per engine, and (c) behaviors that are UnicDB-originals and therefore carry
+  006) consume: it separates (a) behaviors the extension can safely mirror, (b) behaviors that must be
+  capability-negotiated per engine, and (c) extension-specific behaviors that therefore carry
   no upstream safety net.

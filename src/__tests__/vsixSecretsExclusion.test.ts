@@ -35,18 +35,29 @@ describe("vsix secrets exclusion", () => {
   it("a freshly packaged .vsix does NOT contain the .secrets folder (real vsce round-trip)", () => {
     // Stage a tmp copy of the repo so the real .vsixignore + .secrets/.pat
     // get exercised, but our package run can't collide with anything else.
-    const stage = fs.mkdtempSync(path.join(os.tmpdir(), "unicdb-vsixcheck-"));
+    const stage = fs.mkdtempSync(path.join(os.tmpdir(), "vskit-vsixcheck-"));
     try {
-      // Stage a minimal UnicDB-shaped directory: vsce reads package.json
-      // from the cwd and packages everything except .vscodeignore rules.
-      // We plant `.secrets/.pat` to verify the `.secrets/**` rule fires.
       fs.copyFileSync(VSIXIGNORE, path.join(stage, ".vscodeignore"));
       fs.mkdirSync(path.join(stage, ".secrets"), { recursive: true });
       fs.writeFileSync(path.join(stage, ".secrets", ".pat"), "FAKE-PAT-FOR-TEST");
+      for (const relative of [
+        ".claude/agents/probe.md",
+        ".omp/probe.yml",
+        ".codex/skills/probe.md",
+        ".ukit/storage/probe.json",
+        ".github/workflows/ci.yml",
+        "node_modules/probe/package.json",
+      ]) {
+        const fixture = path.join(stage, relative);
+        fs.mkdirSync(path.dirname(fixture), { recursive: true });
+        fs.writeFileSync(fixture, "packaging exclusion fixture");
+      }
+      fs.writeFileSync(path.join(stage, "NOTES.md"), "repository note fixture");
+      fs.writeFileSync(path.join(stage, "PROJECT_IMPORTANT.md"), "maintainer instructions fixture");
       fs.writeFileSync(
         path.join(stage, "package.json"),
         JSON.stringify({
-          name: "unicdb-vsixcheck",
+          name: "vskit-vsixcheck",
           version: "9.9.9-test",
           publisher: "test",
           displayName: "VSIX Check",
@@ -58,8 +69,8 @@ describe("vsix secrets exclusion", () => {
         }),
       );
       fs.writeFileSync(path.join(stage, "extension.js"), "// stub");
-      // Run vsce package from the staged root. The `.vscodeignore` rule
-      // for `.secrets/**` MUST filter the fake PAT out of the archive.
+      // Package from the staged root with representative secrets, agent files,
+      // dependencies and repository-only documents present.
       execFileSync(
         "node",
         [path.join(repoRoot, "node_modules", ".bin", "vsce"), "package", "--no-dependencies", "--allow-missing-repository"],
@@ -73,6 +84,8 @@ describe("vsix secrets exclusion", () => {
       const listing = execFileSync("unzip", ["-l", vsixPath], {
         encoding: "utf-8",
       });
+      expect(listing).not.toMatch(/\.claude\/|\.omp\/|\.codex\/|\.ukit\/|\.github\/|node_modules\//);
+      expect(listing).not.toMatch(/(^|\s)NOTES\.md(\s|$)|PROJECT_IMPORTANT\.md/);
       // The .secrets directory MUST be absent — neither the .pat file nor
       // any sub-path of `.secrets/` may appear in the archive.
       expect(

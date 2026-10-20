@@ -30,7 +30,7 @@ IN/OUT cards (capped height, internal scroll, fade at the cut) — plus a traili
   label + muted summary line, status dot driven by the EXISTING `data-status` attribute,
   expandable IN/OUT block (`IN` = `item.detail`, `OUT` = `item.summary`) with markers
   `[data-tool-block="in"|"out"]`, toggle button, monospace class; render() appends ONE trailing
-  live indicator node `.UnicDB-ai-chat-v2-live` (pulsing dot + "Working…" text) while
+  live indicator node `.vskit-ai-chat-v2-live` (pulsing dot + "Working…" text) while
   `state.turn` is open (`!state.turn.closed`), removes it when closed. All wire text via
   `textContent`.
 - `webview/aiChat/styles.css` — timeline polish near the existing tool rules (lines ~628-660):
@@ -38,9 +38,9 @@ IN/OUT cards (capped height, internal scroll, fade at the cut) — plus a traili
   high-contrast label + muted summary, dot pulse for `[data-status="running"]` + green
   `[data-status="ok"]` / red failed (failed/denied colors exist at 641 — extend, don't replace),
   IN/OUT inset cards (editor-font, inset bg, 1px border, radius-sm, `max-height` ≈ 8 rows,
-  `overflow-y: auto`, fade mask at the cut), pulsing `.UnicDB-ai-chat-v2-live` keyframes.
-  EVERY new selector and `@keyframes` name must carry the `UnicDB-ai-chat-v2` prefix
-  (shell.test.ts enforces globally) — precedent: `UnicDB-ai-chat-v2-activity-spin` (line 1182).
+  `overflow-y: auto`, fade mask at the cut), pulsing `.vskit-ai-chat-v2-live` keyframes.
+  EVERY new selector and `@keyframes` name must carry the `vskit-ai-chat-v2` prefix
+  (shell.test.ts enforces globally) — precedent: `vskit-ai-chat-v2-activity-spin` (line 1182).
 - `webview/aiChat/__tests__/transcript.test.ts` — (modify) add the DOM cases below.
 - `webview/aiChat/__tests__/store.test.ts` — (modify) add the reducer detail case below.
 
@@ -49,7 +49,7 @@ IN/OUT cards (capped height, internal scroll, fade at the cut) — plus a traili
 | # | Type | Test name | Expected | Pre-state / Fixture |
 |---|------|----------|----------|---------------------|
 | 1 | happy | Bash step with IN/OUT | `tool_started{toolId, label:"Bash", detail:"git status"}` then `tool_finished{status:"ok", summary:"3 files changed"}` → row shows bold "Bash", `[data-tool-block="in"]` textContent "git status", `[data-tool-block="out"]` textContent "3 files changed", status node `data-status="ok"` | real reducer state (transcript.test.ts pattern) |
-| 2 | happy | live indicator lifecycle | after submit (turn open) transcript contains `.UnicDB-ai-chat-v2-live`; after `turn_finished` the node is removed | real reducer |
+| 2 | happy | live indicator lifecycle | after submit (turn open) transcript contains `.vskit-ai-chat-v2-live`; after `turn_finished` the node is removed | real reducer |
 | 3 | edge (absent field) | legacy frame without detail | `tool_started` with NO `detail` → no IN block node; row still renders label + dot; no throw | reducer frame without the field |
 | 4 | edge (hostile input) | HTML/control chars | detail/summary `"<img src=x onerror=alert(1)>"` → row `innerHTML` contains no `<img`; text is escaped as text | hostile strings |
 | 5 | edge (boundary) | output longer than the cap | 2000-char summary → OUT block renders full text but CSS caps it (assert `[data-tool-block="out"]` rule has `max-height` + `overflow-y: auto`) | long string |
@@ -92,7 +92,7 @@ changes — there is no lint script.)
   `ChatToolItem` (store.ts:126), `updateTool` (transcript.ts:445).
 - Produces: `ChatToolItem.detail: string` (new required field, `""` default);
   `AiChatHostToolStartedV2.detail?: string`; DOM markers `[data-tool-block="in"]`,
-  `[data-tool-block="out"]`, class `UnicDB-ai-chat-v2-live` — TASK-CHATFIX-004 and reviewers
+  `[data-tool-block="out"]`, class `vskit-ai-chat-v2-live` — TASK-CHATFIX-004 and reviewers
   target these exact names.
 
 ---
@@ -190,9 +190,9 @@ Note:
 - The OUT card carries `max-height: 128px` + `overflow-y: auto` (case 5 pins it); the
   fade-at-the-cut mask is gated on `data-scrollable` computed in the renderer so short
   output never loses its last line to the gradient.
-- Every new selector/keyframes usage carries the `UnicDB-ai-chat-v2` prefix (shell.test.ts
+- Every new selector/keyframes usage carries the `vskit-ai-chat-v2` prefix (shell.test.ts
   scoping guard green); the running dot reuses the existing namespaced
-  `UnicDB-ai-chat-v2-pulse` keyframes.
+  `vskit-ai-chat-v2-pulse` keyframes.
 - Environment fix, no repo change: worktree `node_modules` → symlink to the main repo's
   `node_modules` (gitignored, inside the worktree).
 
@@ -217,4 +217,4 @@ FINDINGS:
     - webview/aiChat/styles.css:793 — only OUT carries max-height/overflow-y; the plan's styles bullet asked the cap on both IN/OUT cards. IN is host-capped at 121 chars single-line (src/ui/aiChatPanel.ts:1118) so it cannot overflow in practice — acceptable, noted for TASK-CHATFIX-004 consumers.
     - webview/aiChat/transcript.ts:561 — data-scrollable is computed at text-set time; while a row is collapsed (display:none) scrollHeight/clientHeight read 0 so the fade flag can clear until the next item update re-syncs. Cosmetic only.
 NEXT_STATUS_FOR_INDEX: done
-NOTES: All wire text enters via textContent (hostile-input test pins no <img>); reconcile() inserts rows before the live node so it stays trailing; every new selector/keyframes name carries the UnicDB-ai-chat-v2 prefix (shell guard green); no lint script exists in package.json, typecheck is the required check and is present.
+NOTES: All wire text enters via textContent (hostile-input test pins no <img>); reconcile() inserts rows before the live node so it stays trailing; every new selector/keyframes name carries the vskit-ai-chat-v2 prefix (shell guard green); no lint script exists in package.json, typecheck is the required check and is present.

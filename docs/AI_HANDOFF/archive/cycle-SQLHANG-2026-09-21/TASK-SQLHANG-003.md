@@ -131,7 +131,7 @@ Test Files 2 passed (2)
 Tests 24 passed (24)
 
 $ npm run typecheck
-> UnicDB@1.54.1 typecheck
+> project-name@1.54.1 typecheck
 > tsc --noEmit
 (0 errors)
 

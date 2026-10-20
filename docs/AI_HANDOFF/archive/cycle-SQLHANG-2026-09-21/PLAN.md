@@ -18,10 +18,10 @@ mssql `enqueue`) is unbounded, `runner.cancel()` is best-effort with unbounded i
 awaits, and the checked-out connection is never force-released — so a driver-level hang
 freezes the run, the busy UI, and the connection until manual restart.
 
-Success: any statement that fails OR exceeds `UnicDB.queryTimeoutSeconds` (default
+Success: any statement that fails OR exceeds `queryTimeoutSeconds` (default
 300s) ends the run automatically — statement marked `error`, rest `cancelled`, error
-reported through the existing STOPERR surface, connection handle released/destroyed,
-next run works without manual reconnect. `UnicDB.cancelQuery` always resolves and
+reported through the existing error-reporting surface, connection handle released/destroyed,
+next run works without manual reconnect. `cancelQuery` always resolves and
 escalates to hard abort.
 
 ## §2 Scope
@@ -37,7 +37,7 @@ escalates to hard abort.
 - `src/adapters/mssql.ts` — `abortActiveQuery`, `queueGeneration` stale-op rejection,
   lazy reconnect via `ensureConnection` (FR-012).
 - `src/extension.ts` — one-line `statementTimeoutMs` wiring (FR-013).
-- `package.json` — `UnicDB.queryTimeoutSeconds` property (FR-013).
+- `package.json` — `queryTimeoutSeconds` property (FR-013).
 - 4 NEW test files (SPEC §11).
 
 **Out-of-scope**
@@ -125,7 +125,7 @@ npm test                                                             # wave boun
 - [ ] AC-4: mysql abort (destroy via closures) + bounded rollback → destroy — TASK-002.
 - [ ] AC-5: mssql abort (queue generation + connection.close) + lazy reconnect +
       stale-queue rejection — TASK-003.
-- [ ] AC-6: `UnicDB.queryTimeoutSeconds` in package.json + wired at runner
+- [ ] `queryTimeoutSeconds` in package.json + wired at runner
       construction — TASK-001.
 - [ ] AC-7: regression test fails on pre-fix code (hang) and passes post-fix — TASK-001.
 - [ ] AC-8: `npm run typecheck` 0 errors; `npm run compile` OK; full `npm test` PASS

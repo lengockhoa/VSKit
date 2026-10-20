@@ -130,7 +130,7 @@ command: `npm run typecheck && npx vitest run src/ai/__tests__/agent.test.ts src
 result: typecheck exit 0; 19/19 pass (0 fail) — fresh re-run PASS
 output_excerpt:
 ```
-> UnicDB@1.5.1 typecheck
+> extension@1.5.1 typecheck
 > tsc --noEmit
  ✓ src/ai/__tests__/agentStream.test.ts  (7 tests) 6ms
  ✓ src/ai/__tests__/agent.test.ts  (12 tests) 6ms

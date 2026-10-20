@@ -15,11 +15,11 @@ Organize connections with **folders/colors**, enforce a per-connection **read-on
 
 ## Existing surfaces consumed
 
-- `src/core/connectionManager.ts` — `ConnectionManager` CRUD, SecretStorage keys `UnicDB.pass.<id>`, active-connection events, passive adapter cache.
+- `src/core/connectionManager.ts` — `ConnectionManager` CRUD, neutral SecretStorage keys, active-connection events, passive adapter cache.
 - `src/config/types.ts` — `ConnectionConfig` (additive optional fields only).
 - `src/core/dangerousStatement.ts` + `src/extension.ts#confirmDangerousStatements` — tier classification reused for the read-only guard.
 - `src/ui/connectionForm.ts` — form webview (additive fields).
-- `src/extension.ts#UnicDB.schemaTree` — tree provider renders connections (folders become virtual nodes).
+- `src/extension.ts#schemaTree` — tree provider renders connections (folders become virtual nodes).
 
 ## New modules
 

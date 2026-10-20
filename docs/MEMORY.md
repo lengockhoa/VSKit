@@ -21,72 +21,17 @@
 
 <!-- WHY choices were made. Prevents future sessions from re-debating settled questions. -->
 <!-- Format: [YYYY-MM-DD] Decision: X. Reason: Y. Do NOT change because: Z. -->
-- [2026-09-09] Decision: Reuse `UnicDB.openConsoleForObject` for Schema Explorer connection/schema/category/table/view shortcuts. Reason: preserves the singleton Console, existing table/view SELECT seeding, active-schema pinning, and shared execution path without another command surface.
+- [2026-09-09] Decision: Reuse the existing `openConsoleForObject` command for Schema Explorer connection/schema/category/table/view shortcuts. Reason: preserves the singleton Console, existing table/view SELECT seeding, active-schema pinning, and shared execution path without another command surface.
 
 ## Active Constraints
 
 <!-- Rules AI must respect during implementation. Non-obvious limits not visible in the code. -->
-- **OWNER MANDATE — HIGH PRIORITY, luôn áp dụng (2026-09-17): mọi thay đổi source code (không tính update docs) đều bắt buộc version bump + VS Marketplace publish.**
-  1. Bất kỳ thay đổi nào bên source code — kể cả nhỏ nhất — phải lên số patch hoặc version release mới. Patch number KHÔNG giới hạn, cứ tăng thoải mái; owner theo dõi dự án theo số patch này.
-  2. Bất cứ version/patch nào đã lên git đều BẮT BUỘC được publish lên VS Marketplace. Ngoại lệ DUY NHẤT: update docs (docs-only).
-  3. Docs-only changes (README, CLAUDE.md, `docs/**`, comments) không cần bump/publish.
-  Cơ chế thực thi: dùng `npm run bump` (atomic — bump → CHANGELOG → test → .vsix → commit → tag → push → GitHub Release → Marketplace). Chi tiết trong 2 entry bên dưới: "Versioning policy" (2026-09-06) và "1 git release = 1 Marketplace release" (2026-09-15). Quy tắc này được lặp lại trong `.ukit/storage/memory/user.json`.
-- **Ship constraint — user installs ONLY via the one-liner**:
-  `curl -fsSL https://raw.githubusercontent.com/lengockhoa/UnicDB/main/scripts/install-UnicDB.sh | bash`
-  User machines are non-dev machines (no repo, no Node, no build). The script pulls the `.vsix`
-  from the **latest GitHub Release**. Therefore: a fix is NOT shipped until a GitHub release
-  exists (version bump + tag + `UnicDB-<version>.vsix` asset). "Merged to main" ≠ shipped.
-  After installing, the user must reload the VS Code window.
-
-- **Versioning policy — every code change ships as a new version** (2026-09-06):
-  No user-visible code change lands unversioned. After the verification gate (`npm run
-  typecheck` + `npm test`) passes, the next required step is the atomic bump recipe:
-  ```bash
-  npm run bump -- --changelog-summary "what this ships" --changelog-files "file1, file2"
-  # ONE command does it all: bump → lock-sync → CHANGELOG → test → compile → .vsix
-  #   → commit → tag → push → GitHub release (+.vsix) → VS Code Marketplace publish
-  ```
-  Default level is **patch**. Use `npm run bump:minor` for new features, `npm run bump:major`
-  for breaking changes — never silently. Trivial internal-only edits (typo, comment) skip
-  the bump unless the day also tags/releases. Full recipe + flags: `docs/RELEASE.md`.
-  Atomic script: `scripts/bump-version.mjs`. Refuses to publish if the CHANGELOG Summary
-  placeholder is still unfilled (must pass `--changelog-summary` or edit the file first).
-  Refuses to bump only if `package.json` / `package-lock.json` / `CHANGELOG.md` are
-  already dirty (would clobber). Skip flags for emergencies: `--skip-test`,
-  `--skip-package`, `--skip-publish`. **Marketplace PAT lives at
-  `.secrets/.pat`** (gitignored — file content is the raw Azure DevOps PAT
-  string, no newline). macOS Keychain entry `vscode-vsce` also exists from
-  the original `vsce login lengockhoa` BUT `security find-generic-password`
-  hangs in non-interactive shells (GUI unlock prompt), so the on-disk cache
-  is the only AI-runnable path. Flow: `VSCE_PAT="$(cat .secrets/.pat)" vsce
-  publish --packagePath ./UnicDB-<ver>.vsix`. `gh release create` requires
-  `gh` CLI auth.
-  **GitHub Releases and VS Code Marketplace are kept in lockstep by this script** — every
-  bump ships to both channels at the same version, no manual `git tag` / `gh release
-  create` / `vsce publish` separated run.
-
-- **"1 git release = 1 Marketplace release" — non-negotiable, every bump (2026-09-15):**
-  NEVER bump the git version without publishing the matching Marketplace version. There are
-  **two** independent publishers, and either one satisfying the rule counts:
-  1. **CI (primary, no local PAT needed):** `.github/workflows/publish.yml` triggers on any
-     pushed `v*` tag and runs `vsce publish -p "$VSCE_PAT"` (repo secret). So a plain
-     `git push origin v<ver>` already publishes to the Marketplace. Many recent tags mis-read
-     as "publish failed" when actually the CI run succeeded (e.g. v1.53.47 published in 2m19s
-     — verify with `gh run list --workflow=publish.yml`, not the Gallery query, which lags a
-     few minutes after publish).
-  2. **Local (`npm run bump`):** `scripts/bump-version.mjs` step 6g publishes locally. PAT
-     resolution: `$VSCE_PAT` → `.secrets/.pat` → Keychain `vscode-vsce` (interactive only) →
-     bare `vsce`. Because the tag push in the same step also triggers CI, a local
-     "already published" rejection is EXPECTED and non-fatal — do not treat it as failure.
-  **AI rule:** after ANY version bump/tag push, confirm publish with
-  `gh run list --workflow=publish.yml --limit 3` (or the CI log line
-  `Published lengockhoa.UnicDB v<ver>.`). Do NOT run a bare `vsce publish` and do NOT
-  hand-edit `package.json`/`package-lock.json`/`CHANGELOG.md` separately — `npm run bump`
-  (now wired in `package.json`: `bump`, `bump:patch`, `bump:minor`, `bump:major`) does the
-  whole atomic sequence. This rule exists because a docs-only cycle (AICHAT) was first
-  handled with a manual bump and a manual tag push, which left the Marketplace step unclear
-  even though CI had actually published.
-- **AI engine source of truth:** `src/extension.ts` reads persisted `AiSettings.engine` from `AiConfigStore` before consulting the legacy `UnicDB.ai.engine` configuration fallback. Selecting `omp` in AI Settings therefore controls AI Chat; unavailable OMP explicitly falls back to builtin.
+- **Distribution status:** Marketplace publishing is paused. The package identity is `lengockhoa.vskit`, with repository `lengockhoa/VSKit`; no remote release asset is verified.
+- **Installer behavior:** `scripts/install-vskit.sh --local <file.vsix>` installs a caller-supplied artifact. Its no-argument path queries the latest GitHub release; do not claim that it retrieves a VSKit VSIX until a matching release asset is verified.
+- **Persistence boundary:** VSKit does not import extension-scoped state or secrets from other installations. Configure connections and credentials in VSKit as needed; never read VS Code storage directories or create credential export files.
+- **Build verification order:** typecheck → compile → tests → VSIX package. Compile first because some tests read generated `dist` bundles during module initialization. Inspect VSIX contents before distribution; do not install it or reload VS Code unless explicitly requested.
+- **Release automation:** The GitHub workflow is `.github/workflows/ci.yml` and is verification-only. Marketplace publish workflows and bump commands are absent while publication is paused. Do not run publish, tag, release, or push actions for this conversion.
+- **AI engine setting:** Current configuration lives under `VSKit.ai.*`. Provider/model identifiers such as `omp`, `codex`, and `claude-code` are not product branding and remain unchanged.
 
 ## Known Bugs & Root Causes
 
@@ -100,18 +45,7 @@
   release (or an explicit queued next-cycle release task); releaseHygiene.test.ts now fails
   the build when package-lock version drifts — run `npm install --package-lock-only` after bumping.
 
-- [2026-09-08] **CRITICAL SECURITY: PAT leak in `UnicDB-1.53.32.vsix`.** The `.secrets/`
-  directory (Marketplace publish PAT cache) was packaged into v1.53.32 because `vsce
-  package` reads `.vscodeignore` (NOT `.gitignore`). The Azure DevOps PAT inside
-  `.secrets/.pat` was therefore embedded in the public .vsix on both GitHub Releases
-  and VS Code Marketplace. **User rotated the PAT** in Azure DevOps (mandatory
-  before any further `vsce publish`). Fix: added `.secrets/**` to `.vscodeignore`
-  + new regression guard `vsixSecretsExclusion.test.ts` that runs a real
-  `vsce package` round-trip on a tmp stage with a planted `.secrets/.pat` and
-  asserts the produced archive contains no `.secrets/` entry. v1.53.33 ships the
-  fix; v1.53.32 is superseded. Watch for: any future local credential cache
-  (API keys, OAuth refresh tokens, SSH keys, `.env`) MUST be added to
-  `.vscodeignore` at the SAME commit that creates the cache, not later.
+- [2026-09-08] **CRITICAL SECURITY: packaged credential leak.** A local credential cache was included in a published package because the packager reads `.vscodeignore` (not `.gitignore`). Credentials were rotated and the ignore rule plus a regression guard were added. Any future local credential cache (API keys, OAuth refresh tokens, SSH keys, `.env`) MUST be added to `.vscodeignore` in the same change that creates it.
 
 ## Open Risks
 
@@ -122,31 +56,9 @@
   connectionTimeoutMillis. Fixed by raising Postgres pool to `max: 4` (`PG_POOL_MAX`,
   postgres.ts connect()) — runQuery still holds ONE client per multi-statement script and
   beginTransaction() pins its own, so metadata lands on independent sessions. Regression test:
-  adapterQueryShape.test.ts "metadata runs on its own slot…". Not yet released to the user's
-  installer (needs a GitHub release per Ship Constraint).
-
 ## Session Handoff
-- Last worked on: 2026-09-10 — shipped v1.53.45 (Generate git message: route through `settings.engine` via `resolveEngine`, plus typed-contract defence against `[object Object]` for `builtin`, `omp one-shot`, and `serializeCommitPrompt`). VS Code Marketplace publish completed: `lengockhoa.UnicDB v1.53.45` live at https://marketplace.visualstudio.com/items?itemName=lengockhoa.UnicDB.
-- Verification: focused vitest suites `commitMessage` (17), `commitGenCommand` (12), `commitGenIntegration` (7) = 36 tests pass. PAT org mismatch (PAT from `lengockhoa-unic` vs publisher `lengockhoa`) resolved on user side; `vsce publish` returned `DONE Published`.
-- Next step: reload VS Code after installing v1.53.45; no further product task is pending.
+- Previous session completed implementation and test work on commit-message generation and provider routing. Current repository state and release availability should be checked before acting; do not rely on historical release URLs or install instructions.
 
-## Release Protocol — Marketplace publish
-
-- **Trigger phrases** the user uses for any release action: `publish`, `push`, `up`, `lên version`, `đẩy lên marketplace`, `bump version`, `release`, `đóng gói`. Whenever a session detects one of these and the request touches `package.json` version, VS Code Marketplace publish, or VSIX packaging, **follow this protocol verbatim** instead of asking the user how to publish.
-- **PAT source (canonical):** `.secrets/.pat` at the repo root. It contains the raw Azure DevOps Personal Access Token for publisher `lengockhoa` (scope: Marketplace → Manage). Read it once per release, pass it to `vsce` via env, never print it.
-- **One-shot publish command** (from repo root):
-  ```
-  vsce package "$(jq -r .version package.json)" \
-    && VSCE_PAT="$(tr -d '\n' < .secrets/.pat)" vsce publish --no-dependencies --pat "$VSCE_PAT"
-  ```
-  Use the version that is already in `package.json` — do not bump in the same step unless the user asked for a bump. Always run package + publish together so the VSIX on disk matches what gets pushed.
-- **If publish returns 401:** the PAT is expired or revoked. Tell the user to regenerate it at https://dev.azure.com/lengockhoa/_usersSettings/tokens (scope: Marketplace → Manage), overwrite `.secrets/.pat`, and rerun the one-shot command. Do NOT debug network/TLS, do NOT switch to a different token source, do NOT upload by hand unless the user explicitly says so.
-- **Pre-publish checklist (must pass before running the command above):**
-  1. `npm run typecheck` passes.
-  2. Focused vitest suites for the change pass (`npx vitest run <touched test files>`).
-  3. `package.json` version is the target version. `CHANGELOG.md` has a matching top entry with date + summary + files + verification line.
-  4. `vsce package` succeeds and the resulting `UnicDB-<version>.vsix` sits at repo root.
-- **Privacy invariant:** the PAT must never be echoed, written to logs, committed to git, or pasted into a chat message. `vsce publish --pat "$VSCE_PAT"` keeps it off argv in any process listing beyond `vsce` itself.
 
 - [2026-09-09] Decision: Keep the SQL Console editor dependency-free by layering `webview/sqlHighlight.ts` spans under a transparent native textarea. Reason: preserves native selection, clipboard, autocomplete, draft persistence, and keyboard behavior while adding file-like syntax coloring without introducing a heavyweight editor runtime.
 - [2026-09-09] Constraint: The active namespace picker is shared across status bar, Console toolbar, and SQL file editor title menu. `ConnectionManager` reads the per-connection `ActiveSchemaStore` dynamically at execution time and prepends PostgreSQL `SET search_path`; do not duplicate namespace state in webviews or rewrite user SQL.

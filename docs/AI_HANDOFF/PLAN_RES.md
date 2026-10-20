@@ -21,9 +21,8 @@ type into them and press Enter, it should re-search and show me results.")
    `[close | refresh | separator | upload | delete | undo | redo | ✓ | grid | tsv ▼ |
    WHERE … | ORDER BY … | ☐ header | copy | download | Search…]`. P0's "between tsv
    dropdown and Search..." and §2's "after `exportFormat`, before `exportHeader`" describe
-   the SAME two-slot gap: WHERE input is the first child immediately after
-   `.UnicDB-export-format`; ORDER BY input is the second; the empty `.UnicDB-export-header`
-   checkbox is the third; `.UnicDB-search-input` remains the last.
+   the same two-slot gap: WHERE input is the first child immediately after the format control;
+   ORDER BY input is the second; the empty header checkbox is the third; search remains last.
 
 **Success looks like:** the Results webview toolbar carries the two inputs in the P0 slot;
 pressing Enter inside either one re-runs the statement's ORIGINAL SQL with the typed
@@ -59,7 +58,7 @@ defensively.
   (toolbar has no room for text labels).
 - Enter key on either input triggers the requery exactly once per keydown (debounce-free;
   IME-composition guard).
-- CSS: narrow toolbar inputs matching the existing `.UnicDB-search-input` sizing pattern;
+- CSS: narrow toolbar inputs matching the existing search-input sizing pattern;
   toolbar height stable (`flex-wrap: nowrap` is pinned by a structural test — keep it).
 - Remove the now-empty standalone requery bar (DOM + its CSS block).
 - Update the tests that pin the old layout.
@@ -90,7 +89,7 @@ into TASK-RES-001 per the conflict rule.)
 
 **Folded-in task (TASK-RES-003 — toolbar hover polish):** drops `btn.title` from
 `makeIconButton` and adds a short `transition: background-color 80ms ease-out` to
-`.UnicDB-btn` so the two-tooltip flicker and the instant background flash disappear.
+the toolbar icon-button selector so duplicate tooltips and instant background flashes disappear.
 Shares `webview/main.ts` + `webview/styles.css` with TASK-RES-001 → sequenced into
 **wave 2** with `Dependencies: TASK-RES-001`. Touches only CSS rules outside RES-001's
 .toolbar-context input rule and only one line of `makeIconButton` (the `btn.title` delete).
@@ -102,21 +101,20 @@ TASK-RES-003 (extension SQL-rewrite handler) and TASK-RES-004 (re-render pipelin
 pre-existing, shipped, and pinned by tests (`resultsPanelRequery.test.ts`,
 `resultsPanelOrderBy.test.ts`, `resultsGridModelRequery.test.ts`, and the bundle tests in
 `webviewRequery.test.ts` including the equal-row-count reset fix). Re-implementing them or
-adding a new `unicdb/results/whereOrderBy` message discriminator would fork the `requery`
+adding a new results-requery message discriminator would fork the `requery`
 contract that `handleRequery` already consumes. **Rejected alternative:** new message type
 + new handler → duplicate pipeline, double the review surface, zero user value. The Enter
 handler simply calls the existing `onRequeryClick()` (`webview/main.ts:3294`).
 
 **TASK-RES-001 (webview):** move the four existing elements (`requeryWhere`,
-`requeryOrderBy`, `requeryRunBtn`, `requeryClearBtn` — same class names
-`.UnicDB-requery-where/-order/-run/-clear`, which `webviewPostCommit.test.ts` and
-`webviewRequery.test.ts` select on) into the toolbar between `exportFormat` and
-`exportHeader`; change placeholders to `WHERE …` / `ORDER BY …`; add one `keydown`
-listener per input: `if (ev.key !== "Enter" || ev.isComposing) return; ev.preventDefault();
-onRequeryClick();`. Delete the `UnicDB-requery-bar` wrapper + labels; restyle inputs with a
-toolbar-context rule (flex `0 1 140px`, min-width `90px`, height aligned to
-`.UnicDB-btn`/`.UnicDB-search-input`) so the toolbar stays one row tall. Buttons keep
-`makeIconButton` (svg + title + aria-label contract, `webview/main.ts:674`).
+`requeryOrderBy`, `requeryRunBtn`, `requeryClearBtn` — the WHERE/ORDER BY input, run and
+clear elements, selected by their existing neutral selectors in the webview tests) into
+the toolbar between `exportFormat` and `exportHeader`; change placeholders to `WHERE …` /
+`ORDER BY …`; add one `keydown` listener per input: `if (ev.key !== "Enter" || ev.isComposing)
+return; ev.preventDefault(); onRequeryClick();`. Delete the standalone requery-bar wrapper
++ labels; restyle inputs with a toolbar-context rule (flex `0 1 140px`, min-width `90px`,
+height aligned to the button and search-input sizing) so the toolbar stays one row tall.
+Buttons keep `makeIconButton` (svg + title + aria-label contract, `webview/main.ts:674`).
 
 **TASK-RES-002 (extension hardening):** new pure exported helper
 `stripLeadingClauseKeyword(fragment: string, keyword: "WHERE" | "ORDER BY"): string` in
@@ -134,16 +132,15 @@ double-strip would also be non-idempotent across lanes.
 **Accepted behaviors recorded (not bugs):**
 - Inputs are now visible in the empty state (toolbar is persistent; the old bar was hidden
   inside `gridWrap`). Enter with no active statement → existing host guard toasts
-  "UnicDB: requery failed — no statement at index N." (`resultsPanel.ts:1853-1857`).
-- Holding Enter fires repeated keydowns → repeated posts; host `requerySeq` guard
+  no statement is available at the requested index (`resultsPanel.ts:1853-1857`).
+  Holding Enter fires repeated keydowns → repeated posts; host `requerySeq` guard
   (`resultsPanel.ts:1868-1870`) drops stale runs. Debounce-free per instruction.
 
 **TASK-RES-003 (wave 2 — toolbar hover polish):** removes the ONLY second source of the
 two-tooltip flicker — `btn.title` — so `data-tooltip` is the sole tooltip provider. Adds
-`transition: background-color 80ms ease-out, box-shadow 80ms ease-out` to `.UnicDB-btn`
-so the `:hover` background-color swap fades instead of cutting. Does NOT touch the
-`data-tooltip` pseudo-element block (`webview/styles.css:78-115`) — that block is already
-instant and correctly z-indexed (`z-index: 1000`); regex-pinned by TASK-RES-003 tests #5,#7.
+`transition: background-color 80ms ease-out, box-shadow 80ms ease-out` to the toolbar button.
+Do NOT touch the tooltip pseudo-element block (`webview/styles.css:78-115`); it remains
+instant and correctly z-indexed (`z-index: 1000`), pinned by TASK-RES-003 tests #5,#7.
 **Rejected alternative:** removing `data-tooltip` and keeping `title` only → re-introduces
 the 1-3s VS Code-webview tooltip delay. **Rejected alternative:** adding `transition: all`
 → would also ease layout-triggering properties (width/padding/border) and reintroduce the
@@ -162,8 +159,7 @@ never accept a silent skip as green).
 |------|-----------|----------|
 | happy (webview) | Enter keydown on WHERE input (values `id > 1` / `id DESC`) → posts `requery` | exactly 1 message `{type:"requery", index:0, where:"id > 1", orderBy:"id DESC"}` |
 | happy (webview) | Enter keydown on ORDER BY input (both boxes filled) | exactly 1 requery post carrying both values |
-| happy (webview) | Toolbar placement | `.UnicDB-requery-where` and `.UnicDB-requery-order` are children of `.UnicDB-toolbar`, ordered after `.UnicDB-export-format` and before `.UnicDB-export-header`; no `[data-UnicDB-requery-bar]` element exists |
-| happy (ext) | `stripLeadingClauseKeyword("WHERE id > 5", "WHERE")` | returns `"id > 5"` |
+| happy (webview) | Toolbar placement | WHERE and ORDER BY inputs are toolbar children, ordered after the format control and before the header checkbox; no standalone requery-bar element exists |
 | happy (ext) | `stripLeadingClauseKeyword("ORDER BY id DESC", "ORDER BY")` then `parseOrderBy(out, dialect)` | `"id DESC"`; parse ok with 1 term, column `id` |
 | happy (ext) | handler: requery msg `where:"WHERE a>1"` on fixture `SELECT a FROM t` | composed SQL sent to the runner contains `WHERE a>1` exactly once — no `WHERE WHERE` substring |
 | edge (input-kind, webview) | keydown `"a"` then `"Escape"` in WHERE input | zero requery posts |
@@ -173,18 +169,15 @@ never accept a silent skip as green).
 | edge (case, ext) | `"where a=1"`, `"Where a=1"` | stripped (case-insensitive) |
 | edge (repeat-input, ext) | `"WHERE WHERE x=1"` | `"WHERE x=1"` — exactly one strip, deterministic |
 | regression (webview) | existing cases: Re-Run click posts, empty boxes post `{where:"",orderBy:""}`, Clear empties | unchanged GREEN (class names + click path preserved) |
-| regression (webview) | toolbar icon-button census | `.UnicDB-toolbar .UnicDB-btn` buttons = 12 (was 10), each with svg + currentColor + title + aria-label; `flex-wrap: nowrap` structural regex still green |
-| regression (webview) | old layout pins REWRITTEN: toolbar < gridWrap/gridHost document order; inputs present in empty state | updated assertions GREEN (old cases 5-7 replaced, not deleted silently) |
+| regression (webview) | toolbar icon-button census | toolbar button count is 12 (was 10), each with svg + currentColor + title + aria-label; `flex-wrap: nowrap` structural regex still green |
 | regression (ext) | `resultsPanelRequery` "empty WHERE/ORDER BY emits the literal statement (no `;` corruption)" + `resultsPanelOrderBy` compose cases | unchanged GREEN — keyword-free fragments byte-identical |
-| happy (RES-003 webview) | `makeIconButton` no longer sets `btn.title` | first `.UnicDB-btn` rendered in jsdom: `title` attr missing; `data-tooltip` and `aria-label` present | bundle compile, render stub |
-| happy (RES-003 webview) | `.UnicDB-btn:hover:not(:disabled)` style block does not change any layout-triggering property | parse the CSS block; assert its declarations list EXCLUDES `width`, `height`, `padding`, `margin`, `border`, `top`, `left`, `right`, `bottom` (background-color + box-shadow only) | webview/styles.css |
-| edge (RES-003 css) | `.UnicDB-btn` carries a `transition` rule | source regex matches `\.\s*UnicDB-btn\s*\{[^}]*transition\s*:` | webview/styles.css |
-| edge (RES-003 css) | the transition contains NO layout-triggering property | parsed value excludes `width`/`height`/`top`/`left`/`margin`/`padding` | parsed CSS |
-| edge (RES-003 css) | `data-tooltip` pseudo keeps `z-index: 1000` | source regex matches `\.UnicDB-btn\[data-tooltip\][^{]*\{[^}]*z-index\s*:\s*1000` | webview/styles.css |
-| regression (RES-003 webview) | every toolbar button still has `data-tooltip` and `aria-label` matching its provided title text | for each rendered `.UnicDB-btn`: `getAttribute("data-tooltip")` and `getAttribute("aria-label")` both equal the original `title` arg | bundle compile |
-| regression (RES-003 webview) | wave-1 toolbar icon-button census rewrites the `title` clause | the wave-1 census test (`.UnicDB-toolbar .UnicDB-btn` count = 12) keeps the `svg + currentColor + aria-label` pins but its `+ title` clause is removed in wave 2; REWRITTEN, not silently deleted (same pattern as the wave-1 layout-pin rewrites in row :169) | webviewToolbar.test.ts |
-| regression (RES-003 css) | instant tooltip pseudo-element block (`UnicDB-btn[data-tooltip]:not(:disabled):hover::after`) intact | source regex finds the block and `content: attr(data-tooltip)` inside | webview/styles.css |
-
+| happy (RES-003 webview) | `makeIconButton` no longer sets `btn.title` | first toolbar icon button in jsdom: `title` attr missing; `data-tooltip` and `aria-label` present | bundle compile, render stub
+| happy (RES-003 webview) | toolbar button hover style does not change any layout-triggering property | parse the CSS block; assert declarations exclude `width`, `height`, `padding`, `margin`, `border`, `top`, `left`, `right`, `bottom` (background-color + box-shadow only) | webview/styles.css
+| edge (RES-003 css) | toolbar button carries a `transition` rule | source regex matches a button selector block containing a transition |
+| edge (RES-003 css) | tooltip pseudo keeps `z-index: 1000` | source regex matches the tooltip pseudo style rule |
+| regression (RES-003 webview) | every toolbar button still has `data-tooltip` and `aria-label` matching its provided title text | each rendered button's attributes equal the original title argument | bundle compile
+| regression (RES-003 webview) | wave-1 toolbar icon-button census rewrites the title clause | census test retains svg + currentColor + aria-label pins and removes the title pin in wave 2 |
+| regression (RES-003 css) | instant tooltip pseudo-element block intact | source regex finds the tooltip pseudo-element and `content: attr(data-tooltip)` inside |
 No bugfix against shipped behavior is claimed (the WHERE/WHERE duplication is a live UX
 defect but no regression test can fail against pre-cycle code for the webview move; for
 RES-002 the new edge cases DO fail against today's `handleRequery`, which passes fragments
@@ -219,20 +212,20 @@ self-skip when `dist/webview.js` is missing — an executor that skips them with
 - [ ] Manual smoke (executor, from VS Code dev host or documented equivalent): run a SELECT, type `id > 1` in WHERE + `id DESC` in ORDER BY, press Enter in each → grid re-renders filtered/sorted rows; invalid fragment (`WHERE (`) surfaces a DB error state, panel stays usable.
 - [ ] Manual smoke (RES-003): hover each toolbar icon — ONE tooltip appears instantly (the `data-tooltip` pseudo); NO second tooltip arrives ~1.5 s later; icon background fades smoothly on mouse-in/mouse-out instead of flashing.
 - [ ] Post-merge: `grep -nE 'btn\.title\s*=\s*title' webview/main.ts` returns 0 matches.
-- [ ] Post-merge: `grep -nE 'transition\s*:' webview/styles.css` shows at least one match inside the `.UnicDB-btn { ... }` block.
+- [ ] Post-merge: `grep -nE 'transition\s*:' webview/styles.css` shows at least one match inside the toolbar button style rule.
 - [ ] No file outside the Target Files lists of TASK-RES-001/002/003 modified.
 
 ## §7 Global Constraints
 
 - No new npm dependencies; no new webview→extension message discriminator — the `requery` type (`webview/main.ts:171-176`) is the only contract.
 - Placeholders exactly `WHERE …` and `ORDER BY …` (U+2026, matching the existing `Search…` style).
-- Preserve class names `.UnicDB-requery-where`, `.UnicDB-requery-order`, `.UnicDB-requery-run`, `.UnicDB-requery-clear` (webviewPostCommit + webviewRequery tests select them).
-- `.UnicDB-toolbar { flex-wrap: nowrap }` must remain — pinned by a structural source-regex test.
+- Preserve the neutral selectors for WHERE/ORDER inputs, run/clear controls, and toolbar (tests select them).
+- The toolbar must remain single-row and nowrap — pinned by a structural source-regex test.
 - Normalization strips exactly ONE leading clause keyword (case-insensitive, whitespace-bounded); never recursive.
 - composeRequery's documented injection policy is unchanged (fragments are user-intended SQL).
 - Bundle tests require `npm run compile`; treat self-skips as failures in review.
-- RES-003: the `transition` added to `.UnicDB-btn` MUST list only `background-color` and `box-shadow` (composited properties — no layout trigger). NEVER `transition: all`; NEVER transition `width`/`height`/`padding`/`margin`/`top`/`left`.
-- RES-003: do NOT touch the `.UnicDB-btn[data-tooltip]:not(:disabled):hover::after` pseudo-element block at `webview/styles.css:78-115`; tests #5 and #7 regex-pin it.
+- RES-003: the toolbar button `transition` MUST list only `background-color` and `box-shadow` (composited properties — no layout trigger). NEVER `transition: all`; NEVER transition `width`/`height`/`padding`/`margin`/`top`/`left`.
+- RES-003: do NOT touch the tooltip pseudo-element block at `webview/styles.css:78-115`; tests #5 and #7 regex-pin it.
 - No version bump / release (maintainer folds into the next release).
 
 ## Planner Report

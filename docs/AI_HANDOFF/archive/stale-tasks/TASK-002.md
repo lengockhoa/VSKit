@@ -74,10 +74,10 @@ EXECUTOR_TOOL: Claude Code
 EXECUTOR_MODEL: claude-sonnet-4-5
 EXECUTOR_SUBAGENT: feature-implementer
 RED_OUTPUT: |
-  RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-002
+  RUN  v1.6.1 /workspace/.worktrees/task-002
    ❯ src/ai/claudeCode/__tests__/detect.test.ts  (0 test)
    FAIL  src/ai/claudeCode/__tests__/detect.test.ts [ src/ai/claudeCode/__tests__/detect.test.ts ]
-  Error: Failed to load url ../detect (resolved id: ../detect) in /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-002/src/ai/claudeCode/__tests__/detect.test.ts. Does the file exist?
+  Error: Failed to load url ../detect (resolved id: ../detect) in /workspace/.worktrees/task-002/src/ai/claudeCode/__tests__/detect.test.ts. Does the file exist?
    Test Files  1 failed (1)
         Tests  no tests
 VERIFICATION_OUTPUT: |
@@ -85,7 +85,7 @@ VERIFICATION_OUTPUT: |
    ✓ src/ai/claudeCode/__tests__/detect.test.ts  (11 tests) 3ms
      Tests  11 passed (11)
   > npm run typecheck
-   > UnicDB@1.53.23 typecheck
+   > Extension@1.53.23 typecheck
    > tsc --noEmit
    (exit 0, no errors)
 STATUS: PASS

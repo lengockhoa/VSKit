@@ -2,6 +2,14 @@
 
 Track session-level execution details.
 
+## 2026-10-20 — VSKit standalone conversion
+
+- Converted package/runtime identifiers, grammar and media paths, installer/user documentation, and Docker development fixture names. Publisher `lengockhoa` is unchanged; version `1.55.7` avoids reusing the existing `v1.55.6` release. The manifest declares the existing default-off `VSKit.ai.grounding` option.
+- No cross-identity importer was added. The guide documents inaccessible prior VS Code state/secrets and manual recreation; previous extension stores, workspace files, and Docker volumes remain untouched.
+- Verification: typecheck and compile passed; full unit/regression suite reported 319 files passed, 2 skipped (4,812 tests passed, 5 skipped). Final focused manifest/resource/grammar/guide/release/installer tests passed (64). `docker compose config --quiet`, shell syntax checks, and installer `--help` passed.
+- Packaging passed: `dist/vskit-1.55.7.vsix` contains 23 files (2.17 MB): VSKit manifest, entrypoint, README, user guide, icons, and lowercase grammar. The repo build script was not invoked because it runs `npm ci`; no VS Code install/reload, integration database/service, tag, release, publish, commit, or push has occurred yet.
+- Dated release/worklog records below preserve historical identifiers and exact artifact names/URLs for audit; they do not describe the current identity. Pre-existing legacy VSIX and SMB tombstone artifacts were left untouched and are excluded from the package.
+
 ## 2026-09-22 — Cycle MENU (schema-tree table-node context menu order)
 
 - TASK-001 (verify-and-close): feature pre-landed in 1e96f89 — `package.json`

@@ -92,7 +92,7 @@ describe("CHATV2-015 #6 — export content", () => {
   it("JSON carries schemaVersion and the structured record, not a scraped string", () => {
     const doc = serializeSessionToJson(makeRecord());
     expect(doc.schemaVersion).toBe(AI_CHAT_EXPORT_SCHEMA_VERSION);
-    expect(doc.kind).toBe("UnicDB.aiChat.session");
+    expect(doc.kind).toBe("VSKit.aiChat.session");
     expect(doc.session.id).toBe("sess-exact-123");
     expect(doc.session.messages.map((m) => [m.role, m.text])).toEqual([
       ["user", "Why is the join slow?"],
@@ -124,7 +124,7 @@ describe("CHATV2-015 #6 — export content", () => {
     const rec = makeRecord({ title: "../Weird/../Name <script>" });
     expect(exportFileName(rec, "markdown")).toBe("weird-name-script.md");
     expect(exportFileName(rec, "json")).toBe("weird-name-script.json");
-    expect(exportFileName(makeRecord({ title: "" }), "json")).toBe("unicdb-chat.json");
+    expect(exportFileName(makeRecord({ title: "" }), "json")).toBe("vskit-chat.json");
   });
 });
 

@@ -1,5 +1,5 @@
 // src/extension.ts
-// UnicDB extension entry — TASK-007 wires all commands + tree view + CodeLens + status bar.
+// VSKit extension entry — TASK-007 wires all commands + tree view + CodeLens + status bar.
 import * as vscode from "vscode";
 import { ConnectionManager } from "./core/connectionManager";
 import { createAdapter } from "./adapters/factory";
@@ -32,7 +32,7 @@ import {
 } from "./ui/largeValueEditor";
 import { commandOpenGrantWizard } from "./ui/adminWizard";
 import { registerDdlView } from "./ui/ddlView";
-import { UnicDBCodeLensProvider } from "./ui/codeLensProvider";
+import { VSKitCodeLensProvider } from "./ui/codeLensProvider";
 import { registerTableCommands } from "./ui/tableCommands";
 import { ConnectionForm } from "./ui/connectionForm";
 import {
@@ -122,7 +122,7 @@ import {
 } from "./ui/sqlSemanticTokens";
 import { defaultAiSettings, type AiSettings } from "./ai/settings";
 import type { ConnectionConfig, ParsedStatement } from "./config/types";
-import { writeUnicDBAiConfig } from "./extensionConfigExport";
+import { writeVSKitAiConfig } from "./extensionConfigExport";
 import { SqlAutocompleteService, type ProviderFn, type SchemaContext } from "./ai/sqlAutocomplete";
 import { createSchemaContextCache, type SchemaContextCache } from "./ai/schemaContextCache";
 import { registerSqlAutocomplete, type AutocompleteRegistration } from "./extensionAutocomplete";
@@ -146,7 +146,7 @@ let aiSettingsForm: AiSettingsForm | null = null;
 /** Cached single-instance AiChatPanel (TASK-004). Reused across calls. */
 let aiChatPanel: AiChatPanel | null = null;
 let consolePanel: ConsolePanel | null = null;
-/** TASK-OC4O-002 — UnicDB Help Grid singleton. Created on first open. */
+/** TASK-OC4O-002 — VSKit Help Grid singleton. Created on first open. */
 let helpGridPanel: HelpGridPanel | null = null;
 /**
  * TASK-STOPERR-003 — single statement-error marker (decoration + Problems
@@ -184,7 +184,7 @@ let invalidateAfterSchemaDdl:
 let schemaTreeRefresher: ReturnType<typeof createDebouncedRefresher> | null = null;
 
 /**
- * TASK-GITMSG-002 — single-flight gate for `UnicDB.generateCommitMessage`
+ * TASK-GITMSG-002 — single-flight gate for `VSKit.generateCommitMessage`
  * (SPEC FR-001 / §7.1). ONE instance at module scope: while a generation is
  * in flight a second click gets the frozen in-progress toast instead of a
  * second stacked progress notification.
@@ -236,7 +236,7 @@ let diagPendingLines: string[] = [];
 function ensureDiagChannel(): void {
   if (deactivating) return;
   if (diagOutputChannel === null) {
-    diagOutputChannel = vscode.window.createOutputChannel("UnicDB");
+    diagOutputChannel = vscode.window.createOutputChannel("VSKit");
   }
   if (diagPendingLines.length > 0) {
     const pending = diagPendingLines;
@@ -251,7 +251,7 @@ function ensureDiagChannel(): void {
 }
 
 /**
- * Host-side helper: write one redacted diagnostic line to the UnicDB Output
+ * Host-side helper: write one redacted diagnostic line to the VSKit Output
  * Channel. Public so other modules / future cycles can drive the same
  * channel without re-importing `logLine` or knowing about the lazy holder.
  *
@@ -312,16 +312,16 @@ interface ExtensionState {
   runner: QueryRunner;
   panel: ResultsPanel;
   tree: SchemaTreeProvider;
-  codeLens: UnicDBCodeLensProvider;
+  codeLens: VSKitCodeLensProvider;
   statusBar: StatusBarWrapper;
 }
 
 // AIX-01: opt-in workspace grounding. Default OFF so the pre-AIX-01
-// turn path is unchanged. Hosts gate on `UnicDB.ai.grounding` so a
+// turn path is unchanged. Hosts gate on `VSKit.ai.grounding` so a
 // setting change takes effect on the next panel open.
 function isGroundingEnabled(): boolean {
   return vscode.workspace
-    .getConfiguration("UnicDB")
+    .getConfiguration("VSKit")
     .get<boolean>("ai.grounding", false);
 }
 // AIX-02 — host-curated workspace allowlist for grounding + file ops.
@@ -329,7 +329,7 @@ function isGroundingEnabled(): boolean {
 // Text-like files only, capped at 200 entries; exact relative-ish fsPaths
 // (the same strings grounding readFile/workspace_write use as keys).
 const GROUNDING_MAX_FILES = 200;
-const GROUNDING_EXCLUDE_GLOBS = "{**/node_modules/**,**/.git/**,**/dist/**,**/out/**,**/build/**,**/.UnicDB/**,**/*.min.*,**/*.lock,**/*.png,**/*.jpg,**/*.jpeg,**/*.gif,**/*.ico,**/*.webp,**/*.pdf,**/*.zip,**/*.gz,**/*.exe,**/*.dll,**/*.so,**/*.dylib,**/*.woff,**/*.woff2,**/*.ttf,**/*.mp3,**/*.mp4,**/*.sqlite,**/*.db}";
+const GROUNDING_EXCLUDE_GLOBS = "{**/node_modules/**,**/.git/**,**/dist/**,**/out/**,**/build/**,**/.VSKit/**,**/*.min.*,**/*.lock,**/*.png,**/*.jpg,**/*.jpeg,**/*.gif,**/*.ico,**/*.webp,**/*.pdf,**/*.zip,**/*.gz,**/*.exe,**/*.dll,**/*.so,**/*.dylib,**/*.woff,**/*.woff2,**/*.ttf,**/*.mp3,**/*.mp4,**/*.sqlite,**/*.db}";
 let groundingFiles: readonly string[] = [];
 async function refreshGroundingFiles(): Promise<void> {
   try {
@@ -369,7 +369,7 @@ async function readWorkspaceFile(p: string): Promise<string> {
 }
 /**
  * TASK-SCHEMA-FILTER — extract a ConnectionConfig from a tree-view argument.
- * Right-click commands receive the raw UnicDBNode (`{ meta: { connection } }`).
+ * Right-click commands receive the raw VSKitNode (`{ meta: { connection } }`).
  * Palette invocation falls back to undefined, which callers handle by
  * defaulting to `mgr.getActive()`.
  */
@@ -406,7 +406,7 @@ async function writeWorkspaceFileAtomic(
     }
   }
   const tmp = target.with({
-    path: `${target.path}.UnicDB-tmp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+    path: `${target.path}.VSKit-tmp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
   });
   await vscode.workspace.fs.writeFile(tmp, new TextEncoder().encode(content));
   try {
@@ -434,7 +434,7 @@ async function safeFileExists(uri: vscode.Uri): Promise<boolean> {
   }
 }
 
-// v1.53.32 — ensure UnicDB container lives in Primary Sidebar (left activity
+// v1.53.32 — ensure VSKit container lives in Primary Sidebar (left activity
 // bar) on first activation. VS Code 1.85+ may auto-route a newly-registered
 // activity-bar container to the Secondary Sidebar (right) when one is open
 // — leaving the activity-bar slot empty even though the views are
@@ -443,24 +443,24 @@ async function safeFileExists(uri: vscode.Uri): Promise<boolean> {
 // the user can fall back to View > Appearance > Primary Side Bar.
 //
 // The flag is stored in globalState per extension install so the move
-// happens once. Re-running the `UnicDB.moveToPrimarySidebar` command
+// happens once. Re-running the `VSKit.moveToPrimarySidebar` command
 // clears the flag and re-tries (manual escape hatch if the first attempt
 // failed because the view was still mid-registration).
 async function ensurePrimarySidebar(context: vscode.ExtensionContext): Promise<void> {
-  const KEY = "UnicDB.primarySidebarEnsured";
+  const KEY = "VSKit.primarySidebarEnsured";
   if (context.globalState.get<boolean>(KEY)) return;
-  const cfg = vscode.workspace.getConfiguration("UnicDB");
+  const cfg = vscode.workspace.getConfiguration("VSKit");
   if (cfg.get<boolean>("preferPrimarySidebar") === false) {
     // User has explicitly opted out — remember so we never ask again.
     await context.globalState.update(KEY, true);
     return;
   }
   // Wait one microtask + a real tick so createTreeView has finished
-  // registering `UnicDB.schemaTree` / `UnicDB.adminTree`. Without this
+  // registering `VSKit.schemaTree` / `VSKit.adminTree`. Without this
   // the move command runs before VS Code knows the views exist and the
   // call is a no-op.
   await new Promise<void>((r) => setTimeout(r, 50));
-  const viewIds = ["UnicDB.schemaTree", "UnicDB.adminTree"];
+  const viewIds = ["VSKit.schemaTree", "VSKit.adminTree"];
   // Try every plausible workbench command name. Older VS Code builds
   // expose different IDs; we accept the first one that succeeds.
   const candidates: Array<{ cmd: string; args: unknown[] }> = [
@@ -473,7 +473,7 @@ async function ensurePrimarySidebar(context: vscode.ExtensionContext): Promise<v
     try {
       await vscode.commands.executeCommand(cmd, ...(args as []));
       await context.globalState.update(KEY, true);
-      console.log(`UnicDB: container moved to Primary Sidebar via ${cmd}`);
+      console.log(`VSKit: container moved to Primary Sidebar via ${cmd}`);
       return;
     } catch {
       // try next candidate
@@ -481,14 +481,14 @@ async function ensurePrimarySidebar(context: vscode.ExtensionContext): Promise<v
   }
   // All candidates unavailable — leave the flag unset so the next
   // activation (reload, window reopen) retries. The user can also
-  // invoke `UnicDB.moveToPrimarySidebar` to force a retry.
+  // invoke `VSKit.moveToPrimarySidebar` to force a retry.
 }
 
 export async function activate(
   context: vscode.ExtensionContext,
 ): Promise<void> {
   disposables = [];
-  // v1.53.32 — fire-and-forget: move UnicDB container to Primary Sidebar
+  // v1.53.32 — fire-and-forget: move VSKit container to Primary Sidebar
   // on first activation. Runs in parallel with the rest of activate();
   // the function itself waits a tick before issuing the move command so
   // the views below have time to register.
@@ -535,7 +535,7 @@ export async function activate(
   // ---- Schema tree ----
   const tree = new SchemaTreeProvider(mgr);
   registerSchemaTreeProvider(tree);
-  const treeView = vscode.window.createTreeView("UnicDB.schemaTree", {
+  const treeView = vscode.window.createTreeView("VSKit.schemaTree", {
     treeDataProvider: tree,
   });
   disposables.push(treeView);
@@ -559,11 +559,11 @@ export async function activate(
     onSchemaDdl: (statements, dialect) => {
       invalidateAfterSchemaDdl?.(statements, dialect);
     },
-    // TASK-UX1-003 — UnicDB.generateSampleData: open the Console with the
+    // TASK-UX1-003 — VSKit.generateSampleData: open the Console with the
     // typed INSERT template (manual execution). The closure captures `mgr`,
     // `runner`, `panel`, and the mementos that `commandOpenConsole` needs
     // to wire the singleton + onRun + draft/autocomplete path identically
-    // to `UnicDB.openConsole` / `UnicDB.openConsoleForObject`.
+    // to `VSKit.openConsole` / `VSKit.openConsoleForObject`.
     openConsoleWithTemplate: (name, buffer) => {
       openConsoleWithTemplate(
         mgr,
@@ -578,9 +578,9 @@ export async function activate(
     },
   });
 
-  // TASK-AF-002 — UnicDB-ddl: virtual document provider for "Open DDL" on
-  // view/routine/trigger nodes. Registers content provider + UnicDB.openDdl +
-  // UnicDB.refreshDdl. Disposables go to ctx.subscriptions for clean teardown.
+  // TASK-AF-002 — VSKit-ddl: virtual document provider for "Open DDL" on
+  // view/routine/trigger nodes. Registers content provider + VSKit.openDdl +
+  // VSKit.refreshDdl. Disposables go to ctx.subscriptions for clean teardown.
   registerDdlView(mgr, context.subscriptions);
 
   // ---- Status bar ----
@@ -588,7 +588,7 @@ export async function activate(
   context.subscriptions.push(statusBar);
 
   // ACTIVE-SCHEMA — secondary status bar item showing the pinned schema
-  // for the ACTIVE connection. Click → `UnicDB.selectActiveSchema` (same
+  // for the ACTIVE connection. Click → `VSKit.selectActiveSchema` (same
   // QuickPick as the command-palette entry). Hidden when no connection is
   // active OR when the active connection isn't postgres (the wrap only
   // applies on postgres; showing a "schema chip" on mysql would be
@@ -597,7 +597,7 @@ export async function activate(
     vscode.StatusBarAlignment.Left,
     99, // just below the connection chip (priority 100)
   );
-  schemaStatusItem.command = "UnicDB.selectActiveSchema";
+  schemaStatusItem.command = "VSKit.selectActiveSchema";
   const renderSchemaStatus = (): void => {
     const active = mgr.getActive();
     if (!active || active.driver !== "postgres") {
@@ -672,12 +672,12 @@ export async function activate(
   // ---- Results panel + query runner ----
   const runner = new QueryRunner(() => mgr.getAdapter(), {
     batchSize:
-      vscode.workspace.getConfiguration("UnicDB").get<number>("batchSize") ??
+      vscode.workspace.getConfiguration("VSKit").get<number>("batchSize") ??
       500,
     // SQLHANG (FR-013) — per-statement watchdog, seconds → ms; 0 disables.
     statementTimeoutMs:
       (vscode.workspace
-        .getConfiguration("UnicDB")
+        .getConfiguration("VSKit")
         .get<number>("queryTimeoutSeconds") ?? 300) * 1000,
   });
   // TASK-503 — Save flow dependencies: dialect (from active connection) +
@@ -720,7 +720,7 @@ export async function activate(
     // the status-bar chip). The resulting store mutation re-broadcasts to
     // every panel via the fan-out subscriber installed below.
     onPickSchema: () => {
-      void vscode.commands.executeCommand("UnicDB.selectActiveSchema");
+      void vscode.commands.executeCommand("VSKit.selectActiveSchema");
     },
     // ACTIVE-SCHEMA chip — initial seed so the chip shows the right label
     // before any user interaction. `resolveWebviewView` calls this once.
@@ -732,9 +732,9 @@ export async function activate(
   panel.setExtensionUri(context.extensionUri);
   // TASK-RP-001 — register the panel as a `WebviewViewProvider` whose view
   // lives in the bottom panel container (next to Terminal). The legacy
-  // `createWebviewPanel` shell + `UnicDB.resultsPlacement` setting +
+  // `createWebviewPanel` shell + `VSKit.resultsPlacement` setting +
   // `moveEditorToBelowGroup`/`AboveGroup` placement paths are gone —
-  // `package.json` owns the `UnicDB-results` webview view contribution.
+  // `package.json` owns the `VSKit-results` webview view contribution.
   // `retainContextWhenHidden` keeps the panel's render state alive when
   // the user docks it away and back, mirroring the editor-area shell.
   context.subscriptions.push(
@@ -746,7 +746,7 @@ export async function activate(
   );
   context.subscriptions.push(panel);
 
-  // TASK-002 — wire `UnicDB.browseTableData` (double-click/Enter on table/view nodes
+  // TASK-002 — wire `VSKit.browseTableData` (double-click/Enter on table/view nodes
   // in the schema tree). Consumes TASK-001's registerBrowseCommands; the tree
   // node (with .meta) is passed as the command argument.
   registerBrowseCommands({ mgr, runner, panel });
@@ -755,7 +755,7 @@ export async function activate(
   // (review fix round C, Finding #3) — resolver reads the LIVE active
   // connection at lens-render time (not captured once at construction), so
   // switching connections re-dialects the next `provideCodeLenses` call.
-  const codeLens = new UnicDBCodeLensProvider(() => toSqlDialect(mgr.getActive()?.driver));
+  const codeLens = new VSKitCodeLensProvider(() => toSqlDialect(mgr.getActive()?.driver));
   context.subscriptions.push(
     vscode.languages.registerCodeLensProvider(
       { scheme: "file", language: "sql" },
@@ -828,7 +828,7 @@ export async function activate(
   ) {
     disposables.push(
       vscode.workspace.registerTextDocumentContentProvider(
-        "UnicDB-sql-catalog",
+        "VSKit-sql-catalog",
         catalogDocuments,
       ),
     );
@@ -896,64 +896,64 @@ export async function activate(
 
   // ---- Register all 12 package commands + 1 internal tree command -----------
 
-  // 1. UnicDB.runQuery — Cmd+Enter
+  // 1. VSKit.runQuery — Cmd+Enter
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.runQuery", () => runQueryFromEditor(mgr, runner, panel, statusBar)),
+    vscode.commands.registerCommand("VSKit.runQuery", () => runQueryFromEditor(mgr, runner, panel, statusBar)),
   );
 
   // v1.53.32 — manual escape hatch: clear the primarySidebarEnsured flag
   // and re-attempt the move. Useful if the auto-move on first activation
   // fired before the views were registered, or if the user toggled VS
-  // Code's sidebar layout and wants UnicDB back on the Primary Sidebar.
+  // Code's sidebar layout and wants VSKit back on the Primary Sidebar.
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.moveToPrimarySidebar", async () => {
-      await context.globalState.update("UnicDB.primarySidebarEnsured", undefined);
+    vscode.commands.registerCommand("VSKit.moveToPrimarySidebar", async () => {
+      await context.globalState.update("VSKit.primarySidebarEnsured", undefined);
       await ensurePrimarySidebar(context);
       void vscode.window.showInformationMessage(
-        "UnicDB: container moved to Primary Sidebar (if the workbench move command is available in this VS Code version).",
+        "VSKit: container moved to Primary Sidebar (if the workbench move command is available in this VS Code version).",
       );
     }),
   );
 
-  // 2. UnicDB.runStatement — CodeLens click
+  // 2. VSKit.runStatement — CodeLens click
   disposables.push(
     vscode.commands.registerCommand(
-      "UnicDB.runStatement",
+      "VSKit.runStatement",
       (stmt: ParsedStatement) => runStatement(mgr, runner, panel, statusBar, stmt),
     ),
   );
 
-  // 3. UnicDB.addConnection
+  // 3. VSKit.addConnection
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.addConnection", () =>
+    vscode.commands.registerCommand("VSKit.addConnection", () =>
       commandAddConnection(mgr),
     ),
   );
 
-  // 4. UnicDB.editConnection
+  // 4. VSKit.editConnection
   disposables.push(
     vscode.commands.registerCommand(
-      "UnicDB.editConnection",
+      "VSKit.editConnection",
       (arg?: { id?: string }) => commandEditConnection(mgr, arg),
     ),
   );
 
-  // 5. UnicDB.deleteConnection
+  // 5. VSKit.deleteConnection
   disposables.push(
     vscode.commands.registerCommand(
-      "UnicDB.deleteConnection",
+      "VSKit.deleteConnection",
       (arg?: { id?: string }) => commandDeleteConnection(mgr, arg),
     ),
   );
 
-  // 6. UnicDB.selectConnection
+  // 6. VSKit.selectConnection
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.selectConnection", () =>
+    vscode.commands.registerCommand("VSKit.selectConnection", () =>
       commandSelectConnection(mgr),
     ),
   );
 
-  // 7. UnicDB.cancelQuery
+  // 7. VSKit.cancelQuery
   // TASK-RLX02-003 — AWAIT runner.cancel() before clearing busy state: the
   // runner's cancel performs best-effort dialect cleanup through
   // `adapter.cancelActiveQuery()` (MySQL/MSSQL KILL / ATTENTION). A
@@ -962,45 +962,45 @@ export async function activate(
   // runner.cancel() never rejects (seam failures are swallowed inside), so
   // awaiting cannot turn a late cancel into a command error.
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.cancelQuery", async () => {
+    vscode.commands.registerCommand("VSKit.cancelQuery", async () => {
       await runner.cancel();
       panel.setBusy(false);
     }),
   );
 
-  // 8. UnicDB.generateSelect — Generate SELECT for current node (table/view).
+  // 8. VSKit.generateSelect — Generate SELECT for current node (table/view).
   // The view/item/context menus forwards the qualified name as the command argument.
   // If invoked from command palette (no arg), fall back to prompting.
   disposables.push(
     vscode.commands.registerCommand(
-      "UnicDB.generateSelect",
+      "VSKit.generateSelect",
       (qualifiedOrNode?: unknown) =>
         commandGenerateSelect(mgr, qualifiedOrNode),
     ),
   );
 
-  // 9. UnicDB.copyQualifiedName
+  // 9. VSKit.copyQualifiedName
   disposables.push(
     vscode.commands.registerCommand(
-      "UnicDB.copyQualifiedName",
+      "VSKit.copyQualifiedName",
       (qualifiedOrNode?: unknown) =>
         commandCopyQualifiedName(qualifiedOrNode),
     ),
   );
 
-  // 10. UnicDB.refreshSchema — TASK-008: invalidate completion schema cache
+  // 10. VSKit.refreshSchema — TASK-008: invalidate completion schema cache
   // trước khi refresh tree để completion không phục vụ data cũ.
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.refreshSchema", () => {
+    vscode.commands.registerCommand("VSKit.refreshSchema", () => {
       schemaCache.invalidate();
       sqlSemanticTokens.refresh();
       tree.refresh();
     }),
   );
 
-  // 11. UnicDB.filterSchemaTree — open input box, apply filter (TASK-303).
+  // 11. VSKit.filterSchemaTree — open input box, apply filter (TASK-303).
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.filterSchemaTree", async () => {
+    vscode.commands.registerCommand("VSKit.filterSchemaTree", async () => {
       const text = await vscode.window.showInputBox({
         prompt: "Filter schemas, tables, columns, routines…",
         placeHolder: "Filter…",
@@ -1010,37 +1010,37 @@ export async function activate(
       tree.setFilter(text);
       await vscode.commands.executeCommand(
         "setContext",
-        "UnicDB.schemaTreeFilterActive",
+        "VSKit.schemaTreeFilterActive",
         text.length > 0,
       );
     }),
   );
 
-  // 12. UnicDB.clearSchemaTreeFilter — clear filter (TASK-303).
+  // 12. VSKit.clearSchemaTreeFilter — clear filter (TASK-303).
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.clearSchemaTreeFilter", async () => {
+    vscode.commands.registerCommand("VSKit.clearSchemaTreeFilter", async () => {
       tree.setFilter("");
       await vscode.commands.executeCommand(
         "setContext",
-        "UnicDB.schemaTreeFilterActive",
+        "VSKit.schemaTreeFilterActive",
         false,
       );
     }),
   );
-  // TASK-SCHEMA-FILTER — UnicDB.selectSchemas (multi-select QuickPick) +
-  // UnicDB.resetSchemaFilter (show all). Both are right-click menu items on
+  // TASK-SCHEMA-FILTER — VSKit.selectSchemas (multi-select QuickPick) +
+  // VSKit.resetSchemaFilter (show all). Both are right-click menu items on
   // connection nodes in the Schema Explorer.
   disposables.push(
     vscode.commands.registerCommand(
-      "UnicDB.selectSchemas",
+      "VSKit.selectSchemas",
       async (arg?: unknown) => {
-        // Right-click on a connection node hands us the raw UnicDBNode
+        // Right-click on a connection node hands us the raw VSKitNode
         // (with `meta.connection`). Fall back to the active connection
         // when invoked from the palette.
         const conn = readConnectionFromNodeArg(arg) ?? mgr.getActive();
         if (!conn) {
           void vscode.window.showInformationMessage(
-            "UnicDB: select a connection first.",
+            "VSKit: select a connection first.",
           );
           return;
         }
@@ -1049,7 +1049,7 @@ export async function activate(
           adapter = await mgr.getAdapterFor(conn);
         } catch (err) {
           void vscode.window.showErrorMessage(
-            `UnicDB: ${err instanceof Error ? err.message : String(err)}`,
+            `VSKit: ${err instanceof Error ? err.message : String(err)}`,
           );
           return;
         }
@@ -1058,13 +1058,13 @@ export async function activate(
           schemas = await adapter.listSchemas(true);
         } catch (err) {
           void vscode.window.showErrorMessage(
-            `UnicDB: ${err instanceof Error ? err.message : String(err)}`,
+            `VSKit: ${err instanceof Error ? err.message : String(err)}`,
           );
           return;
         }
         if (schemas.length === 0) {
           void vscode.window.showInformationMessage(
-            "UnicDB: this connection has no schemas to filter.",
+            "VSKit: this connection has no schemas to filter.",
           );
           return;
         }
@@ -1081,7 +1081,7 @@ export async function activate(
             canPickMany: true,
             placeHolder:
               "Pick schemas to keep visible (uncheck to hide). The schema list updates immediately.",
-            title: `UnicDB: Schemas — ${conn.name}`,
+            title: `VSKit: Schemas — ${conn.name}`,
           },
         );
         // User cancelled the picker → no change.
@@ -1102,7 +1102,7 @@ export async function activate(
   );
   disposables.push(
     vscode.commands.registerCommand(
-      "UnicDB.resetSchemaFilter",
+      "VSKit.resetSchemaFilter",
       async (arg?: unknown) => {
         const conn = readConnectionFromNodeArg(arg) ?? mgr.getActive();
         if (!conn) return;
@@ -1110,7 +1110,7 @@ export async function activate(
       },
     ),
   );
-  // ACTIVE-SCHEMA — UnicDB.selectActiveSchema: pick the schema every
+  // ACTIVE-SCHEMA — VSKit.selectActiveSchema: pick the schema every
   // subsequent SQL run will execute in (DataGrip parity). Single-select
   // QuickPick of `adapter.listSchemas(true)` for the active connection
   // (or the connection passed via the tree-node arg). The current pin
@@ -1121,18 +1121,18 @@ export async function activate(
   // (no more "everything defaults to public").
   disposables.push(
     vscode.commands.registerCommand(
-      "UnicDB.selectActiveSchema",
+      "VSKit.selectActiveSchema",
       async (arg?: unknown) => {
         const conn = readConnectionFromNodeArg(arg) ?? mgr.getActive();
         if (!conn) {
           void vscode.window.showInformationMessage(
-            "UnicDB: select a connection first.",
+            "VSKit: select a connection first.",
           );
           return;
         }
         if (conn.driver !== "postgres") {
           void vscode.window.showInformationMessage(
-            `UnicDB: active schema selection is only supported for PostgreSQL connections (this one is "${conn.driver}").`,
+            `VSKit: active schema selection is only supported for PostgreSQL connections (this one is "${conn.driver}").`,
           );
           return;
         }
@@ -1141,7 +1141,7 @@ export async function activate(
           adapter = await mgr.getAdapterFor(conn);
         } catch (err) {
           void vscode.window.showErrorMessage(
-            `UnicDB: ${err instanceof Error ? err.message : String(err)}`,
+            `VSKit: ${err instanceof Error ? err.message : String(err)}`,
           );
           return;
         }
@@ -1150,13 +1150,13 @@ export async function activate(
           schemas = await adapter.listSchemas(true);
         } catch (err) {
           void vscode.window.showErrorMessage(
-            `UnicDB: ${err instanceof Error ? err.message : String(err)}`,
+            `VSKit: ${err instanceof Error ? err.message : String(err)}`,
           );
           return;
         }
         if (schemas.length === 0) {
           void vscode.window.showInformationMessage(
-            "UnicDB: this connection has no schemas.",
+            "VSKit: this connection has no schemas.",
           );
           return;
         }
@@ -1192,7 +1192,7 @@ export async function activate(
             canPickMany: false,
             placeHolder:
               "Schema for new SQL runs. CREATE FUNCTION / unqualified SELECT land here.",
-            title: `UnicDB: Active schema — ${conn.name}`,
+            title: `VSKit: Active schema — ${conn.name}`,
           },
         );
         if (picks === undefined) return; // cancelled
@@ -1208,43 +1208,43 @@ export async function activate(
         mgr.setActiveSchema(conn.id, next);
         void vscode.window.showInformationMessage(
           next
-            ? `UnicDB: new SQL runs on "${conn.name}" will use schema "${next}".`
-            : `UnicDB: cleared schema pin on "${conn.name}" (server default).`,
+            ? `VSKit: new SQL runs on "${conn.name}" will use schema "${next}".`
+            : `VSKit: cleared schema pin on "${conn.name}" (server default).`,
         );
       },
     ),
   );
-  // 13. UnicDB.selectConnectionFromTree — click connection node → set active.
+  // 13. VSKit.selectConnectionFromTree — click connection node → set active.
   // (Không thuộc 12 command khai báo trong package.json; command này được trigger
   // từ TreeItem.command trên connection node. StatusBar + tree badges auto-update
   // qua mgr.onDidChangeActive.)
   disposables.push(
     vscode.commands.registerCommand(
-      "UnicDB.selectConnectionFromTree",
+      "VSKit.selectConnectionFromTree",
       async (id?: string) => {
         if (!id) return;
         try {
           await mgr.setActive(id);
         } catch (err) {
           void vscode.window.showErrorMessage(
-            `UnicDB: ${err instanceof Error ? err.message : String(err)}`,
+            `VSKit: ${err instanceof Error ? err.message : String(err)}`,
           );
         }
       },
     ),
   );
 
-  // 14. UnicDB.runScript — send active .sh file to a reused terminal (TASK-505).
+  // 14. VSKit.runScript — send active .sh file to a reused terminal (TASK-505).
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.runScript", () => commandRunScript()),
+    vscode.commands.registerCommand("VSKit.runScript", () => commandRunScript()),
   );
 
-  // 14b. UnicDB.runShellSelection — TASK-SH-002: send ONLY highlighted
+  // 14b. VSKit.runShellSelection — TASK-SH-002: send ONLY highlighted
   // selections (or cursor line) from a .sh file to the same reused terminal.
   // Keybinding-driven (Cmd+Enter); silent no-op on wrong language / no
   // selection / whitespace-only.
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.runShellSelection", () =>
+    vscode.commands.registerCommand("VSKit.runShellSelection", () =>
       commandRunShellSelection(),
     ),
   );
@@ -1254,7 +1254,7 @@ export async function activate(
   // missing legacy preference start on the same engine. If omp is not
   // available, the gate below explicitly persists the safe builtin fallback.
   const initialEngine = vscode.workspace
-    .getConfiguration("UnicDB")
+    .getConfiguration("VSKit")
     .get<string>("ai.engine", "omp");
   // Cycle AE.5 — perform only the lightweight availability gate at activation.
   // AcpProcess is intentionally created when the user opens chat, not here,
@@ -1265,17 +1265,17 @@ export async function activate(
       if (!detection.ok) {
         const hint = detection.available ? OMP_UPDATE_HINT : OMP_INSTALL_HINT;
         void vscode.window.showInformationMessage(
-          `UnicDB: omp engine unavailable — falling back to builtin. ${hint}`,
+          `VSKit: omp engine unavailable — falling back to builtin. ${hint}`,
         );
         await vscode.workspace
-          .getConfiguration("UnicDB")
+          .getConfiguration("VSKit")
           .update("ai.engine", "builtin", vscode.ConfigurationTarget.Global);
       }
     })();
   }
   const aiStore = new AiConfigStore(context);
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.openAiSettings", () =>
+    vscode.commands.registerCommand("VSKit.openAiSettings", () =>
       commandOpenAiSettings(aiStore),
     ),
   );
@@ -1286,7 +1286,7 @@ export async function activate(
   // success; every failure path returns before injection.
   disposables.push(
     vscode.commands.registerCommand(
-      "UnicDB.generateCommitMessage",
+      "VSKit.generateCommitMessage",
       async () => {
         // Single-flight (SPEC FR-001): a second click while a run is in
         // flight gets the frozen toast — never a second stacked spinner.
@@ -1301,7 +1301,7 @@ export async function activate(
           await vscode.window.withProgress(
             {
               location: vscode.ProgressLocation.SourceControl,
-              title: "UnicDB: generating commit message…",
+              title: "VSKit: generating commit message…",
               cancellable: true,
             },
             async (progress, token) =>
@@ -1315,7 +1315,7 @@ export async function activate(
       },
     ),
   );
-  // 16. UnicDB.aiChat — TASK-004: AI chat panel with real deps.
+  // 16. VSKit.aiChat — TASK-004: AI chat panel with real deps.
   // Spec: store.loadConfig() (flat AiConfig), createProviderClient per
   // complete() call, adapterFactory resolves ConnectionManager's active
   // POSTGRES adapter (else null). Unconfigured → info + open AI Settings.
@@ -1348,7 +1348,7 @@ export async function activate(
       }).streamComplete(req, { onText, signal }),
   };
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.aiChat", () =>
+    vscode.commands.registerCommand("VSKit.aiChat", () =>
       // TASK-AIX03-102 — thread the activation-scoped `mgr` so the
       // panel can subscribe to `onDidChangeRecoveryStatus` and fail-close
       // any in-flight turn against a recovering or failed connection.
@@ -1362,17 +1362,17 @@ export async function activate(
   // trace. All three derive/consume the central policy; no new policy rule
   // lives here.
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.ai.showPolicy", () =>
+    vscode.commands.registerCommand("VSKit.ai.showPolicy", () =>
       commandShowPolicy(aiStore),
     ),
   );
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.ai.exportTrace", () =>
+    vscode.commands.registerCommand("VSKit.ai.exportTrace", () =>
       commandExportTrace(aiStore),
     ),
   );
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.ai.clearTrace", () =>
+    vscode.commands.registerCommand("VSKit.ai.clearTrace", () =>
       commandClearTrace(),
     ),
   );
@@ -1425,7 +1425,7 @@ export async function activate(
   // `runStatements` path after a run settles. `shouldRefreshAfter` returns:
   //   "full" → DDL landed → drop completion+context caches + refresh tree
   //            + refresh sqlSemanticTokens (matches the
-  //            `UnicDB.refreshSchema` command body; we don't re-execute
+  //            `VSKit.refreshSchema` command body; we don't re-execute
   //            the command to avoid double-invalidation).
   //   "tree" → DML landed → tree.refresh() only (no cache bust; data
   //            changes don't need completion re-scan).
@@ -1447,7 +1447,7 @@ export async function activate(
     }
   };
   // Construct the debouncer anyway so it's available for the
-  // `UnicDB.refreshSchema` command + future tree-only batch paths. The
+  // `VSKit.refreshSchema` command + future tree-only batch paths. The
   // ref keeps a reference alive; cancel() on deactivate prevents
   // post-teardown timer fires.
   schemaTreeRefresher = createDebouncedRefresher((strategy) => {
@@ -1459,13 +1459,13 @@ export async function activate(
     state?.tree.refresh();
   });
 
-  // 17. UnicDB.openConsole — TASK-003 cycle Z: DataGrip-style SQL Console.
+  // 17. VSKit.openConsole — TASK-003 cycle Z: DataGrip-style SQL Console.
   // TASK-AF-004 cycle AF: passes `globalState` Memento so query history
   // (capped at 200 entries) persists across panel reloads.
   // ARP-08 TASK-ARP08-004: also passes `workspaceState` as the draft
   // memento so Console drafts stay workspace-scoped (history stays global).
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.openConsole", () =>
+    vscode.commands.registerCommand("VSKit.openConsole", () =>
       commandOpenConsole(
         mgr,
         runner,
@@ -1476,15 +1476,15 @@ export async function activate(
       ),
     ),
   );
-  // 17b. UnicDB.consoleNewTab — TASK-AF-004: add a new tab to the existing
+  // 17b. VSKit.consoleNewTab — TASK-AF-004: add a new tab to the existing
   // Console panel (no-op if the user hasn't opened the panel yet).
   disposables.push(
     vscode.commands.registerCommand(
-      "UnicDB.consoleNewTab",
+      "VSKit.consoleNewTab",
       () => commandOpenConsoleCreateTab(),
     ),
   );
-  // 17c. UnicDB.openConsoleForObject — open the SQL Console with a fresh tab
+  // 17c. VSKit.openConsoleForObject — open the SQL Console with a fresh tab
   // pre-filled with a driver-aware SELECT for the picked table/view.
   // Wired to the right-click `view/item/context` menu on schema-tree
   // table/view nodes (see package.json contributes.menus.view/item/context).
@@ -1494,7 +1494,7 @@ export async function activate(
   // flow not finished), we fall back to a plain postgres-style snippet.
   disposables.push(
     vscode.commands.registerCommand(
-      "UnicDB.openConsoleForObject",
+      "VSKit.openConsoleForObject",
       (qualifiedOrNode?: unknown) =>
         commandOpenConsoleForObject(mgr, runner, panel, statusBar, qualifiedOrNode, {
           globalState: context.globalState,
@@ -1514,7 +1514,7 @@ export async function activate(
   // (schemaTree.ts:541/565) — only `kind` differs.
   disposables.push(
     vscode.commands.registerCommand(
-      "UnicDB.generateViewDdl",
+      "VSKit.generateViewDdl",
       (arg?: unknown) =>
         commandGenerateObjectDdl(
           mgr,
@@ -1530,7 +1530,7 @@ export async function activate(
   );
   disposables.push(
     vscode.commands.registerCommand(
-      "UnicDB.generateFunctionDdl",
+      "VSKit.generateFunctionDdl",
       (arg?: unknown) =>
         commandGenerateObjectDdl(
           mgr,
@@ -1547,24 +1547,24 @@ export async function activate(
   // 17c.6 — TASK-UX1-007: settings hub gear on the schema-tree title bar
   // (R8b). Opens VS Code's Settings UI filtered to this extension so the
   // user sees every `contributes.configuration` entry as a single hub.
-  // Distinct from `UnicDB.openAiSettings` (which opens the AI Settings form
+  // Distinct from `VSKit.openAiSettings` (which opens the AI Settings form
   // webview) — this routes through the built-in settings editor.
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.openSettings", () =>
+    vscode.commands.registerCommand("VSKit.openSettings", () =>
       commandOpenSettingsHub(),
     ),
   );
-  // 17d. UnicDB.openHelpGrid — TASK-OC4O-002: open the UnicDB Help Grid webview
+  // 17d. VSKit.openHelpGrid — TASK-OC4O-002: open the VSKit Help Grid webview
   // (a responsive grid of feature cards). Also wired into the webview's
   // `...` (more actions) menu via package.json contributes.menus. The
   // singleton uses the live `disposables` registered-commands set so cards
   // for missing registrations are filtered out before the panel renders.
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.openHelpGrid", () =>
+    vscode.commands.registerCommand("VSKit.openHelpGrid", () =>
       commandOpenHelpGrid(disposables),
     ),
   );
-  // TASK-UX1-004 (R2) — open docs/UNICDB_USER_GUIDE.md in VS Code's
+  // TASK-UX1-004 (R2) — open docs/VSKIT_USER_GUIDE.md in VS Code's
   // Markdown preview. Path is resolved against context.extensionUri
   // (NEVER process.cwd()) so it works in both dev and packaged installs.
   //
@@ -1575,16 +1575,14 @@ export async function activate(
   // opening the canonical GitHub URL in the user's browser so they always
   // land on a readable guide rather than seeing nothing.
   //
-  // NOTE: filename is UNICDB_USER_GUIDE.md (all-caps prefix) — case is
-  // significant because vsce's glob only honours case-sensitive paths on
-  // Linux/Windows. Using "UnicDB_USER_GUIDE.md" silently fails the allow-
-  // list and the file never lands in the .vsix.
+  // NOTE: filename is docs/vskit-user-guide.md; the package allowlist below
+  // matches this exact path on case-sensitive filesystems.
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.openUserGuide", async () => {
+    vscode.commands.registerCommand("VSKit.openUserGuide", async () => {
       const guideUri = vscode.Uri.joinPath(
         context.extensionUri,
         "docs",
-        "UNICDB_USER_GUIDE.md",
+        "vskit-user-guide.md",
       );
       const guideExists = await safeFileExists(guideUri);
       if (guideExists) {
@@ -1595,18 +1593,18 @@ export async function activate(
           );
           return;
         } catch (err) {
-          console.warn("[UnicDB] markdown.showPreview failed:", err);
+          console.warn("[VSKit] markdown.showPreview failed:", err);
         }
       }
       // Fallback: open the canonical GitHub URL so the user always gets
       // the guide instead of a useless absolute-path toast.
       const githubUrl = vscode.Uri.parse(
-        "https://github.com/lengockhoa/UnicDB/blob/main/docs/UNICDB_USER_GUIDE.md",
+        "https://github.com/lengockhoa/VSKit/blob/main/docs/vskit-user-guide.md",
       );
       const opened = await vscode.env.openExternal(githubUrl);
       if (!opened) {
         void vscode.window.showInformationMessage(
-          "UnicDB user guide: https://github.com/lengockhoa/UnicDB/blob/main/docs/UNICDB_USER_GUIDE.md",
+          "VSKit user guide: https://github.com/lengockhoa/VSKit/blob/main/docs/vskit-user-guide.md",
         );
       }
     }),
@@ -1616,72 +1614,72 @@ export async function activate(
   // env-var hint so OMP picks it up from the user's `OPENAI_API_KEY`.
   disposables.push(
     vscode.commands.registerCommand(
-      "UnicDB.ai.useWithOmp",
+      "VSKit.ai.useWithOmp",
       async () => commandUseWithOmp(aiStore, adapterFactory),
     ),
   );
 
-  // TASK-012 — `UnicDB.ai.useWithClaudeCode` / `UnicDB.ai.useWithCodex`.
-  // Reuse the existing `writeUnicDBAiConfig` context export (the same
+  // TASK-012 — `VSKit.ai.useWithClaudeCode` / `VSKit.ai.useWithCodex`.
+  // Reuse the existing `writeVSKitAiConfig` context export (the same
   // YAML + DB-context markdown written by `useWithOmp`) and surface an
   // agent-specific copy-pasteable command line. No new workspace config
-  // format — the same `.vscode/UnicDB-ai-config.yml` and
-  // `.vscode/UnicDB-db-context.md` files are reused. Manifest identifiers
+  // format — the same `.vscode/VSKit-ai-config.yml` and
+  // `.vscode/VSKit-db-context.md` files are reused. Manifest identifiers
   // are supplied by TASK-013.
   disposables.push(
     vscode.commands.registerCommand(
-      "UnicDB.ai.useWithClaudeCode",
+      "VSKit.ai.useWithClaudeCode",
       async () => commandUseWithClaudeCode(aiStore, adapterFactory),
     ),
   );
   disposables.push(
     vscode.commands.registerCommand(
-      "UnicDB.ai.useWithCodex",
+      "VSKit.ai.useWithCodex",
       async () => commandUseWithCodex(aiStore, adapterFactory),
     ),
   );
 
-  // 19. UnicDB.ai.refreshDbContext — cycle AD TASK-003 §9 (refresh path).
-  // Re-runs the DB introspection that powers `UnicDB-db-context.md` so the
+  // 19. VSKit.ai.refreshDbContext — cycle AD TASK-003 §9 (refresh path).
+  // Re-runs the DB introspection that powers `VSKit-db-context.md` so the
   // appended system-prompt OMP loads is current. Same write path as
-  // `UnicDB.ai.useWithOmp` minus the on-screen notification (silent refresh).
+  // `VSKit.ai.useWithOmp` minus the on-screen notification (silent refresh).
   disposables.push(
     vscode.commands.registerCommand(
-      "UnicDB.ai.refreshDbContext",
+      "VSKit.ai.refreshDbContext",
       async () => commandRefreshDbContext(aiStore, adapterFactory),
     ),
   );
 
   // ── TASK-AHL-004 — admin features (PG-only; mysql/mssql degrade).
   // ADDITIVE: never modifies runStatements body or resultsPanel construction.
-  // The admin tree is a sibling view registered alongside UnicDB.schemaTree;
+  // The admin tree is a sibling view registered alongside VSKit.schemaTree;
   // the sessions/locks panel is a separate webview panel opened by command.
   const adminTree = new AdminTreeProvider(mgr);
-  const adminTreeView = vscode.window.createTreeView("UnicDB.adminTree", {
+  const adminTreeView = vscode.window.createTreeView("VSKit.adminTree", {
     treeDataProvider: adminTree,
   });
   disposables.push(adminTreeView);
   context.subscriptions.push({ dispose: () => adminTree.dispose() });
 
-  // UnicDB.refreshAdmin — invalidate the admin tree cache.
+  // VSKit.refreshAdmin — invalidate the admin tree cache.
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.refreshAdmin", () => {
+    vscode.commands.registerCommand("VSKit.refreshAdmin", () => {
       adminTree.refresh();
     }),
   );
 
-  // UnicDB.openSessionsPanel — open the sessions/locks webview for the
+  // VSKit.openSessionsPanel — open the sessions/locks webview for the
   // active connection. Reuses the existing single-instance pattern.
   // DBX-08 — after the select-connection warning, admission is the DECLARED
   // admin capability of the active adapter: false/missing declaration shows
   // the concise unsupported message and never creates a panel or resolves an
   // AdminApi member.
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.openSessionsPanel", async () => {
+    vscode.commands.registerCommand("VSKit.openSessionsPanel", async () => {
       const active = mgr.getActive();
       if (!active) {
         void vscode.window.showWarningMessage(
-          "UnicDB: select a connection first to open the Sessions panel.",
+          "VSKit: select a connection first to open the Sessions panel.",
         );
         return;
       }
@@ -1700,17 +1698,17 @@ export async function activate(
     }),
   );
 
-  // UnicDB.killSession / UnicDB.terminateSession — drive the same path the
+  // VSKit.killSession / VSKit.terminateSession — drive the same path the
   // panel buttons do. Self-pid detection + confirm modal are owned by
   // AdminSessionsPanelCore, so these stay thin wrappers.
   disposables.push(
     vscode.commands.registerCommand(
-      "UnicDB.killSession",
+      "VSKit.killSession",
       async (pid: number) => {
         const panel = AdminSessionsPanel.current;
         if (!panel) {
           void vscode.window.showInformationMessage(
-            "UnicDB: open the Sessions panel first.",
+            "VSKit: open the Sessions panel first.",
           );
           return;
         }
@@ -1720,12 +1718,12 @@ export async function activate(
   );
   disposables.push(
     vscode.commands.registerCommand(
-      "UnicDB.terminateSession",
+      "VSKit.terminateSession",
       async (pid: number) => {
         const panel = AdminSessionsPanel.current;
         if (!panel) {
           void vscode.window.showInformationMessage(
-            "UnicDB: open the Sessions panel first.",
+            "VSKit: open the Sessions panel first.",
           );
           return;
         }
@@ -1734,7 +1732,7 @@ export async function activate(
     ),
   );
 
-  // UnicDB.runGrantSql — host-driven grant/revoke wizard entry. The wizard
+  // VSKit.runGrantSql — host-driven grant/revoke wizard entry. The wizard
   // (adminWizard.ts) opens vscode quickPicks, previews the SQL via
   // adapter.admin.buildGrantSql / buildRevokeSql, and posts the result
   // through the existing confirmDangerousStatements gate (now extended
@@ -1748,7 +1746,7 @@ export async function activate(
   // the truthful reason there).
   disposables.push(
     vscode.commands.registerCommand(
-      "UnicDB.runGrantSql",
+      "VSKit.runGrantSql",
       async (kind: "grant" | "revoke") => {
         if (mgr.getActive()) {
           let grantAdapter: Awaited<
@@ -1804,16 +1802,16 @@ export async function activate(
       return confirmDangerousStatements(parsedStatements, dialect);
     },
     batchSize: vscode.workspace
-      .getConfiguration("UnicDB")
+      .getConfiguration("VSKit")
       .get<number>("import.batchSize", 1000),
   };
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.importCsv", async () => {
+    vscode.commands.registerCommand("VSKit.importCsv", async () => {
       await openImportWizard("csv", importCtx);
     }),
   );
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.importJson", async () => {
+    vscode.commands.registerCommand("VSKit.importJson", async () => {
       await openImportWizard("json", importCtx);
     }),
   );
@@ -1831,16 +1829,16 @@ export async function activate(
   }
   disposables.push(
     vscode.commands.registerCommand(
-      "UnicDB.editLargeValue",
+      "VSKit.editLargeValue",
       async (cell: { label: string; value: string }) => {
         await openLargeValueEditor(cell);
       },
     ),
   );
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.openFormView", () => {
+    vscode.commands.registerCommand("VSKit.openFormView", () => {
       void vscode.window.showInformationMessage(
-        "UnicDB Form View: select a cell in a results grid and choose 'Open Form'",
+        "VSKit Form View: select a cell in a results grid and choose 'Open Form'",
       );
     }),
   );
@@ -1848,7 +1846,7 @@ export async function activate(
   // the panel never executes the sync plan; clipboard copy hands off
   // to the SQL Console (dangerous-confirm applies there).
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.compareTables", async () => {
+    vscode.commands.registerCommand("VSKit.compareTables", async () => {
       const adapter = await importCtx.getAdapter();
       const driver = importCtx.getActiveDriver();
       if (!adapter) {
@@ -1875,7 +1873,7 @@ export async function activate(
   // ── DBX-04 TASK-DBX04-003 — Relationship Explorer. Preview-only FK
   // diagram; export saves a static SVG. PostgreSQL only.
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.relationshipExplorer", async () => {
+    vscode.commands.registerCommand("VSKit.relationshipExplorer", async () => {
       // Driver gate FIRST (no adapter acquisition for mysql/mssql),
       // matching the service's own gate ordering.
       const driver = importCtx.getActiveDriver();
@@ -1934,12 +1932,12 @@ export async function activate(
   // / clear the channel on first invocation, creating it if absent.
   // (No new callback plumbing into modules owned by other tasks.)
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.diagnostics.show", () => {
+    vscode.commands.registerCommand("VSKit.diagnostics.show", () => {
       getDiagChannel()?.show();
     }),
   );
   disposables.push(
-    vscode.commands.registerCommand("UnicDB.diagnostics.clear", () => {
+    vscode.commands.registerCommand("VSKit.diagnostics.clear", () => {
       getDiagChannel()?.clear();
     }),
   );
@@ -1947,10 +1945,10 @@ export async function activate(
   // TASK-ARP09-003 — buffer the activate-end lifecycle line. The lazy
   // holder treats this single line as the "no-create" signal: it sits
   // in the bounded pending buffer until the first real diagnostic write
-  // (or a `UnicDB.diagnostics.show` invocation) flushes it through the
+  // (or a `VSKit.diagnostics.show` invocation) flushes it through the
   // freshly-created channel. Strict pin #20 — a plain activation with
   // no events/commands never calls `createOutputChannel`.
-  logDiagnostic("lifecycle", "info", "UnicDB activated");
+  logDiagnostic("lifecycle", "info", "VSKit activated");
 
   disposables.forEach((d) => context.subscriptions.push(d));
 }
@@ -2016,14 +2014,14 @@ export async function deactivate(): Promise<void> {
 }
 
 /**
- * TASK-004 — UnicDB.openAiSettings: open the AI Settings form (single instance).
+ * TASK-004 — VSKit.openAiSettings: open the AI Settings form (single instance).
  * Reveals existing panel when present; builds a fresh one bound to the
  * store + provider client otherwise.
  */
 /**
- * TASK-UX1-007 — UnicDB.openSettings (R8b settings hub gear): open VS Code's
+ * TASK-UX1-007 — VSKit.openSettings (R8b settings hub gear): open VS Code's
  * built-in Settings UI pre-filtered to this extension's contributed settings
- * (`@ext:lengockhoa.UnicDB`). Thin shim over `workbench.action.openSettings` —
+ * (`@ext:lengockhoa.vskit`). Thin shim over `workbench.action.openSettings` —
  * any rejection from the editor (e.g. a hostile/unsupported VS Code build)
  * is surfaced as a single error toast and never thrown, so a bad open
  * cannot break activation / deactivate.
@@ -2032,12 +2030,12 @@ async function commandOpenSettingsHub(): Promise<void> {
   try {
     await vscode.commands.executeCommand(
       "workbench.action.openSettings",
-      "@ext:lengockhoa.UnicDB",
+      "@ext:lengockhoa.vskit",
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     void vscode.window.showErrorMessage(
-      `UnicDB: could not open Settings (${message})`,
+      `VSKit: could not open Settings (${message})`,
     );
   }
 }
@@ -2132,7 +2130,7 @@ async function commandOpenAiChat(
   // close any in-flight turn against a recovering or failed connection.
   mgr: ConnectionManager,
 ): Promise<void> {
-  // Cycle AE R4.5/AE.5 — `UnicDB.ai.engine` is the user's source of truth.
+  // Cycle AE R4.5/AE.5 — `VSKit.ai.engine` is the user's source of truth.
   // TASK-012 widens the gating policy to the four-engine vocabulary
   // (builtin / omp / claude-code / codex). ONE non-builtin agent is probed
   // per open — the one the user selected — and the resolved choice is
@@ -2150,7 +2148,7 @@ async function commandOpenAiChat(
   const configuredRaw =
     storedSettings?.engine ??
     vscode.workspace
-      .getConfiguration("UnicDB")
+      .getConfiguration("VSKit")
       .get<unknown>("ai.engine", "omp");
   const engine = normalizeEngineChoice(configuredRaw);
   // `detections` dictionary carries exactly one entry, the selected one.
@@ -2165,18 +2163,18 @@ async function commandOpenAiChat(
   if (engine !== "builtin" && !detections[engine]?.ok) {
     const hint = engineHint(engine, detections[engine]);
     void vscode.window.showInformationMessage(
-      `UnicDB: ${engine} engine unavailable — falling back to builtin. ${hint}`,
+      `VSKit: ${engine} engine unavailable — falling back to builtin. ${hint}`,
     );
     await vscode.workspace
-      .getConfiguration("UnicDB")
+      .getConfiguration("VSKit")
       .update("ai.engine", "builtin", vscode.ConfigurationTarget.Global);
   }
   const choice = resolveEngine({ engine, detections, config: cfg });
   if (choice.requiresConfig) {
     void vscode.window.showInformationMessage(
-      "UnicDB: Configure AI settings first.",
+      "VSKit: Configure AI settings first.",
     );
-    await vscode.commands.executeCommand("UnicDB.openAiSettings");
+    await vscode.commands.executeCommand("VSKit.openAiSettings");
     return;
   }
   // AIX-02: refresh the workspace allowlist right before opening the panel
@@ -2228,7 +2226,7 @@ async function commandOpenAiChat(
     // fail closed inside resolvePolicy (never re-derived here).
     configuredEngine: configuredRaw,
     // AIX-01/AIX-02: opt-in workspace grounding + gated file writes.
-    // `UnicDB.ai.grounding` defaults to false so the pre-AIX-01 turn path is
+    // `VSKit.ai.grounding` defaults to false so the pre-AIX-01 turn path is
     // unchanged; writeFile absent → workspace_write is never registered.
     grounding: isGroundingEnabled()
       ? {
@@ -2285,7 +2283,7 @@ async function commandOpenAiChat(
     // picks up the resulting store mutation and posts `schemaChanged`
     // back to every webview.
     onPickSchema: () => {
-      void vscode.commands.executeCommand("UnicDB.selectActiveSchema");
+      void vscode.commands.executeCommand("VSKit.selectActiveSchema");
     },
     // ACTIVE-SCHEMA chip — initial seed so the composer chip shows the
     // right label before any user interaction. `show()` calls this
@@ -2298,7 +2296,7 @@ async function commandOpenAiChat(
   aiChatPanel.show();
 }
 
-/** TASK-012: narrow the raw `UnicDB.ai.engine` setting into the closed
+/** TASK-012: narrow the raw `VSKit.ai.engine` setting into the closed
  * `AiEngine` vocabulary. Anything else (migrated / corrupted / hostile)
  * falls back to `builtin` so the open-time policy never silently picks
  * an unknown engine. */
@@ -2581,7 +2579,7 @@ async function writeClaudeMcpConfigFile(
 ): Promise<string> {
   const url = typeof descriptor["url"] === "string" ? descriptor["url"] : "";
   const name =
-    typeof descriptor["name"] === "string" ? descriptor["name"] : "UnicDB";
+    typeof descriptor["name"] === "string" ? descriptor["name"] : "VSKit";
   const payload = JSON.stringify({
     mcpServers: {
       [name]: { type: "http", url },
@@ -2592,7 +2590,7 @@ async function writeClaudeMcpConfigFile(
     vscode.Uri.file(process.cwd()).fsPath;
   const dir = path.join(baseDir, ".vscode");
   await fsp.mkdir(dir, { recursive: true });
-  const filename = `.unicdb-claude-mcp-${process.pid}-${Date.now()}.json`;
+  const filename = `.vskit-claude-mcp-${process.pid}-${Date.now()}.json`;
   const filePath = path.join(dir, filename);
   await fsp.writeFile(filePath, payload, { encoding: "utf8", mode: 0o600 });
   return filePath;
@@ -2679,13 +2677,13 @@ function adaptProcessToSession(
 }
 
 // ============================================================================
-// TASK-AIX07-003 — UnicDB.ai.showPolicy / UnicDB.ai.exportTrace / UnicDB.ai.clearTrace
+// TASK-AIX07-003 — VSKit.ai.showPolicy / VSKit.ai.exportTrace / VSKit.ai.clearTrace
 // ============================================================================
 
 /**
  * Derive the ONE effective AI policy from live host state:
  *   - `vscode.workspace.isTrusted` (AIX-02 seam),
- *   - the RAW configured `UnicDB.ai.engine` preference (un-validated; migrated
+ *   - the RAW configured `VSKit.ai.engine` preference (un-validated; migrated
  *     values must reach resolvePolicy un-trusted and fail closed there),
  *   - the existing `resolveEngine()` choice — its valid
  *     `EngineChoice.engine` IS the effective route (locked decision #2:
@@ -2695,7 +2693,7 @@ function adaptProcessToSession(
  */
 async function deriveEffectivePolicy(aiStore: AiConfigStore): Promise<EffectivePolicy> {
   const configuredEngine = vscode.workspace
-    .getConfiguration("UnicDB")
+    .getConfiguration("VSKit")
     .get<unknown>("ai.engine", "builtin");
   const [detection, cfg] = await Promise.all([
     detectOmp(),
@@ -2709,13 +2707,13 @@ async function deriveEffectivePolicy(aiStore: AiConfigStore): Promise<EffectiveP
   });
 }
 
-/** Format the policy posture for `UnicDB.ai.showPolicy` — concise, one line
+/** Format the policy posture for `VSKit.ai.showPolicy` — concise, one line
  * per capability class, no secret-shaped content (policy text only). */
 function formatPolicySummary(policy: EffectivePolicy): string {
   const on = "allowed";
   const off = "blocked";
   return [
-    `UnicDB AI policy — provider: ${policy.provider ?? "unavailable"}`,
+    `VSKit AI policy — provider: ${policy.provider ?? "unavailable"}`,
     `context: schema ${policy.context.schema ? on : off}, rows ${policy.context.rows ? on : off}, workspace ${policy.context.workspace ? on : off}`,
     `tools: database ${policy.tools.database ? on : off}, workspace ${policy.tools.workspace ? on : off}`,
     `audit export: ${policy.auditExportAllowed ? on : off}`,
@@ -2724,7 +2722,7 @@ function formatPolicySummary(policy: EffectivePolicy): string {
 }
 
 /**
- * TASK-AIX07-003 — UnicDB.ai.showPolicy: report the effective provider,
+ * TASK-AIX07-003 — VSKit.ai.showPolicy: report the effective provider,
  * context/tool class admission, and audit-export permission. Read-only —
  * no side effects, no picks, no writes.
  */
@@ -2736,7 +2734,7 @@ async function commandShowPolicy(aiStore: AiConfigStore): Promise<void> {
 }
 
 /**
- * TASK-AIX07-003 — UnicDB.ai.exportTrace: write the active AI panel's
+ * TASK-AIX07-003 — VSKit.ai.exportTrace: write the active AI panel's
  * redacted in-memory trace to a USER-SELECTED file. Order is load-bearing:
  * policy admission is checked BEFORE the save dialog and any bytes touch
  * the filesystem, and an absent active panel is a safe no-op with a
@@ -2748,20 +2746,20 @@ async function commandExportTrace(aiStore: AiConfigStore): Promise<void> {
   if (!policy.auditExportAllowed) {
     // Denial BEFORE the picker and BEFORE any write — default deny.
     void vscode.window.showInformationMessage(
-      policy.notice || "UnicDB AI policy: audit trace export is unavailable.",
+      policy.notice || "VSKit AI policy: audit trace export is unavailable.",
     );
     return;
   }
   const panel = aiChatPanel;
   if (!panel) {
     void vscode.window.showInformationMessage(
-      "UnicDB: no active AI Chat panel — open one with 'UnicDB: Open AI Chat' first.",
+      "VSKit: no active AI Chat panel — open one with 'VSKit: Open AI Chat' first.",
     );
     return;
   }
   const uri = await vscode.window.showSaveDialog({
-    title: "Export UnicDB AI audit trace",
-    defaultUri: vscode.Uri.file("UnicDB-ai-audit.json"),
+    title: "Export VSKit AI audit trace",
+    defaultUri: vscode.Uri.file("VSKit-ai-audit.json"),
     filters: { "JSON trace": ["json"] },
   });
   if (!uri) {
@@ -2773,29 +2771,29 @@ async function commandExportTrace(aiStore: AiConfigStore): Promise<void> {
     new TextEncoder().encode(envelope),
   );
   void vscode.window.showInformationMessage(
-    "UnicDB: AI audit trace exported (redacted).",
+    "VSKit: AI audit trace exported (redacted).",
   );
 }
 
 /**
- * TASK-AIX07-003 — UnicDB.ai.clearTrace: drop the active AI panel's recorded
+ * TASK-AIX07-003 — VSKit.ai.clearTrace: drop the active AI panel's recorded
  * turns. Absent panel ⇒ safe no-op with a concrete notice; nothing throws.
  */
 async function commandClearTrace(): Promise<void> {
   const panel = aiChatPanel;
   if (!panel) {
     void vscode.window.showInformationMessage(
-      "UnicDB: no active AI Chat panel — open one with 'UnicDB: Open AI Chat' first.",
+      "VSKit: no active AI Chat panel — open one with 'VSKit: Open AI Chat' first.",
     );
     return;
   }
   panel.clearTrace();
   void vscode.window.showInformationMessage(
-    "UnicDB: AI chat trace cleared.",
+    "VSKit: AI chat trace cleared.",
   );
 }
 /**
- * TASK-003 cycle Z — UnicDB.openConsole: open the SQL Console (single instance).
+ * TASK-003 cycle Z — VSKit.openConsole: open the SQL Console (single instance).
  * Reveal-on-reshow while live; onDispose drops the module singleton so a
  * closed tab leads to fresh empty state on the next open (AiChatPanel
  * Finding 7 precedent). The injected run callback is explicitly FULL-BUFFER
@@ -2826,7 +2824,7 @@ function commandOpenConsole(
       // panels; the fan-out subscriber picks up the resulting store
       // mutation.
       onPickSchema: () => {
-        void vscode.commands.executeCommand("UnicDB.selectActiveSchema");
+        void vscode.commands.executeCommand("VSKit.selectActiveSchema");
       },
       // ACTIVE-SCHEMA chip — initial seed so the toolbar chip shows
       // the right label before any user interaction. `show()` calls
@@ -2846,7 +2844,7 @@ function commandOpenConsole(
           await promptToAddConnectionOrSelect();
           if (!mgr.getActive()) {
             void vscode.window.showInformationMessage(
-              "UnicDB: chưa chọn connection. Dùng 'Add Connection' để tạo.",
+              "VSKit: chưa chọn connection. Dùng 'Add Connection' để tạo.",
             );
             return;
           }
@@ -2861,7 +2859,7 @@ function commandOpenConsole(
         );
         if (statements.length === 0) {
           void vscode.window.showInformationMessage(
-            "UnicDB: không có statement để chạy.",
+            "VSKit: không có statement để chạy.",
           );
           return;
         }
@@ -2877,9 +2875,9 @@ function commandOpenConsole(
 }
 
 /**
- * TASK-AF-004 — UnicDB.openConsole.createTab: open a fresh tab in an existing
+ * TASK-AF-004 — VSKit.openConsole.createTab: open a fresh tab in an existing
  * Console panel. No-op when the panel hasn't been opened yet (the user must
- * run `UnicDB.openConsole` first to seed the singleton).
+ * run `VSKit.openConsole` first to seed the singleton).
  */
 function commandOpenConsoleCreateTab(): void {
   consolePanel?.createTab();
@@ -2968,7 +2966,7 @@ async function commandOpenConsoleForObject(
   const resolved = resolveQualifiedFromArg(qualifiedOrNode);
   if (!resolved) {
     void vscode.window.showInformationMessage(
-      "UnicDB: right-click a database, schema, table, or view in the schema tree to open the Console.",
+      "VSKit: right-click a database, schema, table, or view in the schema tree to open the Console.",
     );
     return;
   }
@@ -2977,7 +2975,7 @@ async function commandOpenConsoleForObject(
       await mgr.setActive(resolved.connectionId);
     } catch (err) {
       void vscode.window.showErrorMessage(
-        `UnicDB: ${err instanceof Error ? err.message : String(err)}`,
+        `VSKit: ${err instanceof Error ? err.message : String(err)}`,
       );
       return;
     }
@@ -2986,7 +2984,7 @@ async function commandOpenConsoleForObject(
     mgr.setActiveSchema(resolved.connectionId, resolved.schema);
   }
   // Reuse the singleton seeder so the panel + onRun + draft/autocomplete
-  // wiring stays exactly the same as `UnicDB.openConsole`.
+  // wiring stays exactly the same as `VSKit.openConsole`.
   commandOpenConsole(
     mgr,
     runner,
@@ -3019,7 +3017,7 @@ async function commandOpenConsoleForObject(
  * gates on the active postgres adapter + declared `objectDdl` capability
  * (fail-closed: false / missing ⇒ info toast, ZERO adapter calls — the
  * capability predicate is the same `hasAdapterCapability` gate already used
- * by `UnicDB.openSessionsPanel` and the GRANT/REVOKE wizard), then fetches
+ * by `VSKit.openSessionsPanel` and the GRANT/REVOKE wizard), then fetches
  * the DDL via `adapter.catalog.objectDdl(kind, name, schema)` and opens the
  * Console singleton with a fresh tab seeded with `DDL <qualified>` + the
  * DDL buffer (terminated with one `;` — idempotent via
@@ -3066,7 +3064,7 @@ async function commandGenerateObjectDdl(
     ).meta;
     if (!meta?.objectName) {
       void vscode.window.showInformationMessage(
-        "UnicDB: right-click a view or routine in the schema tree to generate DDL.",
+        "VSKit: right-click a view or routine in the schema tree to generate DDL.",
       );
       return;
     }
@@ -3074,7 +3072,7 @@ async function commandGenerateObjectDdl(
     objectName = meta.objectName;
   } else {
     void vscode.window.showInformationMessage(
-      "UnicDB: right-click a view or routine in the schema tree to generate DDL.",
+      "VSKit: right-click a view or routine in the schema tree to generate DDL.",
     );
     return;
   }
@@ -3083,7 +3081,7 @@ async function commandGenerateObjectDdl(
   const active = mgr.getActive();
   if (!active || active.driver !== "postgres") {
     void vscode.window.showInformationMessage(
-      "UnicDB: SQL Generator (view/routine DDL) requires an active PostgreSQL connection.",
+      "VSKit: SQL Generator (view/routine DDL) requires an active PostgreSQL connection.",
     );
     return;
   }
@@ -3095,7 +3093,7 @@ async function commandGenerateObjectDdl(
   }
   if (!hasAdapterCapability(adapter, "objectDdl")) {
     void vscode.window.showInformationMessage(
-      "UnicDB: SQL Generator (view/routine DDL) is not supported by this connection's adapter.",
+      "VSKit: SQL Generator (view/routine DDL) is not supported by this connection's adapter.",
     );
     return;
   }
@@ -3105,12 +3103,12 @@ async function commandGenerateObjectDdl(
     ddl = await adapter!.catalog!.objectDdl(kind, objectName, schema || undefined);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    void vscode.window.showErrorMessage(`UnicDB: ${message}`);
+    void vscode.window.showErrorMessage(`VSKit: ${message}`);
     return;
   }
   // Reuse the singleton seeder so the panel + onRun + draft/autocomplete
-  // wiring stays exactly the same as `UnicDB.openConsole` /
-  // `UnicDB.openConsoleForObject`.
+  // wiring stays exactly the same as `VSKit.openConsole` /
+  // `VSKit.openConsoleForObject`.
   commandOpenConsole(mgr, runner, panel, statusBar, globalState, workspaceState);
   if (!consolePanel) {
     // commandOpenConsole is sync and sets the singleton; defensive guard.
@@ -3127,8 +3125,8 @@ async function commandGenerateObjectDdl(
  * TASK-UX1-003 — openConsoleWithTemplate: exposed console-seeding seam for
  * tableCommands.ts (and any future caller that wants to pre-fill the
  * Console without running the SQL). Reuses the exact singleton + onRun +
- * draft/autocomplete wiring as `UnicDB.openConsole` /
- * `UnicDB.openConsoleForObject` / `commandGenerateObjectDdl`. The seeded
+ * draft/autocomplete wiring as `VSKit.openConsole` /
+ * `VSKit.openConsoleForObject` / `commandGenerateObjectDdl`. The seeded
  * buffer is NEVER auto-executed — the user reviews + edits + runs
  * manually. Exported so tableCommands can inject it through the
  * RegisterDeps optional field, sidestepping the tableCommands ⇄ extension
@@ -3155,7 +3153,7 @@ export function openConsoleWithTemplate(
 }
 
 /**
- * TASK-OC4O-002 — open the UnicDB Help Grid webview. Singleton lifecycle
+ * TASK-OC4O-002 — open the VSKit Help Grid webview. Singleton lifecycle
  * (mirrors `commandOpenConsole`): create on first call, reveal on
  * subsequent calls, drop the singleton when the user closes the panel.
  * The live `disposables` set is the source of truth for "which command
@@ -3171,7 +3169,7 @@ function commandOpenHelpGrid(
     // entries are vscode.CommandDispose shapes whose `command` field carries
     // the command id. Anything else is skipped.
     const cmd = (d as unknown as { command?: unknown }).command;
-    if (typeof cmd === "string" && cmd.startsWith("UnicDB.")) {
+    if (typeof cmd === "string" && cmd.startsWith("VSKit.")) {
       registered.add(cmd);
     }
   }
@@ -3195,7 +3193,7 @@ async function runQueryFromEditor(
     // TASK-STOPERR-003 — was a silent return; the user pressed Cmd+Enter and
     // got zero feedback. Surface the no-op so a non-sql focus is obvious.
     void vscode.window.showInformationMessage(
-      "UnicDB: no SQL editor is focused — nothing to run.",
+      "VSKit: no SQL editor is focused — nothing to run.",
     );
     return;
   }
@@ -3204,7 +3202,7 @@ async function runQueryFromEditor(
     await promptToAddConnectionOrSelect();
     if (!mgr.getActive()) {
       void vscode.window.showInformationMessage(
-        "UnicDB: chưa chọn connection. Dùng 'Add Connection' để tạo.",
+        "VSKit: chưa chọn connection. Dùng 'Add Connection' để tạo.",
       );
       return;
     }
@@ -3264,7 +3262,7 @@ async function runQueryFromEditor(
   }
 
   if (statements.length === 0) {
-    void vscode.window.showInformationMessage("UnicDB: không có statement để chạy.");
+    void vscode.window.showInformationMessage("VSKit: không có statement để chạy.");
     return;
   }
   // TASK-TABCLEAR-001 — auto-clear: each new Run from the editor starts with
@@ -3478,7 +3476,7 @@ export async function runStatements(
   // TASK-QBUSY-001 — early guard for the shared QueryRunner. A second
   // concurrent run() throws "QueryRunner is already running"; the outer
   // catch then surfaces that string verbatim as an error toast
-  // (`UnicDB: QueryRunner is already running`), which the user reads as
+  // (`VSKit: QueryRunner is already running`), which the user reads as
   // a hang/crash and tries again — producing a cascade of identical
   // toasts on every Cmd+Enter / Run-click while the first query is in
   // flight. Detect the busy state BEFORE keyword qualify / header build
@@ -3493,7 +3491,7 @@ export async function runStatements(
     // TASK-STOPERR-003 — upgraded info → warning: a dropped run must not be
     // mistaken for a success at a glance.
     void vscode.window.showWarningMessage(
-      "UnicDB: a query is already running. Please wait for it to finish, then press Run again.",
+      "VSKit: a query is already running. Please wait for it to finish, then press Run again.",
     );
     return;
   }
@@ -3619,7 +3617,7 @@ export async function runStatements(
         const failedRow = runSlice[failedIndex]!;
         const reason = failedRow.error ?? "unknown error";
         void vscode.window.showErrorMessage(
-          `UnicDB: stopped at statement ${failedIndex + 1} of ${runSlice.length} — ${reason}. Remaining statements were not run.`,
+          `VSKit: stopped at statement ${failedIndex + 1} of ${runSlice.length} — ${reason}. Remaining statements were not run.`,
         );
         if (runEditor) {
           try {
@@ -3659,7 +3657,7 @@ export async function runStatements(
         // RunnerBusy (mid-run) or other — toast fall-through only. The
         // outer catch is the only path that calls runFailed; if the runner
         // is genuinely busy, the toast is the right backstop.
-        void vscode.window.showErrorMessage(`UnicDB: ${reason}`);
+        void vscode.window.showErrorMessage(`VSKit: ${reason}`);
       }
       // Belt-and-suspenders render: `runFailed` fires `lastOnUpdate` only when
       // the prior `runner.run()` actually executed its prologue (real adapter
@@ -3721,13 +3719,13 @@ async function promptToAddConnectionOrSelect(): Promise<void> {
       { label: "$(add) Add Connection", action: "add" },
       { label: "$(list-unordered) Select existing", action: "select" },
     ],
-    { placeHolder: "UnicDB: chưa chọn connection. Chọn thao tác:" },
+    { placeHolder: "VSKit: chưa chọn connection. Chọn thao tác:" },
   );
   if (!pick) return;
   if (pick.action === "add") {
-    await vscode.commands.executeCommand("UnicDB.addConnection");
+    await vscode.commands.executeCommand("VSKit.addConnection");
   } else {
-    await vscode.commands.executeCommand("UnicDB.selectConnection");
+    await vscode.commands.executeCommand("VSKit.selectConnection");
   }
 }
 
@@ -3774,7 +3772,7 @@ function openConnectionForm(
         await mgr.addConnection(cfg, payload.password);
         // Tree hiện connection list ngay (root nodes) — không cần chờ user refresh.
         state?.tree.refresh();
-        void vscode.window.showInformationMessage(`UnicDB: added "${cfg.name}"`);
+        void vscode.window.showInformationMessage(`VSKit: added "${cfg.name}"`);
       } else {
         await mgr.editConnection(
           existingId,
@@ -3804,7 +3802,7 @@ function openConnectionForm(
           payload.password.length > 0 ? payload.password : undefined,
         );
         state?.tree.refresh();
-        void vscode.window.showInformationMessage(`UnicDB: updated "${payload.name}"`);
+        void vscode.window.showInformationMessage(`VSKit: updated "${payload.name}"`);
       }
     },
   });
@@ -3819,7 +3817,7 @@ async function commandEditConnection(
   if (!id) {
     const cs = mgr.listConnections();
     if (cs.length === 0) {
-      void vscode.window.showInformationMessage("UnicDB: chưa có connection.");
+      void vscode.window.showInformationMessage("VSKit: chưa có connection.");
       return;
     }
     const pick = await vscode.window.showQuickPick(
@@ -3842,7 +3840,7 @@ async function commandDeleteConnection(
   if (!id) {
     const cs = mgr.listConnections();
     if (cs.length === 0) {
-      void vscode.window.showInformationMessage("UnicDB: chưa có connection.");
+      void vscode.window.showInformationMessage("VSKit: chưa có connection.");
       return;
     }
     const pick = await vscode.window.showQuickPick(
@@ -3865,14 +3863,14 @@ async function commandDeleteConnection(
   if (!confirm || !confirm.value) return;
   await mgr.deleteConnection(id!);
   state?.tree.refresh();
-  void vscode.window.showInformationMessage(`UnicDB: deleted "${target.name}"`);
+  void vscode.window.showInformationMessage(`VSKit: deleted "${target.name}"`);
 }
 
 async function commandSelectConnection(mgr: ConnectionManager): Promise<void> {
   const cs = mgr.listConnections();
   if (cs.length === 0) {
     void vscode.window.showInformationMessage(
-      "UnicDB: chưa có connection. Add Connection trước.",
+      "VSKit: chưa có connection. Add Connection trước.",
     );
     return;
   }
@@ -3933,7 +3931,7 @@ async function commandGenerateSelect(
   }
   if (!qualified) {
     void vscode.window.showInformationMessage(
-      "UnicDB: right-click a table/view to generate SELECT.",
+      "VSKit: right-click a table/view to generate SELECT.",
     );
     return;
   }
@@ -3941,7 +3939,7 @@ async function commandGenerateSelect(
     // Fallback cuối: nếu không resolve được driver, dùng ACTIVE hoặc refuse.
     const active = mgr.getActive();
     if (!active) {
-      void vscode.window.showInformationMessage("UnicDB: no active connection.");
+      void vscode.window.showInformationMessage("VSKit: no active connection.");
       return;
     }
     driver = active.driver;
@@ -3962,7 +3960,7 @@ async function commandGenerateSelect(
   // never silently fails.
   await vscode.env.clipboard.writeText(sql);
   void vscode.window.showInformationMessage(
-    "UnicDB: SELECT đã copy vào clipboard (không có editor để chèn).",
+    "VSKit: SELECT đã copy vào clipboard (không có editor để chèn).",
   );
 }
 
@@ -3987,28 +3985,28 @@ async function commandCopyQualifiedName(qualifiedOrNode?: unknown): Promise<void
   if (!text) return;
   await vscode.env.clipboard.writeText(text);
   void vscode.window.setStatusBarMessage(
-    `UnicDB: copied "${text}"`,
+    `VSKit: copied "${text}"`,
     2000,
   );
 }
 
 /**
  * TASK-505 — Send the active shell script's full text to a reused terminal
- * ("UnicDB Script"). Behaves like pasting the entire file into the shell.
+ * ("VSKit Script"). Behaves like pasting the entire file into the shell.
  */
 async function commandRunScript(): Promise<void> {
   const editor = vscode.window.activeTextEditor;
   // TASK-605: no editor (palette invocation without open file) → warn, KHÔNG gửi text vào terminal.
   if (!editor) {
     void vscode.window.showWarningMessage(
-      "UnicDB: open a .sh file to run",
+      "VSKit: open a .sh file to run",
     );
     return;
   }
   const text = editor.document.getText();
   // Terminal còn sống (exitStatus undefined) → reuse; ngược lại tạo mới.
   if (!runScriptTerminal || runScriptTerminal.exitStatus !== undefined) {
-    runScriptTerminal = vscode.window.createTerminal({ name: "UnicDB Script" });
+    runScriptTerminal = vscode.window.createTerminal({ name: "VSKit Script" });
   }
   runScriptTerminal.sendText(text + "\n");
   runScriptTerminal.show();
@@ -4017,7 +4015,7 @@ async function commandRunScript(): Promise<void> {
 /**
  * TASK-SH-002 — On Cmd+Enter in a `shellscript` editor, send ONLY the
  * selected line(s) (or cursor line when no selection) to the reused
- * `runScriptTerminal` ("UnicDB Script"). Mirrors the SQL multi-selection
+ * `runScriptTerminal` ("VSKit Script"). Mirrors the SQL multi-selection
  * pattern from `runQueryFromEditor` without touching any SQL path.
  *
  * - Silent no-op (no warning) on missing editor / wrong languageId: this is
@@ -4057,17 +4055,17 @@ async function commandRunShellSelection(): Promise<void> {
   }
   // Skip whitespace-only / empty pieces so a blank cursor line or a
   // whitespace selection contributes nothing. If nothing remains, we do not
-  // create the terminal at all (avoids a stray "UnicDB Script" tab on a
+  // create the terminal at all (avoids a stray "VSKit Script" tab on a
   // no-op invocation).
   const meaningful = pieces.filter((p) => p.trim().length > 0);
   if (meaningful.length === 0) {
     return;
   }
   // Reuse the same terminal lifecycle as `commandRunScript`: alive →
-  // reuse, dead → create new. Same name "UnicDB Script" so a single
+  // reuse, dead → create new. Same name "VSKit Script" so a single
   // visible terminal is shared across both commands.
   if (!runScriptTerminal || runScriptTerminal.exitStatus !== undefined) {
-    runScriptTerminal = vscode.window.createTerminal({ name: "UnicDB Script" });
+    runScriptTerminal = vscode.window.createTerminal({ name: "VSKit Script" });
   }
   for (const piece of meaningful) {
     runScriptTerminal.sendText(piece + "\n");
@@ -4076,9 +4074,9 @@ async function commandRunShellSelection(): Promise<void> {
 }
 
 /**
- * TASK-003 cycle AD §9/§10 — `UnicDB.ai.useWithOmp`.
+ * TASK-003 cycle AD §9/§10 — `VSKit.ai.useWithOmp`.
  *
- * Writes `.vscode/UnicDB-ai-config.yml` + `.vscode/UnicDB-db-context.md` and
+ * Writes `.vscode/VSKit-ai-config.yml` + `.vscode/VSKit-db-context.md` and
  * shows an information message containing the copy-pasteable `omp` command
  * line. The "Copy" button puts the command line on the clipboard.
  *
@@ -4094,17 +4092,17 @@ async function commandUseWithOmp(
   const folder = vscode.workspace.workspaceFolders?.[0];
   if (!folder) {
     void vscode.window.showErrorMessage(
-      "UnicDB: open a folder before running `Use with OMP`.",
+      "VSKit: open a folder before running `Use with OMP`.",
     );
     return;
   }
   const live = await aiStore.loadSettings();
   const settings: AiSettings = live ?? defaultAiSettings();
   const history: ReadonlyArray<never> = [];
-  const result = await writeUnicDBAiConfig(folder, settings, adapterFactory, history);
+  const result = await writeVSKitAiConfig(folder, settings, adapterFactory, history);
   // Surface a Copy button so the user can paste into a terminal.
   const choice = await vscode.window.showInformationMessage(
-    `UnicDB: OMP config written. Run this in a terminal:\n\n${result.ompCommandLine}`,
+    `VSKit: OMP config written. Run this in a terminal:\n\n${result.ompCommandLine}`,
     { modal: false },
     "Copy",
   );
@@ -4114,9 +4112,9 @@ async function commandUseWithOmp(
 }
 
 /**
- * TASK-012 — `UnicDB.ai.useWithClaudeCode`.
+ * TASK-012 — `VSKit.ai.useWithClaudeCode`.
  *
- * Reuses the same `writeUnicDBAiConfig` shim as `useWithOmp` — the YAML
+ * Reuses the same `writeVSKitAiConfig` shim as `useWithOmp` — the YAML
  * + DB context files written are the same shape; only the surfaced
  * copy-pasteable command line is agent-specific (Claude's verified
  * `--append-system-prompt` + `--mcp-config <contextPath>` flags). No new
@@ -4129,14 +4127,14 @@ async function commandUseWithClaudeCode(
   const folder = vscode.workspace.workspaceFolders?.[0];
   if (!folder) {
     void vscode.window.showErrorMessage(
-      "UnicDB: open a folder before running `Use with Claude Code`.",
+      "VSKit: open a folder before running `Use with Claude Code`.",
     );
     return;
   }
   const live = await aiStore.loadSettings();
   const settings: AiSettings = live ?? defaultAiSettings();
   const history: ReadonlyArray<never> = [];
-  const result = await writeUnicDBAiConfig(
+  const result = await writeVSKitAiConfig(
     folder,
     settings,
     adapterFactory,
@@ -4146,9 +4144,9 @@ async function commandUseWithClaudeCode(
   // YAML context file (verified from `claude --help` 2.1.261, local —
   // see TASK-005 Discussion). Reuse the same context path written for
   // OMP so there is no second workspace config format.
-  const commandLine = `claude --append-system-prompt "${result.contextPath}" -p "Use the UnicDB schema context to help me with my database question."`;
+  const commandLine = `claude --append-system-prompt "${result.contextPath}" -p "Use the VSKit schema context to help me with my database question."`;
   const choice = await vscode.window.showInformationMessage(
-    `UnicDB: Claude Code config written. Run this in a terminal:\n\n${commandLine}`,
+    `VSKit: Claude Code config written. Run this in a terminal:\n\n${commandLine}`,
     { modal: false },
     "Copy",
   );
@@ -4158,10 +4156,10 @@ async function commandUseWithClaudeCode(
 }
 
 /**
- * TASK-012 — `UnicDB.ai.useWithCodex`.
+ * TASK-012 — `VSKit.ai.useWithCodex`.
  *
  * Same reuse pattern as `useWithClaudeCode` — the YAML + DB context are
- * written through `writeUnicDBAiConfig`; the surfaced copy-pasteable
+ * written through `writeVSKitAiConfig`; the surfaced copy-pasteable
  * command line is Codex-specific. Codex's `codex exec --json -` is the
  * verified wire (TASK-006 §CLI flags), so we point the user at the
  * equivalent one-shot invocation: `codex exec --json -` with the context
@@ -4175,14 +4173,14 @@ async function commandUseWithCodex(
   const folder = vscode.workspace.workspaceFolders?.[0];
   if (!folder) {
     void vscode.window.showErrorMessage(
-      "UnicDB: open a folder before running `Use with Codex`.",
+      "VSKit: open a folder before running `Use with Codex`.",
     );
     return;
   }
   const live = await aiStore.loadSettings();
   const settings: AiSettings = live ?? defaultAiSettings();
   const history: ReadonlyArray<never> = [];
-  const result = await writeUnicDBAiConfig(
+  const result = await writeVSKitAiConfig(
     folder,
     settings,
     adapterFactory,
@@ -4190,7 +4188,7 @@ async function commandUseWithCodex(
   );
   const commandLine = `cat "${result.contextPath}" | codex exec --json -`;
   const choice = await vscode.window.showInformationMessage(
-    `UnicDB: Codex config written. Run this in a terminal:\n\n${commandLine}`,
+    `VSKit: Codex config written. Run this in a terminal:\n\n${commandLine}`,
     { modal: false },
     "Copy",
   );
@@ -4200,11 +4198,11 @@ async function commandUseWithCodex(
 }
 
 /**
- * TASK-003 cycle AD §9 — `UnicDB.ai.refreshDbContext`.
+ * TASK-003 cycle AD §9 — `VSKit.ai.refreshDbContext`.
  *
- * Re-runs DB introspection and rewrites `.vscode/UnicDB-db-context.md`. The
+ * Re-runs DB introspection and rewrites `.vscode/VSKit-db-context.md`. The
  * YAML is not rewritten (provider / model settings haven't changed) but
- * we route through `writeUnicDBAiConfig` to keep a single write path — the
+ * we route through `writeVSKitAiConfig` to keep a single write path — the
  * YAML overwrite is idempotent.
  *
  * No notification on success (silent refresh per the command spec).
@@ -4217,7 +4215,7 @@ async function commandRefreshDbContext(
   const folder = vscode.workspace.workspaceFolders?.[0];
   if (!folder) {
     void vscode.window.showErrorMessage(
-      "UnicDB: open a folder before refreshing the DB context.",
+      "VSKit: open a folder before refreshing the DB context.",
     );
     return;
   }
@@ -4225,10 +4223,10 @@ async function commandRefreshDbContext(
   const settings: AiSettings = live ?? defaultAiSettings();
   const history: ReadonlyArray<never> = [];
   try {
-    await writeUnicDBAiConfig(folder, settings, adapterFactory, history);
+    await writeVSKitAiConfig(folder, settings, adapterFactory, history);
   } catch (err) {
     void vscode.window.setStatusBarMessage(
-      `UnicDB: refresh failed — ${err instanceof Error ? err.message : String(err)}`,
+      `VSKit: refresh failed — ${err instanceof Error ? err.message : String(err)}`,
       5000,
     );
   }
@@ -4402,10 +4400,10 @@ function buildCommitGenDeps(
       if (!body || body.length === 0) return undefined;
       const folder = context.globalStorageUri;
       const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-      const fileName = `unicdb-${label}-${stamp}.txt`;
+      const fileName = `vskit-${label}-${stamp}.txt`;
       const fileUri = vscode.Uri.joinPath(folder, fileName);
       const header =
-        `# UnicDB debug artifact\n` +
+        `# VSKit debug artifact\n` +
         `# label: ${label}\n` +
         `# timestamp: ${new Date().toISOString()}\n` +
         (meta ? `# context: ${JSON.stringify(meta, null, 2)}\n` : "") +

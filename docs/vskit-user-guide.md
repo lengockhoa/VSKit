@@ -1,23 +1,32 @@
-# Hướng dẫn sử dụng UnicDB
+# Hướng dẫn sử dụng VSKit
 
-> Hướng dẫn toàn bộ các dùng bộ UnicDB — VS Code extension cho PostgreSQL /
-> MySQL / MSSQL / BigQuery.
+> Hướng dẫn sử dụng VSKit — VS Code extension cho PostgreSQL / MySQL / MSSQL / BigQuery.
 
 ## Cài đặt
 
-Cài đặt UnicDB vào VS Code:
+Build the local VSIX from the repository root:
 
 ```bash
-code --install-extension UnicDB-<version>.vsix
+bash scripts/build.sh
 ```
 
-Sau khi cài, extension tự động kích hoạt khi mở workspace có file SQL.
-Không cần cấu hình thêm — kết nối đầu tiên sẽ được tạo từ form khi bạn
-bấm "Add Connection" trên thanh Schema Explorer.
+For the current package version, install with:
+
+```bash
+code --install-extension "$(pwd)/dist/vskit-1.55.7.vsix"
+```
+
+The VSKit 1.55.7 GitHub release includes this VSIX; Marketplace listing availability has not been verified.
+
+### Dữ liệu từ cài đặt trước
+
+VSKit has separate identity `lengockhoa.vskit`. It does not import prior `globalState`, `workspaceState`, or `SecretStorage`: connection profiles, database passwords, AI settings/API keys, query history/drafts, chat-session state, and schema filters/pins are not transferred. Existing extension data is left untouched. User/workspace settings files remain, but values under the previous namespace are not read. Recreate connections and reapply non-secret settings; enter passwords and API keys through VSKit forms.
+
+AI chat sessions can be exported as Markdown/JSON from an existing installation, but VSKit has no importer; those files are archival only. Ordinary workspace SQL files are not moved or deleted. Keep the previous extension until you have recreated or archived anything you need.
 
 ## Kết nối
 
-UnicDB hỗ trợ 4 driver:
+VSKit hỗ trợ 4 driver:
 
 - **PostgreSQL** — host, port, user, password, database
 - **MySQL** — host, port, user, password, database
@@ -26,7 +35,7 @@ UnicDB hỗ trợ 4 driver:
 - **BigQuery** — ADC (Application Default Credentials), billing project,
   location
 
-Mỗi kết nối được lưu vào `UnicDB.connections` globalState. Bạn có thể có
+Mỗi kết nối được lưu vào `VSKit.connections` globalState. Bạn có thể có
 nhiều connection cùng lúc; "active connection" là connection đang hiển
 thị trong Schema Explorer.
 
@@ -55,7 +64,7 @@ Cây schema bên trái hiển thị:
 ## SQL Console
 
 Mở SQL Console từ Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`) bằng lệnh
-**`UnicDB: Open Console`**, hoặc bấm biểu tượng terminal trên thanh tiêu đề
+**`VSKit: Open Console`**, hoặc bấm biểu tượng terminal trên thanh tiêu đề
 Schema Explorer. Chuột phải vào connection, schema, category, table hoặc view
 để dùng **Open Console for Object**; connection/schema/category mở tab SQL rỗng,
 còn table/view mở tab có sẵn câu `SELECT` phù hợp với driver.
@@ -123,17 +132,16 @@ tùy chỉnh). Tính năng:
 
 ## Settings hub (R8b)
 
-Bấm icon ⚙️ (settings gear) trên title bar của Schema Explorer để mở
-VS Code Settings filtered to UnicDB. Các setting UnicDB hiện có:
+Bấm icon ⚙️ trên title bar của Schema Explorer để mở VS Code Settings đã lọc theo `VSKit`.
+Các tùy chọn AI được khai báo gồm:
 
-- `UnicDB.aiChatEngine` — chọn engine
-- `UnicDB.aiChatModel` — model cụ thể
-- (các setting khác xuất hiện khi extension thêm)
+- `VSKit.ai.engine` — chọn `builtin`, `omp`, `claude-code` hoặc `codex`
+- `VSKit.ai.grounding` — cho phép ngữ cảnh file trong workspace (mặc định `false`)
 
 ## Generate Commit Message
 
 Trên title bar của panel **Source Control** xuất hiện thêm một nút
-sparkle ✨ (icon `$(sparkle)`) — bấm vào đó để UnicDB tự sinh commit
+sparkle ✨ (icon `$(sparkle)`) — bấm vào đó để VSKit tự sinh commit
 message theo chuẩn **Conventional Commits** rồi điền thẳng vào ô nhập
 commit của SCM. Bạn chỉ cần review lại rồi bấm Commit.
 
@@ -150,10 +158,10 @@ commit của SCM. Bạn chỉ cần review lại rồi bấm Commit.
 - Giới hạn độ dài để message gọn: subject tối đa **12 từ** (72 ký tự), toàn
   bộ message tối đa **100 từ** (600 ký tự).
 - Nếu model trả về chuỗi rác (blob hash, câu suy luận, message tiếng Anh…),
-  UnicDB **tự động thử lại đúng 1 lần**; vẫn không hợp lệ thì hiện toast lỗi
+  VSKit **tự động thử lại đúng 1 lần**; vẫn không hợp lệ thì hiện toast lỗi
   và **KHÔNG điền** vào ô commit để bạn không commit nhầm.
 
-Trong panel **UnicDB AI Settings** có một subsection riêng tên là
+Trong panel **VSKit AI Settings** có một subsection riêng tên là
 "Lite model" — đây là model thứ tư trong taxonomy
 `work | smart | autocomplete | lite`, dùng riêng cho nút sparkle ở
 Source Control.
@@ -181,7 +189,7 @@ chat panel và nút sparkle:
 ## User Guide (R2)
 
 Bấm icon 📖 (book) trên title bar của Schema Explorer để mở file
-này (`docs/UnicDB_USER_GUIDE.md`) trong Markdown preview.
+`docs/vskit-user-guide.md`) trong Markdown preview.
 
 ## Schema Refresh (R13)
 
@@ -205,15 +213,12 @@ Phím tắt hiện đang được hỗ trợ (xem `package.json → contributes.
 | Phím tắt | Lệnh | Phạm vi |
 | --- | --- | --- |
 | **Cmd+Enter** (macOS) / **Ctrl+Enter** (Win/Linux) | Run statement (chạy câu lệnh đang chọn / dưới con trỏ) | Trong file `.sql` |
+| **Cmd+Enter** (macOS) / **Ctrl+Enter** (Win/Linux) | Run selected shell lines in the integrated terminal | File `.sh` |
 
 Trên macOS, phím tắt là `Cmd+Enter`; trên Windows / Linux là `Ctrl+Enter`. VS Code tự động remap
 theo nền tảng — không cần cấu hình thêm.
 
-> **Lưu ý:** các phím tắt cho *Run all*, *Cancel*, *New tab*, *Close tab*, *Toggle Schema
-> Explorer*, *Open AI Chat* đang được lên kế hoạch cho các bản phát hành tiếp theo. Hiện tại
-> chúng có thể chạy qua Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`) bằng tên lệnh
-> (`UnicDB: Cancel Query`, `UnicDB: New Tab`, …). Xem README §Keyboard shortcuts để biết
-> danh sách chính thức luôn đồng bộ với `package.json`.
+Các lệnh khác có trong Command Palette. Gõ `VSKit:` để lọc lệnh của extension, chẳng hạn `VSKit: Cancel Query`, `VSKit: Open Console` hoặc `VSKit: AI Chat`.
 
 ## Troubleshooting
 
@@ -221,11 +226,4 @@ theo nền tảng — không cần cấu hình thêm.
 - **Schema tree rỗng** — bấm refresh (hoặc chạy 1 query DDL/DML)
 - **Console không mở** — bấm chuột phải vào table bất kỳ → Open Console
   for Object
-- **AI Chat không phản hồi** — kiểm tra `UnicDB.aiChatEngine` +
-  credentials của provider
-
-## Thông tin thêm
-
-- [README](../README.md) — overview + key features
-- [CHANGELOG](../CHANGELOG.md) — lịch sử release
-- [AI_HANDOFF](../AI_HANDOFF/INDEX.md) — task pipeline history
+- **AI Chat không phản hồi** — kiểm tra `VSKit.ai.engine` và cấu hình provider trong AI Settings.

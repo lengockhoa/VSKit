@@ -1,6 +1,6 @@
 // src/ui/__tests__/browseCommands.test.ts
 // TASK-001 — Unit tests cho buildBrowseSelect + registerBrowseCommands
-// (UnicDB.browseTableData command).
+// (VSKit.browseTableData command).
 //
 // Reuses the vi.mock("vscode") + vi.hoisted pattern from
 // src/ui/__tests__/tableCommands.test.ts. ConnectionManager is a vi.fn()-based
@@ -206,7 +206,7 @@ describe("buildBrowseSelect", () => {
 });
 
 // =============================================================================
-// registerBrowseCommands — UnicDB.browseTableData
+// registerBrowseCommands — VSKit.browseTableData
 // =============================================================================
 describe("registerBrowseCommands", () => {
   it("#5 palette / no meta — showInformationMessage, no runner.run, no setBusy(true)", async () => {
@@ -218,7 +218,7 @@ describe("registerBrowseCommands", () => {
       runner: runner as unknown as Parameters<typeof registerBrowseCommands>[0]["runner"],
       panel: panel as unknown as Parameters<typeof registerBrowseCommands>[0]["panel"],
     });
-    const fn = state.registeredCommands.get("UnicDB.browseTableData");
+    const fn = state.registeredCommands.get("VSKit.browseTableData");
     expect(fn).toBeDefined();
     await fn!({});
     expect(state.infoMessages).toHaveLength(1);
@@ -234,8 +234,8 @@ describe("registerBrowseCommands", () => {
       driver: "postgres",
       host: "127.0.0.1",
       port: 5432,
-      user: "UnicDB",
-      database: "UnicDB",
+      user: "VSKit",
+      database: "VSKit",
     };
     const runner: FakeRunner = {
       isRunning: vi.fn(() => false),
@@ -267,14 +267,14 @@ describe("registerBrowseCommands", () => {
       runner: runner as unknown as Parameters<typeof registerBrowseCommands>[0]["runner"],
       panel: panel as unknown as Parameters<typeof registerBrowseCommands>[0]["panel"],
     });
-    const fn = state.registeredCommands.get("UnicDB.browseTableData");
+    const fn = state.registeredCommands.get("VSKit.browseTableData");
     await fn!({ meta: { connection: conn, schema: "public", objectName: "users" } });
     expect(runner.run).toHaveBeenCalledTimes(1);
     expect(panel.render).toHaveBeenCalledTimes(2);
     expect(panel.setBusySequence[0]).toBe(true);
     expect(panel.setBusySequence[panel.setBusySequence.length - 1]).toBe(false);
     expect(panel.renderCalls[0]!.header).toMatch(
-      /^Browse public\.users at .+ — postgres@127\.0\.0\.1\/UnicDB$/,
+      /^Browse public\.users at .+ — postgres@127\.0\.0\.1\/VSKit$/,
     );
     expect(state.errorMessages).toEqual([]);
   });
@@ -321,7 +321,7 @@ describe("registerBrowseCommands", () => {
       runner: runner as unknown as Parameters<typeof registerBrowseCommands>[0]["runner"],
       panel: panel as unknown as Parameters<typeof registerBrowseCommands>[0]["panel"],
     });
-    const fn = state.registeredCommands.get("UnicDB.browseTableData");
+    const fn = state.registeredCommands.get("VSKit.browseTableData");
     await fn!({ meta: { connection: nodeConn, schema: "public", objectName: "users" } });
     expect(setActive).toHaveBeenCalledWith("c2");
     expect(order).toEqual(["setActive", "runner.run"]);
@@ -351,7 +351,7 @@ describe("registerBrowseCommands", () => {
       runner: runner as unknown as Parameters<typeof registerBrowseCommands>[0]["runner"],
       panel: panel as unknown as Parameters<typeof registerBrowseCommands>[0]["panel"],
     });
-    const fn = state.registeredCommands.get("UnicDB.browseTableData");
+    const fn = state.registeredCommands.get("VSKit.browseTableData");
     await fn!({ meta: { connection: conn, schema: "public", objectName: "users" } });
     expect(state.errorMessages).toHaveLength(1);
     expect(state.errorMessages[0]).toContain("conn refused");
@@ -367,8 +367,8 @@ describe("registerBrowseCommands", () => {
       driver: "postgres",
       host: "127.0.0.1",
       port: 5432,
-      user: "UnicDB",
-      database: "UnicDB",
+      user: "VSKit",
+      database: "VSKit",
     };
     const runner: FakeRunner = {
       isRunning: vi.fn(() => false),
@@ -394,7 +394,7 @@ describe("registerBrowseCommands", () => {
       runner: runner as unknown as Parameters<typeof registerBrowseCommands>[0]["runner"],
       panel: panel as unknown as Parameters<typeof registerBrowseCommands>[0]["panel"],
     });
-    const fn = state.registeredCommands.get("UnicDB.browseTableData");
+    const fn = state.registeredCommands.get("VSKit.browseTableData");
     await fn!({ meta: { connection: conn, schema: "public", objectName: "empty" } });
     expect(runner.run).toHaveBeenCalledTimes(1);
     expect(panel.render).toHaveBeenCalled();
@@ -414,8 +414,8 @@ describe("registerBrowseCommands", () => {
       driver: "postgres",
       host: "127.0.0.1",
       port: 5432,
-      user: "UnicDB",
-      database: "UnicDB",
+      user: "VSKit",
+      database: "VSKit",
     };
     const mgr = makeFakeMgr({ activeId: "c1", active: conn });
     const runner = makeFakeRunner([]);
@@ -425,7 +425,7 @@ describe("registerBrowseCommands", () => {
       runner: runner as unknown as Parameters<typeof registerBrowseCommands>[0]["runner"],
       panel: panel as unknown as Parameters<typeof registerBrowseCommands>[0]["panel"],
     });
-    const fn = state.registeredCommands.get("UnicDB.browseTableData");
+    const fn = state.registeredCommands.get("VSKit.browseTableData");
     await fn!({ meta: { connection: conn, schema: "public", objectName: "users" } });
     expect(mgr.setActive).not.toHaveBeenCalled();
     expect(runner.run).toHaveBeenCalledTimes(1);
@@ -443,8 +443,8 @@ describe("registerBrowseCommands", () => {
       driver: "postgres",
       host: "127.0.0.1",
       port: 5432,
-      user: "UnicDB",
-      database: "UnicDB",
+      user: "VSKit",
+      database: "VSKit",
     };
     const runner: FakeRunner = {
       isRunning: vi.fn(() => false),
@@ -459,7 +459,7 @@ describe("registerBrowseCommands", () => {
       runner: runner as unknown as Parameters<typeof registerBrowseCommands>[0]["runner"],
       panel: panel as unknown as Parameters<typeof registerBrowseCommands>[0]["panel"],
     });
-    const fn = state.registeredCommands.get("UnicDB.browseTableData");
+    const fn = state.registeredCommands.get("VSKit.browseTableData");
     await fn!({ meta: { connection: conn, schema: "public", objectName: "users" } });
     expect(state.errorMessages).toHaveLength(1);
     expect(state.errorMessages[0]).toContain("runner boom");
@@ -469,7 +469,7 @@ describe("registerBrowseCommands", () => {
 });
 
 // =============================================================================
-// TASK-007 — UnicDB.browseTableData applies qualifyKeywordTables. Browse SQL is
+// TASK-007 — VSKit.browseTableData applies qualifyKeywordTables. Browse SQL is
 // already qualified (driver-specific quoting), so the transform is a no-op for
 // the normal `public/users` browse. Test verifies the wiring: listTables is
 // consulted (called with "public") and the existing pipeline stays intact.
@@ -481,8 +481,8 @@ it("#11 browse path applies qualifyKeywordTables — already-qualified SQL, no r
     driver: "postgres",
     host: "127.0.0.1",
     port: 5432,
-    user: "UnicDB",
-    database: "UnicDB",
+    user: "VSKit",
+    database: "VSKit",
   };
   const listTablesSpy = vi.fn(async (_schema: string): Promise<Array<{ name: string; schema: string }>> => [{ name: "order", schema: "public" }]);
   const mgr = makeFakeMgr({ activeId: "c1", active: conn });
@@ -501,7 +501,7 @@ it("#11 browse path applies qualifyKeywordTables — already-qualified SQL, no r
     runner: runner as unknown as Parameters<typeof registerBrowseCommands>[0]["runner"],
     panel: panel as unknown as Parameters<typeof registerBrowseCommands>[0]["panel"],
   });
-  const fn = state.registeredCommands.get("UnicDB.browseTableData");
+  const fn = state.registeredCommands.get("VSKit.browseTableData");
   expect(fn).toBeDefined();
   await fn!({ meta: { connection: conn, schema: "public", objectName: "users" } });
   expect(runner.run).toHaveBeenCalledTimes(1);
@@ -527,7 +527,7 @@ it("#11 browse path applies qualifyKeywordTables — already-qualified SQL, no r
 // whenever schema is non-empty (and resolveBrowseNode requires schema to be
 // non-empty), so qualifyKeywordTables's own by-design "already-qualified
 // references are never rewritten" rule (see keywordQualify.test.ts #3) means
-// the full `UnicDB.browseTableData` command can never itself reach the rewrite
+// the full `VSKit.browseTableData` command can never itself reach the rewrite
 // branch. This test therefore exercises the identical wiring pattern directly
 // against a genuinely unquoted-reserved-keyword candidate, proving the row
 // mapping + "public" schema argument are correct.
@@ -555,7 +555,7 @@ void vscode;
 // `adapter.listColumns` and wrapped the SELECT with a subquery alias to
 // append `ctid` for no-PK PG tables. That path crashed on views with
 // `column "ctid" does not exist` and forced the save flow to chase host
-// metadata. After this change, `UnicDB.browseTableData` executes exactly one
+// metadata. After this change, `VSKit.browseTableData` executes exactly one
 // `buildBrowseSelect(...)` qualified through `qualifyKeywordTables` — no
 // `listColumns`, no wrap, no host-added ctid column.
 // =============================================================================
@@ -614,7 +614,7 @@ describe("registerBrowseCommands — TASK-001 PG read-path is plain SELECT", () 
       runner: runner as unknown as Parameters<typeof registerBrowseCommands>[0]["runner"],
       panel: panel as unknown as Parameters<typeof registerBrowseCommands>[0]["panel"],
     });
-    const fn = state.registeredCommands.get("UnicDB.browseTableData");
+    const fn = state.registeredCommands.get("VSKit.browseTableData");
     await fn!({ meta: { connection: conn, schema: "public", objectName: "v_notes" } });
     expect(fix.captured()).toHaveLength(1);
     const sql = fix.captured()[0]!;
@@ -660,7 +660,7 @@ describe("registerBrowseCommands — TASK-001 PG read-path is plain SELECT", () 
       runner: runner as unknown as Parameters<typeof registerBrowseCommands>[0]["runner"],
       panel: panel as unknown as Parameters<typeof registerBrowseCommands>[0]["panel"],
     });
-    const fn = state.registeredCommands.get("UnicDB.browseTableData");
+    const fn = state.registeredCommands.get("VSKit.browseTableData");
     await fn!({ meta: { connection: conn, schema: "public", objectName: "users" } });
     expect(fix.captured()).toHaveLength(1);
     const sql = fix.captured()[0]!;
@@ -696,7 +696,7 @@ describe("registerBrowseCommands — TASK-001 PG read-path is plain SELECT", () 
       runner: runner as unknown as Parameters<typeof registerBrowseCommands>[0]["runner"],
       panel: panel as unknown as Parameters<typeof registerBrowseCommands>[0]["panel"],
     });
-    const fn = state.registeredCommands.get("UnicDB.browseTableData");
+    const fn = state.registeredCommands.get("VSKit.browseTableData");
     await fn!({ meta: { connection: conn, schema: "mydb", objectName: "notes" } });
     expect(fix.captured()).toHaveLength(1);
     const sql = fix.captured()[0]!;
@@ -737,7 +737,7 @@ describe("registerBrowseCommands — TASK-001 PG read-path is plain SELECT", () 
       runner: runner as unknown as Parameters<typeof registerBrowseCommands>[0]["runner"],
       panel: panel as unknown as Parameters<typeof registerBrowseCommands>[0]["panel"],
     });
-    const fn = state.registeredCommands.get("UnicDB.browseTableData");
+    const fn = state.registeredCommands.get("VSKit.browseTableData");
     await fn!({ meta: { connection: conn, schema: "public", objectName: "notes" } });
     expect(captured).toHaveLength(1);
     expect(captured[0]).toBe('SELECT * FROM "public"."notes"');
@@ -795,7 +795,7 @@ describe("registerBrowseCommands — TASK-BQ02-002 BigQuery wiring", () => {
       runner: runner as unknown as Parameters<typeof registerBrowseCommands>[0]["runner"],
       panel: panel as unknown as Parameters<typeof registerBrowseCommands>[0]["panel"],
     });
-    const fn = state.registeredCommands.get("UnicDB.browseTableData");
+    const fn = state.registeredCommands.get("VSKit.browseTableData");
     expect(fn).toBeDefined();
     await fn!({ meta: { connection: conn, schema: "ds", objectName: "tbl" } });
     expect(runner.run).toHaveBeenCalledTimes(1);
@@ -838,7 +838,7 @@ describe("registerBrowseCommands — TASK-BQ02-002 BigQuery wiring", () => {
       runner: runner as unknown as Parameters<typeof registerBrowseCommands>[0]["runner"],
       panel: panel as unknown as Parameters<typeof registerBrowseCommands>[0]["panel"],
     });
-    const fn = state.registeredCommands.get("UnicDB.browseTableData");
+    const fn = state.registeredCommands.get("VSKit.browseTableData");
     await fn!({ meta: { connection: conn, schema: "ds", objectName: "tbl" } });
     expect(runner.run).toHaveBeenCalledTimes(1);
     const [stmts] = runner.run.mock.calls[0] as [ParsedStatement[], unknown];
@@ -853,8 +853,8 @@ describe("registerBrowseCommands — TASK-BQ02-002 BigQuery wiring", () => {
       driver: "postgres",
       host: "127.0.0.1",
       port: 5432,
-      user: "UnicDB",
-      database: "UnicDB",
+      user: "VSKit",
+      database: "VSKit",
     };
     // Adapter that returns an unquoted reserved-keyword candidate so the
     // qualifyKeywordTables path actually fires (PG browse SQL is fully quoted,
@@ -876,7 +876,7 @@ describe("registerBrowseCommands — TASK-BQ02-002 BigQuery wiring", () => {
       runner: runner as unknown as Parameters<typeof registerBrowseCommands>[0]["runner"],
       panel: panel as unknown as Parameters<typeof registerBrowseCommands>[0]["panel"],
     });
-    const fn = state.registeredCommands.get("UnicDB.browseTableData");
+    const fn = state.registeredCommands.get("VSKit.browseTableData");
     await fn!({ meta: { connection: conn, schema: "public", objectName: "users" } });
     // PG browse SQL is fully quoted → lazy lookup never fires; the assertion
     // proves the skip-guard did NOT bleed into the PG path (which still has
@@ -903,8 +903,8 @@ describe("registerBrowseCommands — TASK-BQ02-002 BigQuery wiring", () => {
       driver: "postgres",
       host: "127.0.0.1",
       port: 5432,
-      user: "UnicDB",
-      database: "UnicDB",
+      user: "VSKit",
+      database: "VSKit",
     };
     const mgr = makeFakeMgr({ activeId: "c1", active: conn });
     // isRunning() === true — another run is in flight.
@@ -915,7 +915,7 @@ describe("registerBrowseCommands — TASK-BQ02-002 BigQuery wiring", () => {
       runner: runner as unknown as Parameters<typeof registerBrowseCommands>[0]["runner"],
       panel: panel as unknown as Parameters<typeof registerBrowseCommands>[0]["panel"],
     });
-    const fn = state.registeredCommands.get("UnicDB.browseTableData");
+    const fn = state.registeredCommands.get("VSKit.browseTableData");
     await fn!({ meta: { connection: conn, schema: "public", objectName: "users" } });
 
     // A browse is a run: it must NOT enter runner.run (which would throw

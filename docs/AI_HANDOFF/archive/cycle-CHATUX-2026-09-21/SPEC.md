@@ -9,7 +9,7 @@ Source: advisor spec (user-provided) mapped to verified code anchors.
 
 ## 1. Problem and context
 
-The user wants the UnicDB AI chat panel (V2 surface) redesigned to a Claude
+The user wants the VSKit AI chat panel (V2 surface) redesigned to a Claude
 Code–first UX. Advisor spec §19 defines five waves; this cycle implements
 W1–W4 (P0 core) and queues W5. Verified current state (scout + planner):
 
@@ -122,13 +122,13 @@ W1–W4 (P0 core) and queues W5. Verified current state (scout + planner):
 - **FR-005 (W3 code block):** `markdown.ts` `createCodeBlock` emits:
 
   ```
-  <div class="UnicDB-ai-chat-v2-codeblock" data-lang="<lang|absent>">
-    <div class="UnicDB-ai-chat-v2-codeblock-header">
-      <span class="UnicDB-ai-chat-v2-codeblock-lang"><lang|"text"></span>
-      <button type="button" class="UnicDB-ai-chat-v2-codeblock-copy"
+  <div class="VSKit-ai-chat-v2-codeblock" data-lang="<lang|absent>">
+    <div class="VSKit-ai-chat-v2-codeblock-header">
+      <span class="VSKit-ai-chat-v2-codeblock-lang"><lang|"text"></span>
+      <button type="button" class="VSKit-ai-chat-v2-codeblock-copy"
               aria-label="Copy code">Copy</button>
     </div>
-    <pre class="UnicDB-ai-chat-v2-code"><code class="…-<lang|plain>">…</code></pre>
+    <pre class="VSKit-ai-chat-v2-code"><code class="…-<lang|plain>">…</code></pre>
   </div>
   ```
 
@@ -179,8 +179,8 @@ Module-level — §8. No message-protocol changes.
 ### Frontend UI and state
 V2 surface only: `webview/aiChat/{shell,controller,scroll,transcript,
 markdown,composer,keyboard}.ts` + `styles.css`; mounted by
-`webview/aiChatPanelMain.ts` (root `#UnicDB-root.UnicDB-chat
-.UnicDB-ai-chat-v2`; bundle `dist/aiChatPanel.js` + `dist/aiChatPanel.css`
+`webview/aiChatPanelMain.ts` (root `#VSKit-root.VSKit-chat
+.VSKit-ai-chat-v2`; bundle `dist/aiChatPanel.js` + `dist/aiChatPanel.css`
 via `src/ui/aiChatPanel.ts` `buildHtml` ~6331-6366).
 
 ### Integration
@@ -278,7 +278,7 @@ export const COMPOSER_AUTO_GROW_MAX_PX = 88;   // was 160
   default `"1"`; body hidden while collapsed.
 - No signature changes — `createTranscriptRenderer(refs, callbacks)` same.
 
-### 8.5 CSS selectors (all under `.UnicDB-ai-chat-v2`)
+### 8.5 CSS selectors (all under `.VSKit-ai-chat-v2`)
 
 New: `-codeblock`, `-codeblock-header`, `-codeblock-lang`, `-codeblock-copy`,
 `-reasoning-toggle`. Modified: `-code` (nested override), `-action` (no
@@ -333,7 +333,7 @@ opacity gate), `-item-user`, `-item-text`/`-item-reasoning` (drop 880px),
 - [ ] No `opacity: 0` on `-action`; no `width:`/`max-inline-size` in the
       `-item-text`/`-item-reasoning` rule (`-error-card`/`-change-plan` keep
       their 880px caps); no hard-coded colors
-      (only `var(--vscode-*)` / existing `--UnicDB-ai-chat-v2-*` tokens).
+      (only `var(--vscode-*)` / existing `--VSKit-ai-chat-v2-*` tokens).
 
 ## 13. Migration / upgrade steps
 

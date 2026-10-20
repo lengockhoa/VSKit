@@ -77,14 +77,14 @@ EXECUTOR_SUBAGENT: feature-implementer
 
 RED_OUTPUT:
 ```
- RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-009
+ RUN  v1.6.1 /workspace/.worktrees/task-009
 
  ❯ src/ai/claudeCode/__tests__/claudeCodeChatEngine.test.ts  (0 test)
 
 ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
 
  FAIL  src/ai/claudeCode/__tests__/claudeCodeChatEngine.test.ts [ src/ai/claudeCode/__tests__/claudeCodeChatEngine.test.ts ]
-Error: Failed to load url ../claudeCodeChatEngine (resolved id: ../claudeCodeChatEngine) in /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-009/src/ai/claudeCode/__tests__/claudeCodeChatEngine.test.ts. Does the file exist?
+Error: Failed to load url ../claudeCodeChatEngine (resolved id: ../claudeCodeChatEngine) in /workspace/.worktrees/task-009/src/ai/claudeCode/__tests__/claudeCodeChatEngine.test.ts. Does the file exist?
  ❯ loadAndTransform ../../node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
 
  Test Files  1 failed (1)
@@ -96,7 +96,7 @@ Error: Failed to load url ../claudeCodeChatEngine (resolved id: ../claudeCodeCha
 Verification Output:
 ```
 $ npx vitest run src/ai/claudeCode/__tests__/claudeCodeProcess.test.ts src/ai/claudeCode/__tests__/claudeCodeChatEngine.test.ts
- RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-009
+ RUN  v1.6.1 /workspace/.worktrees/task-009
 
  ✓ src/ai/claudeCode/__tests__/claudeCodeChatEngine.test.ts  (7 tests) 5ms
  ✓ src/ai/claudeCode/__tests__/claudeCodeProcess.test.ts  (5 tests) 5ms
@@ -107,7 +107,7 @@ $ npx vitest run src/ai/claudeCode/__tests__/claudeCodeProcess.test.ts src/ai/cl
    Duration  177ms
 
 $ npm run typecheck
-> UnicDB@1.53.23 typecheck
+> Extension@1.53.23 typecheck
 > tsc --noEmit
 (exit 0, no errors)
 ```

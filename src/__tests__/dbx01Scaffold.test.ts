@@ -27,10 +27,10 @@ describe("DBX-01 scaffold — package.json", () => {
 
   it("4 new command ids exist in contributes.commands", () => {
     const expected = [
-      "UnicDB.importCsv",
-      "UnicDB.importJson",
-      "UnicDB.openFormView",
-      "UnicDB.editLargeValue",
+      "VSKit.importCsv",
+      "VSKit.importJson",
+      "VSKit.openFormView",
+      "VSKit.editLargeValue",
     ];
     const ids = pkg.contributes.commands.map((c) => c.command);
     for (const want of expected) {
@@ -39,13 +39,13 @@ describe("DBX-01 scaffold — package.json", () => {
   });
 
   it("activation events for importCsv + importJson are declared", () => {
-    expect(pkg.activationEvents).toContain("onCommand:UnicDB.importCsv");
-    expect(pkg.activationEvents).toContain("onCommand:UnicDB.importJson");
+    expect(pkg.activationEvents).toContain("onCommand:VSKit.importCsv");
+    expect(pkg.activationEvents).toContain("onCommand:VSKit.importJson");
   });
 
-  it("UnicDB.import.batchSize defaults to 1000", () => {
+  it("VSKit.import.batchSize defaults to 1000", () => {
     const setting =
-      pkg.contributes.configuration.properties["UnicDB.import.batchSize"];
+      pkg.contributes.configuration.properties["VSKit.import.batchSize"];
     expect(setting).toBeDefined();
     expect(setting?.default).toBe(1000);
   });

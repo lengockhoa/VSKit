@@ -116,10 +116,10 @@ TypeError: isEngineChoice is not a function
 Verification Output:
 
 ```
-> UnicDB@1.53.23 typecheck
+> Extension@1.53.23 typecheck
 > tsc --noEmit
 $ npx vitest run src/ai/__tests__/engineChoice.test.ts src/ai/__tests__/policy.test.ts
- RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-007
+ RUN  v1.6.1 /workspace/.worktrees/task-007
 
  ✓ src/ai/__tests__/policy.test.ts  (11 tests) 3ms
  ✓ src/ai/__tests__/engineChoice.test.ts  (11 tests) 2ms

@@ -169,7 +169,6 @@ npm run verify:fast
 - [ ] Full suite green (current 3579|2 baseline preserved or better).
 - [ ] BQ-00 / BQ-01 / BQ-02 / BQ-03 / BQ-04 frozen surfaces byte-identical.
 - [ ] CHANGELOG updated for v1.51.5.
-- [ ] **Release: v1.51.5 published to GitHub** at R5.
 
 ## §7 Task Split
 

@@ -75,7 +75,7 @@ export function scrollBehavior(reducedMotion: boolean): ScrollBehavior {
 }
 
 export interface ScrollControllerOptions {
-  /** The scrolling viewport element (`.UnicDB-ai-chat-v2-transcript`). */
+  /** The scrolling viewport element (`.VSKit-ai-chat-v2-transcript`). */
   readonly viewport: HTMLElement;
   /** Where the pill is appended. Defaults to the viewport's parent. */
   readonly pillHost?: HTMLElement;

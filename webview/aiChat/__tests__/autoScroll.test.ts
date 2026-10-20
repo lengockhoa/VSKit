@@ -92,7 +92,7 @@ interface Harness {
 /** Same shape as controllerSurfaces.test.ts: stub postMessage + real controller. */
 function makeHarness(): Harness {
   const root = document.createElement("div");
-  root.id = "UnicDB-root";
+  root.id = "VSKit-root";
   document.body.appendChild(root);
   const sent: unknown[] = [];
   const api: VsCodeApiLike = { postMessage: (message) => sent.push(message) };
@@ -107,7 +107,7 @@ function makeHarness(): Harness {
   });
   controllers.push(controller);
 
-  const transcriptEl = root.querySelector<HTMLElement>(".UnicDB-ai-chat-v2-transcript");
+  const transcriptEl = root.querySelector<HTMLElement>(".VSKit-ai-chat-v2-transcript");
   if (transcriptEl === null) throw new Error("transcript viewport missing");
   // 2000 - 400 - 1600 = 0px from the bottom → pinned by default.
   const viewport = mockScrollGeometry(transcriptEl, 1600);

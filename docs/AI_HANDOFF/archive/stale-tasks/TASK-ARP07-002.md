@@ -101,13 +101,13 @@ in-flight fetch, so it does not exercise the commit gate.
 
 Verification Output (Verification Commands, fresh, after restore):
 ```
-> UnicDB@1.42.0 test
+> package@1.42.0 test
 > vitest run src/ui/__tests__/schemaCache.test.ts
  ✓ src/ui/__tests__/schemaCache.test.ts  (23 tests) 7ms
  Test Files  1 passed (1)
       Tests  23 passed (23)
 
-> UnicDB@1.42.0 typecheck
+> package@1.42.0 typecheck
 > tsc --noEmit
 typecheck exit: 0
 ```

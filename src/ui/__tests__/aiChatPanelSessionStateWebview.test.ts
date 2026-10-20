@@ -16,7 +16,7 @@ const compiled = execFileSync(
   { encoding: "utf8" },
 ).toString();
 
-interface UnicDBApi {
+interface VSKitApi {
   postMessage: (msg: unknown) => void;
 }
 interface Harness {
@@ -27,14 +27,14 @@ interface Harness {
 
 function makeHarness(): Harness {
   const received: Array<Record<string, unknown>> = [];
-  const api: UnicDBApi = {
+  const api: VSKitApi = {
     postMessage: (msg: unknown) => {
       received.push(msg as Record<string, unknown>);
     },
   };
-  (globalThis as unknown as { acquireVsCodeApi: () => UnicDBApi }).acquireVsCodeApi =
+  (globalThis as unknown as { acquireVsCodeApi: () => VSKitApi }).acquireVsCodeApi =
     () => api;
-  document.body.innerHTML = '<div id="UnicDB-root" class="UnicDB-form-body"></div>';
+  document.body.innerHTML = '<div id="VSKit-root" class="VSKit-form-body"></div>';
 
   const originalAdd = window.addEventListener.bind(window);
   let latestMessageHandler: ((ev: MessageEvent) => void) | null = null;
@@ -61,7 +61,7 @@ function makeHarness(): Harness {
     dispatch: (msg: Record<string, unknown>) => {
       latestMessageHandler?.({ data: msg } as MessageEvent);
     },
-    root: document.getElementById("UnicDB-root") as HTMLDivElement,
+    root: document.getElementById("VSKit-root") as HTMLDivElement,
   };
 }
 
@@ -102,7 +102,7 @@ describe("webview — usage chip (TASK-ARP06-005)", () => {
     expect(chip!.textContent).toContain("34");
     expect(chip!.textContent).toContain("100");
     expect(chip!.textContent).toContain("200");
-    expect(chip!.className).toContain("UnicDB-chat-usage");
+    expect(chip!.className).toContain("VSKit-chat-usage");
   });
 
   it("renders the unknown state instead of invented totals", () => {
@@ -122,12 +122,12 @@ describe("webview — usage chip (TASK-ARP06-005)", () => {
     h.dispatch(
       usageMsg({
         policyNotice:
-          "UnicDB AI policy: sensitive AI capabilities are unavailable — workspace is not trusted.",
+          "VSKit AI policy: sensitive AI capabilities are unavailable — workspace is not trusted.",
       }),
     );
     const chip = h.root.querySelector("#usageChip") as HTMLElement | null;
     expect(chip).not.toBeNull();
-    expect(chip!.textContent).toContain("UnicDB AI policy");
+    expect(chip!.textContent).toContain("VSKit AI policy");
   });
 
   it("accumulates across turns — second usage frame shows the running session totals", () => {
@@ -183,9 +183,9 @@ describe("webview — usage/engine chips mount in the V2 header (TASK-CHATUX2-00
     ...over,
   });
 
-  it("applyUsage writes #usageChip into #UnicDB-ai-chat-v2-usage, never as a root child", () => {
+  it("applyUsage writes #usageChip into #VSKit-ai-chat-v2-usage, never as a root child", () => {
     const h = makeHarness();
-    const usageEl = document.getElementById("UnicDB-ai-chat-v2-usage");
+    const usageEl = document.getElementById("VSKit-ai-chat-v2-usage");
     expect(usageEl, "V2 header usage span must exist after boot").not.toBeNull();
     expect(usageEl!.hidden, "usage span starts hidden until its first frame").toBe(true);
 
@@ -206,9 +206,9 @@ describe("webview — usage/engine chips mount in the V2 header (TASK-CHATUX2-00
     ).toBe(false);
   });
 
-  it("applyEngineState writes #engineLifecycle into #UnicDB-ai-chat-v2-engine-state, never as a root child", () => {
+  it("applyEngineState writes #engineLifecycle into #VSKit-ai-chat-v2-engine-state, never as a root child", () => {
     const h = makeHarness();
-    const stateEl = document.getElementById("UnicDB-ai-chat-v2-engine-state");
+    const stateEl = document.getElementById("VSKit-ai-chat-v2-engine-state");
     expect(stateEl, "V2 header engine-state span must exist after boot").not.toBeNull();
     expect(stateEl!.hidden, "engine-state span starts hidden").toBe(true);
 

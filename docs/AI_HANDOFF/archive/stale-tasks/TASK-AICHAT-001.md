@@ -112,7 +112,7 @@ RED_OUTPUT: |
   MISSING VERDICT: aiChatPanelComposer\.ts:496[–-]504
   (exit 1 — loop aborts on the first unresolved anchor range; expected, file did not exist yet)
 Verification Output: |
-  Post-write, all §Verification Commands (worktree /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-aichat-001):
+  Post-write, all §Verification Commands (worktree `.../VSKit/.worktrees/task-aichat-001`):
 
   === V1: anchor bounds ===
   ANCHOR-BOUNDS-OK
@@ -129,7 +129,7 @@ Verification Output: |
   DOCS-ONLY-OK
 
   $ npm run typecheck
-  > UnicDB@1.53.46 typecheck
+  > VSKit@1.53.46 typecheck
   > tsc --noEmit
   TYPECHECK_EXIT=0
 

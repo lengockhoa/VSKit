@@ -14,12 +14,12 @@ and the transcript never being a scroll region.
 
 ## Target Files
 
-- `webview/aiChat/styles.css` — add explicit `grid-row: 1..5` to `.UnicDB-ai-chat-v2-header`,
-  `-banner`, `-main`, `-composer`, `-hint`; add a `.UnicDB-ai-chat-v2-main` rule
+- `webview/aiChat/styles.css` — add explicit `grid-row: 1..5` to `.vskit-ai-chat-v2-header`,
+  `-banner`, `-main`, `-composer`, `-hint`; add a `.vskit-ai-chat-v2-main` rule
   (`display:flex; flex-direction:column; min-width:0; min-height:0`). Keep the root
   `grid-template-rows: 40px auto minmax(0, 1fr) auto auto 20px` (lines 52-55), root
-  `overflow:hidden` (line ~61), `.UnicDB-ai-chat-v2-banner[hidden]{display:none}` (lines 208-210)
-  and the existing `.UnicDB-ai-chat-v2-transcript` rule (`overflow-y:auto`, lines 224-233)
+  `overflow:hidden` (line ~61), `.vskit-ai-chat-v2-banner[hidden]{display:none}` (lines 208-210)
+  and the existing `.vskit-ai-chat-v2-transcript` rule (`overflow-y:auto`, lines 224-233)
   unchanged. Regions to edit: around lines 69-79 (header), 180-210 (banner), 222-238
   (transcript/main), 265-279 (composer), and wherever `-hint` is defined.
 - `webview/aiChat/__tests__/shellGrid.test.ts` — (new) CSS-text contract test, node environment,
@@ -30,12 +30,12 @@ and the transcript never being a scroll region.
 
 | # | Type | Test name | Expected | Pre-state / Fixture |
 |---|------|----------|----------|---------------------|
-| 1 | regression | explicit grid-row on all five shell children | styles.css matches `\.UnicDB-ai-chat-v2-header\s*\{[^}]*grid-row:\s*1` and the same for banner=2, main=3, composer=4, hint=5. RED before fix — no root-level grid-row rules exist today. | current styles.css |
+| 1 | regression | explicit grid-row on all five shell children | styles.css matches `\.vskit-ai-chat-v2-header\s*\{[^}]*grid-row:\s*1` and the same for banner=2, main=3, composer=4, hint=5. RED before fix — no root-level grid-row rules exist today. | current styles.css |
 | 2 | regression | composer cannot be crushed by transcript growth | root rule keeps `grid-template-rows` with `minmax(0, 1fr)` as track 3 AND composer rule contains `grid-row: 4` (auto content track, never squeezed) | current styles.css |
-| 3 | happy | transcript is the scroll region | `.UnicDB-ai-chat-v2-main` rule contains `display: flex`, `flex-direction: column`, `min-width: 0`, `min-height: 0`; `.UnicDB-ai-chat-v2-transcript` body still contains `overflow-y: auto` and `min-height: 0` | CSS text |
-| 4 | edge (clipping) | root clips, main does not | root block contains `overflow: hidden`; the `.UnicDB-ai-chat-v2-main` block contains NO `overflow: hidden` | CSS text |
-| 5 | edge (scoping) | new rules stay V2-scoped | every selector added contains `.UnicDB-ai-chat-v2`; balanced braces in the file | CSS text |
-| 6 | edge (structural) | hidden banner keeps its track | `.UnicDB-ai-chat-v2-banner[hidden] { display: none }` still present AND banner rule has `grid-row: 2` (coexist) | CSS text |
+| 3 | happy | transcript is the scroll region | `.vskit-ai-chat-v2-main` rule contains `display: flex`, `flex-direction: column`, `min-width: 0`, `min-height: 0`; `.vskit-ai-chat-v2-transcript` body still contains `overflow-y: auto` and `min-height: 0` | CSS text |
+| 4 | edge (clipping) | root clips, main does not | root block contains `overflow: hidden`; the `.vskit-ai-chat-v2-main` block contains NO `overflow: hidden` | CSS text |
+| 5 | edge (scoping) | new rules stay V2-scoped | every selector added contains `.vskit-ai-chat-v2`; balanced braces in the file | CSS text |
+| 6 | edge (structural) | hidden banner keeps its track | `.vskit-ai-chat-v2-banner[hidden] { display: none }` still present AND banner rule has `grid-row: 2` (coexist) | CSS text |
 
 ## Test Files
 
@@ -67,9 +67,9 @@ static gate — there is no lint script.)
 
 - Consumes: (none)
 - Produces: the CSS placement contract every later CHATFIX task relies on —
-  `.UnicDB-ai-chat-v2-header{grid-row:1}`, `-banner{grid-row:2}`, `-main{grid-row:3;
+  `.vskit-ai-chat-v2-header{grid-row:1}`, `-banner{grid-row:2}`, `-main{grid-row:3;
   display:flex; flex-direction:column; min-width:0; min-height:0}`, `-composer{grid-row:4}`,
-  `-hint{grid-row:5}`; the transcript (`.UnicDB-ai-chat-v2-transcript`) is the sole scroll
+  `-hint{grid-row:5}`; the transcript (`.vskit-ai-chat-v2-transcript`) is the sole scroll
   region (`overflow-y:auto`, `min-height:0`).
 
 ---
@@ -98,15 +98,15 @@ EXECUTOR_SUBAGENT: feature-implementer
 Command: `cd .worktrees/task-chatfix-001 && npx vitest run webview/aiChat/__tests__/shellGrid.test.ts`
 
 ```
- RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-chatfix-001
+ RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/VSKit/.worktrees/task-chatfix-001
 
  ❯ webview/aiChat/__tests__/shellGrid.test.ts  (6 tests | 6 failed) 5ms
    ❯ ... > pins all five shell children to explicit grid-row 1..5
-     → expected \.UnicDB-ai-chat-v2-header to declare grid-row: 1: expected false to be true
+     → expected \.vskit-ai-chat-v2-header to declare grid-row: 1: expected false to be true
    ❯ ... > keeps the composer on a content-sized track that cannot be crushed
      → expected false to be true
    ❯ ... > makes the transcript the sole scroll region via a flex main
-     → .UnicDB-ai-chat-v2-main rule must exist: expected undefined not to be undefined
+     → .vskit-ai-chat-v2-main rule must exist: expected undefined not to be undefined
    ❯ ... > clips at the root only — main never hides overflow
      → expected undefined not to be undefined
    ❯ ... > keeps every new placement rule V2-scoped with balanced braces
@@ -121,7 +121,7 @@ Command: `cd .worktrees/task-chatfix-001 && npx vitest run webview/aiChat/__test
 ```
 
 All 6 failed for the expected reason: no `grid-row` declarations existed and no
-`.UnicDB-ai-chat-v2-main` rule existed. No test was immediately GREEN, so no
+`.vskit-ai-chat-v2-main` rule existed. No test was immediately GREEN, so no
 test fix was needed.
 
 ### GREEN + Verification (after implementation)
@@ -141,7 +141,7 @@ Command 1: `npx vitest run webview/aiChat/__tests__/shellGrid.test.ts webview/ai
 Command 2: `npm run typecheck`
 
 ```
-> UnicDB@1.54.0 typecheck
+> VSKit@1.54.0 typecheck
 > tsc --noEmit
 ```
 (exit 0, no errors)
@@ -159,7 +159,7 @@ esbuild: build complete
 ### Files changed (worktree commit d51b2d0, milestone: TASK-CHATFIX-001)
 
 - `webview/aiChat/styles.css` (+17): `grid-row: 1` on `-header`, `2` on
-  `-banner`, `4` on `-composer`, `5` on `-hint`; new `.UnicDB-ai-chat-v2-main`
+  `-banner`, `4` on `-composer`, `5` on `-hint`; new `.vskit-ai-chat-v2-main`
   rule (`grid-row: 3; display: flex; flex-direction: column; min-width: 0;
   min-height: 0`) before the transcript section. Root `grid-template-rows`,
   root `overflow: hidden`, `-banner[hidden]`, and the `-transcript` rule are
@@ -184,6 +184,6 @@ TEST_PLAN_COVERAGE: all-followed — all 6 §Test Cases implemented in shellGrid
 FINDINGS:
   critical: none
   important: none
-  minor: webview/aiChat/__tests__/shellGrid.test.ts:74 — `expect(selector).toContain("\\.UnicDB-ai-chat-v2")` asserts the test file's own string literals, so it is a tautology; the meaningful CSS-side V2-scoping check is the preceding regex against stripped() — the dead assertion can be dropped or replaced by a check that each CSS match is V2-prefixed.
+  minor: webview/aiChat/__tests__/shellGrid.test.ts:74 — `expect(selector).toContain("\\.vskit-ai-chat-v2")` asserts the test file's own string literals, so it is a tautology; the meaningful CSS-side V2-scoping check is the preceding regex against stripped() — the dead assertion can be dropped or replaced by a check that each CSS match is V2-prefixed.
 NEXT_STATUS_FOR_INDEX: done
-NOTES: Wave-1 diff is insertions-only; root grid template, overflow:hidden, banner[hidden], and transcript rule intact at HEAD. Later waves' only added overflow-y:auto is the wave-3 inner tool-IO scroller (styles.css:2916 region excluded; .UnicDB-ai-chat-v2-tool-io-text[data-tool-block=out]), not a shell child — no cross-task regression. Live regions are position:absolute visually-hidden and claim no track.
+NOTES: Wave-1 diff is insertions-only; root grid template, overflow:hidden, banner[hidden], and transcript rule intact at HEAD. Later waves' only added overflow-y:auto is the wave-3 inner tool-IO scroller (styles.css:2916 region excluded; .vskit-ai-chat-v2-tool-io-text[data-tool-block=out]), not a shell child — no cross-task regression. Live regions are position:absolute visually-hidden and claim no track.

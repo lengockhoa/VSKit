@@ -1,12 +1,13 @@
 # Changelog
 
-## [Unreleased]
+## [1.55.7] — 2026-10-20
 
-- Summary: Multi-query SQL execution now auto-stops on error: statement-timeout watchdog +
-  `abortActiveQuery` seam (pg PID cancel + destroy-release, mysql destroy via cancel closures,
-  mssql queue generation + lazy reconnect), bounded cleanup, and new `UnicDB.queryTimeoutSeconds`
-  setting (default 300s). Connection is released and the error reported instead of hanging.
-  Cycle SQLHANG-2026-09-21, pushed `33b7263`.
+- The latest query-execution update adds a configurable `VSKit.queryTimeoutSeconds` setting (default 300 seconds), statement-timeout cancellation, and driver-specific cleanup; multi-statement execution stops after the first failure.
+- Converted package identity, manifest/runtime identifiers, resources, installer guidance, and development Compose fixtures to VSKit. Publisher `lengockhoa` is unchanged; version `1.55.7` avoids reusing the existing `v1.55.6` tag.
+- The existing opt-in `VSKit.ai.grounding` setting is now declared in the manifest with its existing `false` default; runtime logic is unchanged.
+- The new extension identity does not import prior global/workspace state or SecretStorage. Recreate connections/settings and re-enter credentials; the prior extension and data remain untouched. AI chat Markdown/JSON exports are archival only; there is no importer.
+- The existing Docker volumes remain untouched. The GitHub `v1.55.7` release includes the local VSIX; Marketplace publication remains paused. Historical release artifact names and URLs below remain unchanged.
+- Dated release entries below are retained as historical records. Their original artifact names and download URLs are intentionally not retargeted to the current package.
 
 ## [1.55.1] — 2026-09-23
 

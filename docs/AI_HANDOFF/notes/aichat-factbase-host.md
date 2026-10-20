@@ -360,7 +360,7 @@ Four engine rows × eight named columns. Every cell is `Verified (file:line)` or
 ### 5c. Streaming route
 
 - **One `delta` frame is the only streaming primitive.** The webview appends text into a
-  `.UnicDB-chat-streaming` bubble and re-renders markdown when a fence closes
+  `.ai-chat-streaming` bubble and re-renders markdown when a fence closes
   (`webview/aiChatPanelMain.ts:1272–1320`); `done`/`assistant`/`error` de-stream it
   (`:1328–1342`, `:1992–2014`).
 - **builtin**: `runAgent` → `deps.streamComplete` with a per-turn `AbortController`
@@ -385,7 +385,7 @@ Searched `grep -rniE "timeline|activity" src webview` (non-test files) and the
   append-only text labels with no time, status or id, and (b) the redacting in-memory
   `TraceRecorder` (`src/ai/trace.ts:1`), which is attached to turns
   (`src/ui/aiChatPanel.ts:1299`) but exposed only through the
-  `UnicDB.ai.exportTrace` / `UnicDB.ai.clearTrace` commands (`src/extension.ts:1319`, `:1324`)
+  the trace export / clear commands (`src/extension.ts:1319`, `:1324`)
   — never rendered in the panel.
 - Conclusion: there is **no activity timeline feature**. `step` rows are the only
   activity-like UI, and they carry one string each.
@@ -422,10 +422,9 @@ outcome, and anchor.
    (`src/ui/aiChatPanelMessages.ts:102`) and `AiEngine` has four values
    (`src/ai/settings.ts:24`), but the host `/engine` parser accepts exactly two literals —
    `builtin` and `omp` — and rejects `claude-code` / `codex` with the literal
-   `Usage: /engine builtin|omp` (`src/ui/aiChatPanel.ts:1779–1781`). Engine switching to the
-   two subprocess engines happens through the VS Code commands
-   `UnicDB.ai.useWithClaudeCode` / `UnicDB.ai.useWithCodex` (`package.json:264`, `:270`),
-   not through `/engine`. This is a real input/output vocabulary mismatch, recorded as fact.
+   `Usage: /engine builtin|omp` (`src/ui/aiChatPanel.ts:1779–1781`). The two subprocess engines
+   are switched through VS Code commands (`package.json:264`, `:270`), not through `/engine`.
+   This is a real input/output vocabulary mismatch, recorded as fact.
 2. **`/model` argument vocabulary vs `AiModelRole`.** The `/model` text path accepts only
    `work` or `smart` (`src/ui/aiChatPanel.ts:1757–1763`), while `AiModelRole` has four members
    (`src/ai/settings.ts:13`) and the `model_select` wire message accepts the full set
@@ -454,7 +453,7 @@ outcome, and anchor.
    `AI_CHAT_COMMANDS` and `executeSlashCommand`, `webview/aiChatPanelMain.ts:643–671`).
 10. **No persistent permission policy.** Bypass is session-scoped and not persisted
     (`src/ui/aiChatPanel.ts:1727–1733`); the only durable policy surface is
-    `UnicDB.ai.showPolicy` (`package.json:282`).
+    the durable AI policy setting (`package.json:282`).
 11. **Unverified-internal cells to confirm by reading the CLI vendors**: whether claudeCode or
     codex accept a model/role selector (matrix 4c/4d), and whether the codex lane can ever
     reach the HostMcp gate in practice.

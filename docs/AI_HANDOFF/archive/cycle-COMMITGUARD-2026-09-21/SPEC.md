@@ -8,9 +8,9 @@ frozen strings, thresholds, test expectations. Open questions chốt trong §14.
 
 ## 1. Problem and context
 
-"Generate Commit Message" (SCM sparkle, command `UnicDB.generateCommitMessage`) với
-model reasoning (vd "chatgpt luna") sinh ra **một chuỗi dài giống hash** thay vì commit
-message; model "GLM5 turbo" chạy đúng. Root cause (verified trong source):
+"Generate Commit Message" (SCM sparkle, command `generateCommitMessage`) can receive
+reasoning output that is a long hash-like string instead of a commit message; other
+models can behave correctly. Root cause (verified in source):
 
 - Parser fallback cho reasoning models trong `src/ai/provider.ts`
   (`pickLongestStringField` provider.ts:209, `extractAnyText` provider.ts:121 — gồm cả
@@ -34,8 +34,8 @@ vẫn fail → toast lỗi rõ ràng và KHÔNG inject; (3) subject ≤ 12 từ,
 - Commit messageinject vào ô SCM luôn là text trông như commit message: không hash/reasoning
   blob, tiếng Việt, subject ≤ 12 từ, tổng ≤ 100 từ.
 - Garbage phát hiện được bằng pure function deterministic, test được không cần vscode.
-- Retry đúng 1 lần qua CÙNG engine path (omp / builtin / claude-code-codex-fallback);
-  vẫn fail → error toast tiếng Việt-thân thiện, không đụng ô commit.
+- Retry exactly once through the same engine path (primary or built-in fallback);
+  if still invalid, show a friendly error toast and leave the commit box unchanged.
 - Baseline 29 test của `commitMessage.test.ts` (17) + `commitGenCommand.test.ts` (12)
   vẫn xanh sau khi update fake messages sang tiếng Việt (contract đổi, structural
   assertions giữ nguyên).
@@ -55,9 +55,9 @@ vẫn fail → toast lỗi rõ ràng và KHÔNG inject; (3) subject ≤ 12 từ,
 
 - **Happy**: user bấm sparkle → diff thu thập → engine sinh message → sanitize → guard
   PASS → message tiếng Việt (vd `feat(db): thêm chỉ mục cho bảng users`) vào ô commit.
-- **Garbage một lần** (bug hôm nay): engine trả blob hash/reasoning → guard FAIL →
-  UnicDB tự gọi lại đúng 1 lần kèm corrective instruction → lần 2 trả message hợp lệ →
-  inject. User thấy kết quả đúng, không cần làm gì.
+- **Garbage once**: engine returns a hash/reasoning blob → guard FAIL →
+  the command retries exactly once with corrective instructions → second attempt returns a valid message →
+  inject. The user sees the result without taking further action.
 - **Garbage hai lần**: cả 2 lần đều fail guard → toast lỗi (frozen string, có reasons +
   raw preview + debug dump path) → ô commit KHÔNG bị ghi đè.
 - **Empty response**: provider trả text rỗng/whitespace → giữ nguyên hành vi hiện tại
@@ -86,8 +86,7 @@ vẫn fail → toast lỗi rõ ràng và KHÔNG inject; (3) subject ≤ 12 từ,
   `"You generate git commit messages"` và `"Conventional Commits"` (2 test đang assert).
 - FR-006: `buildRetryCommitPrompt` pure builder trong `src/ai/commitMessage.ts`
   (signature + frozen shape ở §8.2) — ghép corrective instruction vào user message gốc.
-- FR-007: `runGenerateCommitMessage` (src/ai/commitGenCommand.ts) — sau sanitize ở CẢ 3
-  engine branch (omp / builtin / claude-code-codex-fallback) chạy guard:
+- FR-007: `runGenerateCommitMessage` (`src/ai/commitGenCommand.ts`) — after sanitizing, run the guard for each engine branch:
   - PASS → inject như cũ.
   - FAIL + message rỗng → giữ nguyên empty-diagnostic hiện tại (không retry, không đụng
     `writeDebugArtifact` label khác, không thêm provider call).
@@ -102,11 +101,10 @@ vẫn fail → toast lỗi rõ ràng và KHÔNG inject; (3) subject ≤ 12 từ,
     `commit-gen-guard-rejected`.
   - Throw/non-string từ engine (cả attempt nào) propagate ra catch hiện có của branch →
     error mapping giữ nguyên (không retry khi call throw).
-  - Hint toast claude-code/codex: vẫn hiện đúng 1 lần sau engine call string đầu tiên
-    thành công (thứ tự quan sát được: trước inject, giữ count === 1 như test #10 cũ).
-- FR-008: `docs/UNICDB_USER_GUIDE.md` mục "Generate Commit Message" thêm 3 bullet
-  (tiếng Việt + giới hạn từ + retry-1-lần rồi báo lỗi) — giữ nguyên các keyword đang bị
-  `src/ui/__tests__/userGuideContent.test.ts` assert: "Generate Commit Message",
+  - The fallback hint toast remains shown exactly once after the first successful string response (before injection, count remains one as pinned by existing test #10).
+- FR-008: Add 3 bullets to the Generate Commit Message section of the user guide
+  (Vietnamese + word limits + one retry then error) — preserve keywords asserted by
+  `src/ui/__tests__/userGuideContent.test.ts`: "Generate Commit Message",
   "Source Control", "Lite model", "Conventional Commits", "Open AI Settings".
 
 ## 6. Fullstack scope
@@ -267,7 +265,7 @@ Không thêm port vào `CommitGenDeps`.
 
 ```ts
 export const ERROR_COMMIT_GUARD_FAILED_PREFIX =
-  "UnicDB: generated commit message failed validation";
+  "Generated commit message failed validation";
 export const ERROR_COMMIT_GUARD_RETRY_NOTE =
   "Retried once and still invalid — nothing was injected into the commit box.";
 ```
@@ -284,7 +282,7 @@ ${ERROR_COMMIT_GUARD_FAILED_PREFIX} (reasons: ${reasons.join(", ")}). ${ERROR_CO
 - Ô SCM input: chỉ được ghi khi guard PASS (attempt 1 hoặc 2); giá trị = message đã
   sanitize của attempt PASS. Không state mới.
 - Toasts: dùng ports hiện có. Frozen copy ở §8.5; empty-path toast giữ nguyên text cũ
-  (`"UnicDB: provider returned no commit message text (raw length N). Preview: …"`).
+  ("Provider returned no commit message text (raw length N). Preview: …").
 - Không có màn hình/loading mới; retry diễn ra silently (tối đa +1 engine call).
 
 ## 10. Edge cases
@@ -293,8 +291,7 @@ ${ERROR_COMMIT_GUARD_FAILED_PREFIX} (reasons: ${reasons.join(", ")}). ${ERROR_CO
 - Hex blob 32-39 chars có space giữa các token → `hash-like` vẫn bắt từng token.
 - Message tiếng Việt không dấu: `feat(db): cap nhat ket qua truy van` → PASS nhờ word
   markers (KHÔNG chỉ dựa dấu).
-- English sạch GLM5-style: `feat(db): add index` → `not-vietnamese` → retry 1 lần →
-  vẫn English → block, không inject (hành vi accepted, §14 Q3).
+- Clean English-only output: `feat(db): add index` → `not-vietnamese` → retry once → still English → block, do not inject (accepted behavior, §14 Q3).
 - Subject đúng 12 từ / tổng đúng 100 từ → PASS (boundary `>`); 13/101 → FAIL.
 - Token đúng 40 chars → `unbroken-blob` (boundary `>=`); 39 → không.
 - Sanitize cắt subject 72 chars có thể sinh token dài → guard bắt SAU sanitize (thứ tự
@@ -316,7 +313,7 @@ ${ERROR_COMMIT_GUARD_FAILED_PREFIX} (reasons: ${reasons.join(", ")}). ${ERROR_CO
 |------|-------|-----------|
 | Guard unit (pure) | happy VN có dấu; happy VN không dấu; empty; unbroken-blob (≥40 boundary 39/40); hash-like hex 32-39; symbol-heavy ratio; reasoning-marker (line-start + ``` + repeated okay/wait); not-vietnamese (English sạch PASS-guard-fail, prefix English không lỗi); subject boundary 12/13; message boundary 100/101; multi-reason order | `src/ai/__tests__/commitMessageGuard.test.ts` (NEW) |
 | Prompt/retry builder (pure) | SYSTEM_PROMPT giữ 2 substring + thêm tiếng Việt + limits; retry prompt mang user content gốc + reasons + truncated rejected + Vietnamese instruction; >240 chars truncate; throw khi thiếu user message | `src/ai/__tests__/commitMessage.test.ts` (bổ sung; 17 test cũ giữ nguyên) |
-| Orchestration | #1/#2/#10 happy paths update fake tiếng Việt (giữ structural asserts: called-once, inject, request shape); garbage=72-hex blob→retry→inject (builtin + omp + claude-code fallback, assert corrective prompt ở lần 2, engine call đúng 2 lần); garbage×2→terminal toast + KHÔNG inject; >100 từ×2→block; empty attempt 1→không retry + toast cũ; empty attempt 2 (garbage rồi rỗng)→times(2) + toast cũ + KHÔNG guard-toast + KHÔNG call thứ 3; hint toast claude-code vẫn đúng 1 lần | `src/ai/__tests__/commitGenCommand.test.ts` |
+| Orchestration | #1/#2/#10 happy paths update fakes to Vietnamese (preserve structural asserts); 72-hex blob→retry→inject (built-in and primary/fallback engines); blob twice→terminal toast and no injection; >100 words×2→block; empty attempt 1→no retry + existing toast; empty attempt 2→existing toast + no guard toast + no third call; fallback hint toast once | `src/ai/__tests__/commitGenCommand.test.ts` |
 | Orchestration (transport) | builtin attempt-1 throw → `builtinComplete` times(1), KHÔNG retry (throw = transport, KHÔNG bao giờ vào `buildRetryCommitPrompt`), error-mapping branch cũ verbatim, KHÔNG guard-toast, KHÔNG inject; attempt-2 throw (garbage rồi throw) → cùng mapping, KHÔNG guard-toast chồng | `src/ai/__tests__/commitGenCommand.test.ts` |
 | Docs content | keyword GC vẫn đủ sau khi sửa guide | `src/ui/__tests__/userGuideContent.test.ts` (chạy lại, không sửa) |
 
@@ -329,7 +326,7 @@ ${ERROR_COMMIT_GUARD_FAILED_PREFIX} (reasons: ${reasons.join(", ")}). ${ERROR_CO
 - [ ] `npm run compile` — build thành công.
 - [ ] `npm test` (full suite) — PASS ở wave boundary.
 - [ ] Không có thay đổi ngoài 7 file: `commitMessageGuard.ts` (new), `commitMessage.ts`,
-      `commitGenCommand.ts`, 3 test file, `UNICDB_USER_GUIDE.md` (+2 handoff docs).
+      `commitGenCommand.ts`, 3 test files, `USER_GUIDE.md` (+2 handoff docs).
 - [ ] `grep -n "vscode" src/ai/commitMessageGuard.ts` → 0 dòng (pure module).
 
 ## 13. Migration / upgrade steps
@@ -344,7 +341,7 @@ Không cần bước migrate cho install hiện tại.
 |----------|----------------|-----------|
 | Q1: `not-vietnamese` là HARD block hay retry-then-accept? | Retry đúng 1 lần như mọi reason khác; lần 2 vẫn fail (kể cả English) → terminal block, không inject. | Uniform, đúng locked decision #2; user đã chốt "TIẾNG VIỆT" là yêu cầu cứng. Existing happy-path tests được update fake sang tiếng Việt (orchestrator đã duyệt). |
 | Q2: Empty response có retry không? | KHÔNG — áp dụng cho empty ở CẢ attempt 1 lẫn attempt 2: attempt 1 → 1 engine call như cũ; attempt 2 (garbage rồi rỗng) → times(2) rồi rơi vào cùng empty-diagnostic (toast cũ + `commit-gen-empty` dump raw lần 2), không guard-toast, không call thứ 3. | Empty = vấn đề infra (SSE rỗng/config sai) — corrective prompt không sửa được; giữ diagnostics frozen cũ, zero regression risk. |
-| Q3: GLM5-style English sạch bị chặn? | Chấp nhận bị chặn sau 1 retry. | Locked decision #3 (người dùng yêu cầu tiếng Việt rõ ràng). Prompt mới dạy tiếng Việt nên model compliant sẽ pass ngay lần 1. |
+| Q3: Is clean English-only output blocked? | Yes, after one retry. | Locked decision #3 requires Vietnamese. The updated prompt instructs Vietnamese so compliant output should pass on the first attempt. |
 | Q4: Provider fallback (`pickLongestStringField`) có thu hẹp không? | Không đổi `provider.ts`. | Guard ở output đủ chặn; fallback giúp model khác; tránh regression chat flow. |
 | Q5: Boundary `>=` hay `>` cho blob 40 chars? | `>=` 40 cho `unbroken-blob`; `> 0.5` cho symbol ratio; `>` 12/100 cho word limits. | Frozen tại §7 để test deterministic. |
 | Q6: Retry có rebuild omp engine không? | Không — build `oneShot` 1 lần, chỉ `generate` lại. | "Cùng engine path"; giữ `buildOmpEngine` times(1) như test cũ. |
@@ -356,4 +353,4 @@ Không cần bước migrate cho install hiện tại.
 - [x] Không còn instruction mơ hồ — thresholds, frozen strings, frozen lists ở §7/§8.
 - [x] Dependencies giữa các phần rõ (PLAN §2 CONSTRAINT + task Dependencies).
 - [x] Phase 0 sweep: STOPERR 3/3 done; `docs/TASKS.md` không còn "Ready for AI";
-      `git status` chỉ có `RUN.md` (run cursor của handoff runner — không phải product WIP).
+      `git status` only shows `RUN.md` (the handoff runner cursor, not product work-in-progress).

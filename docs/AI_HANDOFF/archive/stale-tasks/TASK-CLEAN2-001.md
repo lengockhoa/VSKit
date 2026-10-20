@@ -105,7 +105,7 @@ Verification Output: |
   $ test "$(grep -cE '"builtin" \| "omp"\)' src/ai/policy.ts || true)" -eq 0
     (passed — count == 0)
   $ npm run typecheck
-    > UnicDB@1.53.25 typecheck
+    > VSKit@1.53.25 typecheck
     > tsc --noEmit
     (exit 0, clean)
   Diff stat: src/ai/policy.ts | 6 +-----  1 file changed, 1 insertion(+), 5 deletions(-)

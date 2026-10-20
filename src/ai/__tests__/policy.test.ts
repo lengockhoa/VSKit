@@ -108,7 +108,7 @@ describe("isExcludedWorkspacePath — centralized path policy", () => {
   it("credential and generated configuration paths are excluded centrally", () => {
     expect(isExcludedWorkspacePath(".env")).toBe(true);
     expect(isExcludedWorkspacePath(".git/config")).toBe(true);
-    expect(isExcludedWorkspacePath(".vscode/UnicDB-ai-config.yml")).toBe(true);
+    expect(isExcludedWorkspacePath(".vscode/VSKit-ai-config.yml")).toBe(true);
     expect(isExcludedWorkspacePath("src/feature.ts")).toBe(false);
   });
 

@@ -1,4 +1,4 @@
-# UnicDB — Project Notes
+# VSKit — Project Notes
 
 > File này ở project root, NGOÀI phạm vi UKit (UKit touch `.claude/`, `.ukit/`, `docs/`). Mọi ghi chú dài hạn nên viết ở đây để không bị UKit bump/version scripts ghi đè.
 
@@ -6,20 +6,17 @@
 
 ## Workflow trên máy này (Lenk dev vibecode)
 
-- **Không chạy test local** — máy vibecode dev, không có database test thật.
-- **Mỗi fix xong → commit git + publish patch nhỏ lên Marketplace** để thấy ngay thay đổi.
-- **UKit `bump-version.mjs`** luôn auto-bump patch + auto-add CHANGELOG placeholder → cần chú ý:
-  - Mỗi lần chạy sẽ bump thêm 1 patch level (1.53.0 → 1.53.1 → 1.53.2 → ...).
-  - Mỗi lần chạy sẽ THÊM 1 entry mới vào đầu CHANGELOG.md (kể cả khi đã có entry cũ chưa publish).
-  - Nếu placeholder unfilled → script fail; pass `--changelog-summary "..."` để fill.
-- **Patch publish** = `npx vsce publish patch` (chỉ bump version + push Marketplace, không cần bump-version.mjs nếu đã có version sẵn).
+- **Không chạy test có database thật** — máy vibecode dev; unit suite vẫn chạy được local.
+- **Standalone conversion 2026-10-20:** Marketplace publishing is paused; `scripts/bump-version.mjs` and the npm `bump*` aliases have been removed.
+- **Build local:** `scripts/build.sh` (ci → typecheck → compile → test → vsix) hoặc `npm run package`.
+- **Khi publish hoạt động lại:** đọc `docs/RELEASE.md` trước — lockfile root name phải khớp `package.json`, CI hiện chỉ chạy check, không còn workflow/npm script publish.
 
 ---
 
 ## Lesson learned — VS Code SCM context keys (2026-09-06)
 
 **Bug regression từ 1.52.0 → fixed in 1.53.3:**
-Generate Commit Message sparkle (UnicDB) bị ẩn hoàn toàn khỏi Source Control title bar.
+Generate Commit Message sparkle (VSKit) bị ẩn hoàn toàn khỏi Source Control title bar.
 
 **Root cause:**
 ```json

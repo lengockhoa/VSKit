@@ -45,7 +45,7 @@ editor mark). What is still missing — and what produces the reported hang — 
   auto-stops the batch, aborts server-side work, releases/destroys the connection
   handle, and reports the error through the existing STOPERR surfaces (error row in
   Results panel + "stopped at statement N of M" toast + status-bar badge + editor mark).
-- `UnicDB.cancelQuery` (manual Stop) always resolves within a bounded grace and leaves
+- `cancelQuery` (manual Stop) always resolves within a bounded grace and leaves
   no held connection — the guaranteed escape hatch.
 - After any abort, the adapter self-heals: the next `runQuery` gets a usable
   connection without the user reconnecting manually.
@@ -158,9 +158,9 @@ editor mark). What is still missing — and what produces the reported hang — 
     gọi` throw with `await this.ensureConnection()` — lazy reconnect after abort
     (connect() dedups via `this.connecting`).
 - FR-013: `src/extension.ts:663-667` — pass `statementTimeoutMs` into `QueryRunner`
-  from new setting `UnicDB.queryTimeoutSeconds` (seconds → ms; `0` disables).
+  from setting `queryTimeoutSeconds` (seconds → ms; `0` disables).
   `package.json` `contributes.configuration.properties` gains
-  `"UnicDB.queryTimeoutSeconds"` (frozen shape §8.4).
+  `"queryTimeoutSeconds"` (frozen shape §8.4).
 - FR-014: New exported error type `QueryTimeoutError extends Error` in
   queryRunner.ts (`name = "QueryTimeoutError"`, message
   `Statement timed out after ${ms}ms — aborted`). StatementResult.error carries the
@@ -205,7 +205,7 @@ One `setTimeout` per statement/fetch (cleared on settle). No extra round-trips.
 logging surface.
 
 ### Deployment and rollback
-No feature flag needed beyond `UnicDB.queryTimeoutSeconds: 0` (disable). Rollback =
+No feature flag needed beyond `queryTimeoutSeconds: 0` (disable). Rollback =
 revert commit.
 
 ## 7. Watchdog state machine (frozen)
@@ -280,7 +280,7 @@ then throws `makeError()`; clears the timer on BOTH branches (settle and timeout
 ### 8.4 package.json setting (frozen shape)
 
 ```json
-"UnicDB.queryTimeoutSeconds": {
+"queryTimeoutSeconds": {
   "type": "number",
   "default": 300,
   "minimum": 0,
@@ -292,11 +292,11 @@ then throws `makeError()`; clears the timer on BOTH branches (settle and timeout
 
 - Results panel: timed-out statement renders the existing error card with the
   `QueryTimeoutError` message; following statements show `cancelled` (existing).
-- Toast: existing `UnicDB: stopped at statement N of M — <reason>. Remaining
+- Toast: existing `stopped at statement N of M — <reason>. Remaining
   statements were not run.` carries the timeout reason verbatim.
-- Stop button (`UnicDB.cancelQuery`): always returns within ~`CANCEL_GRACE_MS` +
+- Stop button (`cancelQuery`): always returns within ~`CANCEL_GRACE_MS` +
   abort; busy state clears.
-- Settings: `UnicDB.queryTimeoutSeconds` visible in Settings UI.
+- Settings: `queryTimeoutSeconds` visible in Settings UI.
 
 ## 10. Edge cases
 
@@ -329,7 +329,7 @@ then throws `makeError()`; clears the timer on BOTH branches (settle and timeout
 | pg abort | `abortActiveQuery` cancels tracked PID via dedicated client + `release(true)` run client; idempotent second call; owner `finally` does not double-release; bounded ROLLBACK → `release(true)` on hang | `src/adapters/__tests__/postgresAbort.test.ts` (NEW) |
 | mysql abort | `abortActiveQuery` destroys held batch connection (pending query rejects); bounded `rollback()` → destroy on hang | `src/adapters/__tests__/mysqlAbort.test.ts` (NEW) |
 | mssql abort | `abortActiveQuery` cancels requests + closes connection + `connected=false`; queued op dropped via generation; next `runQuery` lazy-reconnects | `src/adapters/__tests__/mssqlAbort.test.ts` (NEW) |
-| Wiring | `extension.ts` passes `statementTimeoutMs` from `UnicDB.queryTimeoutSeconds` (mock getConfiguration); package.json parses + key exists | `src/core/__tests__/queryRunnerWatchdog.test.ts` (setting read) + existing manifest tests |
+| Wiring | `extension.ts` passes `statementTimeoutMs` from `queryTimeoutSeconds` (mock getConfiguration); package.json parses + key exists | `src/core/__tests__/queryRunnerWatchdog.test.ts` (setting read) + existing manifest tests |
 
 ## 12. Acceptance criteria
 
@@ -340,19 +340,19 @@ then throws `makeError()`; clears the timer on BOTH branches (settle and timeout
 - [ ] `npm test` (full suite) — PASS at wave boundary.
 - [ ] Simulated hang (never-settling mock `runQuery`) settles the run with an error
       row + releases the connection — proven by the watchdog tests.
-- [ ] `UnicDB.cancelQuery` command resolves within grace even when the seam hangs.
+- [ ] `cancelQuery` command resolves within grace even when the seam hangs.
 
 ## 13. Migration / upgrade steps
 
 N/A persisted state. Behavior change có chủ đích: statements now auto-abort after
-`UnicDB.queryTimeoutSeconds` (default 300s); users with legitimately longer queries
+`queryTimeoutSeconds` (default 300s); users with legitimately longer queries
 set it to `0` or a larger value.
 
 ## 14. Open questions and chosen defaults
 
 | Question | Chosen default | Rationale |
 |----------|----------------|-----------|
-| Q1: Default timeout value? | 300s, configurable via `UnicDB.queryTimeoutSeconds`, `0` = off. | "Hay bị treo" needs a bound, but a short default would kill legit long queries; 300s bounds the hang while staying invisible for normal use. |
+| Q1: Default timeout value? | 300s, configurable via `queryTimeoutSeconds`, `0` = off. | "Hay bị treo" needs a bound, but a short default would kill legit long queries; 300s bounds the hang while staying invisible for normal use. |
 | Q2: Watchdog in runner or per-adapter? | Runner (`bounded` around adapter calls) + adapter `abortActiveQuery` seam. | One watchdog covers all drivers + all run paths (run/runSql/pickResult/loadMore); only the adapter can release its own connection handle. |
 | Q3: Abort = destroy connection or graceful cancel? | Cancel-then-destroy: `pg_cancel_backend`/`request.cancel` first, then `release(true)`/`destroy()`/`close()`. | Graceful cancel lets the server stop work cleanly; destroy guarantees the parked promise settles even when the server is unreachable. |
 | Q4: Does abort drop the pooled connection? | Yes — `release(true)`/destroy/close. A poisoned or dead session must not return to the pool. | Matches existing `failed → release(true)` precedent (postgres.ts:504). |

@@ -138,7 +138,7 @@ export interface EngineCapabilityInput {
   activeRole?: AiModelRole;
   /** Effective policy; defaults to allow (callers own the real policy). */
   policy?: EngineCapabilityPolicy;
-  /** Host has a persisted UnicDB transcript for resume (engine-independent). */
+  /** Host has a persisted VSKit transcript for resume (engine-independent). */
   savedTranscriptResume?: boolean;
   /** Set when the host fell back from another engine to this effective one. */
   fallbackFrom?: AiEngineName;
@@ -376,7 +376,7 @@ export function resolveEngineCapabilities(
     imageInput: live && base.transportsImages && activeRoleVision(roles, activeRole),
     // Native provider resume is engine-owned; never advertised unproven.
     nativeSessionResume: live && base.nativeSessionResume,
-    // Saved UnicDB transcript resume is host-owned and engine-independent.
+    // Saved VSKit transcript resume is host-owned and engine-independent.
     savedTranscriptResume,
     engineCommands: live && base.engineCommands,
     permissions: live && base.permissions,

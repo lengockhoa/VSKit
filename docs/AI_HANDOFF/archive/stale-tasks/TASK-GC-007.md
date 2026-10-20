@@ -1,4 +1,4 @@
-# TASK-GC-007 — `UnicDB.generateCommitMessage`: wiring + registration
+# TASK-GC-007 — `extension.generateCommitMessage`: wiring + registration
 
 - Status: `ready`
 - Owner: `-`
@@ -27,16 +27,16 @@ Registration is one line in `src/extension.ts`.
     `openSettings(): void`.
   - `runGenerateCommitMessage(deps: CommitGenDeps): Promise<void>` — flow (frozen):
     1. settings = loadSettings(); if null or `settings.models.lite?.modelId.trim()` empty →
-       `showSettingsToast("Configure the Lite Model in UnicDB AI Settings to use Generate
-       Commit Message", "Open Settings")`; when the action is picked → `openSettings()`; return.
-    2. diff = collectDiff(); null → `showInfo("UnicDB: no changes to summarize.")`; return.
+       `showSettingsToast("Configure the Lite Model in Extension AI Settings to use Generate Commit
+       Message", "Open Settings")`; when the action is picked → `openSettings()`; return.
+    2. diff = collectDiff(); null → `showInfo("Extension: no changes to summarize.")`; return.
     3. engine = `settings.models.lite.engine ?? "omp"`.
        - `"omp"`: choice = resolveEngine({ detection: await detectOmp(), config: null });
-         if `choice.engine !== "omp"` → `showError("UnicDB: omp engine unavailable — " +
+         if `choice.engine !== "omp"` → `showError("Extension: omp engine unavailable — " +
          (choice.hint ?? "install omp"))`; return. Else message = sanitize(await
          buildOmpEngine(choice).generate(prompt)).
        - `"builtin"`: cfg = loadConfig(); null → settings-style toast "Configure the AI
-         backend (base URL + API key) in UnicDB AI Settings" + Open Settings; return.
+         backend (base URL + API key) in Extension AI Settings" + Open Settings; return.
          Else result = builtinComplete(cfg, { modelId: lite.modelId, messages:
          buildCommitPrompt(diff), maxOutputTokens: 300, temperature: 0.2 });
          message = sanitize(result.text).
@@ -44,8 +44,8 @@ Registration is one line in `src/extension.ts`.
   - vscode stays OUT of this module — every interaction is a port (pattern:
     `AiSettingsFormOptions`).
 - `src/extension.ts` — register inside the existing `disposables.push(...)` block (near the
-  `UnicDB.openAiSettings` registration, ~line 813):
-  `vscode.commands.registerCommand("UnicDB.generateCommitMessage", () => vscode.window.withProgress(...runGenerateCommitMessage(buildCommitGenDeps(aiStore))))`.
+  `extension.openAiSettings` registration, ~line 813):
+  `vscode.commands.registerCommand("extension.generateCommitMessage", () => vscode.window.withProgress(...runGenerateCommitMessage(buildCommitGenDeps(aiStore))))`.
   `buildCommitGenDeps` binds: GC-002 `getGitApi`/`pickRepository`/`collectCommitDiff`,
   `inputBox.value` on the picked repo, real `detectOmp`/`resolveEngine`/`createProviderClient`,
   an omp one-shot adapter mirroring `buildOmpChatEngine` (~line 1752) but with
@@ -69,7 +69,7 @@ Registration is one line in `src/extension.ts`.
 | 1 | happy | builtin happy path | deps with lite `{modelId:"m", engine:"builtin"}`, staged diff, provider resolving fenced text → `setInputBox` called with sanitized message; no toasts | fake ports |
 | 2 | happy | omp happy path | lite engine "omp", detectOmp ok → `buildOmpEngine` called (resolveEngine consulted with detection), engine output injected | fake ports |
 | 3 | edge (missing config) | lite empty → settings toast | toast called with the frozen string + action "Open Settings"; picking the action calls `openSettings()`; `collectDiff` never called | lite modelId "" |
-| 4 | edge (empty) | no changes | `collectDiff` → null → `showInfo("UnicDB: no changes to summarize.")`; `builtinComplete`/omp never called | empty repo fake |
+| 4 | edge (empty) | no changes | `collectDiff` → null → `showInfo("Extension: no changes to summarize.")`; `builtinComplete`/omp never called | empty repo fake |
 | 5 | edge (missing config) | builtin chosen, no global config | `loadConfig` → null → settings toast with base-URL text; provider never called | lite engine "builtin", config null |
 | 6 | edge (service failure) | provider throws | `showError` contains the error message; `setInputBox` NOT called | rejecting builtinComplete |
 | 7 | edge (service failure) | omp down while lite engine omp | detectOmp !ok → `showError` contains hint; builtin path NOT silently used | detection `{ok:false, reason:"not-installed"}` |
@@ -113,7 +113,7 @@ typecheck is the lint-equivalent gate.)
   `send(text, events: OmpChatEvents): Promise<void>` (`src/ai/omp/ompChatEngine.ts`),
   `commandOpenAiSettings(store)` (`src/extension.ts`).
 - Produces: `runGenerateCommitMessage(deps)` — GC-008 drives it end-to-end; command id
-  `UnicDB.generateCommitMessage` declared by GC-004.
+  `extension.generateCommitMessage` declared by GC-004.
 
 ---
 
@@ -133,11 +133,11 @@ EXECUTOR_TOOL: claude-code
 EXECUTOR_MODEL: unic-code
 EXECUTOR_SUBAGENT: -
 RED_OUTPUT: |
-  RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-gc-007
+  RUN  v1.6.1 /workspace/.worktrees/task-gc-007
   ❯ src/ai/__tests__/commitGenCommand.test.ts  (0 test)
   ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
   FAIL  src/ai/__tests__/commitGenCommand.test.ts [ src/ai/__tests__/commitGenCommand.test.ts ]
-  Error: Failed to load url ../commitGenCommand (resolved id: ../commitGenCommand) in /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-gc-007/src/ai/__tests__/commitGenCommand.test.ts. Does the file exist?
+  Error: Failed to load url ../commitGenCommand (resolved id: ../commitGenCommand) in /workspace/.worktrees/task-gc-007/src/ai/__tests__/commitGenCommand.test.ts. Does the file exist?
   Test Files  1 failed (1)
        Tests  no tests
 Verification Output: |

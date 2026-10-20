@@ -1,6 +1,9 @@
 node_modules
 node_modules/
 .env
+.env.*
+*.pem
+*.key
 *.log
 .DS_Store
 
@@ -20,7 +23,7 @@ node_modules/
 .codex/settings.local.json
 # /UKit
 
-# UnicDB build outputs
+# VSKit build outputs
 dist/
 *.vsix
 *.tsbuildinfo
@@ -31,21 +34,9 @@ dist/
 # The .pat file inside holds the vsce/Azure DevOps publisher PAT — never commit.
 .secrets/
 
-# Cycle AGT (TASK-012) — ephemeral MCP config files written by the extension
-# when launching Claude Code / Codex sessions. Must NOT be committed: the
-# files contain only `127.0.0.1:<port>` endpoint metadata, but they leak
-# ephemeral port numbers and are intended to be cleaned up on engine
-# dispose. Delete on dispose is the contract; this gitignore entry is a
-# safety net for any race where the dispose path didn't run.
-.vscode/.unicdb-claude-mcp-*.json
-.vscode/.unicdb-codex-mcp-*.json
-
-# bump-version.mjs (release pipeline) — temp notes file written to the repo
-# root during `gh release create` and removed in a `finally`. Always clean on
-# success, but the gitignore entry is a safety net for an aborted run that
-# leaves the file behind. Content is the multi-line CHANGELOG entry for the
-# version being released.
-.bump-notes-*.md
+# Local MCP endpoint configs may disclose active localhost ports. Ignore them
+# generically; runtime cleanup remains the primary lifecycle guarantee.
+.vscode/*-mcp-*.json
 node_modules_backup/
 .tmp-debug/
 

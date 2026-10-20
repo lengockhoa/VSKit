@@ -30,7 +30,7 @@ import type {
   RenameFormHostMessage,
 } from "./renameFormMessages";
 
-const PANEL_ID = "UnicDB.renameForm";
+const PANEL_ID = "VSKit.renameForm";
 
 export interface RenameFormOptions {
   extensionUri: vscode.Uri;
@@ -316,10 +316,10 @@ export class RenameForm {
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy" content="${csp}" />
   <link rel="stylesheet" href="${styleUri}" />
-  <title>UnicDB Rename</title>
+  <title>VSKit Rename</title>
 </head>
-<body class="UnicDB-form-body">
-  <div id="UnicDB-root" class="UnicDB-form"></div>
+<body class="VSKit-form-body">
+  <div id="VSKit-root" class="VSKit-form"></div>
   <script src="${scriptUri}"></script>
 </body>
 </html>`;

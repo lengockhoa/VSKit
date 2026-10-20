@@ -70,7 +70,7 @@ the task's known set; no additional sibling chat file exists.
 
 | File | Lines | Role |
 |------|-------|------|
-| `webview/aiChatPanelComposer.ts` | 579 | Sticky composer: attach strip, multiline textarea `#prompt`, chip menu, slash-affordance button, bypass toggle, send/stop. Exports `renderComposer` + `UnicDBComposer`. |
+| `webview/aiChatPanelComposer.ts` | 579 | Sticky composer: attach strip, multiline textarea `#prompt`, chip menu, slash-affordance button, bypass toggle, send/stop. Exports `renderComposer` + `ChatComposer`. |
 | `webview/aiChatPanelHeader.ts` | 170 | Pure-DOM header bar: brand glyph, static title, `#engineBanner`, `#sessionChip`. Exports `renderHeader`; installs no listeners. |
 | `webview/aiChatPanelThread.ts` | 415 | Extracted pure-DOM thread builders + usage chip. Takes the mount node as an argument; class layout is the newer `chat-msg-*` set. |
 | `webview/aiChatPanelMain.ts` | 2264 | Entry + message router: wires header/composer, owns slash + mention + streaming + export state, imports renderers from `src/ui/aiChatPanelCommands.ts`. |
@@ -148,15 +148,15 @@ Sweep notes (negative results recorded):
 - Usage/policy chip: `renderUsageChip`-style path at `webview/aiChatPanelMain.ts:1559–1601`
   (`#usageChip`, `textContent`-only join of parts).
 - Grounding strip/chip: `renderGroundingChips` (`webview/aiChatPanelMain.ts:2229–2252`), strip
-  id `#UnicDB-grounding-strip`, click posts `grounding_toggle` (2243).
+  id `#grounding-strip`, click posts `grounding_toggle` (2243).
 
 ### 3e. Streaming render path
 - Carrier message type: `delta` — interface at `webview/aiChatPanelMain.ts:72–77`, switch case at
   1964–1966 calling `appendDelta(msg.text)`.
 - Renderer: `appendDelta` (`webview/aiChatPanelMain.ts:1272–1320`). It resolves the queued user
   placeholder, settles the thinking row, finds or creates
-  `.UnicDB-chat-bubble.UnicDB-chat-assistant.UnicDB-chat-streaming` (1280–1288), appends the
-  fragment as a text node (1292), accumulates raw text in `bubble.dataset.UnicDBRawStream`
+  `.chat-bubble.chat-assistant.chat-streaming` (1280–1288), appends the
+  fragment as a text node (1292), accumulates raw text in `bubble.dataset.rawStream`
   (1309–1311), and re-renders via `renderMarkdown` once a complete ` ```…``` ` fence is present
   (1312–1317). A streaming caret is maintained by `ensureStreamingCaret` (1318).
 - Terminal message: `assistant` (case 1976–1991) removes the streaming bubble, settles thinking,
@@ -254,7 +254,7 @@ Sweep notes (negative results recorded):
 ## Verification log (this note)
 
 Commands from §Verification Commands (TASK-AICHAT-001), run in worktree
-`/Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-aichat-001`:
+`<worktree>/task-aichat-001`:
 
 - Pre-write (RED): the anchor-verdict loop aborted at
   `MISSING VERDICT: aiChatPanelComposer\.ts:496[–-]504` because the note did not exist yet.

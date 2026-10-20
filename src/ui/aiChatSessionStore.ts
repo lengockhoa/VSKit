@@ -48,9 +48,9 @@ export const SESSION_RETENTION_MAX_SESSIONS = 50;
 export const SESSION_RETENTION_MAX_AGE_DAYS = 30;
 
 /** Memento key namespace. Versioned so a future schema bump is additive. */
-export const SESSION_INDEX_KEY = "UnicDB.aiChat.sessions.v1.index";
-export const SESSION_RECORD_KEY_PREFIX = "UnicDB.aiChat.sessions.v1.record.";
-export const SESSION_QUARANTINE_KEY = "UnicDB.aiChat.sessions.v1.quarantine";
+export const SESSION_INDEX_KEY = "VSKit.aiChat.sessions.v1.index";
+export const SESSION_RECORD_KEY_PREFIX = "VSKit.aiChat.sessions.v1.record.";
+export const SESSION_QUARANTINE_KEY = "VSKit.aiChat.sessions.v1.quarantine";
 /**
  * Per-session envelope sequence head. TASK-CHATV2-015 re-bases the panel's
  * LIVE V2 envelope onto a saved session when `resume_saved_session` adopts it;
@@ -59,7 +59,7 @@ export const SESSION_QUARANTINE_KEY = "UnicDB.aiChat.sessions.v1.quarantine";
  * treats as a stale/replayed frame. The head is host-owned and only ever
  * advances.
  */
-export const SESSION_SEQUENCE_KEY_PREFIX = "UnicDB.aiChat.sessions.v1.seq.";
+export const SESSION_SEQUENCE_KEY_PREFIX = "VSKit.aiChat.sessions.v1.seq.";
 
 /** Minimal structural subset of `vscode.Memento` this store needs. */
 export interface AiChatSessionMementoLike {

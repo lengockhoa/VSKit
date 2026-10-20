@@ -23,7 +23,7 @@ Eligibility: `/` begins current logical line after optional spaces. Do not open 
 
 Keyboard is delegated through 009: arrows one row; Page keys by visible row count; Enter/Tab accept; Escape closes. Focus stays textarea. Accept replaces active token range with exact template and caret after trailing space where present, closes menu, and sends zero intents. A subsequent plain Enter with no menu parses a complete command.
 
-Execution: `/new` and `/clear` show confirmation when history/draft/turn exists; `/help` local card no model; `/engine [name]` opens picker without arg or validates all host-advertised engines; `/model [role]` analogous; `/context` opens inspector; `/export [markdown|json]` opens flow; `/resume` opens saved UnicDB sessions and never claims native provider resume unless capability true. Invalid args preserve draft and show inline syntax + one example. Unknown `/foo` shows explicit selectable `Send as message`; never silently discard/forward as command. Local commands do not add transcript user message unless their specified action does.
+Execution: `/new` and `/clear` show confirmation when history/draft/turn exists; `/help` local card no model; `/engine [name]` opens picker without arg or validates all host-advertised engines; `/model [role]` analogous; `/context` opens inspector; `/export [markdown|json]` opens flow; `/resume` opens saved chat sessions and never claims native provider resume unless capability true. Invalid args preserve draft and show inline syntax + one example. Unknown `/foo` shows explicit selectable `Send as message`; never silently discard/forward as command. Local commands do not add transcript user message unless their specified action does.
 
 No command handler uses raw provider slash strings. Existing quoted/backslash parser behavior remains covered or is deliberately superseded with tests. Filter is local, case-insensitive, stable order; empty state says `No matching commands` and is not selectable.
 
@@ -119,7 +119,7 @@ Note: |
   ENOENT. They fail identically on the untouched base and are not affected by
   these modules. No version bump, package or publish touches were made. The
   appended `webview/aiChat/styles.css` block is a clean append under
-  `.UnicDB-ai-chat-v2` selectors for the orchestrator merge.
+  `.vskit-ai-chat-v2` selectors for the orchestrator merge.
   Scope decision: `/model <role>` validates against the roles the capability
   snapshot advertises (falling back to the closed `AiModelRole` set pre-ready),
   which is what the host's `buildModelsFrame`/`model_select` accept; the

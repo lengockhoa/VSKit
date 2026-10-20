@@ -113,7 +113,7 @@ export interface ResultsPanelOptions {
   /**
    * ACTIVE-SCHEMA chip — fired when the user clicks the schema chip in
    * the results toolbar. extension.ts wires this to
-   * `vscode.commands.executeCommand("UnicDB.selectActiveSchema", undefined)`
+   * `vscode.commands.executeCommand("VSKit.selectActiveSchema", undefined)`
    * (passes no argument → uses the currently active connection, same as
    * the status-bar chip). Optional so existing test doubles keep
    * compiling — without it the chip click is a no-op.
@@ -144,9 +144,9 @@ export interface ResultsPanelOptions {
  *  `ready` message triggers the full-state post. */
 export class ResultsPanel implements vscode.WebviewViewProvider {
   /** Stable view id — matches the webview view contribution in package.json.
-   *  Kept as the legacy viewType string so the `webview/UnicDB.results/context`
+   *  Kept as the legacy viewType string so the `webview/VSKit.results/context`
    *  Help-Grid menu wiring is preserved. */
-  public static readonly viewId = "UnicDB.results";
+  public static readonly viewId = "VSKit.results";
   private readonly runner: QueryRunner;
   private readonly saveContext: SaveContext | null;
   private readonly title: string;
@@ -245,7 +245,7 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
   constructor(options: ResultsPanelOptions) {
     this.runner = options.runner;
     this.saveContext = options.saveContext ?? null;
-    this.title = options.title ?? "UnicDB Results";
+    this.title = options.title ?? "VSKit Results";
     this.onPickSchema = options.onPickSchema;
     this.initialActiveSchema = options.initialActiveSchema;
   }
@@ -263,7 +263,7 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
    * commands, were deleted alongside).
    */
   show(): void {
-    void vscode.commands.executeCommand("UnicDB.results.focus");
+    void vscode.commands.executeCommand("VSKit.results.focus");
   }
 
   /**
@@ -509,7 +509,7 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
           (err: unknown) => {
             const m = err instanceof Error ? err.message : String(err);
             // eslint-disable-next-line no-console
-            console.error("[UnicDB] postMessage rejected:", m);
+            console.error("[VSKit] postMessage rejected:", m);
             void vscode.window.showErrorMessage(`Results panel postMessage failed: ${m}`);
           },
         );
@@ -518,7 +518,7 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
       // synchronous throw (vd structured clone BigInt không bị Thenable catch).
       const m = err instanceof Error ? err.message : String(err);
       // eslint-disable-next-line no-console
-      console.error("[UnicDB] postMessage sync throw:", m);
+      console.error("[VSKit] postMessage sync throw:", m);
       void vscode.window.showErrorMessage(`Results panel postMessage failed: ${m}`);
     }
   }
@@ -742,7 +742,7 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
       if (this.isStaleSession(epoch)) return;
       const m = err instanceof Error ? err.message : String(err);
       void vscode.window.showErrorMessage(
-        `UnicDB: refreshing after transaction close failed: ${m}`,
+        `VSKit: refreshing after transaction close failed: ${m}`,
       );
     }
   }
@@ -1112,7 +1112,7 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
         break;
       // ACTIVE-SCHEMA chip — results toolbar schema chip click.
       // The host has no per-panel "open QuickPick" affordance (it lives
-      // centrally on `UnicDB.selectActiveSchema`), so the webview just
+      // centrally on `VSKit.selectActiveSchema`), so the webview just
       // signals intent here; the extension's fan-out subscriber picks up
       // the resulting store mutation and posts `schemaChanged` back to
       // every webview. We delegate via the imperative `onPickSchema`
@@ -1307,7 +1307,7 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
     // called `ctid` is data, not a row address). The resolver runs ONCE
     // at save time, ONLY for the specific dirty rowIds that actually
     // need a ctid (UPDATE cell edit or DELETE marker); pure INSERT rows
-    // (only `__UnicDB_new_row__` markers) are excluded.
+    // (only `__VSKit_new_row__` markers) are excluded.
     let ctidByRowId: ReadonlyMap<number, string> | undefined;
     const rowIdsNeedingCtid: number[] = [];
     if (driver === "postgres" && pkColumns.length === 0) {
@@ -1330,7 +1330,7 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
         if (
           typeof v === "object" &&
           v !== null &&
-          (v as Record<string, unknown>)["__UnicDB_new_row__"] === true
+          (v as Record<string, unknown>)["__VSKit_new_row__"] === true
         ) {
           insertRowIds.add(e.rowId);
         }
@@ -1696,7 +1696,7 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
    *
    * Errors are surfaced as a host-side notification AND as a synthetic
    * error StatementResult so the webview shows the error in the existing
-   * `UnicDB-error` placeholder (no new banner needed).
+   * `VSKit-error` placeholder (no new banner needed).
    *
    * Cancel-during-requery is treated like cancel-during-loadMore: the
    * runner reports `cancelled` and we re-post the previous state silently
@@ -1852,9 +1852,9 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
    *  - Empty ORDER BY, filter-less requery: `composeRequery(sql, where, "")`
    *    — byte-identical to cycle V.
    *  - Single bare term (no NULLS), filter-less, no offset: cycle-V
-   *    `composeSortQuery` path with its own quoting and `UnicDB_sort` alias.
+   *    `composeSortQuery` path with its own quoting and `VSKit_sort` alias.
    *  - ≥2 terms (or 1 term with NULLS), filter-less, no offset: multi-term
-   *    wrap `SELECT * FROM (<stripped sql>) AS UnicDB_sub[ WHERE …] ORDER BY
+   *    wrap `SELECT * FROM (<stripped sql>) AS VSKit_sub[ WHERE …] ORDER BY
    *    <buildOrderByClause(terms, dialect)>` — no LIMIT/OFFSET.
    *  - `filters` or `offset` present: the paging lane. Two sub-lanes:
    *      · legacy — cycle-W `buildPagedQueryTerms(pkTiebreakers)` when the
@@ -1918,7 +1918,7 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
       const inner = r.sql.replace(/\s*;\s*$/, "").trim();
       const whereClause = where.trim().length ? ` WHERE ${where.trim()}` : "";
       return {
-        sql: `SELECT * FROM (${inner}) AS UnicDB_sub${whereClause} ORDER BY ${buildOrderByClause(terms, dialect)}`,
+        sql: `SELECT * FROM (${inner}) AS VSKit_sub${whereClause} ORDER BY ${buildOrderByClause(terms, dialect)}`,
       };
     }
 
@@ -1973,7 +1973,7 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
     const r = this.lastResults[index];
     if (!r) {
       void vscode.window.showErrorMessage(
-        `UnicDB: requery failed — no statement at index ${index}.`,
+        `VSKit: requery failed — no statement at index ${index}.`,
       );
       return;
     }
@@ -1998,7 +1998,7 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
     const parsed = dialect ? parseOrderBy(orderBy, dialect) : null;
     if (parsed && !parsed.ok) {
       void vscode.window.showErrorMessage(
-        `UnicDB: invalid ORDER BY — ${parsed.error}`,
+        `VSKit: invalid ORDER BY — ${parsed.error}`,
       );
       const next = this.lastResults.slice();
       next[index] = {
@@ -2264,7 +2264,7 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
       if (!cancelled) {
         if (seq !== this.requerySeq) return;
         const m = err instanceof Error ? err.message : String(err);
-        void vscode.window.showErrorMessage(`UnicDB requery failed: ${m}`);
+        void vscode.window.showErrorMessage(`VSKit requery failed: ${m}`);
         // Surface as a per-statement error so the webview grid shows the
         // existing error placeholder instead of the stale result. On an
         // append failure the ORIGINAL rows are preserved (no row loss) —
@@ -2461,8 +2461,8 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
   <title>${escapeHtml(this.title)}</title>
 </head>
 <body>
-  <div id="UnicDB-root" class="UnicDB-webview">
-    <div class="UnicDB-loading">Loading results…</div>
+  <div id="VSKit-root" class="VSKit-webview">
+    <div class="VSKit-loading">Loading results…</div>
   </div>
   <script src="${scriptUri}"></script>
 </body>

@@ -21,7 +21,7 @@ import {
   type ChangePlanData,
 } from "../changePlan";
 
-const ROOT_CLASS = "UnicDB-ai-chat-v2";
+const ROOT_CLASS = "VSKit-ai-chat-v2";
 
 function plan(overrides: Partial<ChangePlanData> = {}): ChangePlanData {
   return {

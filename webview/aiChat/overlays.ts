@@ -32,7 +32,7 @@
 import { createChatIcon } from "./icons";
 
 /** The V2 root class every selector hangs off. */
-const ROOT_CLASS = "UnicDB-ai-chat-v2";
+const ROOT_CLASS = "VSKit-ai-chat-v2";
 
 function cls(name: string): string {
   return `${ROOT_CLASS}-${name}`;
@@ -298,9 +298,9 @@ export function createOverlayMenu(options: OverlayMenuOptions): OverlayMenu {
     list.setAttribute("aria-label", ariaLabel);
     list.dataset.rowHeight = String(OVERLAY_ROW_HEIGHT_PX);
     // Geometry contract as custom properties; styles.css consumes them.
-    list.style.setProperty("--UnicDB-row-h", `${OVERLAY_ROW_HEIGHT_PX}px`);
-    list.style.setProperty("--UnicDB-list-min", `${OVERLAY_WIDTH_MIN}px`);
-    list.style.setProperty("--UnicDB-list-max", `${OVERLAY_WIDTH_MAX}px`);
+    list.style.setProperty("--VSKit-row-h", `${OVERLAY_ROW_HEIGHT_PX}px`);
+    list.style.setProperty("--VSKit-list-min", `${OVERLAY_WIDTH_MIN}px`);
+    list.style.setProperty("--VSKit-list-max", `${OVERLAY_WIDTH_MAX}px`);
     anchor.appendChild(list);
     element = list;
     return list;
@@ -499,8 +499,8 @@ export function createConfirmDialog(options: ConfirmDialogOptions): ConfirmDialo
     dialog.setAttribute("aria-labelledby", titleId);
   }
   dialog.setAttribute("aria-describedby", bodyId);
-  dialog.style.setProperty("--UnicDB-dialog-min", `${OVERLAY_CONFIRM_WIDTH_MIN}px`);
-  dialog.style.setProperty("--UnicDB-dialog-max", `${OVERLAY_CONFIRM_WIDTH_MAX}px`);
+  dialog.style.setProperty("--VSKit-dialog-min", `${OVERLAY_CONFIRM_WIDTH_MIN}px`);
+  dialog.style.setProperty("--VSKit-dialog-max", `${OVERLAY_CONFIRM_WIDTH_MAX}px`);
 
   if (typeof options.title === "string" && options.title.length > 0) {
     const title = document.createElement("div");
@@ -800,8 +800,8 @@ function buildModalDialog(options: ModalDialogOptions): ModalDialog {
   dialog.setAttribute("aria-labelledby", titleId);
   dialog.setAttribute("aria-describedby", bodyId);
   // Same width contract as the confirmation dialog (360–560px).
-  dialog.style.setProperty("--UnicDB-dialog-min", `${OVERLAY_CONFIRM_WIDTH_MIN}px`);
-  dialog.style.setProperty("--UnicDB-dialog-max", `${OVERLAY_CONFIRM_WIDTH_MAX}px`);
+  dialog.style.setProperty("--VSKit-dialog-min", `${OVERLAY_CONFIRM_WIDTH_MIN}px`);
+  dialog.style.setProperty("--VSKit-dialog-max", `${OVERLAY_CONFIRM_WIDTH_MAX}px`);
 
   const title = document.createElement("div");
   title.className = cls("overlay-modal-title");

@@ -109,7 +109,7 @@ accidental out-of-scope edits.)
   properties; 20. WAI-ARIA listbox keyboard behavior/selection and live announcements;
   21. APG guidance relevant to async results/disabled loading rows/focus retention; 22.
   Cross-product comparative synthesis: what is consistent, what must remain engine-gated,
-  and which behaviors are only proposed for UnicDB.
+  and which behaviors are only proposed for VSKit.
 - A `Could-not-verify` answer is correct when sources cannot be reached. Never convert a
   remembered feature into `Verified-with-URL`.
 - **BLOCKED(network) terminal state (review round 1):** `Verified-with-URL ≥ 15` is the goal,
@@ -175,7 +175,7 @@ PASS (exit 0)
 DOCS-ONLY-OK
 === CMD8: typecheck ===
 
-> UnicDB@1.53.46 typecheck
+> VSKit@1.53.46 typecheck
 > tsc --noEmit
 
 typecheck-exit=0

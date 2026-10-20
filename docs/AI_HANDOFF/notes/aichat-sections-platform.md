@@ -65,7 +65,7 @@ Every engine funnels into it through the same events shape.
   contract keeps this: **no raw engine byte reaches the webview unredacted**, and `thought`
   is redacted the same way.
 
-### 1b. Render coalescing policy (target-state; UnicDB-original)
+### 1b. Render coalescing policy (target-state; extension-specific)
 
 Current behavior appends one `delta` per chunk as a raw text node and re-parses markdown on
 fence close — Verified (webview/aiChatPanelMain.ts:1272–1320). At provider chunk rates this
@@ -108,7 +108,7 @@ fence is present — Verified (webview/aiChatPanelMain.ts:1312–1317). Target r
   (webview/aiChatPanelMain.ts:1223–1248). If the terminal render throws, the bubble keeps the
   last good streamed render and a failure banner is raised (see FAIL-07).
 
-### 1d. Stick-to-bottom scroll rule (target-state; concrete px threshold, UnicDB-original)
+### 1d. Stick-to-bottom scroll rule (target-state; concrete px threshold, extension-specific)
 
 No scroll-lock constant exists in current source (`absent in current source`). Target rule:
 
@@ -244,8 +244,8 @@ Per-engine content rules (honest about what each backend supplies):
 
 - **The extension persists nothing to disk.** Conversation state is per-panel in-memory
   `this.history: ChatMessage[]` — `absent in current source` for any extension-owned session
-  store (TASK-002 §5a; the only durable policy surface is `UnicDB.ai.showPolicy`,
-  `package.json:282`).
+  store (TASK-002 §5a; the only durable policy surface is
+  `extension.ai.showPolicy`, `package.json:282`).
 - **Session persistence belongs to the omp child process.** Listing is ACP `session/list` —
   Verified (src/ai/omp/acp.ts:213); loading is `session/load` — Verified (src/ai/omp/acp.ts:252).
 - The host filters the list by `cwd`, excludes the current session, sorts by `updatedAt`
@@ -367,7 +367,7 @@ resume unsupported. Only the omp path may use the words "resume"/"resumed sessio
 | Timeout | Default deny after 60 s — `DEFAULT_PERMISSION_TIMEOUT_MS` | Verified (src/ui/aiChatPanel.ts:123), Verified (src/ui/aiChatPanel.ts:3629) |
 | Bypass | Session-scoped, default OFF, never persisted; when ON the webview receives no card | Verified (src/ui/aiChatPanel.ts:1727), Verified (src/ui/aiChatPanel.ts:3599), Verified (src/ui/aiChatPanel.ts:2933) |
 | Plan approval | Separate consent path: `plan_approve` / `plan_reject` on the `change_plan` card, re-validated against the live schema via `confirmDangerousStatements` | Verified (src/ui/aiChatPanelMessages.ts:241), Verified (src/ui/aiChatPanelMessages.ts:253), Verified (src/ui/aiChatPanelMessages.ts:258), Verified (src/ui/aiChatPanel.ts:4357) |
-| Durable policy surface | `UnicDB.ai.showPolicy` is the only durable policy view | Verified (package.json:282) |
+| Durable policy surface | The AI policy setting is the only durable policy view | Verified (package.json:282) |
 
 **Codex caveat (must be stated honestly):** the HostMcp gate is constructed and bridged for
 the codex lane, but the codex CLI route passes no `--mcp-config` in `codex exec` mode, so the
@@ -560,7 +560,7 @@ not a fixed two-literal parser:
 
 - The set of engines named by `/engine` is exactly the set the host reports as *available and
   switchable in this session*. Engines wired through VS Code commands
-  (`UnicDB.ai.useWithClaudeCode` / `UnicDB.ai.useWithCodex`, `package.json:264` and
+  (the VS Code commands for switching to Claude Code and Codex, `package.json:264` and
   `package.json:270`) are switched through those commands; `/engine` must not accept a literal
   it cannot actually switch to, and must not silently reject one it can.
 - Invalid/unknown arguments keep the draft and show a corrective example; they do **not**
@@ -750,7 +750,7 @@ they apply (Q06).
 
 Evidence labels for the external claims above are inherited verbatim from TASK-AICHAT-003:
 every row is `Verified-with-URL`; Q17's in-IDE cancel/retry sub-part is `Could-not-verify`,
-which is exactly why §1e's stop/retry contract is stated as an UnicDB target rule rather than
+which is exactly why §1e's stop/retry contract is stated as an extension target rule rather than
 attributed to an upstream precedent.
 
 ---
@@ -772,6 +772,6 @@ attributed to an upstream precedent.
 ## Verification log (this note)
 
 Document-acceptance commands from this task's §Verification Commands are run in worktree
-`/Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-aichat-005`; the full pre-write
+`<worktree>/task-aichat-005`; the full pre-write
 (RED) and post-write (green) transcripts are reproduced in the task file's `## Executor
 Report`.

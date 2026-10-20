@@ -8,9 +8,9 @@
 ## Goal
 
 Reviewer caught a critical bug in wave 1: `ResultsPanel.show()` calls
-`vscode.commands.executeCommand("UnicDB-results.focus")` — but `UnicDB-results` is the
+`vscode.commands.executeCommand("VSKit-results.focus")` — but `VSKit-results` is the
 **container** id (hyphen), and VS Code auto-registers focus commands per **view** id
-(dot), not per container. The correct command is `"UnicDB.results.focus"`. Every
+(dot), not per container. The correct command is `"VSKit.results.focus"`. Every
 test asserts the broken literal; the bottom panel never auto-revealed on query run.
 
 Also append the missing `## Executor Report` to TASK-RP-004.md (the wave-3 partial
@@ -21,8 +21,8 @@ referencing files.
 
 ## Target Files
 
-- `src/ui/resultsPanel.ts` — change `executeCommand("UnicDB-results.focus")` →
-  `executeCommand("UnicDB.results.focus")` (1 line, line 233).
+- `src/ui/resultsPanel.ts` — change `executeCommand("VSKit-results.focus")` →
+  `executeCommand("VSKit.results.focus")` (1 line, line 233).
 - `src/ui/__tests__/resultsPanelViewProvider.test.ts` — case 4 title + assertion
   (lines 315, 329) reference the wrong string. Fix.
 - `src/ui/__tests__/resultsPanelViewManifest.test.ts` — comments + assertion
@@ -36,12 +36,12 @@ referencing files.
   (line 115), `resultsPanelServerFilter.test.ts` (line 122), `resultsPanelErrorIntegration.test.ts`
   (line 123), `resultsPanelClose.test.ts` (line 59), `resultsPanelCloseWiring.test.ts`
   (line 55), `resultsPanelOrderBy.test.ts` (line 116) — all check
-  `cmd === "UnicDB-results.focus"`. Fix every one.
+  `cmd === "VSKit-results.focus"`. Fix every one.
 - `docs/AI_HANDOFF/PLAN.md` — comments in §3 + §4 + §6 (lines 79, 98, 171, 206, 221) reference
-  the wrong string. Update to `"UnicDB.results.focus"` (note: also the §3 reference to
+  the wrong string. Update to `"VSKit.results.focus"` (note: also the §3 reference to
   "container id + .focus" must change to "view id + .focus"; the §4 case 4 description
   must rename the expected command).
-- `docs/AI_HANDOFF/tasks/TASK-RP-003.md` — case 4 references `viewsContainers.panel[0].id + ".focus" === "UnicDB-results.focus"`. Change to assert the view id produces the focus command: `views["UnicDB-results"][0].id + ".focus" === "UnicDB.results.focus"`.
+- `docs/AI_HANDOFF/tasks/TASK-RP-003.md` — case 4 references `viewsContainers.panel[0].id + ".focus" === "VSKit-results.focus"`. Change to assert the view id produces the focus command: `views["VSKit-results"][0].id + ".focus" === "VSKit.results.focus"`.
 - `docs/AI_HANDOFF/tasks/TASK-RP-004.md` — append a `## Executor Report` block with:
   ```
   ## Executor Report
@@ -62,8 +62,8 @@ referencing files.
 
 | # | Type | Test name | Expected | Pre-state / Fixture |
 |---|------|----------|----------|---------------------|
-| 1 | regression (bug fix) | `resultsPanel.ts uses the view focus command, not container focus` | `readFileSync("src/ui/resultsPanel.ts")` contains `executeCommand("UnicDB.results.focus")` AND does NOT contain the literal `UnicDB-results.focus` anywhere | raw source string |
-| 2 | regression (bug fix) | `every sibling resultsPanel test asserts the view focus command` | `grep -lR "UnicDB-results.focus" src/` returns ONLY this task file (RP-006) and PLAN.md (which contains it as text, not test assertion). Every other match — including the test files listed above — is replaced | grep over src/ |
+| 1 | regression (bug fix) | `resultsPanel.ts uses the view focus command, not container focus` | `readFileSync("src/ui/resultsPanel.ts")` contains `executeCommand("VSKit.results.focus")` AND does NOT contain the literal `VSKit-results.focus` anywhere | raw source string |
+| 2 | regression (bug fix) | `every sibling resultsPanel test asserts the view focus command` | `grep -lR "VSKit.results.focus" src/` returns ONLY this task file (RP-006) and PLAN.md (which contains it as text, not test assertion). Every other match — including the test files listed above — is replaced | grep over src/ |
 | 3 | regression (suite gate) | full `npm test` exits 0 | `npm test` reports 0 failed test files and 0 failed tests | full repo |
 | 4 | unit (paperwork) | `TASK-RP-004.md has a ## Executor Report block with EXECUTOR_MODEL: unic-code` | `readFileSync("docs/AI_HANDOFF/tasks/TASK-RP-004.md")` contains `EXECUTOR_MODEL: unic-code` after the `## Executor Report` heading | task file |
 
@@ -78,7 +78,7 @@ referencing files.
 
 ```bash
 # Confirm no stale references remain in source
-grep -rn "UnicDB-results.focus" src/ 2>&1 | grep -v "^src/.*\.md" | head -10
+grep -rn "VSKit-results.focus" src/ 2>&1 | grep -v "^src/.*\.md" | head -10
 # Run the touched test files
 npm test src/ui/__tests__/resultsPanelViewProvider.test.ts
 npm test src/ui/__tests__/resultsPanelViewManifest.test.ts
@@ -94,7 +94,7 @@ npm test
 ## Acceptance Criteria
 
 - [ ] Every test in §Test Cases passes.
-- [ ] `grep -rn "UnicDB-results.focus" src/` returns nothing (every src/ occurrence replaced).
+- [ ] `grep -rn "VSKit-results.focus" src/` returns nothing (every src/ occurrence replaced).
 - [ ] Full `npm test` reports 0 failed test files and 0 failed tests.
 - [ ] `npm run typecheck && npm run compile` pass.
 - [ ] `docs/AI_HANDOFF/tasks/TASK-RP-004.md` ends with a `## Executor Report` block declaring `EXECUTOR_MODEL: unic-code`.
@@ -109,7 +109,7 @@ npm test
 ## Interfaces
 
 - Consumes: `ResultsPanel.show()`'s `executeCommand` call from RP-001; manifest view id
-  `"UnicDB.results"` from RP-003.
+  "VSKit.results" from RP-003.
 - Produces: a working bottom-panel auto-reveal on `ResultsPanel.show()`.
 
 ---
@@ -155,9 +155,9 @@ Phase 4 reviewer appends `## Reviewer Verdict` BELOW the Executor Report. -->
 EXECUTOR_TOOL: claude-code
 EXECUTOR_MODEL: unic-code
 EXECUTOR_SUBAGENT: -
-RED_OUTPUT: (none — no source-level RED exists; tests previously asserted the broken literal in lockstep with the broken source so the suite was green but functionally wrong. The functional bug is "show() reveals nothing"; coverage gap fixed in place by the find-and-replace. New source-scan gate: `grep -rn "UnicDB-results.focus" src/` returns nothing — verified empty)
+RED_OUTPUT: (none — no source-level RED exists; tests previously asserted the broken literal in lockstep with the broken source so the suite was green but functionally wrong. The functional bug is "show() reveals nothing"; coverage gap fixed in place by the find-and-replace. New source-scan gate: `grep -rn "VSKit-results.focus" src/` returns nothing — verified empty)
 Verification Output:
-- `grep -rn "UnicDB-results.focus" src/` → 0 matches (PASS)
+- `grep -rn "VSKit-results.focus" src/` → 0 matches (PASS)
 - `npm test src/ui/__tests__/resultsPanelViewProvider.test.ts` → 1 file / 6 tests passed
 - `npm test src/ui/__tests__/resultsPanelViewManifest.test.ts` → 1 file / 4 tests passed
 - `npm test src/ui/__tests__/resultsPanelBottomPanelIntegration.test.ts` → 1 file / 6 tests passed
@@ -170,7 +170,7 @@ Verification Output:
 Status: PASS — own scope (1 source + 14 test files + 3 doc files); full-suite gate blocked on the same pre-existing `aiChatPanel*` ENOENT that RP-005 resolved in main checkout
 Note: Two collaboration fallouts caught mid-run and fixed in this pass:
 1. `resultsPanelViewManifest.test.ts` case 4 — my initial replacement created duplicate `const views` / `const panelViews` declarations over the existing pre-fix block; collapsed to the single original declarations + appended focus derivation using `panelViews[0]!.id`.
-2. `resultsPanelBottomPanelIntegration.test.ts` case 5 (line 429) — the pre-existing `expect(`${container!.id}.focus`).toBe("UnicDB.results.focus")` assertion is structurally wrong (container id ≠ view id and never was); rewrote to derive the executed command from the view id (`manifestViews[0]!.id`) which is what VS Code actually registers. Both fixes are minimal-correct, no scope creep.
+2. `resultsPanelBottomPanelIntegration.test.ts` case 5 (line 429) — the pre-existing `expect(`${container!.id}.focus`).toBe("VSKit.results.focus")` assertion is structurally wrong (container id ≠ view id and never was); rewrote to derive the executed command from the view id (`manifestViews[0]!.id`) which is what VS Code actually registers. Both fixes are minimal-correct, no scope creep.
 `docs/AI_HANDOFF/tasks/TASK-RP-004.md` now ends with the `## Executor Report` block declaring `EXECUTOR_MODEL: unic-code` and `EXECUTOR_SUBAGENT: feature-implementer (aaad3089594a7ad8d)`, inserted between the existing separator and the prior Reviewer Verdict. The 19 target files are all in place; no commits pushed.
 
 ## Reviewer Verdict (round 2)
@@ -182,6 +182,6 @@ VERIFICATION_RERUN: PASS (npm test = 244 files / 3619 tests passed / 0 failed / 
 FINDINGS:
   critical: none
   important: none
-  minor: (1) PLAN.md §4 "edge (manifest consistency)" row still says viewsContainers.panel[0].id + ".focus" is the command show() executes — the same structural error this task fixed in tests; the sweep updated 5 PLAN.md lines but missed this row (contains no literal hyphen string, so the grep gate passes); (2) docs/AI_HANDOFF/tasks/TASK-RP-003.md:73 (§Interfaces) still says "UnicDB-results.focus is what show() executes" while line 34 was fixed — internal inconsistency in the same doc; (3) hyphen-string residue remains in TASK-RP-001.md:33,78 and TASK-RP-004.md:26 (historical verdict/quote mentions are fine to keep).
+  minor: (1) PLAN.md §4 "edge (manifest consistency)" row still says viewsContainers.panel[0].id + ".focus" is the command show() executes — the same structural error this task fixed in tests; the sweep updated 5 PLAN.md lines but missed this row (contains no literal hyphen string, so the grep gate passes); (2) docs/AI_HANDOFF/tasks/TASK-RP-003.md:73 (§Interfaces) still says "VSKit-results.focus is what show() executes" while line 34 was fixed — internal inconsistency in the same doc; (3) hyphen-string residue remains in TASK-RP-001.md:33,78 and TASK-RP-004.md:26 (historical verdict/quote mentions are fine to keep).
 NEXT_STATUS_FOR_INDEX: approved_minor
 NOTES: Test integrity verified against ground truth, not mere self-consistency: source (resultsPanel.ts:233), both manifest tests, and the integration suite now derive the focus command from the manifest VIEW id — matching VS Code's actual per-view registration. The executor also caught and fixed the pre-existing structurally-wrong case 5 derivation (container id to view id) without scope creep: all 19 changed files are in this task's target list. RED_OUTPUT "none" is justified — the defect was lockstep-green (tests pinned the broken literal), and the corrected assertions + grep gate are the real regression guard.

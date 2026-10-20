@@ -197,7 +197,7 @@ import { escapeHtml, renderMarkdown } from "./markdownSafe";
  * TASK-CHATV2-017 (Lane 3) — V2-only boot. The legacy wave-1 header/composer
  * modules (renderHeader / renderComposer) are DELETED; every live surface is
  * owned by the V2 shell + controller.
- *   1. mountChatShellIfNeeded(root) → the semantic `.UnicDB-ai-chat-v2`
+ *   1. mountChatShellIfNeeded(root) → the semantic `.VSKit-ai-chat-v2`
  *      skeleton (header / banner / transcript / composer + live regions).
  *      Idempotent on repeat boots.
  *   2. <#thread> — the legacy live message container inside the shell's
@@ -215,7 +215,7 @@ function renderInitial(): void {
 
   const thread = document.createElement("div");
   thread.id = "thread";
-  thread.className = "UnicDB-chat-thread";
+  thread.className = "VSKit-chat-thread";
   thread.setAttribute("aria-live", "polite");
   shell.transcript.appendChild(thread);
 
@@ -237,7 +237,7 @@ function renderInitial(): void {
   const jump = document.createElement("button");
   jump.type = "button";
   jump.id = "jumpLatest";
-  jump.className = "UnicDB-chat-jump";
+  jump.className = "VSKit-chat-jump";
   jump.hidden = true;
   jump.textContent = "Jump to latest";
   root.appendChild(jump);
@@ -256,13 +256,13 @@ function appendUser(text: string): void {
   const thread = document.getElementById("thread");
   if (!thread) return;
   const div = document.createElement("div");
-  div.className = "UnicDB-chat-bubble UnicDB-chat-user UnicDB-chat-queued";
+  div.className = "VSKit-chat-bubble VSKit-chat-user VSKit-chat-queued";
   div.textContent = text;
   // Queued marker — child element with the same class so test #8 can find
   // it via both classList and a descendant selector. Resolved by
   // resolveQueuedUserBubble() on first delta/error/done.
   const queued = document.createElement("span");
-  queued.className = "UnicDB-chat-queued";
+  queued.className = "VSKit-chat-queued";
   queued.setAttribute("aria-label", "queued");
   div.appendChild(queued);
   thread.appendChild(div);
@@ -288,17 +288,17 @@ function appendThinking(): void {
   const thread = document.getElementById("thread");
   if (!thread) return;
   // Idempotency: never stack multiple thinking rows on the same turn.
-  if (thread.querySelector(".UnicDB-chat-thinking-row")) return;
+  if (thread.querySelector(".VSKit-chat-thinking-row")) return;
   const row = document.createElement("div");
-  row.className = "UnicDB-chat-thinking-row";
+  row.className = "VSKit-chat-thinking-row";
   row.setAttribute("role", "status");
   row.setAttribute("aria-live", "polite");
   const spinner = document.createElement("span");
-  spinner.className = "UnicDB-chat-thinking-spinner";
+  spinner.className = "VSKit-chat-thinking-spinner";
   spinner.setAttribute("aria-hidden", "true");
   row.appendChild(spinner);
   const label = document.createElement("span");
-  label.className = "UnicDB-chat-thinking-label";
+  label.className = "VSKit-chat-thinking-label";
   label.textContent = "AI is thinking…";
   row.appendChild(label);
   thread.appendChild(row);
@@ -312,7 +312,7 @@ function removeThinking(): void {
   const thread = document.getElementById("thread");
   if (!thread) return;
   for (const row of Array.from(
-    thread.querySelectorAll<HTMLElement>(".UnicDB-chat-thinking-row"),
+    thread.querySelectorAll<HTMLElement>(".VSKit-chat-thinking-row"),
   )) {
     row.remove();
   }
@@ -328,12 +328,12 @@ function removeThinking(): void {
  * bubble (e.g. error before any user bubble). */
 function resolveQueuedUserBubble(): void {
   const queued = root.querySelector(
-    ".UnicDB-chat-bubble.UnicDB-chat-user.UnicDB-chat-queued",
+    ".VSKit-chat-bubble.VSKit-chat-user.VSKit-chat-queued",
   ) as HTMLDivElement | null;
   if (!queued) return;
-  queued.classList.remove("UnicDB-chat-queued");
+  queued.classList.remove("VSKit-chat-queued");
   for (const m of Array.from(
-    queued.querySelectorAll(".UnicDB-chat-queued"),
+    queued.querySelectorAll(".VSKit-chat-queued"),
   )) m.remove();
 }
 
@@ -341,7 +341,7 @@ function appendStep(label: string): void {
   const thread = document.getElementById("thread");
   if (!thread) return;
   const step = document.createElement("div");
-  step.className = "UnicDB-chat-step";
+  step.className = "VSKit-chat-step";
   step.textContent = `→ ${label}`;
   thread.appendChild(step);
 }
@@ -350,8 +350,8 @@ function appendStep(label: string): void {
  * host-authored shape text, rendered via textContent (never innerHTML).
  *
  * TASK-AGTUI-008 polish: the card is now a collapsible container with a
- * clickable header (.UnicDB-chat-tool-header → toggles
- * .UnicDB-chat-tool-collapsed on the parent). The header carries NO
+ * clickable header (.VSKit-chat-tool-header → toggles
+ * .VSKit-chat-tool-collapsed on the parent). The header carries NO
  * visible text — its glyph is delivered via a CSS pseudo-element
  * (::before) so the card's textContent remains EQUAL to the original
  * summary string (DbAwareWebview test pins that invariant).
@@ -359,17 +359,17 @@ function appendStep(label: string): void {
  * The body hosts the existing summary text. The card STAYS in the DOM
  * in both states; collapsed only hides the body via CSS (max-height → 0,
  * opacity → 0, 150ms ease). The legacy
- * `.UnicDB-chat-tool-result.UnicDB-chat-tool-result-<status>` class hook
+ * `.VSKit-chat-tool-result.VSKit-chat-tool-result-<status>` class hook
  * stays so the existing suite keeps passing. */
 function appendToolResult(tool: string, status: string, summary: string): void {
   const thread = document.getElementById("thread");
   if (!thread) return;
   const container = document.createElement("div");
-  container.className = `UnicDB-chat-tool-result UnicDB-chat-tool-result-${status} UnicDB-chat-tool-collapsible`;
+  container.className = `VSKit-chat-tool-result VSKit-chat-tool-result-${status} VSKit-chat-tool-collapsible`;
   container.dataset.toolResult = "true";
 
   const header = document.createElement("div");
-  header.className = "UnicDB-chat-tool-header";
+  header.className = "VSKit-chat-tool-header";
   header.setAttribute("role", "button");
   header.setAttribute("tabindex", "0");
   header.setAttribute("aria-expanded", "true");
@@ -380,15 +380,15 @@ function appendToolResult(tool: string, status: string, summary: string): void {
   header.title = `${tool} — ${status}`;
 
   // Intentionally NO textContent on the header. The 12×12 caret glyph is
-  // delivered via the .UnicDB-chat-tool-glyph::before pseudo-element in
+  // delivered via the .VSKit-chat-tool-glyph::before pseudo-element in
   // styles.css so card.textContent remains exactly the summary string.
 
   const body = document.createElement("div");
-  body.className = "UnicDB-chat-tool-body";
+  body.className = "VSKit-chat-tool-body";
   body.textContent = summary; // host already formats "✓ tool — shape"
 
   const toggle = (): void => {
-    const collapsed = container.classList.toggle("UnicDB-chat-tool-collapsed");
+    const collapsed = container.classList.toggle("VSKit-chat-tool-collapsed");
     header.setAttribute("aria-expanded", collapsed ? "false" : "true");
   };
   header.addEventListener("click", toggle);
@@ -413,24 +413,24 @@ function appendChangePlan(msg: ChangePlanMsg): void {
   const thread = document.getElementById("thread");
   if (!thread) return;
   const card = document.createElement("div");
-  card.className = "UnicDB-chat-plan";
+  card.className = "VSKit-chat-plan";
   card.setAttribute("role", "region");
   card.setAttribute("aria-label", "reviewed change plan");
 
   const head = document.createElement("div");
-  head.className = "UnicDB-chat-plan-head";
+  head.className = "VSKit-chat-plan-head";
   head.textContent = `Change plan — ${msg.plan.intent || "no intent"}`;
   card.appendChild(head);
 
   for (const st of msg.plan.statements) {
     const row = document.createElement("div");
-    row.className = `UnicDB-chat-plan-stmt UnicDB-chat-plan-tier-${st.tier}`;
+    row.className = `VSKit-chat-plan-stmt VSKit-chat-plan-tier-${st.tier}`;
     const code = document.createElement("code");
     code.textContent = st.sql;
     row.appendChild(code);
     if (st.dangerNote) {
       const note = document.createElement("span");
-      note.className = "UnicDB-chat-plan-note";
+      note.className = "VSKit-chat-plan-note";
       note.textContent = st.dangerNote;
       row.appendChild(note);
     }
@@ -439,7 +439,7 @@ function appendChangePlan(msg: ChangePlanMsg): void {
 
   if (msg.plan.drift.length > 0) {
     const driftBox = document.createElement("div");
-    driftBox.className = "UnicDB-chat-plan-drift";
+    driftBox.className = "VSKit-chat-plan-drift";
     const title = document.createElement("div");
     title.textContent = msg.plan.drifted
       ? "Schema drift detected — plan is stale. Re-run the suggestion before approving."
@@ -454,16 +454,16 @@ function appendChangePlan(msg: ChangePlanMsg): void {
   }
 
   const actions = document.createElement("div");
-  actions.className = "UnicDB-chat-plan-actions";
+  actions.className = "VSKit-chat-plan-actions";
   const approve = document.createElement("button");
   approve.type = "button";
-  approve.className = "UnicDB-chat-plan-approve";
+  approve.className = "VSKit-chat-plan-approve";
   approve.textContent = "Approve & run";
   approve.disabled = msg.plan.drifted;
   approve.addEventListener("click", () => post({ type: "plan_approve" }));
   const reject = document.createElement("button");
   reject.type = "button";
-  reject.className = "UnicDB-chat-plan-reject";
+  reject.className = "VSKit-chat-plan-reject";
   reject.textContent = "Reject";
   reject.addEventListener("click", () => post({ type: "plan_reject" }));
   actions.appendChild(approve);
@@ -478,7 +478,7 @@ function appendAssistant(text: string, markdown: boolean): void {
   const thread = document.getElementById("thread");
   if (!thread) return;
   const div = document.createElement("div");
-  div.className = "UnicDB-chat-bubble UnicDB-chat-assistant";
+  div.className = "VSKit-chat-bubble VSKit-chat-assistant";
   // TASK-003: colorize SQL fenced blocks AFTER the escaped HTML is in place.
   // renderMarkdown escapes user text first; reading `textContent` off the
   // already-escaped <code> node decodes entities back to the raw SQL, and
@@ -488,7 +488,7 @@ function appendAssistant(text: string, markdown: boolean): void {
   div.innerHTML = markdown ? renderMarkdown(text) : escapeHtml(text);
   if (markdown) {
     for (const code of Array.from(
-      div.querySelectorAll<HTMLElement>("code.UnicDB-md-code-lang-sql"),
+      div.querySelectorAll<HTMLElement>("code.VSKit-md-code-lang-sql"),
     )) {
       const frag = highlightSql(code.textContent ?? "");
       code.replaceChildren(frag);
@@ -512,7 +512,7 @@ function appendError(message: string): void {
   const thread = document.getElementById("thread");
   if (!thread) return;
   const div = document.createElement("div");
-  div.className = "UnicDB-chat-bubble UnicDB-chat-error";
+  div.className = "VSKit-chat-bubble VSKit-chat-error";
   div.textContent = message;
   thread.appendChild(div);
   autoScroll(div);
@@ -532,12 +532,12 @@ function appendDelta(text: string): void {
   const thread = document.getElementById("thread");
   if (!thread) return;
   let bubble = thread.querySelector<HTMLDivElement>(
-    ".UnicDB-chat-bubble.UnicDB-chat-assistant.UnicDB-chat-streaming",
+    ".VSKit-chat-bubble.VSKit-chat-assistant.VSKit-chat-streaming",
   );
   if (!bubble) {
     bubble = document.createElement("div");
     bubble.className =
-      "UnicDB-chat-bubble UnicDB-chat-assistant UnicDB-chat-streaming";
+      "VSKit-chat-bubble VSKit-chat-assistant VSKit-chat-streaming";
     thread.appendChild(bubble);
   }
   // Streaming content is plain text; full markdown render happens on the
@@ -559,12 +559,12 @@ function appendDelta(text: string): void {
   // from textContent on a SECOND closing fence would inline the previous
   // code + the literal word "Copy" into the next markdown pass. Storing
   // the raw stream in a dataset attribute keeps the source intact.
-  // (dataset converts dashed names to camelCase: "UnicDBRawStream".)
-  const previous = bubble.dataset.UnicDBRawStream ?? "";
+  // (dataset converts dashed names to camelCase: "VSKitRawStream".)
+  const previous = bubble.dataset.VSKitRawStream ?? "";
   const accumulated = previous + text;
-  bubble.dataset.UnicDBRawStream = accumulated;
+  bubble.dataset.VSKitRawStream = accumulated;
   if (/```[\s\S]*?```/.test(accumulated)) {
-    const caret = bubble.querySelector(".UnicDB-chat-caret");
+    const caret = bubble.querySelector(".VSKit-chat-caret");
     bubble.innerHTML = renderMarkdown(accumulated);
     if (caret) bubble.appendChild(caret);
     wireCopyButtons(bubble);
@@ -583,15 +583,15 @@ function deStreamOpenBubble(): void {
   const thread = document.getElementById("thread");
   if (!thread) return;
   const open = thread.querySelectorAll<HTMLDivElement>(
-    ".UnicDB-chat-bubble.UnicDB-chat-assistant.UnicDB-chat-streaming",
+    ".VSKit-chat-bubble.VSKit-chat-assistant.VSKit-chat-streaming",
   );
   for (const bubble of Array.from(open)) {
-    bubble.classList.remove("UnicDB-chat-streaming");
-    const caret = bubble.querySelector(".UnicDB-chat-caret");
+    bubble.classList.remove("VSKit-chat-streaming");
+    const caret = bubble.querySelector(".VSKit-chat-caret");
     if (caret) caret.remove();
     // Clear the raw-stream scratch — the streaming bubble is now closed
     // and the terminal assistant message owns the final text.
-    delete bubble.dataset.UnicDBRawStream;
+    delete bubble.dataset.VSKitRawStream;
   }
 }
 
@@ -639,13 +639,13 @@ function wireJumpLatest(): void {
  * Idempotent — the bubble only carries one caret at a time. The caret is
  * removed when the bubble is de-streamed (done/error). */
 function ensureStreamingCaret(bubble: HTMLDivElement): void {
-  const existing = bubble.querySelector(".UnicDB-chat-caret");
+  const existing = bubble.querySelector(".VSKit-chat-caret");
   if (existing) {
     // Re-append (move) to the end so the caret trails the latest text.
     bubble.removeChild(existing);
   }
   const caret = document.createElement("span");
-  caret.className = "UnicDB-chat-caret";
+  caret.className = "VSKit-chat-caret";
   caret.setAttribute("aria-hidden", "true");
   caret.textContent = "\u258D"; // �
   bubble.appendChild(caret);
@@ -667,13 +667,13 @@ function applyThought(text: string): void {
   if (text.length === 0) return;
   if (!thinkingBlock) {
     const details = document.createElement("details");
-    details.className = "UnicDB-chat-thinking";
+    details.className = "VSKit-chat-thinking";
     details.id = "thinkingBlock";
     const summary = document.createElement("summary");
     summary.textContent = "Thinking";
     details.appendChild(summary);
     const body = document.createElement("div");
-    body.className = "UnicDB-chat-thinking-body";
+    body.className = "VSKit-chat-thinking-body";
     details.appendChild(body);
     const thread = document.getElementById("thread");
     if (thread) thread.appendChild(details);
@@ -716,11 +716,11 @@ function unescapeHtml(s: string): string {
     .replace(/&amp;/g, "&");
 }
 
-/** Wire all `.UnicDB-md-copy` buttons inside a bubble root so a click
+/** Wire all `.VSKit-md-copy` buttons inside a bubble root so a click
  * copies the raw code (data-raw attribute, un-escaped) via clipboard. */
 function wireCopyButtons(rootEl: HTMLElement): void {
   for (const btn of Array.from(
-    rootEl.querySelectorAll<HTMLButtonElement>(".UnicDB-md-copy"),
+    rootEl.querySelectorAll<HTMLButtonElement>(".VSKit-md-copy"),
   )) {
     btn.addEventListener("click", () => {
       const pre = btn.closest("pre");
@@ -740,7 +740,7 @@ function wireCopyButtons(rootEl: HTMLElement): void {
 function appendCopyMessageAction(bubble: HTMLElement, rawSource: string): void {
   const action = document.createElement("button");
   action.type = "button";
-  action.className = "UnicDB-chat-copy-msg";
+  action.className = "VSKit-chat-copy-msg";
   action.textContent = "Copy";
   action.title = "Copy message";
   action.addEventListener("click", () => {
@@ -751,7 +751,7 @@ function appendCopyMessageAction(bubble: HTMLElement, rawSource: string): void {
   bubble.appendChild(action);
 }
 
-const root = document.getElementById("UnicDB-root") as HTMLDivElement;
+const root = document.getElementById("VSKit-root") as HTMLDivElement;
 
 /** TASK-ARP06-005: render the per-turn usage + policy notice chip. The
  * `usage` frame is SHAPE-SAFE (numeric fields + notice string only — no
@@ -762,13 +762,13 @@ const root = document.getElementById("UnicDB-root") as HTMLDivElement;
  * zeros so unknown usage is never displayed as a confirmed zero cost. */
 function applyUsage(msg: UsageMsg): void {
   // CHATUX2-001: the chip renders INSIDE the V2 header's -usage span — never
-  // as an implicit grid child of #UnicDB-root (that stacked a stray bar
+  // as an implicit grid child of #VSKit-root (that stacked a stray bar
   // under the composer). Fallback: the V2 header itself.
-  const usageEl = document.getElementById("UnicDB-ai-chat-v2-usage");
+  const usageEl = document.getElementById("VSKit-ai-chat-v2-usage");
   const host =
     usageEl ??
     document.querySelector<HTMLElement>(
-      "#UnicDB-root .UnicDB-ai-chat-v2-header",
+      "#VSKit-root .VSKit-ai-chat-v2-header",
     );
   if (!host) return;
   let chip = document.getElementById("usageChip") as HTMLSpanElement | null;
@@ -799,8 +799,8 @@ function applyUsage(msg: UsageMsg): void {
     parts.push(msg.policyNotice);
   }
   chip.className = msg.unknown
-    ? "UnicDB-chat-usage UnicDB-chat-usage-unknown"
-    : "UnicDB-chat-usage UnicDB-chat-usage-known";
+    ? "VSKit-chat-usage VSKit-chat-usage-unknown"
+    : "VSKit-chat-usage VSKit-chat-usage-known";
   chip.textContent = parts.join(" — ");
   chip.title = "AI token usage for this turn and this panel session";
 }
@@ -811,12 +811,12 @@ function applyUsage(msg: UsageMsg): void {
  * verbatim from the wire. */
 function applyEngineState(state: string): void {
   // CHATUX2-001: same retarget as applyUsage — the chip lives inside the V2
-  // header's -engine-state span, never appended to #UnicDB-root.
-  const stateEl = document.getElementById("UnicDB-ai-chat-v2-engine-state");
+  // header's -engine-state span, never appended to #VSKit-root.
+  const stateEl = document.getElementById("VSKit-ai-chat-v2-engine-state");
   const host =
     stateEl ??
     document.querySelector<HTMLElement>(
-      "#UnicDB-root .UnicDB-ai-chat-v2-header",
+      "#VSKit-root .VSKit-ai-chat-v2-header",
     );
   if (!host) return;
   let chip = document.getElementById("engineLifecycle") as HTMLSpanElement | null;
@@ -834,7 +834,7 @@ function applyEngineState(state: string): void {
     "crashed": "Crashed",
     "fallback-builtin": "Fallback to builtin",
   };
-  chip.className = `UnicDB-chat-engine-state UnicDB-chat-engine-state-${state}`;
+  chip.className = `VSKit-chat-engine-state VSKit-chat-engine-state-${state}`;
   chip.textContent = labels[state] ?? state;
 }
 
@@ -869,7 +869,7 @@ function permissionCard(requestId: string): HTMLDivElement | null {
   const thread = document.getElementById("thread");
   if (!thread) return null;
   return thread.querySelector<HTMLDivElement>(
-    `.UnicDB-chat-permission[data-request-id="${cssEscape(requestId)}"]`,
+    `.VSKit-chat-permission[data-request-id="${cssEscape(requestId)}"]`,
   );
 }
 /** Threshold above which the detail collapses into a <details><pre> block.
@@ -889,12 +889,12 @@ function permissionDetailNode(
     !detail.includes("\n");
   if (isShort) {
     const div = document.createElement("div");
-    div.className = "UnicDB-chat-permission-tool-detail";
+    div.className = "VSKit-chat-permission-tool-detail";
     div.textContent = detail;
     return div;
   }
   const details = document.createElement("details");
-  details.className = "UnicDB-chat-permission-tool-detail";
+  details.className = "VSKit-chat-permission-tool-detail";
   const summary = document.createElement("summary");
   summary.textContent = "Show tool details";
   details.appendChild(summary);
@@ -918,21 +918,21 @@ function renderPermissionRequest(msg: PermissionRequestMsg): void {
     disposePermissionCard(existing, false);
   }
   const card = document.createElement("div");
-  card.className = "UnicDB-chat-permission";
+  card.className = "VSKit-chat-permission";
   card.dataset.requestId = msg.requestId;
 
   const header = document.createElement("div");
-  header.className = "UnicDB-chat-permission-header";
+  header.className = "VSKit-chat-permission-header";
   header.textContent = "Permission required";
   card.appendChild(header);
 
   const toolId = document.createElement("div");
-  toolId.className = "UnicDB-chat-permission-tool-id";
+  toolId.className = "VSKit-chat-permission-tool-id";
   toolId.textContent = msg.tool.id;
   card.appendChild(toolId);
 
   const toolName = document.createElement("div");
-  toolName.className = "UnicDB-chat-permission-tool-name";
+  toolName.className = "VSKit-chat-permission-tool-name";
   toolName.textContent = msg.tool.name;
   card.appendChild(toolName);
 
@@ -942,13 +942,13 @@ function renderPermissionRequest(msg: PermissionRequestMsg): void {
   if (detailNode !== null) card.appendChild(detailNode);
 
   const actions = document.createElement("div");
-  actions.className = "UnicDB-chat-permission-actions";
+  actions.className = "VSKit-chat-permission-actions";
   for (const opt of msg.options) {
     const btn = document.createElement("button");
     btn.className =
       opt.optionId === "deny"
-        ? "UnicDB-chat-secondary UnicDB-chat-permission-deny"
-        : "UnicDB-chat-primary UnicDB-chat-permission-allow";
+        ? "VSKit-chat-secondary VSKit-chat-permission-deny"
+        : "VSKit-chat-primary VSKit-chat-permission-allow";
     btn.textContent = opt.label;
     btn.dataset.optionId = opt.optionId;
     btn.addEventListener("click", () => {
@@ -1016,25 +1016,25 @@ function renderResumePicker(msg: ResumeSessionsMsg): void {
   if (!thread) return;
 
   const card = document.createElement("div");
-  card.className = "UnicDB-chat-resume-picker";
+  card.className = "VSKit-chat-resume-picker";
 
   const header = document.createElement("div");
-  header.className = "UnicDB-chat-resume-header";
+  header.className = "VSKit-chat-resume-header";
   header.textContent = "Resume a previous session";
   card.appendChild(header);
 
   for (const s of msg.sessions) {
     const row = document.createElement("div");
-    row.className = "UnicDB-chat-resume-row";
+    row.className = "VSKit-chat-resume-row";
     row.dataset.sessionId = s.sessionId;
 
     const label = document.createElement("div");
-    label.className = "UnicDB-chat-resume-row-label";
+    label.className = "VSKit-chat-resume-row-label";
     label.textContent = s.label;
     row.appendChild(label);
 
     const detail = document.createElement("div");
-    detail.className = "UnicDB-chat-resume-row-detail";
+    detail.className = "VSKit-chat-resume-row-detail";
     detail.textContent = s.detail;
     row.appendChild(detail);
 
@@ -1049,7 +1049,7 @@ function renderResumePicker(msg: ResumeSessionsMsg): void {
   }
 
   const cancelBtn = document.createElement("button");
-  cancelBtn.className = "UnicDB-chat-secondary UnicDB-chat-resume-cancel";
+  cancelBtn.className = "VSKit-chat-secondary VSKit-chat-resume-cancel";
   cancelBtn.textContent = "Cancel";
   cancelBtn.addEventListener("click", () => {
     if (!pickerOpen) return;
@@ -1082,7 +1082,7 @@ function renderResumePicker(msg: ResumeSessionsMsg): void {
 function disposeResumePicker(): void {
   pickerOpen = false;
   pickerConsumed = false;
-  const existing = document.querySelector(".UnicDB-chat-resume-picker");
+  const existing = document.querySelector(".VSKit-chat-resume-picker");
   if (existing) existing.remove();
 }
 
@@ -1097,7 +1097,7 @@ function renderHistory(msg: HistoryMsg): void {
 
   if (msg.truncated && msg.truncatedCount > 0) {
     const notice = document.createElement("div");
-    notice.className = "UnicDB-chat-history-truncated";
+    notice.className = "VSKit-chat-history-truncated";
     notice.textContent = `${msg.truncatedCount} earlier items not shown`;
     thread.appendChild(notice);
   }
@@ -1109,7 +1109,7 @@ function renderHistory(msg: HistoryMsg): void {
       appendAssistant(item.text, true);
     } else if (item.kind === "tool") {
       const row = document.createElement("div");
-      row.className = "UnicDB-chat-history-tool";
+      row.className = "VSKit-chat-history-tool";
       row.textContent = item.text;
       thread.appendChild(row);
     }
@@ -1180,7 +1180,7 @@ function handleLegacyHostMessage(data: unknown): void {
       {
         const thread = document.getElementById("thread");
         const streaming = thread?.querySelector(
-          ".UnicDB-chat-bubble.UnicDB-chat-assistant.UnicDB-chat-streaming",
+          ".VSKit-chat-bubble.VSKit-chat-assistant.VSKit-chat-streaming",
         );
         if (streaming) streaming.remove();
       }
@@ -1255,7 +1255,7 @@ function renderMentionMiss(token: string): void {
   const thread = document.getElementById("thread");
   if (!thread) return;
   const div = document.createElement("div");
-  div.className = "UnicDB-chat-mention-miss";
+  div.className = "VSKit-chat-mention-miss";
   div.textContent = `Could not resolve @${token}`;
   thread.appendChild(div);
 }
@@ -1266,7 +1266,7 @@ function renderAttachWarning(message: string): void {
   const thread = document.getElementById("thread");
   if (!thread) return;
   const div = document.createElement("div");
-  div.className = "UnicDB-chat-attach-warning";
+  div.className = "VSKit-chat-attach-warning";
   div.textContent = message;
   thread.appendChild(div);
 }
@@ -1283,13 +1283,13 @@ function renderGroundingChips(msg: {
   excludedCount: number;
   turnId: string;
 }): void {
-  let strip = document.getElementById("UnicDB-grounding-strip");
+  let strip = document.getElementById("VSKit-grounding-strip");
   if (!strip) {
     strip = document.createElement("div");
-    strip.id = "UnicDB-grounding-strip";
-    strip.className = "UnicDB-grounding-strip";
+    strip.id = "VSKit-grounding-strip";
+    strip.className = "VSKit-grounding-strip";
     // The V1 composer card is deleted (CHATV2-017); the strip mounts on
-    // <body> and positions via the `.UnicDB-grounding-strip` rules.
+    // <body> and positions via the `.VSKit-grounding-strip` rules.
     document.body.appendChild(strip);
     strip.addEventListener("click", () => {
       vscodeApi.postMessage({ type: "grounding_toggle", enabled: false });
@@ -1305,7 +1305,7 @@ function renderGroundingChips(msg: {
   if (msg.fileCount > 0) bits.push(`${msg.fileCount} file(s)`);
   if (msg.excludedCount > 0) bits.push(`${msg.excludedCount} excluded`);
   const chip = document.createElement("span");
-  chip.className = "UnicDB-grounding-chip";
+  chip.className = "VSKit-grounding-chip";
   chip.textContent = `Grounded in ${bits.join(" · ")} — click to disable`;
   chip.title = "Click to disable workspace grounding for this panel";
   strip.appendChild(chip);

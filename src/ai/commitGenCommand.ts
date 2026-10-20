@@ -26,15 +26,15 @@ import {
 
 // ---- frozen strings ---------------------------------------------------------
 export const TOAST_NO_LITE =
-  "Configure the Lite Model in UnicDB AI Settings to use Generate Commit Message";
+  "Configure the Lite Model in VSKit AI Settings to use Generate Commit Message";
 export const ACTION_OPEN_SETTINGS = "Open Settings";
 export const TOAST_NO_CHANGES =
-  "UnicDB: nothing to commit — this Git repo has no staged or unstaged changes. Stage or modify at least one file, then click again.";
+  "VSKit: nothing to commit — this Git repo has no staged or unstaged changes. Stage or modify at least one file, then click again.";
 export const TOAST_NO_BACKEND_CONFIG =
-  "Configure the AI backend (base URL + API key) in UnicDB AI Settings";
-export const ERROR_ENGINE_UNAVAILABLE_PREFIX = "UnicDB: ";
+  "Configure the AI backend (base URL + API key) in VSKit AI Settings";
+export const ERROR_ENGINE_UNAVAILABLE_PREFIX = "VSKit: ";
 export const ERROR_ENGINE_UNAVAILABLE_SUFFIX = " engine unavailable — ";
-export const ERROR_OMP_UNAVAILABLE_PREFIX = "UnicDB: omp engine unavailable — ";
+export const ERROR_OMP_UNAVAILABLE_PREFIX = "VSKit: omp engine unavailable — ";
 export const ERROR_NON_STRING_TEXT_BUILTIN =
   "commit-gen: builtin provider returned non-string text";
 export const ERROR_NON_STRING_TEXT_OMP =
@@ -43,7 +43,7 @@ export const ERROR_NON_STRING_TEXT_OMP =
 // Guard-flow frozen strings (SPEC §8.5). The terminal toast is assembled from
 // these two constants plus the last raw preview and an optional debug-dump path.
 export const ERROR_COMMIT_GUARD_FAILED_PREFIX =
-  "UnicDB: generated commit message failed validation";
+  "VSKit: generated commit message failed validation";
 export const ERROR_COMMIT_GUARD_RETRY_NOTE =
   "Retried once and still invalid — nothing was injected into the commit box.";
 
@@ -52,7 +52,7 @@ export const ERROR_COMMIT_GUARD_RETRY_NOTE =
 // single-flight gate refuses a second run.
 export const COMMIT_GEN_TIMEOUT_MS = 120_000;
 export const TOAST_GENERATION_IN_PROGRESS =
-  "UnicDB: a commit message is already being generated — wait for it to finish or cancel it.";
+  "VSKit: a commit message is already being generated — wait for it to finish or cancel it.";
 export const PROGRESS_COLLECTING_DIFF = "Collecting diff…";
 export const PROGRESS_CONTACTING_MODEL = "Contacting model…";
 export const PROGRESS_VALIDATING = "Validating message…";
@@ -314,7 +314,7 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
       if (deps.isCancelled?.()) {
         return;
       }
-      deps.showError(`UnicDB: omp error — ${(e as Error).message ?? String(e)}`);
+      deps.showError(`VSKit: omp error — ${(e as Error).message ?? String(e)}`);
       return;
     }
   } else if (selectedEngine === "builtin") {
@@ -357,7 +357,7 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
       }
       const err = e as Error & { bodySnippet?: string };
       const detail = err.bodySnippet ? `: ${err.bodySnippet}` : "";
-      deps.showError(`UnicDB: provider error — ${err.message ?? String(e)}${detail}`);
+      deps.showError(`VSKit: provider error — ${err.message ?? String(e)}${detail}`);
       return;
     }
   } else {
@@ -426,7 +426,7 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
       const err = e as Error & { bodySnippet?: string };
       const detail = err.bodySnippet ? `: ${err.bodySnippet}` : "";
       deps.showError(
-        `UnicDB: ${selectedEngine} commit-gen fell back to provider error — ${err.message ?? String(e)}${detail}${hintSuffix}`,
+        `VSKit: ${selectedEngine} commit-gen fell back to provider error — ${err.message ?? String(e)}${detail}${hintSuffix}`,
       );
       return;
     }
@@ -498,7 +498,7 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
   });
   const fileNote = debugFile ? ` Debug dump: ${debugFile}` : "";
   deps.showError(
-    `UnicDB: provider returned no commit message text (raw length ${rawLen}). ` +
+    `VSKit: provider returned no commit message text (raw length ${rawLen}). ` +
       `Preview: "${rawPreview}". Check Lite Model config.${fileNote}`,
   );
 }

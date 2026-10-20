@@ -74,7 +74,7 @@ RED_OUTPUT: n/a for this resume run — tests were authored and committed increm
 Verification Output:
 ```
 $ npm test -- --run webview/aiChat/__tests__/attachments.test.ts src/ui/__tests__/aiChatPanelAttachments.test.ts src/ui/__tests__/aiChatAttachments.test.ts src/ui/__tests__/aiChatGrounding.test.ts
- RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-chatv2-013
+ RUN v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/VSKit/.worktrees/task-chatv2-013
  ✓ src/ui/__tests__/aiChatAttachments.test.ts  (23 tests) 10ms
  ✓ src/ui/__tests__/aiChatGrounding.test.ts  (5 tests) 2ms
  ✓ src/ui/__tests__/aiChatPanelAttachments.test.ts  (23 tests) 17ms

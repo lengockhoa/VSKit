@@ -11,7 +11,7 @@
 //   `No active schema` when the host has none. A hostile/host-provided schema
 //   name is rendered with `textContent` and can never become markup.
 // - Click emits the EXISTING host picker intent (`onPickSchema`); the host
-//   routes it through `UnicDB.selectActiveSchema`, so every surface stays
+//   routes it through `VSKit.selectActiveSchema`, so every surface stays
 //   coherent. The chip never mutates a draft.
 // - FUTURE-DRAFT SEMANTICS: a schema change during an active turn applies only
 //   to the NEXT draft. This module owns no turn state and never retargets a
@@ -21,7 +21,7 @@
 
 import { createChatIcon } from "./icons";
 
-const ROOT_CLASS = "UnicDB-ai-chat-v2";
+const ROOT_CLASS = "VSKit-ai-chat-v2";
 
 /** Marker attribute identifying the active-schema chip. */
 export const SCHEMA_CHIP_MARKER = "data-chat-schema-chip";
@@ -79,8 +79,8 @@ export function createSchemaControl(options: SchemaControlOptions): SchemaContro
   if (options.id !== undefined && options.id.length > 0) button.id = options.id;
   else button.id = SCHEMA_CHIP_DEFAULT_ID;
   button.setAttribute(SCHEMA_CHIP_MARKER, "1");
-  button.style.setProperty("--UnicDB-schema-chip-h", `${SCHEMA_CHIP_MIN_HEIGHT_PX}px`);
-  button.style.setProperty("--UnicDB-schema-chip-icon", `${SCHEMA_CHIP_ICON_PX}px`);
+  button.style.setProperty("--VSKit-schema-chip-h", `${SCHEMA_CHIP_MIN_HEIGHT_PX}px`);
+  button.style.setProperty("--VSKit-schema-chip-icon", `${SCHEMA_CHIP_ICON_PX}px`);
 
   const labelNode = document.createElement("span");
   labelNode.className = `${ROOT_CLASS}-schema-chip-label`;

@@ -38,7 +38,7 @@ class FakeWebviewView {
   webview = new FakeWebview();
   description: string | undefined;
   title: string | undefined;
-  viewType = "UnicDB.results";
+  viewType = "VSKit.results";
   visible = true;
   private didDisposeHandlers: Array<() => void> = [];
   onDidDispose(h: () => void) {
@@ -105,7 +105,7 @@ vi.mock("vscode", () => {
 
     commands: {
       executeCommand: vi.fn(async (cmd: string, ..._rest: unknown[]) => {
-        if (cmd === "UnicDB.results.focus" && providerStore.length > 0) {
+        if (cmd === "VSKit.results.focus" && providerStore.length > 0) {
           if (lastView.current && !(lastView.current as unknown as { isDisposed?: boolean }).isDisposed) {
             return undefined;
           }

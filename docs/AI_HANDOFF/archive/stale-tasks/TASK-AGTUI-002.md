@@ -71,7 +71,7 @@ RED_OUTPUT: Direct tsc on src/ui/__tests__/aiChatPanelMessagesClone.test.ts befo
   error TS2339: Property 'enabled' does not exist on type 'never'.
   (12+ type-level errors confirming the new types and union members were absent)
 Verification Output:
-  > UnicDB@1.53.24 typecheck
+  > extension@1.53.24 typecheck
   > tsc --noEmit
   (clean exit — no errors)
 

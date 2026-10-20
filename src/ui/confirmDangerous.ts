@@ -25,12 +25,12 @@ export async function confirmDangerousStatements(
   statements: DangerousStatementLike[],
   dialect?: SqlDialect,
 ): Promise<boolean> {
-  // TASK-AHL-004 re-review fix: classify FIRST. `UnicDB.confirmDestructive=false`
+  // TASK-AHL-004 re-review fix: classify FIRST. `VSKit.confirmDestructive=false`
   // may skip the red/amber prompts, but admin DCL is a distinct risk class and
-  // must still reach its own `UnicDB.admin.confirmGrant` gate below.
+  // must still reach its own `VSKit.admin.confirmGrant` gate below.
   const enabled =
     vscode.workspace
-      .getConfiguration("UnicDB")
+      .getConfiguration("VSKit")
       .get<boolean>("confirmDestructive") ?? true;
 
   const red: string[] = [];
@@ -49,17 +49,17 @@ export async function confirmDangerousStatements(
   }
 
   // TASK-AHL-004 — admin DCL (GRANT/REVOKE/KILL/TERMINATE) always prompts.
-  // Gated by `UnicDB.admin.confirmGrant` (default true) — separate from
-  // `UnicDB.confirmDestructive` because admin DCL is a distinct risk class
+  // Gated by `VSKit.admin.confirmGrant` (default true) — separate from
+  // `VSKit.confirmDestructive` because admin DCL is a distinct risk class
   // (changes who-can-do-what, or kills another user's session).
   if (admin.length > 0) {
     const adminEnabled =
       vscode.workspace
-        .getConfiguration("UnicDB.admin")
+        .getConfiguration("VSKit.admin")
         .get<boolean>("confirmGrant") ?? true;
     if (adminEnabled) {
       const picked = await vscode.window.showWarningMessage(
-        "UnicDB: ADMIN DCL — câu lệnh này thay đổi quyền (GRANT/REVOKE) hoặc kết thúc session khác (KILL/TERMINATE). Chắc chắn chưa?",
+        "VSKit: ADMIN DCL — câu lệnh này thay đổi quyền (GRANT/REVOKE) hoặc kết thúc session khác (KILL/TERMINATE). Chắc chắn chưa?",
         { modal: true, detail: capDetail(admin, RED_DETAIL_CAP) },
         "Vẫn chạy (admin)",
       );
@@ -69,7 +69,7 @@ export async function confirmDangerousStatements(
 
   if (red.length > 0) {
     const picked = await vscode.window.showWarningMessage(
-      "UnicDB: CỰC KỲ NGUY HIỂM — câu lệnh sẽ XÓA SẠCH DỮ LIỆU (DELETE không WHERE / TRUNCATE / DROP). Kiểm tra lại query!",
+      "VSKit: CỰC KỲ NGUY HIỂM — câu lệnh sẽ XÓA SẠCH DỮ LIỆU (DELETE không WHERE / TRUNCATE / DROP). Kiểm tra lại query!",
       { modal: true, detail: capDetail(red, RED_DETAIL_CAP) },
       "Vẫn chạy (nguy hiểm)",
     );
@@ -78,7 +78,7 @@ export async function confirmDangerousStatements(
 
   if (amber.length > 0) {
     const picked = await vscode.window.showWarningMessage(
-      "UnicDB: DELETE có điều kiện — chạy câu lệnh này?",
+      "VSKit: DELETE có điều kiện — chạy câu lệnh này?",
       { modal: true, detail: capDetail(amber, AMBER_DETAIL_CAP) },
       "Run",
     );

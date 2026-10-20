@@ -46,7 +46,7 @@ import {
 import type { ChatViewState, ChatModelsState, TurnPhase } from "./store";
 
 /** The V2 root class every selector hangs off. */
-const ROOT_CLASS = "UnicDB-ai-chat-v2";
+const ROOT_CLASS = "VSKit-ai-chat-v2";
 
 function cls(name: string): string {
   return `${ROOT_CLASS}-${name}`;

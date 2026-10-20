@@ -66,7 +66,7 @@ beforeAll(() => {
 const distPath = resolve(process.cwd(), "dist", "newTableForm.js");
 const bundleSrc = existsSync(distPath) ? readFileSync(distPath, "utf8") : null;
 
-interface UnicDBApi {
+interface VSKitApi {
   postMessage: (msg: unknown) => void;
 }
 
@@ -81,16 +81,16 @@ function loadBundle(): BundleHandle {
       "dist/newTableForm.js missing — run `npm run compile` before this test",
     );
   }
-  document.body.innerHTML = '<div id="UnicDB-root" class="UnicDB-form-body"></div>';
-  const root = document.getElementById("UnicDB-root") as HTMLDivElement;
+  document.body.innerHTML = '<div id="VSKit-root" class="VSKit-form-body"></div>';
+  const root = document.getElementById("VSKit-root") as HTMLDivElement;
 
   const received: Array<Record<string, unknown>> = [];
-  const api: UnicDBApi = {
+  const api: VSKitApi = {
     postMessage: (msg) => {
       received.push(msg as Record<string, unknown>);
     },
   };
-  (globalThis as unknown as { acquireVsCodeApi: () => UnicDBApi }).acquireVsCodeApi =
+  (globalThis as unknown as { acquireVsCodeApi: () => VSKitApi }).acquireVsCodeApi =
     () => api;
 
   (0, eval)(bundleSrc);
@@ -164,11 +164,11 @@ describeIfBundle("webview/newTableFormMain.ts bundle (TASK-004)", () => {
         keys: [],
       },
     });
-    const root = document.getElementById("UnicDB-root") as HTMLDivElement;
+    const root = document.getElementById("VSKit-root") as HTMLDivElement;
     // Sections with live counts.
     const sectionLabels = Array.from(
       root.querySelectorAll(
-        ".UnicDB-designer-section-title, .UnicDB-designer-section h3, h3, h2, h4",
+        ".VSKit-designer-section-title, .VSKit-designer-section h3, h3, h2, h4",
       ),
     )
       .map((el) => (el as HTMLElement).textContent ?? "")
@@ -206,7 +206,7 @@ describeIfBundle("webview/newTableFormMain.ts bundle (TASK-004)", () => {
         keys: [],
       },
     });
-    const root = document.getElementById("UnicDB-root") as HTMLDivElement;
+    const root = document.getElementById("VSKit-root") as HTMLDivElement;
     // The table-name input must exist; rename it to "orders" + dispatch input.
     const tableNameInput = root.querySelector("#tableName") as HTMLInputElement;
     expect(tableNameInput).not.toBeNull();
@@ -249,8 +249,8 @@ describeIfBundle("webview/newTableFormMain.ts bundle (TASK-004)", () => {
       },
     });
     // Click the first column row to select it.
-    const root = document.getElementById("UnicDB-root") as HTMLDivElement;
-    const colItem = root.querySelector('[data-section="columns"] li, .UnicDB-designer-col-item, .UnicDB-designer-item') as HTMLElement | null;
+    const root = document.getElementById("VSKit-root") as HTMLDivElement;
+    const colItem = root.querySelector('[data-section="columns"] li, .VSKit-designer-col-item, .VSKit-designer-item') as HTMLElement | null;
     if (colItem) colItem.click();
     // Simulate host posting errors.
     dispatch({
@@ -302,7 +302,7 @@ describeIfBundle("webview/newTableFormMain.ts bundle (TASK-004)", () => {
         keys: [],
       },
     });
-    const root = document.getElementById("UnicDB-root") as HTMLDivElement;
+    const root = document.getElementById("VSKit-root") as HTMLDivElement;
     // Click the first column item to select it.
     const firstLi = root.querySelector('li[data-section="columns"]') as HTMLElement | null;
     expect(firstLi).not.toBeNull();

@@ -99,7 +99,7 @@ $ npm test
     known-flake resultsGridModelNull.test.ts did NOT fail this run)
 
 $ npm run typecheck
-> UnicDB@1.6.3 typecheck
+> extension@1.6.3 typecheck
 > tsc --noEmit
 (clean, exit 0)
 ```

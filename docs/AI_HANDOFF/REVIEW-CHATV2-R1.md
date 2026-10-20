@@ -41,7 +41,7 @@ accepted limitation — the concrete duplicate-render/dead-surface consequences 
   materializes text_delta items).
 - EMPIRICAL PROOF (jsdom, production `dist/aiChatPanel.js`, frames exactly as the host emits
   them): after `{type:"delta",text:MARKER}` + `{kind:"text_delta",text:MARKER}`, the marker
-  appears **2 times** in `#UnicDB-root` textContent. Repro script kept at /tmp/r1-duperepro.mjs.
+  appears **2 times** in the chat root element's textContent. Repro script kept at /tmp/r1-duperepro.mjs.
 - Same dual family: thoughts render as legacy `step` lines AND V2 `reasoning_delta`
   (`3243-3244`, `3457-3458`); tool results as legacy card AND V2 timeline items;
   `attach_error` explicitly dual-posted (`6068-6069`).
@@ -144,10 +144,10 @@ ORPHANED (no live successor):
 3. `webview/aiChatPanelMain.ts:1237-1239` — grounding strip uses `vscodeApi.postMessage(...)`
    directly instead of the null-safe `post()` helper used everywhere else.
 4. `webview/aiChatPanelMain.ts:555-557` — accumulated stream stored in
-   `bubble.dataset.UnicDBRawStream`, contradicting transcript.ts's "never into a DOM dataset"
+   `bubble.dataset.rawStream`, contradicting transcript.ts's "never into a DOM dataset"
    contract (text-only, not a security hole; retire with the bridge).
 5. `applyEngineState` (`aiChatPanelMain.ts:800-806`) appends the lifecycle chip to
-   `#UnicDB-root` now that `#engineBanner` is deleted — unstyled placement oddity.
+   the chat root element now that `#engineBanner` is deleted — unstyled placement oddity.
 
 ## Visual/soak gate note
 Per the caller's scope this ran as module/bundle-level evidence only (no real-webview
@@ -213,7 +213,7 @@ demonstrated for every fix before it went GREEN (see per-item evidence below).
   result) and #8 (canonical ids verbatim). RED: both FAILed with only `src/ui/aiChatPanel.ts`
   reverted; GREEN with fix.
 - Bundle pin: `#R1 dual-wire permission` — legacy card + V2 sheet dispatched together ⇒ zero
-  `.UnicDB-chat-permission` cards, exactly one `[data-chat-permission-request]` sheet, Allow
+  neutral legacy permission cards, exactly one `[data-chat-permission-request]` sheet, Allow
   enabled, exactly one `permission_response` with the canonical optionId, and composer Enter
   posts `submit_turn` after settle. RED pre-fix (legacy card rendered alongside the sheet).
 
@@ -275,7 +275,7 @@ VERIFICATION_RERUN (fresh, this review):
 - Bundle pin `#R1 model chip` proves the legacy `models` twin does NOT populate the chip and the V2 frame does.
 
 ### P1-3 — single permission surface + invertible optionIds — CLOSED
-- Legacy card emission is SUPPRESSED, not hidden: the bridge returns before `renderPermissionRequest` (`aiChatPanelMain.ts:1202`); bundle test asserts `.UnicDB-chat-permission` count is 0 (a hidden node would still count).
+- Legacy card emission is SUPPRESSED, not hidden: the bridge returns before `renderPermissionRequest` (`aiChatPanelMain.ts:1202`); bundle test asserts legacy permission-card count is 0 (a hidden node would still count).
 - No wedge: host settles-once (`aiChatPanel.ts:4452-4457`), timeout default-denies (`:4418-4420`), stop/dispose cancel (`cancelAllPending` 4486-4498); webview drops the request on `turn_finished` (`store.ts:674`) and on respond (`:936`), so `permissionRequest.isOpen()` cannot stay true behind the keyboard ladder. Bundle test asserts composer Enter posts `submit_turn` after settle.
 - Invertible mapping verified: `normalizeV2PermissionOptionId` forward (`aiChatPanel.ts:246-262`, applied at 3703-3706) and `pending.v2OptionIdMap` reverse (`:4464-4467`); ACP pin #7 asserts the result carries the SERVER id `ok1` exactly once; #8 asserts canonical/kindless ids pass verbatim both ways.
 

@@ -5,13 +5,7 @@ Spec: `docs/AI_HANDOFF/SPEC.md` | Tasks: `docs/AI_HANDOFF/tasks/TASK-CG2-00{1,2,
 
 ## §1 Intent
 
-Mục "Generate Commit Message" (SCM sparkle, `UnicDB.generateCommitMessage`) với model
-reasoning ("chatgpt luna") sinh ra một chuỗi dài giống hash; "GLM5 turbo" chạy đúng.
-Root cause (verified): parser fallback cho reasoning models trong `src/ai/provider.ts`
-(`pickLongestStringField` :209, `extractAnyText` :121, gồm key `reasoning_content`) có
-thể trả blob reasoning/hash, và `sanitizeCommitMessage` (`src/ai/commitMessage.ts:94`)
-chỉ normalize — clamp first-line 72 chars biến blob không-space thành đúng hình "hash
-72 ký tự" rồi inject. Không có lớp plausibility-check nào.
+The "Generate Commit Message" action (SCM sparkle) can receive reasoning output that is a long hash-like string instead of a commit message. Root cause (verified): parser fallback for reasoning models in `src/ai/provider.ts` (`pickLongestStringField` :209, `extractAnyText` :121, including key `reasoning_content`) can return a reasoning/hash blob, and `sanitizeCommitMessage` (`src/ai/commitMessage.ts:94`) only normalizes — clamping the first line to 72 chars can turn a non-space blob into a hash-like string. No plausibility check existed.
 
 Success: sau cycle này, ô commit chỉ nhận message "trông như commit message" —
 không garbage/reasoning leak, tiếng Việt, subject ≤ 12 từ, tổng ≤ 100 từ; garbage →
@@ -42,8 +36,7 @@ retry đúng 1 lần → vẫn fail thì toast lỗi rõ ràng và KHÔNG inject
   giữ nguyên), `commitGenCommand.test.ts` (update fake EN→VN ở Tests #1/#2/#10 giữ
   structural asserts + thêm 8 guard-flow tests: retry ×3 branch, terminal block,
   length block, empty ×2 attempt, transport).
-- Docs: `docs/UNICDB_USER_GUIDE.md` mục Generate Commit Message +3 bullet (giữ keyword
-  mà `userGuideContent.test.ts` assert).
+- Docs: `docs/USER_GUIDE.md` section Generate Commit Message +3 bullets (preserve keywords asserted by `userGuideContent.test.ts`).
 
 **Out-of-scope**
 - `src/ai/provider.ts` parser fallbacks — KHÔNG đổi (SPEC §14 Q4).
@@ -95,7 +88,7 @@ bỏ hẳn fallback reasoning — mất khả năng đọc model reasoning-only.
 | Happy (command #1 update) | builtin happy path fake VN | `builtinComplete` times(1), `setInputBox("feat(db): thêm chỉ mục cho bảng users")`, 0 error |
 | Happy (command #2 update) | omp happy path fake VN | `generate` times(1), prompt chứa 2 substring frozen, inject message VN |
 | Happy (retry) | garbage = 72-hex blob lần 1 → VN lần 2 (builtin) | `builtinComplete` times(2); req#2 `messages[1].content` chứa reason + "rejected"; inject msg#2; 0 guard-error |
-| Happy (retry) | garbage lần 1 → VN lần 2 (omp + claude-code fallback) | `generate`/`builtinComplete` times(2); inject; hint toast claude-code vẫn đúng 1 lần |
+| Happy (retry) | garbage once → VN once (alternate engine fallback) | engine calls times(2); inject; hint toast shown once |
 | Edge (empty) | `""` / whitespace | `reasons === ["empty"]` (short-circuit) |
 | Edge (blob) | token 72 chars không space (blob đã clamp) | `unbroken-blob` trong reasons |
 | Edge (boundary) | token 39 vs 40 chars | 39 → không `unbroken-blob`; 40 → có |
@@ -159,7 +152,7 @@ static duy nhất, bắt buộc trong Verification của mọi task.
 ## Planner Self-Audit
 Checklist: 14/14 pass
 Fixed during audit: thêm field `Spec references` (SPEC §5 FR IDs) vào cả 3 task file (task gate yêu cầu); gộp bảng test CG2-001/CG2-003 từ 12 xuống 8 rows theo task-budget validator (maxTestCases=8) — không mất assertion, chỉ merge row.
-Known gaps: (1) `not-vietnamese` hard-block sau 1 retry nghĩa là model chỉ trả English sạch (GLM5-style) sẽ bị chặn — accepted per locked decision #3, ghi §14 Q3; (2) heuristic guard là conservative-hướng-false-accept — garbage dạng chưa liệt kê có thể lọt, mitigation là frozen marker list có thể mở rộng ở cycle sau; (3) chạy thật với model "chatgpt luna" không thể verify tự động — chỉ pin được signature blob ở unit + command level.
+Known gaps: (1) `not-vietnamese` hard-block after one retry means a model returning clean English is blocked — accepted per locked decision #3, recorded in §14 Q3; (2) heuristic guard is conservative and may accept unlisted garbage; mitigation is the frozen marker list; (3) testing against a live model is not automatic — only the signature blob is pinned in unit and command tests.
 
 ## Planner Report
 PLANNER_MODEL: bao-opus
@@ -172,7 +165,7 @@ VERDICT: Issues Found
 FINDINGS:
   - [consistency] SPEC §7 rule 6 + §7.1: frozen Vietnamese marker list contains "them" and "bang" — both are common English words, so `\b…\b` case-insensitive matching lets clean English messages (e.g. "fix: update tests so CI can run them") pass the Vietnamese check and `not-vietnamese` never fires, contradicting §7.1's own principle "không thêm marker dễ trúng English" and weakening locked decision #1. Drop both markers before implementation (unaccented-VN recall remains via the other 20 markers) and sync §11 guard-test fixtures.
   - [clarity] SPEC FR-007 + §10: attempt-2 EMPTY response is not pinned — the terminal path only covers "Lần 2 vẫn FAIL non-empty", and whether `commit-gen-empty` is re-dumped on attempt 2 is ambiguous. State explicitly that attempt-2 empty follows the attempt-1 empty-diagnostic path (old toast + `commit-gen-empty`, no guard toast, no third engine call) and add a §11/PLAN §4 test row so executor and tests don't guess.
-  - [consistency, minor] SPEC §12: acceptance says "Không có thay đổi ngoài 6 file" but the whitelist enumerates 7 product files (guard module, commitMessage.ts, commitGenCommand.ts, 3 test files, UNICDB_USER_GUIDE.md). Fix the count to 7 so the acceptance check cannot misfire.
+  - [consistency, minor] SPEC §12: acceptance says "no changes beyond 6 files" but the whitelist enumerates 7 product files (guard module, commitMessage.ts, commitGenCommand.ts, 3 test files, user guide). Fix the count to 7 so the acceptance check cannot misfire.
   - [clarity, minor] PLAN §4 regression row: typo "FỚI code hiện tại" (presumably "trên code hiện tại"), and it is ambiguous whether the bugfix-regression row is a distinct 7th command-level test or the same retry/terminal tests run with a 72-char hex-blob fixture, while AC-5 pins "+6 guard-flow test mới" — pin the count (recommend: make the retry/terminal garbage fixtures a 72-char hex blob so the existing 6 tests carry the regression pin).
 
 NOTES: Decisions, scope, test plan, and ACs line up with SPEC §7/§8 across all 3 engine branches; thresholds are frozen and testable; provider.ts correctly untouched; the hash-blob regression pin fails on old code. Blocking only because findings 1-2 live in frozen artifacts that are cheap to fix now and costly to churn after tasks implement them.

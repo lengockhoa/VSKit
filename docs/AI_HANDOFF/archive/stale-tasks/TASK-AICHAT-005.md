@@ -160,7 +160,7 @@ DOCS-ONLY-OK
 exit=0
 ```
 
-VERIFICATION (post-write, worktree `/Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-aichat-005`):
+VERIFICATION (post-write, worktree `.../VSKit/.worktrees/task-aichat-005`):
 ```
 command: for f in STREAM TIME SESS PERM FAIL VIS; do test "$(grep -coE "${f}-[0-9]{2}" docs/AI_HANDOFF/notes/aichat-sections-platform.md)" -ge 5 || { echo "FAMILY TOO THIN: $f"; exit 1; }; done
 result: exit 0
@@ -200,7 +200,7 @@ Milestone commit: 98d6a77 "milestone: platform section drafts ..." on branch han
 
 ISSUES:
 - The capability matrix deliberately carries `Unverified-internal` cells for claudeCode/codex model-role selection and codex permission-gate reachability (inherited from TASK-002 §4c/4d/§7.5/7.11); these are honest unknowns, not invented capabilities, and are flagged for implementation-time confirmation.
-- Section 1b/1d coalescing (16 ms/50 ms) and the 24 px stick-to-bottom threshold are UnicDB-original target rules with no upstream anchor (Q04/Q10 shape direction only); they are explicitly marked `new capability (no current source anchor)`.
+- Section 1b/1d coalescing (16 ms/50 ms) and the 24 px stick-to-bottom threshold are VSKit-original target rules with no upstream anchor (Q04/Q10 shape direction only); they are explicitly marked `new capability (no current source anchor)`.
 - The note cites §3g internally in the §9 research index table (a typo for the non-resumable-row rule living in §3c/§4); harmless, but TASK-AICHAT-006 should reconcile the label when consolidating.
 
 HANDOFF_TO_REVIEWER: yes — STATUS: DONE; reviewer must differ from executor model (expect unic-smart).
@@ -213,7 +213,7 @@ VERDICT: APPROVED-WITH-MINOR
 REVIEWER_MODEL: bao-opus
 EXECUTOR_MODEL: bao-sonnet
 VERIFICATION_RERUN: PASS
-  command: all 11 §Verification Commands re-run in main worktree (/Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB)
+  command: all 11 §Verification Commands re-run in main worktree (`.../VSKit`)
   result: cmd1 family minima exit 0; cmd2 distinct STREAM=7 TIME=6 SESS=10 PERM=6 FAIL=12 VIS=8; cmd3 sections exit 0; cmd4 verified-anchor lines=94 (>=16); cmd5 composer pointers=5; cmd6 anchors 1744 + 91–106 present; cmd7 per-Qxx=22; cmd8 quotes=67; cmd9 no vague terms; cmd10 DOCS-ONLY-OK; npm run typecheck exit 0
 TEST_PLAN_COVERAGE: all-followed — TC1 all six sections + VIS at density bar; TC2 matrix 4x8, every cell labeled, no invented capability (codex gate caveat matches extension.ts:2479 comment); TC3 ten failure classes each with exact quoted string + recovery + FAIL ID; TC4 reconciliation cites both anchors, capability gating + local-transcript≠native-resume preserved; TC5 16 distinct Q IDs, all verified verbatim against aichat-research-external.md
 FINDINGS:

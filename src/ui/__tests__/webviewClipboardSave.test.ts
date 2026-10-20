@@ -38,19 +38,19 @@ interface ClipboardDebug {
   simulatePaste?: (text: string) => void;
 }
 
-interface UnicDBDebug {
+interface VSKitDebug {
   gridApi?: GridApi | null;
   editState?: EditStateHandle;
   commit?: () => void;
   debugClipboard?: ClipboardDebug;
 }
 
-function UnicDBApi(): UnicDBDebug | null {
-  return (window as unknown as { __UnicDB?: UnicDBDebug }).__UnicDB ?? null;
+function VSKitApi(): VSKitDebug | null {
+  return (window as unknown as { __VSKit?: VSKitDebug }).__VSKit ?? null;
 }
 
 function getEditState(): EditStateHandle | null {
-  return UnicDBApi()?.editState ?? null;
+  return VSKitApi()?.editState ?? null;
 }
 
 beforeAll(() => {
@@ -97,8 +97,8 @@ function loadBundle(): {
     );
   }
 
-  document.body.innerHTML = '<div id="UnicDB-root" class="UnicDB-webview"></div>';
-  const root = document.getElementById("UnicDB-root") as HTMLDivElement;
+  document.body.innerHTML = '<div id="VSKit-root" class="VSKit-webview"></div>';
+  const root = document.getElementById("VSKit-root") as HTMLDivElement;
   const received: ReceivedMessage[] = [];
   (globalThis as unknown as { acquireVsCodeApi: () => unknown }).acquireVsCodeApi =
     () => ({
@@ -152,7 +152,7 @@ async function flush(): Promise<void> {
 }
 
 function seedPaste(): void {
-  const api = UnicDBApi();
+  const api = VSKitApi();
   expect(api?.gridApi).toBeTruthy();
   api!.gridApi!.setFocusedCell(0, "id");
   expect(api?.debugClipboard?.simulatePaste).toBeTruthy();
@@ -191,7 +191,7 @@ describeIfBundle("webview/main.ts bundle (TASK-CLIP-004 save persistence)", () =
     expect(getEditState()!.dirtyCount).toBe(2);
 
     received.length = 0;
-    const host = document.querySelector(".UnicDB-grid-host") as HTMLElement;
+    const host = document.querySelector(".VSKit-grid-host") as HTMLElement;
     dispatchCommitShortcut(host, { metaKey: true });
     await flush();
 
@@ -224,7 +224,7 @@ describeIfBundle("webview/main.ts bundle (TASK-CLIP-004 save persistence)", () =
     await flush();
 
     received.length = 0;
-    const host = document.querySelector(".UnicDB-grid-host") as HTMLElement;
+    const host = document.querySelector(".VSKit-grid-host") as HTMLElement;
     dispatchCommitShortcut(host, { ctrlKey: true });
     await flush();
 
@@ -245,8 +245,8 @@ describeIfBundle("webview/main.ts bundle (TASK-CLIP-004 save persistence)", () =
     await flush();
 
     received.length = 0;
-    expect(typeof UnicDBApi()?.commit).toBe("function");
-    UnicDBApi()!.commit!();
+    expect(typeof VSKitApi()?.commit).toBe("function");
+    VSKitApi()!.commit!();
     await flush();
 
     const saves = saveMessages(received);
@@ -261,7 +261,7 @@ describeIfBundle("webview/main.ts bundle (TASK-CLIP-004 save persistence)", () =
     expect(getEditState()!.dirtyCount).toBe(0);
 
     received.length = 0;
-    const host = document.querySelector(".UnicDB-grid-host") as HTMLElement;
+    const host = document.querySelector(".VSKit-grid-host") as HTMLElement;
     dispatchCommitShortcut(host, { metaKey: true });
     await flush();
 
@@ -276,7 +276,7 @@ describeIfBundle("webview/main.ts bundle (TASK-CLIP-004 save persistence)", () =
     await flush();
     expect(getEditState()!.dirtyCount).toBe(2);
 
-    UnicDBApi()!.commit!();
+    VSKitApi()!.commit!();
     await flush();
     dispatchHost({
       type: "saveResult",
@@ -288,10 +288,10 @@ describeIfBundle("webview/main.ts bundle (TASK-CLIP-004 save persistence)", () =
     await flush();
 
     expect(getEditState()!.dirtyCount).toBe(0);
-    const banner = root.querySelector(".UnicDB-save-banner");
+    const banner = root.querySelector(".VSKit-save-banner");
     expect(banner).toBeTruthy();
     expect(banner!.textContent).toContain("no PK");
-    expect(banner!.classList.contains("UnicDB-hidden")).toBe(false);
+    expect(banner!.classList.contains("VSKit-hidden")).toBe(false);
   });
 
   itIfBundle("failed save shows errors and preserves dirty edits for retry", async () => {
@@ -302,16 +302,16 @@ describeIfBundle("webview/main.ts bundle (TASK-CLIP-004 save persistence)", () =
     await flush();
     const dirtyBefore = getEditState()!.dirtyCount;
 
-    UnicDBApi()!.commit!();
+    VSKitApi()!.commit!();
     await flush();
     dispatchHost({ type: "saveResult", index: 0, ok: false, errors: ["boom"] });
     await flush();
 
     expect(getEditState()!.dirtyCount).toBe(dirtyBefore);
-    const banner = root.querySelector(".UnicDB-save-banner");
+    const banner = root.querySelector(".VSKit-save-banner");
     expect(banner).toBeTruthy();
     expect(banner!.textContent).toContain("boom");
-    expect(banner!.classList.contains("UnicDB-hidden")).toBe(false);
+    expect(banner!.classList.contains("VSKit-hidden")).toBe(false);
   });
 
   itIfBundle("saveResult ok:true clears paste-origin highlights", async () => {
@@ -322,16 +322,16 @@ describeIfBundle("webview/main.ts bundle (TASK-CLIP-004 save persistence)", () =
     await flush();
     expect(getEditState()!.dirtyCount).toBe(2);
 
-    const gridHost = root.querySelector(".UnicDB-grid-host") as HTMLElement;
+    const gridHost = root.querySelector(".VSKit-grid-host") as HTMLElement;
     expect(gridHost).toBeTruthy();
-    expect(gridHost.querySelectorAll(".UnicDB-cell-dirty").length).toBeGreaterThan(0);
+    expect(gridHost.querySelectorAll(".VSKit-cell-dirty").length).toBeGreaterThan(0);
 
-    UnicDBApi()!.commit!();
+    VSKitApi()!.commit!();
     await flush();
     dispatchHost({ type: "saveResult", index: 0, ok: true });
     await flush();
 
     expect(getEditState()!.dirtyCount).toBe(0);
-    expect(gridHost.querySelectorAll(".UnicDB-cell-dirty")).toHaveLength(0);
+    expect(gridHost.querySelectorAll(".VSKit-cell-dirty")).toHaveLength(0);
   });
 });

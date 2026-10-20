@@ -23,28 +23,22 @@ horizontal scrollbar, and every existing behavior (requery Enter, export, quick 
 commit, transaction controls) keeps working. Typecheck + compile + targeted tests + full
 suite green.
 
-**Supersession:** this cycle REVERSES the RES-BAR / TASK-COLLAPSE-001 single-row contract
-(`.UnicDB-toolbar { flex-wrap: nowrap }` + `overflow: hidden` + requery inputs
-`flex: 1 1 140px; min-width: 80px`). The pins live in 3 test files and MUST be flipped, not
-silently deleted: `src/ui/__tests__/webviewToolbar.test.ts` (test #4 nowrap regex + the
-px-basis assertions, AND test #3's flat-children census — a fourth flip discovered during
-planner grounding), `tests/webviewRequeryAlignment.test.ts` (2 `it()` bodies), and
+**Supersession:** this cycle reverses the RES-BAR / TASK-COLLAPSE-001 single-row contract
+(fixed-width query inputs in a single toolbar row). The pins live in 3 test files and MUST
+be flipped, not silently deleted: `src/ui/__tests__/webviewToolbar.test.ts` (test #4 nowrap
+regex + px-basis assertions, and test #3 flat-children census — a fourth flip discovered
+during planner grounding), `tests/webviewRequeryAlignment.test.ts` (2 `it()` bodies), and
 `src/ui/__tests__/aiChatPanelCloneCss.test.ts` (line 119).
 
 ## §2 Scope
 
 **In scope (single task — TASK-COLLAPSE-002 — all edits share 2 source files):**
-- `webview/styles.css`: `.UnicDB-toolbar` becomes `display: flex; flex-direction: column;
-  gap: 4px; min-width: 0; overflow: hidden; margin-bottom: 8px;` (drop `flex-wrap: nowrap`);
-  new `.UnicDB-toolbar-row` rule `display: flex; flex-wrap: nowrap; align-items: center;
-  gap: 4px; min-width: 0; overflow: hidden;`; `.UnicDB-requery-where/-order` become
-  `flex: 1 1 100%; min-width: 0` (inside a nowrap row this means "split the leftover space",
-  NOT "own a full line"); update the stale TASK-COLLAPSE-001 comment block.
+- `webview/styles.css`: toolbar becomes a column with two dedicated row containers; each
+  row stays nowrap and clipped. Query inputs divide available row width with `flex: 1 1
+  100%` and `min-width: 0`; update the stale prior-cycle comment.
 - `webview/main.ts` `buildPersistentDom()` (lines ~932-1210): wrap toolbar children in two
-  `.UnicDB-toolbar-row` divs. Row 1 appends: cancelBtn, refreshBtn, sep, addRowBtn,
-  deleteRowBtn, undoBtn, redoBtn, commitBtn, csvToggleBtn, sep, exportFormat. Row 2 appends:
-  requeryWhere, requeryOrderBy, requeryRunBtn, requeryClearBtn, exportHeader, exportCopyBtn,
-  exportFileBtn, schemaChip, searchInput (still last child of row 2).
+  generic toolbar-row divs; row 1 contains the existing action controls and format menu,
+  row 2 contains the query inputs/actions, header/export controls, schema chip, and search.
 - `webview/main.ts` line 817-820 (`render()`): `dom.toolbar.insertBefore(
   dom.transactionControls, dom.csvToggleBtn)` THROWS under the wrapper strategy (ref node's
   parent is row 1, not toolbar). Add `toolbarRow1: HTMLDivElement` to the `PersistentDom`
@@ -74,9 +68,8 @@ rejecting the other.)
 
 ## §3 Approach
 
-**Option A (chosen): fixed two-row wrappers.** `.UnicDB-toolbar` → `flex-direction: column`
-containing exactly two `.UnicDB-toolbar-row` children; each row is `flex-wrap: nowrap` +
-`overflow: hidden`. Row membership is decided in `buildPersistentDom()` by which wrapper an
+**Option A (chosen): fixed two-row wrappers.** The toolbar uses `flex-direction: column`
+containing exactly two row wrappers; each row is nowrap and clipped. Row membership is decided in `buildPersistentDom()` by which wrapper an
 element is appended to, so the split is structural (DOM), not emergent (CSS width math).
 
 - Why it guarantees "exactly 2 rows": a nowrap row can never gain a line; at narrow widths
@@ -114,15 +107,15 @@ NOT green.
 
 | Type | Test Name | Expected |
 |------|-----------|----------|
-| happy (css) | `.UnicDB-toolbar` rule pins the 2-row column contract | source regex: `/\.UnicDB-toolbar\s*\{[^}]*flex-direction:\s*column/` matches; `/flex-wrap:\s*nowrap/` does NOT match inside the `.UnicDB-toolbar` block |
-| happy (css) | `.UnicDB-toolbar-row` rule exists and locks its line | regex: `/\.UnicDB-toolbar-row\s*\{[^}]*flex-wrap:\s*nowrap/` matches AND same block contains `overflow:\s*hidden` |
-| happy (webview, bundle) | toolbar renders exactly 2 rows with the agreed split | `toolbar.children.length === 2`, both `.UnicDB-toolbar-row`; row 1 order = `[btn-danger, btn, sep, btn, btn, btn, btn, commit, btn, sep, export-format]`; row 2 order = `[requery-where, requery-order, btn(Re-Run), btn(Clear), export-header, export-copy, export-file, schema-chip, search-input]`, search LAST |
-| edge (structural split point) | `.UnicDB-requery-where` is the FIRST child of row 2 | `row2.firstElementChild.classList.contains("UnicDB-requery-where")` — the break is where the user pointed: "Từ Where" |
-| edge (overflow/boundary, css) | rows clip instead of scrolling; inputs absorb the squeeze | `.UnicDB-requery-where/-order` bodies match `flex:\s*1\s+1\s+100\s*%` + `min-width:\s*0` and do NOT match `140px`/`80px`; `.UnicDB-toolbar` + `.UnicDB-toolbar-row` both pin `overflow: hidden` (no horizontal scrollbar at any width) |
-| edge (state/re-parenting, bundle) | manual transaction open → controls insert into ROW 1 | dispatch a transaction-open state; render completes WITHOUT throwing; `.UnicDB-transaction-controls.parentElement` is the row-1 `.UnicDB-toolbar-row` wrapper AND `transactionControls.nextElementSibling === csvToggleBtn` (insertBefore anchor preserved) |
+| happy (css) | toolbar rule pins the 2-row column contract | source regex confirms `flex-direction: column`; `flex-wrap: nowrap` does NOT appear in the toolbar rule |
+| happy (css) | row-wrapper rule exists and locks its line | regex confirms its rule uses nowrap and `overflow: hidden` |
+| happy (webview, bundle) | toolbar renders exactly 2 rows with agreed split | exactly two row wrappers; row 1 order = `[btn-danger, btn, sep, btn, btn, btn, btn, commit, btn, sep, export-format]`; row 2 order = `[requery-where, requery-order, btn(Re-Run), btn(Clear), export-header, export-copy, export-file, schema-chip, search-input]`, search LAST |
+| edge (structural split point) | WHERE input is first child of row 2 | `row2.firstElementChild` is the WHERE input — break matches the requested placement |
+| edge (overflow/boundary, css) | rows clip instead of scrolling; inputs absorb squeeze | query inputs use `flex: 1 1 100%` + `min-width: 0`, not fixed 140px/80px widths; toolbar and both rows pin `overflow: hidden` |
+| edge (state/re-parenting, bundle) | manual transaction open → controls insert into ROW 1 | dispatch transaction-open state; render completes without throwing; transaction controls parent is row 1 and next sibling remains csvToggleBtn |
 | regression (webview, bundle) | requery behavior unchanged | Enter in WHERE posts exactly 1 `{type:"requery", index, where, orderBy}`; Clear empties both inputs; existing `webviewToolbar.test.ts` test #5 + `webviewRequeryAlignment` bundle cases stay GREEN untouched |
-| regression (webview, bundle) | toolbar census + tooltip contract survive the re-parenting | `.UnicDB-toolbar .UnicDB-btn` button count still 12 (descendant selector crosses row wrappers), each with svg + aria-label; `aiChatPanelCloneCss` non-chat-selector checks (`.UnicDB-btn`, `.UnicDB-tab`, `.UnicDB-grid-host`) stay GREEN |
-| regression (css) | RES-BAR hover polish intact | `.UnicDB-btn` block still has `transition: background-color …, box-shadow …`; `data-tooltip` pseudo block (`styles.css:98-123`) byte-untouched — no edit may appear between those lines |
+| regression (webview, bundle) | toolbar census + tooltip contract survive re-parenting | toolbar button count remains 12; each has svg + aria-label; existing non-chat selector checks remain green |
+| regression (css) | hover polish intact | button transition keeps background-color and box-shadow; tooltip pseudo block remains byte-untouched |
 
 No bugfix regression-against-today is possible for the layout itself (today's code is the
 single-row state this cycle deliberately reverses — the "RED before GREEN" step is the
@@ -160,13 +153,10 @@ self-skip when `dist/webview.js` is missing — an executor that skips them with
 
 ## §7 Global Constraints
 
-- Preserve class names: `.UnicDB-requery-where`, `.UnicDB-requery-order`,
-  `.UnicDB-requery-run`, `.UnicDB-requery-clear`, `.UnicDB-toolbar`, `.UnicDB-search-input`,
-  `.UnicDB-export-*`, `.UnicDB-schema-chip` (tests + postMessage tests select them). NEW
-  class allowed: `.UnicDB-toolbar-row` (exactly this name).
+- Preserve existing neutral selectors for WHERE/ORDER inputs, toolbar, search, export and schema-chip elements (tests + postMessage tests select them). New row wrapper class is allowed.
 - Do NOT touch the `data-tooltip` pseudo-element block (`webview/styles.css:98-134`,
   covers both ::after tooltip body 98-122 and ::before arrow 124-134).
-- NEVER `transition: all`; the RES-BAR `.UnicDB-btn` transition stays as-is.
+- NEVER `transition: all`; the RES-BAR button transition stays as-is.
 - No version bump inside any task; orchestrator (R5) bumps to v1.53.39 + publishes to
   Marketplace per the RUN.md USER OVERRIDE.
 - No new npm dependencies; no new webview→extension message types.
@@ -249,7 +239,7 @@ FINDINGS:
       one-line reword — "no version bump inside any task this cycle; the v1.53.39
       patch + publish happens at pipeline R5 per the RUN.md override". Does not gate P3.
   minor:
-    - TASK-COLLAPSE-002 "Test Files": case #2 (.UnicDB-toolbar-row rule pin) is not
+    - TASK-COLLAPSE-002 "Test Files": case #2 (toolbar-row rule pin) is not
       assigned to any file in the per-file list (webviewToolbar line says "cases 3,
       4, 6, 7, 8"); its assertions live only in the test-#4 rewrite prose. Add case 2.
     - "4 flipped pins" label vs the enumeration webviewToolbar #3+#4 +
@@ -257,7 +247,7 @@ FINDINGS:
       so no executor confusion; suggest "5 pin assertions across 4 test sites".
     - TASK case #6 fixture: name the exact message — dispatchState({ type:
       "transactionStatus", open: true }) (webview/main.ts:4424-4427). Also note its
-      RED mode vs today is an assertion failure (parentElement is .UnicDB-toolbar),
+      RED mode vs today is an assertion failure (parentElement is the toolbar),
       not the NotFoundError throw (that only occurs post-wrapper without the
       re-target) — PLAN §3 already words this correctly.
     - data-tooltip do-not-touch range cited as styles.css:98-123, but the

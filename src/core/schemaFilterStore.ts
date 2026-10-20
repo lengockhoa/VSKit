@@ -2,7 +2,7 @@
 // Per-connection schema filter for the Schema Explorer tree.
 //
 // Persistence:
-//   key = `unicDb.schemaFilter.<connectionId>`
+//   key = `vskit.schemaFilter.<connectionId>`
 //   value = string[] (JSON-serialized; sorted for stable equality)
 //   absence = no filter applied (show every schema the adapter returns)
 //
@@ -14,7 +14,7 @@
 // onDidChange fires once per real set/clear; no-op writes do not fire.
 import * as vscode from "vscode";
 
-const KEY_PREFIX = "unicDb.schemaFilter.";
+const KEY_PREFIX = "vskit.schemaFilter.";
 
 export interface SchemaFilterChangeEvent {
   /** Connection id whose filter changed. */

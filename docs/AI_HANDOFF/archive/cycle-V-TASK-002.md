@@ -23,7 +23,7 @@ only match regexes, it cannot know `users` is a real table.
   `schemaCache` instance already exists there (`src/extension.ts:132`) — reuse it, do not
   construct a second cache. Also call the provider's `refresh()` from the two places that
   already invalidate the cache: the `mgr.onDidChangeActive` subscription
-  (`src/extension.ts:141`) and the `UnicDB.refreshSchema` command handler
+  (`src/extension.ts:141`) and the schema-refresh command handler
   (`src/extension.ts:233-237`).
 - `src/ui/__tests__/sqlSemanticTokens.test.ts` **(new)** — tests below.
 
@@ -81,7 +81,7 @@ npm test
       `readonly onDidChangeSemanticTokens: vscode.Event<void>` and a public `refresh(): void`
       that fires it, plus `dispose()` disposing the underlying `EventEmitter`.
 - [ ] `src/extension.ts` calls `refresh()` from **both** cache-invalidation sites —
-      `mgr.onDidChangeActive` (`:141`) and the `UnicDB.refreshSchema` handler (`:233-237`) —
+      `mgr.onDidChangeActive` (`:141`) and the schema-refresh handler (`:233-237`) —
       and pushes the provider onto `disposables` so its emitter is released on deactivate.
 - [ ] All 10 Test Cases PASS.
 - [ ] `npm run typecheck` clean; `npm test` ≥ 1327 passed, 0 failed.
@@ -90,7 +90,7 @@ npm test
 ## Dependencies
 
 - (none) — independent of TASK-001. Semantic tokens layer over whatever TextMate grammar
-  is active; they do not require UnicDB's injection grammar to exist.
+  is active; they do not require a particular injection grammar to exist.
 
 ## Interfaces
 
@@ -153,7 +153,7 @@ Required shape:
   the only signal.
 - Call `refresh()` wherever the cache becomes newly-valid. Two sites already exist and
   need no new plumbing: `mgr.onDidChangeActive` at `src/extension.ts:141` (currently
-  `() => schemaCache.invalidate()`) and the `UnicDB.refreshSchema` command at
+  `() => schemaCache.invalidate()`) and the schema-refresh command at
   `src/extension.ts:233-237`. Extend both to also call `provider.refresh()`.
 - Additionally, when `provideDocumentSemanticTokens` runs against a **cold** cache — the
   awaited lookup returned empty *and* `hasConnection()` is true — schedule one `refresh()`
@@ -172,71 +172,3 @@ resolves to zero tokens (case 4 unchanged), it just gets a second chance once da
 Phase 3 executor append `## Executor Report` BELOW this separator.
 Phase 4 reviewer append `## Reviewer Verdict` BELOW the Executor Report.
 -->
-
-## Executor Report
-
-```
-STATUS: DONE
-EXECUTOR_TOOL: claude-code
-EXECUTOR_MODEL: bao-sonnet
-EXECUTOR_SUBAGENT: feature-implementer
-SUMMARY: Added SqlSemanticTokensProvider (.sql semantic coloring by live
-  schema/table/column via SchemaCache), wired registration + refresh() into
-  extension.ts, and shipped 10 TDD test cases (9 unit + 1 registration guard).
-TEST_PLAN_FOLLOWED: task §Test Cases (#1-#10)
-FILES_CHANGED:
-  - src/ui/sqlSemanticTokens.ts: new — SQL_SEMANTIC_LEGEND + provider
-    (onDidChangeSemanticTokens EventEmitter, provideDocumentSemanticTokens,
-    refresh(), dispose(), cold-cache refresh scheduling).
-  - src/extension.ts: import provider; construct next to SchemaCache; guard
-    registerDocumentSemanticTokensProvider; push provider onto disposables;
-    refresh() from mgr.onDidChangeActive + UnicDB.refreshSchema.
-  - src/ui/__tests__/sqlSemanticTokens.test.ts: new — cases #1-#7,#9,#10.
-  - src/extension.test.ts: case #8 (registration guard) added.
-TESTS_ADDED:
-  - src/ui/__tests__/sqlSemanticTokens.test.ts: #1-#7,#9,#10.
-  - src/extension.test.ts: TASK-002 #8 activate() does not throw when the API is absent.
-VERIFICATION:
-  command: npx vitest run src/ui/__tests__/sqlSemanticTokens.test.ts src/extension.test.ts && npm run typecheck && npm test
-  result: semantic tests 9/9 pass; extension tests 60/60 pass; typecheck clean; full npm test 1337 passed, 0 failed (2 skipped)
-  output_excerpt: |
-    Test Files  96 passed | 1 skipped (97)
-    Tests  1337 passed | 2 skipped (1339)
-RED_OUTPUT (module missing, pre-implementation):
-    FAIL src/ui/__tests__/sqlSemanticTokens.test.ts
-    Error: Failed to load url ../sqlSemanticTokens ... Does the file exist?
-    Test Files  1 failed (1) / Tests no tests
-ISSUES: none
-HANDOFF_TO_REVIEWER: yes — provider is a new shared-runtime surface
-NEXT: ready for review
-```
-
-**Design decisions (recorded per Handoff mode):**
-- `provideDocumentSemanticTokens` keeps `vscode`'s `(document, token)` arity; the
-  legend is the module constant `SQL_SEMANTIC_LEGEND` (fixed at registration), so no
-  legend parameter is threaded through. Tests pass the legend arg harmlessly (ignored).
-- Cold cache: `Promise.race` with a 50 ms timeout. Timeout wins → empty token set +
-  one auto-`refresh()` when the in-flight lookup settles, guarded by a per-provider
-  `coldRefreshScheduled` boolean (breaks the fire-per-edit loop; never fires
-  synchronously inside provide).
-- Column resolution: only the LAST `FROM` target's columns are fetched (schema-qualified
-  `public.users` handled); unresolvable FROM → schema/table tokens only, no N-query storm.
-- `npm run compile` was run once because `dist/` was absent in this clean worktree
-  (pre-existing test `schemaFormBundlePresent` needs it); after that full suite is green.
-
-## Reviewer Verdict
-
-VERDICT: approved
-REVIEWER_MODEL: bao-opus
-EXECUTOR_MODEL: bao-sonnet
-VERIFICATION_RERUN:
-  command: "npm run typecheck && npx vitest run src/ui/__tests__/sqlSemanticTokens.test.ts src/extension.test.ts"
-  result: typecheck clean; 69/69 pass (9 semantic + 60 extension)
-FINDINGS:
-  critical: none
-  important: none
-  minor: none
-NEXT_STATUS_FOR_INDEX: approved
-NOTES: Clean implementation. Provider correctly uses shared SchemaCache (no second instance),
-  refresh() wired from both invalidation sites, cold-cache race/guard pattern sound,
-  all 10 test cases have real expect assertions with concrete token data.

@@ -22,7 +22,7 @@
 
 import { createChatIcon } from "./icons";
 
-const ROOT_CLASS = "UnicDB-ai-chat-v2";
+const ROOT_CLASS = "VSKit-ai-chat-v2";
 
 function cls(name: string): string {
   return `${ROOT_CLASS}-${name}`;

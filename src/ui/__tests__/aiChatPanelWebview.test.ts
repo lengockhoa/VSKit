@@ -46,7 +46,7 @@ const compiled = execFileSync(
 ).toString();
 
 
-interface UnicDBApi {
+interface VSKitApi {
   postMessage: (msg: unknown) => void;
 }
 
@@ -58,16 +58,16 @@ interface Harness {
 
 function makeHarness(): Harness {
   const received: Array<Record<string, unknown>> = [];
-  const api: UnicDBApi = {
+  const api: VSKitApi = {
     postMessage: (msg: unknown) => {
       received.push(msg as Record<string, unknown>);
     },
   };
-  (globalThis as unknown as { acquireVsCodeApi: () => UnicDBApi })
+  (globalThis as unknown as { acquireVsCodeApi: () => VSKitApi })
     .acquireVsCodeApi = () => api;
 
   document.body.innerHTML =
-    '<div id="UnicDB-root" class="UnicDB-form-body"></div>';
+    '<div id="VSKit-root" class="VSKit-form-body"></div>';
 
   // Re-eval accumulates `window.addEventListener("message", ...)` handlers
   // across previous tests (each IIFE evaluates a fresh closure), so the
@@ -108,7 +108,7 @@ function makeHarness(): Harness {
   return {
     received,
     dispatch,
-    root: document.getElementById("UnicDB-root") as HTMLDivElement,
+    root: document.getElementById("VSKit-root") as HTMLDivElement,
   };
 }
 
@@ -293,7 +293,7 @@ describe("AiChatPanelWebview — permission detail collapsible (TASK-001)", () =
     const h = makeHarness();
     h.dispatch({ type: "init", hasHistory: false });
     h.dispatch(longDetailRequest(longDetail));
-    const card = h.root.querySelector(".UnicDB-chat-permission");
+    const card = h.root.querySelector(".VSKit-chat-permission");
     expect(card).not.toBeNull();
     // Collapsible: a <details> with a <summary> + <pre>.
     const details = card?.querySelector("details");
@@ -302,9 +302,9 @@ describe("AiChatPanelWebview — permission detail collapsible (TASK-001)", () =
     expect(summary?.textContent).toBe("Show tool details");
     const pre = details?.querySelector("pre");
     expect(pre?.textContent).toBe(longDetail);
-    // No .UnicDB-chat-permission-tool-detail plain div when collapsible is used.
+    // No .VSKit-chat-permission-tool-detail plain div when collapsible is used.
     // When collapsible, the detail element is a <details>, not a plain div.
-    expect(card?.querySelector("div.UnicDB-chat-permission-tool-detail")).toBeNull();
+    expect(card?.querySelector("div.VSKit-chat-permission-tool-detail")).toBeNull();
     // Sanity: nothing in card assigned innerHTML — textContent only.
     const threadHtml = h.root.innerHTML;
     expect(threadHtml).not.toMatch(/<script/i);
@@ -314,23 +314,23 @@ describe("AiChatPanelWebview — permission detail collapsible (TASK-001)", () =
     const h = makeHarness();
     h.dispatch({ type: "init", hasHistory: false });
     h.dispatch(longDetailRequest("short detail"));
-    const card = h.root.querySelector(".UnicDB-chat-permission");
+    const card = h.root.querySelector(".VSKit-chat-permission");
     expect(card).not.toBeNull();
-    const plain = card?.querySelector(".UnicDB-chat-permission-tool-detail");
+    const plain = card?.querySelector(".VSKit-chat-permission-tool-detail");
     expect(plain).not.toBeNull();
     expect(plain?.textContent).toBe("short detail");
     // No <details> when detail is short.
     expect(card?.querySelector("details")).toBeNull();
   });
 
-  it("#8 empty detail: no .UnicDB-chat-permission-tool-detail node", () => {
+  it("#8 empty detail: no .VSKit-chat-permission-tool-detail node", () => {
     const h = makeHarness();
     h.dispatch({ type: "init", hasHistory: false });
     h.dispatch(longDetailRequest(""));
-    const card = h.root.querySelector(".UnicDB-chat-permission");
+    const card = h.root.querySelector(".VSKit-chat-permission");
     expect(card).not.toBeNull();
     expect(
-      card?.querySelector(".UnicDB-chat-permission-tool-detail"),
+      card?.querySelector(".VSKit-chat-permission-tool-detail"),
     ).toBeNull();
     expect(card?.querySelector("details")).toBeNull();
   });
@@ -427,24 +427,24 @@ describe("AiChatPanelWebview — no apiKey crossing", () => {
 // bubble; without de-stream on done, the y is appended into the orphaned
 // streaming bubble that x created, merging the two turns' text.
 describe("AiChatPanelWebview — de-stream on done/error (regression F4)", () => {
-  it('#7 done de-streams: after delta(x)+done, no .UnicDB-chat-streaming bubble; next delta(y) opens new bubble', () => {
+  it('#7 done de-streams: after delta(x)+done, no .VSKit-chat-streaming bubble; next delta(y) opens new bubble', () => {
     const h = makeHarness();
     h.dispatch({ type: "init", hasHistory: false });
     h.dispatch({ type: "delta", text: "x" });
     // Verify the streaming bubble IS open before done (sanity).
-    expect(document.querySelector(".UnicDB-chat-streaming")).not.toBeNull();
+    expect(document.querySelector(".VSKit-chat-streaming")).not.toBeNull();
     h.dispatch({ type: "done" });
     // After done, streaming bubble must have been removed (de-streamed).
-    expect(document.querySelector(".UnicDB-chat-streaming")).toBeNull();
+    expect(document.querySelector(".VSKit-chat-streaming")).toBeNull();
     // The x bubble still has its content visible (no text wipe).
-    const after = document.querySelectorAll(".UnicDB-chat-bubble.UnicDB-chat-assistant");
+    const after = document.querySelectorAll(".VSKit-chat-bubble.VSKit-chat-assistant");
     expect(after).toHaveLength(1);
     expect(after[0]?.textContent).toBe("x");
 
     // Second turn: delta(y) must open a NEW bubble, NOT merge into x.
     h.dispatch({ type: "delta", text: "y" });
     const allAfter2 = document.querySelectorAll(
-      ".UnicDB-chat-bubble.UnicDB-chat-assistant",
+      ".VSKit-chat-bubble.VSKit-chat-assistant",
     );
     expect(allAfter2).toHaveLength(2);
     expect(allAfter2[0]?.textContent).toBe("x");
@@ -455,11 +455,11 @@ describe("AiChatPanelWebview — de-stream on done/error (regression F4)", () =>
     const h = makeHarness();
     h.dispatch({ type: "init", hasHistory: false });
     h.dispatch({ type: "delta", text: "x" });
-    expect(document.querySelector(".UnicDB-chat-streaming")).not.toBeNull();
+    expect(document.querySelector(".VSKit-chat-streaming")).not.toBeNull();
     h.dispatch({ type: "error", message: "stream aborted" });
-    expect(document.querySelector(".UnicDB-chat-streaming")).toBeNull();
+    expect(document.querySelector(".VSKit-chat-streaming")).toBeNull();
     // Error bubble is added; original text x stays visible.
-    const bubbles = document.querySelectorAll(".UnicDB-chat-bubble");
+    const bubbles = document.querySelectorAll(".VSKit-chat-bubble");
     expect(bubbles.length).toBeGreaterThanOrEqual(2);
   });
 });
@@ -488,7 +488,7 @@ describe("AiChatPanelWebview — Resume button + session picker", () => {
     const cancels = h.received.filter((m) => m.type === "resume_cancel");
     expect(cancels).toHaveLength(1);
     // Picker is gone from the DOM.
-    expect(h.root.querySelector(".UnicDB-chat-resume-picker")).toBeNull();
+    expect(h.root.querySelector(".VSKit-chat-resume-picker")).toBeNull();
   });
 });
 
@@ -508,25 +508,25 @@ describe("AiChatPanelWebview — history batch render", () => {
     });
 
     const thread = document.getElementById("thread") as HTMLDivElement;
-    // User bubble: plain text node, class UnicDB-chat-user.
-    const userBubbles = thread.querySelectorAll(".UnicDB-chat-bubble.UnicDB-chat-user");
+    // User bubble: plain text node, class VSKit-chat-user.
+    const userBubbles = thread.querySelectorAll(".VSKit-chat-bubble.VSKit-chat-user");
     expect(userBubbles.length).toBe(1);
     expect(userBubbles[0]?.textContent).toBe("hi");
     // Assistant bubble: uses existing markdown renderer → emits <strong>.
     const assistantBubbles = thread.querySelectorAll(
-      ".UnicDB-chat-bubble.UnicDB-chat-assistant",
+      ".VSKit-chat-bubble.VSKit-chat-assistant",
     );
     expect(assistantBubbles.length).toBe(1);
     expect(assistantBubbles[0]?.innerHTML).toMatch(/<strong>bold<\/strong>/);
     // Tool item: one-line, collapsed (no markdown interpreted, no inner HTML
     // payload from host data beyond text).
-    const toolItems = thread.querySelectorAll(".UnicDB-chat-history-tool");
+    const toolItems = thread.querySelectorAll(".VSKit-chat-history-tool");
     expect(toolItems.length).toBe(1);
     expect(toolItems[0]?.textContent).toContain("ran sql_query");
     // DOM order matches item order.
     const ordered = Array.from(
       thread.querySelectorAll(
-        ".UnicDB-chat-bubble, .UnicDB-chat-history-tool",
+        ".VSKit-chat-bubble, .VSKit-chat-history-tool",
       ),
     );
     expect(ordered.length).toBe(3);
@@ -554,7 +554,7 @@ describe("AiChatPanelWebview — history batch render", () => {
     const thread = document.getElementById("thread") as HTMLDivElement;
     expect(thread.textContent ?? "").not.toMatch(/secret thought/);
     // Only the user + assistant bubbles exist.
-    const bubbles = thread.querySelectorAll(".UnicDB-chat-bubble");
+    const bubbles = thread.querySelectorAll(".VSKit-chat-bubble");
     expect(bubbles.length).toBe(2);
   });
 
@@ -568,7 +568,7 @@ describe("AiChatPanelWebview — history batch render", () => {
       truncatedCount: 23,
     });
     const thread = document.getElementById("thread") as HTMLDivElement;
-    const notice = thread.querySelector(".UnicDB-chat-history-truncated");
+    const notice = thread.querySelector(".VSKit-chat-history-truncated");
     expect(notice).not.toBeNull();
     expect(notice?.textContent).toMatch(/^23 earlier items not shown$/);
     // Notice sits above the rendered items.
@@ -593,7 +593,7 @@ describe("AiChatPanelWebview — history batch render", () => {
     const threadHtml = h.root.innerHTML;
     expect(threadHtml).not.toMatch(/<script/i);
     expect(threadHtml).not.toMatch(/<img[^>]*onerror/i);
-    const row = h.root.querySelector(".UnicDB-chat-resume-row");
+    const row = h.root.querySelector(".VSKit-chat-resume-row");
     expect(row?.textContent).toContain("<img src=x onerror=alert(1)>");
     expect(row?.textContent).toContain("<script>window.__pwned=1</script>");
     const w = window as unknown as Record<string, unknown>;
@@ -630,7 +630,7 @@ describe("AiChatPanelWebview — init re-enable (TASK-003)", () => {
     }).not.toThrow();
     // Thread container still exists and has no error bubbles.
     const thread = document.getElementById("thread");
-    expect(thread?.querySelectorAll(".UnicDB-chat-bubble.UnicDB-chat-error").length ?? 0).toBe(0);
+    expect(thread?.querySelectorAll(".VSKit-chat-bubble.VSKit-chat-error").length ?? 0).toBe(0);
   });
 });
 
@@ -650,7 +650,7 @@ describe("AiChatPanelWebview — TASK-AG-001 composer guards", () => {
     // actions row to simulate a composer-less surface, then drive message
     // paths that touch buttons/inputs.
     h.dispatch({ type: "init", hasHistory: false });
-    document.querySelector(".UnicDB-chat-actions")?.remove();
+    document.querySelector(".VSKit-chat-actions")?.remove();
     expect(() => {
       h.dispatch({ type: "init", hasHistory: false });
       h.dispatch({ type: "done" });

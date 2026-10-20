@@ -98,7 +98,7 @@ RED_OUTPUT: |
 
   5. styles.css tier — ran the CSS contract suite against the pre-append
      stylesheet (git show HEAD:...styles.css): 8 real failures, first:
-     AssertionError: expected '/* webview/aiChat/styles.css ...' to contain '.UnicDB-ai-chat-v2-error-card'
+     AssertionError: expected '/* webview/aiChat/styles.css ...' to contain '.vskit-ai-chat-v2-error-card'
      Restored the appended block; 42/42 green.
 
 Verification Output: |

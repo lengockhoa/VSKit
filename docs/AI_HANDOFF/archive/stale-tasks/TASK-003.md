@@ -74,14 +74,14 @@ EXECUTOR_TOOL: Claude Code (Agent tool)
 EXECUTOR_MODEL: claude-sonnet-4-5
 EXECUTOR_SUBAGENT: feature-implementer
 RED_OUTPUT: |
-  RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-003
+  RUN  v1.6.1 /workspace/.worktrees/task-003
 
    ❯ src/ai/codex/__tests__/detect.test.ts  (0 test)
 
   ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
 
    FAIL  src/ai/codex/__tests__/detect.test.ts [ src/ai/codex/__tests__/detect.test.ts ]
-  Error: Failed to load url ../detect (resolved id: ../detect) in /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-003/src/ai/codex/__tests__/detect.test.ts. Does the file exist?
+  Error: Failed to load url ../detect (resolved id: ../detect) in /workspace/.worktrees/task-003/src/ai/codex/__tests__/detect.test.ts. Does the file exist?
    ❯ loadAndTransform ../../node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
 
   ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
@@ -90,7 +90,7 @@ RED_OUTPUT: |
         Tests  no tests
 Verification Output: |
   === vitest ===
-  RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-003
+  RUN  v1.6.1 /workspace/.worktrees/task-003
 
    ✓ src/ai/codex/__tests__/detect.test.ts  (12 tests) 3ms
 
@@ -100,7 +100,7 @@ Verification Output: |
      Duration  172ms
 
   === typecheck ===
-  > UnicDB@1.53.23 typecheck
+  > Extension@1.53.23 typecheck
   > tsc --noEmit
   (exit 0, no errors)
 Status: PASS

@@ -68,12 +68,12 @@ beforeAll(() => {
 const distPath = resolve(process.cwd(), "dist", "webview.js");
 const bundleSrc = existsSync(distPath) ? readFileSync(distPath, "utf8") : null;
 
-interface UnicDBGlobals {
+interface VSKitGlobals {
   gridApi?: GridApi;
   checkLoadMore?: () => void;
 }
 
-interface UnicDBApi {
+interface VSKitApi {
   postMessage: (msg: unknown) => void;
 }
 
@@ -87,16 +87,16 @@ function loadBundle(): {
     );
   }
 
-  document.body.innerHTML = '<div id="UnicDB-root" class="UnicDB-webview"></div>';
-  const root = document.getElementById("UnicDB-root") as HTMLDivElement;
+  document.body.innerHTML = '<div id="VSKit-root" class="VSKit-webview"></div>';
+  const root = document.getElementById("VSKit-root") as HTMLDivElement;
 
   const received: Array<Record<string, unknown>> = [];
-  const api: UnicDBApi = {
+  const api: VSKitApi = {
     postMessage: (msg) => {
       received.push(msg as Record<string, unknown>);
     },
   };
-  (globalThis as unknown as { acquireVsCodeApi: () => UnicDBApi }).acquireVsCodeApi =
+  (globalThis as unknown as { acquireVsCodeApi: () => VSKitApi }).acquireVsCodeApi =
     () => api;
 
   (0, eval)(bundleSrc);
@@ -109,8 +109,8 @@ function dispatchState(msg: Record<string, unknown>): void {
 }
 
 function getGridApi(): GridApi | null {
-  const w = window as unknown as { __UnicDB?: UnicDBGlobals };
-  return w.__UnicDB?.gridApi ?? null;
+  const w = window as unknown as { __VSKit?: VSKitGlobals };
+  return w.__VSKit?.gridApi ?? null;
 }
 
 function selectState(args: {
@@ -206,7 +206,7 @@ describeIfBundle("webview/main.ts bundle (TASK-402)", () => {
        await flushGridEvents();
        expect(api!.getDisplayedRowCount()).toBe(1);
 
-       const footer = root.querySelector(".UnicDB-grid-footer") as HTMLElement;
+       const footer = root.querySelector(".VSKit-grid-footer") as HTMLElement;
        expect(footer).toBeTruthy();
        expect(footer.textContent).toMatch(/1 of 3/);
      },
@@ -303,8 +303,8 @@ describeIfBundle("webview/main.ts bundle (TASK-402)", () => {
       // Clear any pre-existing loadMore messages, then trigger the hook.
       received.length = 0;
       const hook = (window as unknown as {
-        __UnicDBCheckLoadMoreForHost?: () => void;
-      }).__UnicDBCheckLoadMoreForHost;
+        __VSKitCheckLoadMoreForHost?: () => void;
+      }).__VSKitCheckLoadMoreForHost;
       expect(typeof hook).toBe("function");
       hook!();
       void root;
@@ -330,8 +330,8 @@ describeIfBundle("webview/main.ts bundle (TASK-402)", () => {
       });
       await flushGridEvents();
       received.length = 0;
-      (window as unknown as { __UnicDBCheckLoadMoreForHost?: () => void })
-        .__UnicDBCheckLoadMoreForHost!();
+      (window as unknown as { __VSKitCheckLoadMoreForHost?: () => void })
+        .__VSKitCheckLoadMoreForHost!();
       expect(received.filter((m) => m.type === "loadMore").length).toBe(0);
 
       // Now clear filter → onFilterChanged fires → colFilterActive flips off
@@ -339,8 +339,8 @@ describeIfBundle("webview/main.ts bundle (TASK-402)", () => {
       api!.setFilterModel(null);
       await flushGridEvents();
       received.length = 0;
-      (window as unknown as { __UnicDBCheckLoadMoreForHost?: () => void })
-        .__UnicDBCheckLoadMoreForHost!();
+      (window as unknown as { __VSKitCheckLoadMoreForHost?: () => void })
+        .__VSKitCheckLoadMoreForHost!();
       const loadMore = received.filter((m) => m.type === "loadMore");
       expect(loadMore.length).toBe(1);
       const lm = loadMore[0] as { index: number };
@@ -354,7 +354,7 @@ describeIfBundle("webview/main.ts bundle (TASK-402)", () => {
       const { received, root } = loadBundle();
       dispatchState(threeRowsState());
       await flushGridEvents();
-      const input = root.querySelector(".UnicDB-search-input") as HTMLInputElement;
+      const input = root.querySelector(".VSKit-search-input") as HTMLInputElement;
       expect(input).toBeTruthy();
 
       for (const text of ["b", "be", "bet"]) {
@@ -393,8 +393,8 @@ describeIfBundle("webview/main.ts bundle (TASK-402)", () => {
       });
       await flushGridEvents();
       received.length = 0;
-      (window as unknown as { __UnicDBCheckLoadMoreForHost?: () => void })
-        .__UnicDBCheckLoadMoreForHost!();
+      (window as unknown as { __VSKitCheckLoadMoreForHost?: () => void })
+        .__VSKitCheckLoadMoreForHost!();
       expect(received.filter((m) => m.type === "loadMore").length).toBe(0);
     },
   );

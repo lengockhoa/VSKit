@@ -1,7 +1,7 @@
 # Cycle RP — Final Report
 
 **Command:** handoff-fullstack
-**Goal:** Move SQL Results to a tab in VS Code's bottom panel (next to Terminal); remove `UnicDB.resultsPlacement` setting.
+**Goal:** Move Results to a tab in VS Code's bottom panel (next to Terminal); remove the `Extension.resultsPlacement` setting.
 **Base:** main @ 4812026 (after R5 push)
 **Date:** 2026-09-06
 
@@ -17,7 +17,7 @@
 All four constraints honored:
 1. ✅ SQL results now live in a tab in the bottom panel (next to Terminal).
 2. ✅ Never side-by-side with the SQL editor — the panel is registered via `viewsContainers.panel`.
-3. ✅ `UnicDB.resultsPlacement` setting removed entirely (no alias, no default, no fallback) — placement is forced.
+3. ✅ `Extension.resultsPlacement` setting removed entirely (no alias, no default, no fallback) — placement is forced.
 4. ✅ Thoroughly tested — 244/245 files (1 skipped), 3619/3621 tests (2 skipped), 0 failed.
 
 ## Task delivery summary
@@ -37,12 +37,12 @@ Cycle gate: `npm test` → **244 passed | 1 skipped (245 files) | 3619 passed | 
 
 | Before | After |
 |--------|-------|
-| `vscode.window.createWebviewPanel()` lands in editor area | `registerWebviewViewProvider("UnicDB.results")` against `viewsContainers.panel` |
+| `vscode.window.createWebviewPanel()` lands in editor area | `registerWebviewViewProvider("extension.results")` against `viewsContainers.panel` |
 | Side-by-side with SQL editor | Tab in bottom panel next to Terminal |
-| `UnicDB.resultsPlacement` user setting (enum: `editor` \| `panel`) | Setting removed — placement forced to panel |
-| `ResultsPanel.show()` calls `createWebviewPanel(...)` directly | `ResultsPanel.show()` calls `executeCommand("UnicDB.results.focus")` (view id, dot notation) |
+| `Extension.resultsPlacement` user setting (enum: `editor` \| `panel`) | Setting removed — placement forced to panel |
+| `ResultsPanel.show()` calls `createWebviewPanel(...)` directly | `ResultsPanel.show()` calls `executeCommand("extension.results.focus")` (view id, dot notation) |
 
-The round-1 review caught a critical bug: the original RP-001 had `executeCommand("UnicDB-results.focus")` (container id with hyphen). VS Code only auto-registers `<viewId>.focus` (view id with dot). The wrong string never matched a real command, so the bottom panel never auto-revealed on query run. RP-006 fixed all 19 references in lockstep.
+The round-1 review caught a critical bug: the original task used `executeCommand("extension-results.focus")` (container id with hyphen). VS Code only auto-registers `<viewId>.focus` (view id with dot). The wrong string never matched a real command, so the bottom panel never auto-revealed on query run. The correction fixed all 19 references in lockstep.
 
 ## Fix-round evolution
 
@@ -67,7 +67,7 @@ These are tidy-up items for a future "docs polish" cycle, not blockers.
 
 **Shipped (in 4812026, now on origin main):**
 - 1 source file: `src/ui/resultsPanel.ts` — uses `WebviewViewProvider`, calls correct focus command
-- 1 manifest: `package.json` — adds `viewsContainers.panel` + view + activation event, **deletes** `UnicDB.resultsPlacement`
+- 1 manifest: `package.json` — adds `viewsContainers.panel` + view + activation event, **deletes** `Extension.resultsPlacement`
 - 15 test files (1 new regression net + 14 updated to match new literal)
 - 2 doc files updated (user guide + PLAN.md)
 - 1 new task: `TASK-RP-004` regression net
@@ -79,7 +79,7 @@ These are tidy-up items for a future "docs polish" cycle, not blockers.
 ## Verification log
 
 ```
-$ grep -rn "UnicDB-results.focus" src/
+$ grep -rn "extension-results.focus" src/
 (no matches)
 
 $ npm run typecheck
@@ -118,7 +118,7 @@ src/ui/__tests__/resultsPanelClose.test.ts                (modified — correct 
 src/ui/__tests__/resultsPanelCloseWiring.test.ts          (modified — correct focus cmd)
 src/ui/__tests__/resultsPanelOrderBy.test.ts              (modified — correct focus cmd)
 src/ui/__tests__/userGuideContent.test.ts                 (modified — drop resultsPlacement docs)
-docs/UNICDB_USER_GUIDE.md                                 (modified — document forced placement)
+docs/USER_GUIDE.md                                 (modified — document forced placement)
 docs/AI_HANDOFF/PLAN.md                                   (modified)
 docs/AI_HANDOFF/tasks/TASK-RP-001.md through RP-006.md    (new)
 docs/AI_HANDOFF/INDEX.md                                  (new)

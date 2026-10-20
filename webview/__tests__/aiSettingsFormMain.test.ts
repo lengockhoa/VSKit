@@ -69,7 +69,7 @@ beforeAll(() => {
 const distPath = resolve(process.cwd(), "dist", "aiSettingsForm.js");
 const bundleSrc = existsSync(distPath) ? readFileSync(distPath, "utf8") : null;
 
-interface UnicDBApi {
+interface VSKitApi {
   postMessage: (msg: unknown) => void;
 }
 
@@ -85,16 +85,16 @@ function loadBundle(): BundleHandle {
     );
   }
   document.body.innerHTML =
-    '<div id="UnicDB-root" class="UnicDB-form-body"></div>';
-  const root = document.getElementById("UnicDB-root") as HTMLDivElement;
+    '<div id="VSKit-root" class="VSKit-form-body"></div>';
+  const root = document.getElementById("VSKit-root") as HTMLDivElement;
 
   const received: Array<Record<string, unknown>> = [];
-  const api: UnicDBApi = {
+  const api: VSKitApi = {
     postMessage: (msg) => {
       received.push(msg as Record<string, unknown>);
     },
   };
-  (globalThis as unknown as { acquireVsCodeApi: () => UnicDBApi }).acquireVsCodeApi =
+  (globalThis as unknown as { acquireVsCodeApi: () => VSKitApi }).acquireVsCodeApi =
     () => api;
 
   (0, eval)(bundleSrc);

@@ -77,18 +77,18 @@ beforeAll(() => {
 const distPath = resolve(process.cwd(), "dist", "webview.js");
 const bundleSrc = existsSync(distPath) ? readFileSync(distPath, "utf8") : null;
 
-interface UnicDBApi {
+interface VSKitApi {
   postMessage: (msg: unknown) => void;
 }
 
-interface UnicDBBundle {
+interface VSKitBundle {
   render: () => void;
   postToHost: (msg: unknown) => void;
 }
 
-interface UnicDBGlobal {
-  __UnicDB?: UnicDBBundle;
-  acquireVsCodeApi?: () => UnicDBApi;
+interface VSKitGlobal {
+  __VSKit?: VSKitBundle;
+  acquireVsCodeApi?: () => VSKitApi;
 }
 
 interface GridNodeLike {
@@ -101,41 +101,41 @@ interface GridApiLike {
 }
 
 interface GridHostWithApi extends HTMLElement {
-  __UnicDBApi?: GridApiLike;
+  __VSKitApi?: GridApiLike;
 }
 
 function readGridApi(host: HTMLElement | null): GridApiLike | null {
   if (!host) return null;
-  return (host as GridHostWithApi).__UnicDBApi ?? null;
+  return (host as GridHostWithApi).__VSKitApi ?? null;
 }
 
 function loadBundle(): {
   received: Array<Record<string, unknown>>;
   root: HTMLDivElement;
-  UnicDB: UnicDBBundle;
+  VSKit: VSKitBundle;
 } {
   if (!bundleSrc) {
     throw new Error(
       "dist/webview.js missing — run `npm run compile` before this test",
     );
   }
-  document.body.innerHTML = '<div id="UnicDB-root" class="UnicDB-webview"></div>';
-  const root = document.getElementById("UnicDB-root") as HTMLDivElement;
+  document.body.innerHTML = '<div id="VSKit-root" class="VSKit-webview"></div>';
+  const root = document.getElementById("VSKit-root") as HTMLDivElement;
 
   const received: Array<Record<string, unknown>> = [];
-  const api: UnicDBApi = {
+  const api: VSKitApi = {
     postMessage: (msg) => {
       received.push(msg as Record<string, unknown>);
     },
   };
-  (globalThis as unknown as UnicDBGlobal).acquireVsCodeApi = () => api;
+  (globalThis as unknown as VSKitGlobal).acquireVsCodeApi = () => api;
 
   (0, eval)(bundleSrc);
-  const UnicDB = (window as unknown as UnicDBGlobal).__UnicDB;
-  if (!UnicDB) {
-    throw new Error("bundle did not expose __UnicDB");
+  const VSKit = (window as unknown as VSKitGlobal).__VSKit;
+  if (!VSKit) {
+    throw new Error("bundle did not expose __VSKit");
   }
-  return { received, root, UnicDB };
+  return { received, root, VSKit };
 }
 
 function dispatchState(msg: Record<string, unknown>): void {
@@ -211,9 +211,9 @@ function collectIds(api: GridApiLike | null): number[] {
 }
 
 function queryGridApiHost(): HTMLElement | null {
-  // `gridHost` is the AG Grid host element (.UnicDB-ag-host class). The
-  // persistent wrap carries the .UnicDB-grid-host class — different DOM.
-  return document.querySelector(".UnicDB-ag-host") as HTMLElement | null;
+  // `gridHost` is the AG Grid host element (.VSKit-ag-host class). The
+  // persistent wrap carries the .VSKit-grid-host class — different DOM.
+  return document.querySelector(".VSKit-ag-host") as HTMLElement | null;
 }
 
 // ---- tests ----------------------------------------------------------------
@@ -227,16 +227,16 @@ describeIfBundle("webview/main.ts WHERE/ORDER BY requery bar (TASK-504)", () => 
     dispatchState(selectState());
 
     const whereInput = root.querySelector(
-      ".UnicDB-requery-where",
+      ".VSKit-requery-where",
     ) as HTMLInputElement | null;
     const orderInput = root.querySelector(
-      ".UnicDB-requery-order",
+      ".VSKit-requery-order",
     ) as HTMLInputElement | null;
     const runBtn = root.querySelector(
-      ".UnicDB-requery-run",
+      ".VSKit-requery-run",
     ) as HTMLButtonElement | null;
     const clearBtn = root.querySelector(
-      ".UnicDB-requery-clear",
+      ".VSKit-requery-clear",
     ) as HTMLButtonElement | null;
 
     expect(whereInput).toBeTruthy();
@@ -252,13 +252,13 @@ describeIfBundle("webview/main.ts WHERE/ORDER BY requery bar (TASK-504)", () => 
     dispatchState(selectState());
 
     const whereInput = document.querySelector(
-      ".UnicDB-requery-where",
+      ".VSKit-requery-where",
     ) as HTMLInputElement | null;
     const orderInput = document.querySelector(
-      ".UnicDB-requery-order",
+      ".VSKit-requery-order",
     ) as HTMLInputElement | null;
     const runBtn = document.querySelector(
-      ".UnicDB-requery-run",
+      ".VSKit-requery-run",
     ) as HTMLButtonElement | null;
 
     whereInput!.value = "id > 1";
@@ -280,7 +280,7 @@ describeIfBundle("webview/main.ts WHERE/ORDER BY requery bar (TASK-504)", () => 
     dispatchState(selectState());
 
     const runBtn = document.querySelector(
-      ".UnicDB-requery-run",
+      ".VSKit-requery-run",
     ) as HTMLButtonElement | null;
     runBtn!.click();
 
@@ -299,13 +299,13 @@ describeIfBundle("webview/main.ts WHERE/ORDER BY requery bar (TASK-504)", () => 
     dispatchState(selectState());
 
     const whereInput = document.querySelector(
-      ".UnicDB-requery-where",
+      ".VSKit-requery-where",
     ) as HTMLInputElement | null;
     const orderInput = document.querySelector(
-      ".UnicDB-requery-order",
+      ".VSKit-requery-order",
     ) as HTMLInputElement | null;
     const clearBtn = document.querySelector(
-      ".UnicDB-requery-clear",
+      ".VSKit-requery-clear",
     ) as HTMLButtonElement | null;
 
     whereInput!.value = "x = 1";
@@ -322,10 +322,10 @@ describeIfBundle("webview/main.ts WHERE/ORDER BY requery bar (TASK-504)", () => 
     dispatchState(selectState());
 
     const whereInput = root.querySelector(
-      ".UnicDB-requery-where",
+      ".VSKit-requery-where",
     ) as HTMLInputElement | null;
     const orderInput = root.querySelector(
-      ".UnicDB-requery-order",
+      ".VSKit-requery-order",
     ) as HTMLInputElement | null;
     expect(whereInput).toBeTruthy();
     expect(orderInput).toBeTruthy();
@@ -352,10 +352,10 @@ describeIfBundle("webview/main.ts WHERE/ORDER BY requery bar (TASK-504)", () => 
     dispatchState(selectState());
 
     const whereInput = root.querySelector(
-      ".UnicDB-requery-where",
+      ".VSKit-requery-where",
     ) as HTMLInputElement | null;
     const orderInput = root.querySelector(
-      ".UnicDB-requery-order",
+      ".VSKit-requery-order",
     ) as HTMLInputElement | null;
     expect(whereInput).toBeTruthy();
     expect(orderInput).toBeTruthy();
@@ -378,23 +378,23 @@ describeIfBundle("webview/main.ts WHERE/ORDER BY requery bar (TASK-504)", () => 
   // TASK-RES-001 / TASK-COLLAPSE-002 — toolbar placement (P0 slot). The
   // requery inputs live as direct children of row 2 in the exact slot after
   // the row-1 export format <select> and before the export header checkbox.
-  // The old `data-UnicDB-requery-bar` wrapper element is gone.
+  // The old `data-VSKit-requery-bar` wrapper element is gone.
   itIfBundle("7. Toolbar placement (P0 slot): inputs between export-format and export-header; no requery-bar wrapper", () => {
     const { root } = loadBundle();
     dispatchState(selectState());
 
-    const toolbar = root.querySelector(".UnicDB-toolbar") as HTMLElement | null;
+    const toolbar = root.querySelector(".VSKit-toolbar") as HTMLElement | null;
     const exportFormat = root.querySelector(
-      ".UnicDB-export-format",
+      ".VSKit-export-format",
     ) as HTMLElement | null;
     const exportHeader = root.querySelector(
-      ".UnicDB-export-header",
+      ".VSKit-export-header",
     ) as HTMLElement | null;
     const whereInput = root.querySelector(
-      ".UnicDB-requery-where",
+      ".VSKit-requery-where",
     ) as HTMLElement | null;
     const orderInput = root.querySelector(
-      ".UnicDB-requery-order",
+      ".VSKit-requery-order",
     ) as HTMLElement | null;
     expect(toolbar).toBeTruthy();
     expect(exportFormat).toBeTruthy();
@@ -405,7 +405,7 @@ describeIfBundle("webview/main.ts WHERE/ORDER BY requery bar (TASK-504)", () => 
     // Both inputs are direct children of row 2; row 1 still owns the
     // export-format select and the split begins exactly at WHERE.
     const row2 = toolbar!.querySelector(
-      ".UnicDB-toolbar-row:nth-child(2)",
+      ".VSKit-toolbar-row:nth-child(2)",
     ) as HTMLElement | null;
     expect(row2).toBeTruthy();
     expect(whereInput!.parentElement).toBe(row2);
@@ -424,8 +424,8 @@ describeIfBundle("webview/main.ts WHERE/ORDER BY requery bar (TASK-504)", () => 
     expect(cmp(orderInput!, exportHeader!)).toBe(-1);
 
     // Old `requery-bar` wrapper element is gone.
-    expect(document.querySelector("[data-UnicDB-requery-bar]")).toBeNull();
-    expect(document.querySelector(".UnicDB-requery-bar")).toBeNull();
+    expect(document.querySelector("[data-VSKit-requery-bar]")).toBeNull();
+    expect(document.querySelector(".VSKit-requery-bar")).toBeNull();
   });
 
   // TASK-RES-001 — placeholders and aria-labels are the new fragment-style
@@ -435,10 +435,10 @@ describeIfBundle("webview/main.ts WHERE/ORDER BY requery bar (TASK-504)", () => 
     dispatchState(selectState());
 
     const whereInput = root.querySelector(
-      ".UnicDB-requery-where",
+      ".VSKit-requery-where",
     ) as HTMLInputElement | null;
     const orderInput = root.querySelector(
-      ".UnicDB-requery-order",
+      ".VSKit-requery-order",
     ) as HTMLInputElement | null;
     expect(whereInput).toBeTruthy();
     expect(orderInput).toBeTruthy();
@@ -455,7 +455,7 @@ describeIfBundle("webview/main.ts WHERE/ORDER BY requery bar (TASK-504)", () => 
     dispatchState(selectState());
 
     const whereInput = root.querySelector(
-      ".UnicDB-requery-where",
+      ".VSKit-requery-where",
     ) as HTMLInputElement | null;
     expect(whereInput).toBeTruthy();
     whereInput!.value = "id > 1";
@@ -477,7 +477,7 @@ describeIfBundle("webview/main.ts WHERE/ORDER BY requery bar (TASK-504)", () => 
     dispatchState(selectState());
 
     const whereInput = root.querySelector(
-      ".UnicDB-requery-where",
+      ".VSKit-requery-where",
     ) as HTMLInputElement | null;
     expect(whereInput).toBeTruthy();
     whereInput!.value = "id > 1";
@@ -505,23 +505,23 @@ describeIfBundle("webview/main.ts WHERE/ORDER BY requery bar (TASK-504)", () => 
 
     // Empty state: no state dispatched. Toolbar still owns the requery
     // inputs because the toolbar is persistent.
-    const toolbarEmpty = root.querySelector(".UnicDB-toolbar") as HTMLElement | null;
+    const toolbarEmpty = root.querySelector(".VSKit-toolbar") as HTMLElement | null;
     const whereInputEmpty = root.querySelector(
-      ".UnicDB-requery-where",
+      ".VSKit-requery-where",
     ) as HTMLElement | null;
     const orderInputEmpty = root.querySelector(
-      ".UnicDB-requery-order",
+      ".VSKit-requery-order",
     ) as HTMLElement | null;
     expect(toolbarEmpty).toBeTruthy();
     expect(whereInputEmpty).toBeTruthy();
     expect(orderInputEmpty).toBeTruthy();
     // No old requery-bar wrapper exists in the empty state.
-    expect(document.querySelector("[data-UnicDB-requery-bar]")).toBeNull();
+    expect(document.querySelector("[data-VSKit-requery-bar]")).toBeNull();
 
     // Now dispatch state — toolbar precedes grid host in document order.
     dispatchState(selectState());
-    const toolbar = root.querySelector(".UnicDB-toolbar") as HTMLElement | null;
-    const gridHost = root.querySelector(".UnicDB-ag-host") as HTMLElement | null;
+    const toolbar = root.querySelector(".VSKit-toolbar") as HTMLElement | null;
+    const gridHost = root.querySelector(".VSKit-ag-host") as HTMLElement | null;
     expect(toolbar).toBeTruthy();
     expect(gridHost).toBeTruthy();
 
@@ -541,12 +541,12 @@ describeIfBundle("webview/main.ts WHERE/ORDER BY requery bar (TASK-504)", () => 
     const { root } = loadBundle();
     dispatchState(selectState());
 
-    const gridWrap = root.querySelector(".UnicDB-grid-host") as HTMLElement | null;
+    const gridWrap = root.querySelector(".VSKit-grid-host") as HTMLElement | null;
     expect(gridWrap).toBeTruthy();
 
-    const gridHost = gridWrap!.querySelector(".UnicDB-ag-host") as HTMLElement | null;
+    const gridHost = gridWrap!.querySelector(".VSKit-ag-host") as HTMLElement | null;
     const gridFooter = gridWrap!.querySelector(
-      ".UnicDB-grid-footer",
+      ".VSKit-grid-footer",
     ) as HTMLElement | null;
     expect(gridHost).toBeTruthy();
     expect(gridFooter).toBeTruthy();
@@ -584,7 +584,7 @@ describeIfBundle("webview grid reset on requery (Fix R2 critical #1)", () => {
   itIfBundle(
     "ORDER BY change with equal row count RE-RENDERS new order (not stale append)",
     () => {
-      const { UnicDB } = loadBundle();
+      const { VSKit } = loadBundle();
       dispatchState(
         selectState({ rows: [[1, "a"], [2, "b"], [3, "c"]], rowCount: 3 }),
       );
@@ -608,7 +608,7 @@ describeIfBundle("webview grid reset on requery (Fix R2 critical #1)", () => {
           rowCount: 3,
         }),
       );
-      UnicDB.render();
+      VSKit.render();
       dispatchState(
         stateWithStatus({
           status: "done",
@@ -633,7 +633,7 @@ describeIfBundle("webview grid reset on requery (Fix R2 critical #1)", () => {
   itIfBundle(
     "Row-growing requery RE-RENDERS fresh rows (no append-mix [1,2,12,13])",
     () => {
-      const { UnicDB } = loadBundle();
+      const { VSKit } = loadBundle();
       // Initial state: 2 rows.
       dispatchState(
         selectState({ rows: [[1, "a"], [2, "b"]], rowCount: 2 }),
@@ -654,7 +654,7 @@ describeIfBundle("webview grid reset on requery (Fix R2 critical #1)", () => {
           rowCount: 2,
         }),
       );
-      UnicDB.render();
+      VSKit.render();
 
       // Requery result: WHERE removed → 4 rows.
       dispatchState(
@@ -692,7 +692,7 @@ describeIfBundle("webview/main.ts toolbar hover polish (TASK-RES-003)", () => {
       const { root } = loadBundle();
       dispatchState(selectState());
       const btns = Array.from(
-        root.querySelectorAll(".UnicDB-toolbar .UnicDB-btn"),
+        root.querySelectorAll(".VSKit-toolbar .VSKit-btn"),
       ).filter(
         (el): el is HTMLButtonElement => el.tagName === "BUTTON",
       ) as HTMLButtonElement[];
@@ -720,7 +720,7 @@ describeIfBundle("webview/main.ts toolbar hover polish (TASK-RES-003)", () => {
   );
 
   itIfBundle(
-    "2. .UnicDB-btn:hover:not(:disabled) declares NO layout-triggering property (jsdom cannot layout)",
+    "2. .VSKit-btn:hover:not(:disabled) declares NO layout-triggering property (jsdom cannot layout)",
     () => {
       if (!stylesSrc) {
         throw new Error("webview/styles.css missing");
@@ -730,11 +730,11 @@ describeIfBundle("webview/main.ts toolbar hover polish (TASK-RES-003)", () => {
       // absence of layout-triggering properties instead. The hover block
       // may ONLY change composited/non-layout properties (background-color,
       // box-shadow, etc.).
-      const re = /\.UnicDB-btn:hover:not\(:disabled\)\s*\{([^}]*)\}/;
+      const re = /\.VSKit-btn:hover:not\(:disabled\)\s*\{([^}]*)\}/;
       const m = re.exec(stylesSrc);
       expect(
         m,
-        "could not locate .UnicDB-btn:hover:not(:disabled) block in styles.css",
+        "could not locate .VSKit-btn:hover:not(:disabled) block in styles.css",
       ).toBeTruthy();
       const body = m![1];
       const forbidden = [
@@ -756,14 +756,14 @@ describeIfBundle("webview/main.ts toolbar hover polish (TASK-RES-003)", () => {
         );
         expect(
           propRe.test(body),
-          `.UnicDB-btn:hover:not(:disabled) must NOT declare layout-triggering property "${prop}"; body was: ${body.trim()}`,
+          `.VSKit-btn:hover:not(:disabled) must NOT declare layout-triggering property "${prop}"; body was: ${body.trim()}`,
         ).toBe(false);
       }
       // The hover block must STILL declare background-color (the visual
       // hover swap).
       expect(
         /background-color\s*:/.test(body),
-        ".UnicDB-btn:hover:not(:disabled) must still declare background-color",
+        ".VSKit-btn:hover:not(:disabled) must still declare background-color",
       ).toBe(true);
     },
   );
@@ -777,7 +777,7 @@ describeIfBundle("webview/main.ts toolbar hover polish (TASK-RES-003)", () => {
       const { root } = loadBundle();
       dispatchState(selectState());
       const btns = Array.from(
-        root.querySelectorAll(".UnicDB-toolbar .UnicDB-btn"),
+        root.querySelectorAll(".VSKit-toolbar .VSKit-btn"),
       ).filter(
         (el): el is HTMLButtonElement => el.tagName === "BUTTON",
       ) as HTMLButtonElement[];

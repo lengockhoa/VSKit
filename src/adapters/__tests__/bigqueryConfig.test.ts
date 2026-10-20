@@ -183,8 +183,8 @@ describe("validateBigQueryConnection — legacy 3-driver configs untouched", () 
       driver: "postgres",
       host: "127.0.0.1",
       port: 5433,
-      user: "UnicDB",
-      database: "UnicDB",
+      user: "VSKit",
+      database: "VSKit",
     };
     const result = validateBigQueryConnection(cfg);
     // The validator is OPT-IN for bigquery; non-bq drivers fall through
@@ -202,13 +202,13 @@ describe("validateBigQueryConnection — legacy 3-driver configs untouched", () 
       driver: "postgres",
       host: "127.0.0.1",
       port: 5433,
-      user: "UnicDB",
-      database: "UnicDB",
+      user: "VSKit",
+      database: "VSKit",
     };
     expect(cfg.host).toBe("127.0.0.1");
     expect(cfg.port).toBe(5433);
-    expect(cfg.user).toBe("UnicDB");
-    expect(cfg.database).toBe("UnicDB");
+    expect(cfg.user).toBe("VSKit");
+    expect(cfg.database).toBe("VSKit");
     expect(validateBigQueryConnection(cfg).ok).toBe(true);
   });
 });

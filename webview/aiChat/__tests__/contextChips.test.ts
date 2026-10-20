@@ -32,7 +32,7 @@ function makeStrip(callbacks: {
   onResolve?: (ref: ContextRef, choice: string) => void;
 } = {}) {
   const container = document.createElement("div");
-  container.className = "UnicDB-ai-chat-v2";
+  container.className = "VSKit-ai-chat-v2";
   document.body.appendChild(container);
   const strip = createContextChipStrip({
     container,
@@ -61,8 +61,8 @@ describe("createContextChipStrip — chips", () => {
     ]));
     const chips = container.querySelectorAll<HTMLElement>(`[${CONTEXT_CHIP_MARKER}]`);
     expect(chips).toHaveLength(1);
-    expect(chips[0]!.style.getPropertyValue("--UnicDB-chip-h")).toBe(`${CONTEXT_CHIP_MIN_HEIGHT_PX}px`);
-    expect(chips[0]!.style.getPropertyValue("--UnicDB-chip-remove")).toBe(`${CONTEXT_CHIP_REMOVE_SIZE_PX}px`);
+    expect(chips[0]!.style.getPropertyValue("--VSKit-chip-h")).toBe(`${CONTEXT_CHIP_MIN_HEIGHT_PX}px`);
+    expect(chips[0]!.style.getPropertyValue("--VSKit-chip-remove")).toBe(`${CONTEXT_CHIP_REMOVE_SIZE_PX}px`);
     expect(CONTEXT_CHIP_MIN_HEIGHT_PX).toBe(28);
     expect(CONTEXT_CHIP_REMOVE_SIZE_PX).toBe(28);
     expect(chips[0]!.querySelector('svg[data-icon="file"]')).not.toBeNull();

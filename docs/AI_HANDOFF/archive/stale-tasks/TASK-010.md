@@ -75,7 +75,7 @@ EXECUTOR_MODEL: claude-sonnet-4-5
 EXECUTOR_SUBAGENT: feature-implementer
 RED_OUTPUT: |
   FAIL  src/ai/codex/__tests__/codexChatEngine.test.ts [ src/ai/codex/__tests__/codexChatEngine.test.ts ]
-  Error: Failed to load url ../codexChatEngine (resolved id: ../codexChatEngine) in /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-010/src/ai/codex/__tests__/codexChatEngine.test.ts. Does the file exist?
+  Error: Failed to load url ../codexChatEngine (resolved id: ../codexChatEngine) in /workspace/.worktrees/task-010/src/ai/codex/__tests__/codexChatEngine.test.ts. Does the file exist?
    Test Files  1 failed (1)
         Tests  no tests
 Verification Output: |

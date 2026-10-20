@@ -32,7 +32,7 @@ import {
 } from "../../src/ui/aiChatAttachments";
 import { createChatIcon } from "./icons";
 
-const ROOT_CLASS = "UnicDB-ai-chat-v2";
+const ROOT_CLASS = "VSKit-ai-chat-v2";
 
 /** Marker attribute identifying the thumbnail strip. */
 export const ATTACHMENT_STRIP_MARKER = "data-chat-attachment-strip";
@@ -255,10 +255,10 @@ export function createAttachmentController(
   strip.setAttribute(ATTACHMENT_STRIP_MARKER, "1");
   strip.setAttribute("aria-label", "Draft images");
   strip.hidden = true;
-  strip.style.setProperty("--UnicDB-thumb-strip-max", `${THUMB_STRIP_MAX_PX}px`);
-  strip.style.setProperty("--UnicDB-thumb-size", `${THUMB_SIZE_PX}px`);
-  strip.style.setProperty("--UnicDB-thumb-radius", `${THUMB_RADIUS_PX}px`);
-  strip.style.setProperty("--UnicDB-thumb-remove", `${THUMB_REMOVE_SIZE_PX}px`);
+  strip.style.setProperty("--VSKit-thumb-strip-max", `${THUMB_STRIP_MAX_PX}px`);
+  strip.style.setProperty("--VSKit-thumb-size", `${THUMB_SIZE_PX}px`);
+  strip.style.setProperty("--VSKit-thumb-radius", `${THUMB_RADIUS_PX}px`);
+  strip.style.setProperty("--VSKit-thumb-remove", `${THUMB_REMOVE_SIZE_PX}px`);
   container.appendChild(strip);
 
   const noticeList = document.createElement("div");

@@ -112,7 +112,7 @@ Status: PASS
 Note: none
 
 Deliverable: `docs/AI_HANDOFF/notes/aichat-factbase-host.md` (new, 469 lines) in worktree
-`/Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-aichat-002`, branch
+`.../VSKit/.worktrees/task-aichat-002`, branch
 `handoff/task-aichat-002`, milestone commit `b461c6b`. No other file changed.
 
 ### RED_OUTPUT (pre-state, before the note existed; same command block the task defines)
@@ -162,7 +162,7 @@ V6 exit=0 (no placeholder markers)
 DOCS-ONLY-OK
 V7 exit=0
 ########## V8 typecheck ##########
-> UnicDB@1.53.46 typecheck
+> VSKit@1.53.46 typecheck
 > tsc --noEmit
 TYPECHECK_EXIT=0
 ```

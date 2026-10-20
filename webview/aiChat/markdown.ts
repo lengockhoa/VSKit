@@ -169,17 +169,17 @@ const CODEBLOCK_COPY_RESTORE_MS = 1500;
  */
 export function createCodeBlock(block: { readonly lang: string; readonly code: string }): HTMLElement {
   const wrapper = document.createElement("div");
-  wrapper.className = "UnicDB-ai-chat-v2-codeblock";
+  wrapper.className = "VSKit-ai-chat-v2-codeblock";
   if (block.lang.length > 0) wrapper.setAttribute("data-lang", block.lang);
 
   const header = document.createElement("div");
-  header.className = "UnicDB-ai-chat-v2-codeblock-header";
+  header.className = "VSKit-ai-chat-v2-codeblock-header";
   const lang = document.createElement("span");
-  lang.className = "UnicDB-ai-chat-v2-codeblock-lang";
+  lang.className = "VSKit-ai-chat-v2-codeblock-lang";
   lang.textContent = block.lang.length > 0 ? block.lang : "text";
   const copy = document.createElement("button");
   copy.type = "button";
-  copy.className = "UnicDB-ai-chat-v2-codeblock-copy";
+  copy.className = "VSKit-ai-chat-v2-codeblock-copy";
   copy.setAttribute("aria-label", "Copy code");
   copy.textContent = CODEBLOCK_COPY_LABEL;
   let restoreTimer: ReturnType<typeof setTimeout> | null = null;
@@ -205,9 +205,9 @@ export function createCodeBlock(block: { readonly lang: string; readonly code: s
   header.append(lang, copy);
 
   const pre = document.createElement("pre");
-  pre.className = "UnicDB-ai-chat-v2-code";
+  pre.className = "VSKit-ai-chat-v2-code";
   const code = document.createElement("code");
-  code.className = `UnicDB-ai-chat-v2-code-${block.lang.length > 0 ? block.lang : "plain"}`;
+  code.className = `VSKit-ai-chat-v2-code-${block.lang.length > 0 ? block.lang : "plain"}`;
   if (isSqlLang(block.lang)) {
     // highlightSql builds a fragment from createElement/textContent only.
     code.appendChild(highlightSql(block.code));
@@ -224,12 +224,12 @@ export function createBlockElement(block: MarkdownBlock): HTMLElement {
   if (block.kind === "code") return createCodeBlock(block);
   if (block.kind === "heading") {
     const el = document.createElement(`h${block.level}`);
-    el.className = "UnicDB-ai-chat-v2-md-heading";
+    el.className = "VSKit-ai-chat-v2-md-heading";
     appendInline(el, block.text);
     return el;
   }
   const p = document.createElement("p");
-  p.className = "UnicDB-ai-chat-v2-md-paragraph";
+  p.className = "VSKit-ai-chat-v2-md-paragraph";
   appendInline(p, block.text);
   return p;
 }

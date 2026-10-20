@@ -44,7 +44,7 @@ function readCertFile(label: string, path: string | undefined): string | undefin
   } catch (err) {
     const reason = (err as NodeJS.ErrnoException).code ?? String(err);
     throw new Error(
-      `UnicDB: không đọc được SSL ${label} file "${path}": ${reason}. ` +
+      `VSKit: không đọc được SSL ${label} file "${path}": ${reason}. ` +
         `Kiểm tra đường dẫn trong connection settings.`,
     );
   }

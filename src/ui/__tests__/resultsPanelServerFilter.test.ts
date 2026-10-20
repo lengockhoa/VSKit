@@ -45,7 +45,7 @@ class FakeWebviewView {
   webview = new FakeWebview();
   description: string | undefined;
   title: string | undefined;
-  viewType = "UnicDB.results";
+  viewType = "VSKit.results";
   visible = true;
   private didDisposeHandlers: Array<() => void> = [];
   onDidDispose(h: () => void) {
@@ -119,7 +119,7 @@ vi.mock("vscode", () => {
 
     commands: {
       executeCommand: vi.fn(async (cmd: string, ..._rest: unknown[]) => {
-        if (cmd === "UnicDB.results.focus" && providerStore.length > 0) {
+        if (cmd === "VSKit.results.focus" && providerStore.length > 0) {
           if (lastView.current && !(lastView.current as unknown as { isDisposed?: boolean }).isDisposed) {
             return undefined;
           }
@@ -645,7 +645,7 @@ describe("TASK-004 case 16 — non-simple ORDER BY is parsed or rejected, never 
     const composed = runSql.mock.calls[0]![0] as string;
     expect(composed).not.toBe(composeRequery(sql, "id > 0", "a, b DESC"));
     expect(composed).toBe(
-      'SELECT * FROM (SELECT id FROM t) AS UnicDB_sub WHERE id > 0 ORDER BY "a" ASC, "b" DESC',
+      'SELECT * FROM (SELECT id FROM t) AS VSKit_sub WHERE id > 0 ORDER BY "a" ASC, "b" DESC',
     );
   });
 

@@ -2,7 +2,7 @@
 //
 // TASK-BQ00-002 — pure boundary types + the named mapper `toBigQueryPage` +
 // the `hasNextPage` helper that maps BigQuery's async-job + paged-result API
-// into UnicDB's adapter world.
+// into VSKit's adapter world.
 //
 // HARD CONSTRAINT: this module MUST NOT import from `@google-cloud/bigquery` or
 // `vscode`. The client's response contract is captured ONLY as the locally
@@ -21,7 +21,7 @@
 // everywhere downstream.
 
 // ===========================================================================
-// Boundary types — pure UnicDB code. No runtime client import.
+// Boundary types — pure VSKit code. No runtime client import.
 // ===========================================================================
 
 /**

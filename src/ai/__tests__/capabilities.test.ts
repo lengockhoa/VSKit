@@ -337,7 +337,7 @@ describe("resolveEngineCapabilities — native resume", () => {
     }
   });
 
-  it("#5c saved UnicDB transcript resume is independent of engine + native resume", () => {
+  it("#5c saved VSKit transcript resume is independent of engine + native resume", () => {
     for (const engine of AI_ENGINE_NAMES) {
       const s = snap(engine, { savedTranscriptResume: true });
       expect(s.supports.savedTranscriptResume).toBe(true);

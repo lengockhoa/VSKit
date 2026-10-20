@@ -16,7 +16,7 @@
 //   - omp healthy does not override explicit builtin (P0.3 regression)
 //   - image pipeline: omp rejects with vision_unsupported, claude/codex
 //     accept {mime, base64} shape unchanged, builtin follows work.vision
-//   - manifest: UnicDB.ai.useWithClaudeCode / useWithCodex / aiChat /
+//   - manifest: VSKit.ai.useWithClaudeCode / useWithCodex / aiChat /
 //     useWithOmp command ids present in package.json
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 import * as fs from "node:fs";
@@ -779,24 +779,24 @@ describe("TASK-014 — manifest command ids (regression)", () => {
   ) as PackageJson;
   const commandIds = new Set(pkg.contributes.commands.map((c) => c.command));
 
-  it("UnicDB.ai.useWithClaudeCode manifest command exists", () => {
-    expect(commandIds.has("UnicDB.ai.useWithClaudeCode")).toBe(true);
+  it("VSKit.ai.useWithClaudeCode manifest command exists", () => {
+    expect(commandIds.has("VSKit.ai.useWithClaudeCode")).toBe(true);
   });
-  it("UnicDB.ai.useWithCodex manifest command exists", () => {
-    expect(commandIds.has("UnicDB.ai.useWithCodex")).toBe(true);
+  it("VSKit.ai.useWithCodex manifest command exists", () => {
+    expect(commandIds.has("VSKit.ai.useWithCodex")).toBe(true);
   });
-  it("UnicDB.ai.useWithOmp manifest command exists", () => {
-    expect(commandIds.has("UnicDB.ai.useWithOmp")).toBe(true);
+  it("VSKit.ai.useWithOmp manifest command exists", () => {
+    expect(commandIds.has("VSKit.ai.useWithOmp")).toBe(true);
   });
-  it("UnicDB.aiChat manifest command exists", () => {
-    expect(commandIds.has("UnicDB.aiChat")).toBe(true);
+  it("VSKit.aiChat manifest command exists", () => {
+    expect(commandIds.has("VSKit.aiChat")).toBe(true);
   });
   it("activation events include all four new ai.* commands", () => {
     const ev = new Set(pkg.activationEvents);
-    expect(ev.has("onCommand:UnicDB.aiChat")).toBe(true);
-    expect(ev.has("onCommand:UnicDB.ai.useWithOmp")).toBe(true);
-    expect(ev.has("onCommand:UnicDB.ai.useWithClaudeCode")).toBe(true);
-    expect(ev.has("onCommand:UnicDB.ai.useWithCodex")).toBe(true);
+    expect(ev.has("onCommand:VSKit.aiChat")).toBe(true);
+    expect(ev.has("onCommand:VSKit.ai.useWithOmp")).toBe(true);
+    expect(ev.has("onCommand:VSKit.ai.useWithClaudeCode")).toBe(true);
+    expect(ev.has("onCommand:VSKit.ai.useWithCodex")).toBe(true);
   });
 });
 

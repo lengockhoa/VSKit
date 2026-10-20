@@ -26,7 +26,7 @@ const compiled = execFileSync(
   { encoding: "utf8" },
 ).toString();
 
-interface UnicDBApi {
+interface VSKitApi {
   postMessage: (msg: unknown) => void;
 }
 
@@ -50,16 +50,16 @@ function makeHarness(opts: {
   clipboard?: "ok" | "reject" | "missing";
 } = {}): Harness {
   const received: Array<Record<string, unknown>> = [];
-  const api: UnicDBApi = {
+  const api: VSKitApi = {
     postMessage: (msg: unknown) => {
       received.push(msg as Record<string, unknown>);
     },
   };
-  (globalThis as unknown as { acquireVsCodeApi: () => UnicDBApi })
+  (globalThis as unknown as { acquireVsCodeApi: () => VSKitApi })
     .acquireVsCodeApi = () => api;
 
   document.body.innerHTML =
-    '<div id="UnicDB-root" class="UnicDB-form-body"></div>';
+    '<div id="VSKit-root" class="VSKit-form-body"></div>';
 
   // Stub navigator.clipboard BEFORE the bundle evaluates.
   const clipboardSpy: ClipboardSpy = {
@@ -114,7 +114,7 @@ function makeHarness(opts: {
   return {
     received,
     dispatch,
-    root: document.getElementById("UnicDB-root") as HTMLDivElement,
+    root: document.getElementById("VSKit-root") as HTMLDivElement,
     clipboard: clipboardSpy,
   };
 }
@@ -142,14 +142,14 @@ afterEach(() => {
 // #1 Thinking block: renders collapsed by default, chunks append
 // ============================================================================
 describe("AiChatPanelWebview — thinking block (TASK-002 #1)", () => {
-  it("renders one collapsed .UnicDB-chat-thinking block per turn and appends chunks", () => {
+  it("renders one collapsed .VSKit-chat-thinking block per turn and appends chunks", () => {
     const h = makeHarness();
     h.dispatch({ type: "init", hasHistory: false });
 
     h.dispatch({ type: "thought", text: "t1" });
     h.dispatch({ type: "thought", text: "t2" });
 
-    const blocks = h.root.querySelectorAll(".UnicDB-chat-thinking");
+    const blocks = h.root.querySelectorAll(".VSKit-chat-thinking");
     expect(blocks).toHaveLength(1);
 
     // Default collapsed: no `open` attribute on the <details>.
@@ -162,7 +162,7 @@ describe("AiChatPanelWebview — thinking block (TASK-002 #1)", () => {
 
     // Body text is the concatenation of the two chunks (textContent order
     // matches DOM order — both chunks appended to the same body node).
-    const body = block.querySelector(".UnicDB-chat-thinking-body");
+    const body = block.querySelector(".VSKit-chat-thinking-body");
     expect(body?.textContent).toBe("t1t2");
   });
 
@@ -171,7 +171,7 @@ describe("AiChatPanelWebview — thinking block (TASK-002 #1)", () => {
     h.dispatch({ type: "init", hasHistory: false });
     h.dispatch({ type: "thought", text: "t" });
     h.dispatch({ type: "done" });
-    const blocks = h.root.querySelectorAll(".UnicDB-chat-thinking");
+    const blocks = h.root.querySelectorAll(".VSKit-chat-thinking");
     expect(blocks).toHaveLength(1);
     expect(blocks[0]?.textContent).toContain("t");
   });
@@ -187,7 +187,7 @@ describe("AiChatPanelWebview — thinking block survives toggle, resets on new s
 
     h.dispatch({ type: "thought", text: "a" });
     const block = h.root.querySelector(
-      ".UnicDB-chat-thinking",
+      ".VSKit-chat-thinking",
     ) as HTMLDetailsElement;
     expect(block).not.toBeNull();
     block.open = true; // user expands
@@ -195,7 +195,7 @@ describe("AiChatPanelWebview — thinking block survives toggle, resets on new s
 
     h.dispatch({ type: "thought", text: "b" });
     expect(block.hasAttribute("open")).toBe(true);
-    expect(block.querySelector(".UnicDB-chat-thinking-body")?.textContent).toBe(
+    expect(block.querySelector(".VSKit-chat-thinking-body")?.textContent).toBe(
       "ab",
     );
   });
@@ -236,7 +236,7 @@ describe("AiChatPanelWebview — fenced-code copy button (TASK-002 #4)", () => {
     });
 
     const copyBtns = h.root.querySelectorAll<HTMLButtonElement>(
-      ".UnicDB-md-copy",
+      ".VSKit-md-copy",
     );
     expect(copyBtns).toHaveLength(1);
 
@@ -270,7 +270,7 @@ describe("AiChatPanelWebview — clipboard rejection degrades silently (TASK-002
         text: "```sql\nSELECT 1;\n```\n",
         markdown: true,
       });
-      const copyBtn = h.root.querySelector<HTMLButtonElement>(".UnicDB-md-copy");
+      const copyBtn = h.root.querySelector<HTMLButtonElement>(".VSKit-md-copy");
       expect(copyBtn).not.toBeNull();
       const originalLabel = copyBtn?.textContent ?? "";
 
@@ -301,9 +301,9 @@ describe("AiChatPanelWebview — assistant message copy action (TASK-002 #6)", (
     h.dispatch({ type: "assistant", text: source, markdown: true });
 
     // The assistant bubble carries a copy action. We tag it with
-    // .UnicDB-chat-copy-msg to distinguish from per-block copy buttons.
+    // .VSKit-chat-copy-msg to distinguish from per-block copy buttons.
     const copyBtns = h.root.querySelectorAll<HTMLButtonElement>(
-      ".UnicDB-chat-copy-msg",
+      ".VSKit-chat-copy-msg",
     );
     expect(copyBtns).toHaveLength(1);
     copyBtns[0]!.click();
@@ -416,7 +416,7 @@ describe("AiChatPanelWebview — scroll discipline + jump-to-latest (TASK-002 #7
 // #10 Replay history kind agent_thought_chunk stays dropped
 // ============================================================================
 describe("AiChatPanelWebview — replay history agent_thought_chunk still dropped (TASK-002 #10)", () => {
-  it("history item with kind agent_thought_chunk renders no .UnicDB-chat-thinking node", () => {
+  it("history item with kind agent_thought_chunk renders no .VSKit-chat-thinking node", () => {
     const h = makeHarness();
     h.dispatch({ type: "init", hasHistory: false });
     h.dispatch({
@@ -432,13 +432,13 @@ describe("AiChatPanelWebview — replay history agent_thought_chunk still droppe
 
     // Thought must NOT have been rendered into a thinking block (the live
     // thinking source is the `thought` message; replay must stay filtered).
-    expect(h.root.querySelectorAll(".UnicDB-chat-thinking").length).toBe(0);
+    expect(h.root.querySelectorAll(".VSKit-chat-thinking").length).toBe(0);
     expect(h.root.textContent ?? "").not.toContain("leaked thought");
 
     // But the other items DID render.
-    expect(h.root.querySelectorAll(".UnicDB-chat-bubble.UnicDB-chat-user").length)
+    expect(h.root.querySelectorAll(".VSKit-chat-bubble.VSKit-chat-user").length)
       .toBe(1);
-    expect(h.root.querySelectorAll(".UnicDB-chat-bubble.UnicDB-chat-assistant").length)
+    expect(h.root.querySelectorAll(".VSKit-chat-bubble.VSKit-chat-assistant").length)
       .toBe(1);
   });
 });
@@ -467,10 +467,10 @@ describe("AiChatPanelWebview — Esc dismisses resume picker (TASK-002 #12)", ()
         { sessionId: "s1", label: "first", detail: "1 messages" },
       ],
     });
-    expect(h.root.querySelector(".UnicDB-chat-resume-picker")).not.toBeNull();
+    expect(h.root.querySelector(".VSKit-chat-resume-picker")).not.toBeNull();
 
     // Esc keydown — target the picker element so the listener fires.
-    const picker = h.root.querySelector(".UnicDB-chat-resume-picker") as
+    const picker = h.root.querySelector(".VSKit-chat-resume-picker") as
       HTMLDivElement;
     picker.dispatchEvent(
       new KeyboardEvent("keydown", {
@@ -482,7 +482,7 @@ describe("AiChatPanelWebview — Esc dismisses resume picker (TASK-002 #12)", ()
 
     const cancels = h.received.filter((m) => m.type === "resume_cancel");
     expect(cancels).toHaveLength(1);
-    expect(h.root.querySelector(".UnicDB-chat-resume-picker")).toBeNull();
+    expect(h.root.querySelector(".VSKit-chat-resume-picker")).toBeNull();
   });
 });
 
@@ -555,7 +555,7 @@ describe("AiChatPanelWebview — caps mirror equality (cycle AB TASK-002)", () =
 // #20 (cycle AB) — host posts attach_error → warning bubble rendered.
 // ============================================================================
 describe("AiChatPanelWebview — attach_error renders warning bubble (cycle AB TASK-002)", () => {
-  it("host posts {type:'attach_error', id, reason, message} → .UnicDB-chat-attach-warning bubble with the message text", () => {
+  it("host posts {type:'attach_error', id, reason, message} → .VSKit-chat-attach-warning bubble with the message text", () => {
     const h = makeHarness();
     h.dispatch({ type: "init", hasHistory: false, visionCapable: true });
 
@@ -566,7 +566,7 @@ describe("AiChatPanelWebview — attach_error renders warning bubble (cycle AB T
       message: "File too big (6 MB > 5 MB cap)",
     });
 
-    const warnings = h.root.querySelectorAll(".UnicDB-chat-attach-warning");
+    const warnings = h.root.querySelectorAll(".VSKit-chat-attach-warning");
     expect(warnings).toHaveLength(1);
     expect(warnings[0]?.textContent).toContain("File too big");
   });

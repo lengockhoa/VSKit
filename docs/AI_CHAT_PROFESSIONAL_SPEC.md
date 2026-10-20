@@ -1,8 +1,8 @@
-# UnicDB Professional AI Chat — Implementation Specification
+# VSKit Professional AI Chat — Implementation Specification
 
 **Status:** Design and implementation contract. This is a new target specification, not a claim that every item exists today.
 
-**Owner:** UnicDB maintainers and AI implementors.
+**Owner:** VSKit maintainers and AI implementors.
 
 **Scope:** Replace the fragile current AI Chat webview experience with a professional, engine-aware chat surface. Preserve the existing OMP, Claude Code, Codex, builtin, database-tool, policy, trace and safety boundaries. Do not create a second chat stack.
 
@@ -10,7 +10,7 @@
 
 ## 1. Product decision
 
-Build one **UnicDB AI Chat** experience with two layers:
+Build one **VSKit AI Chat** experience with two layers:
 
 1. **Universal shell.** Composer, transcript, slash menu, mentions, selected context, activity timeline, permission cards, status indicators, keyboard behavior, export, accessibility and error recovery look and behave identically regardless of backend.
 2. **Engine capability layer.** OMP, Claude Code, Codex and builtin advertise actual capabilities. The UI must reveal only operations confirmed by the selected engine and host. It must never pretend that an engine supports native session resume, live thought streaming, images, tools, a provider command or a permission mode when it does not.
@@ -28,7 +28,7 @@ The target is an evolution of the current implementation. Do not discard the hos
 | `webview/aiChatPanelMain.ts` | Current DOM composition, message handling, slash and mention behavior. | Replace fragmented module-level mutable UI state with one controller/store. Preserve security restrictions. |
 | `webview/aiChatPanelThread.ts` | Escaped bubbles, Markdown path, thinking/tool cards. | Reuse safe render primitives. Continue escaping all untrusted values. |
 | `src/ai/omp/*`, `src/ai/claudeCode/*`, `src/ai/codex/*` | Engine adapters declare a shared delta/thought/tool/error/done callback surface, but not every adapter emits every kind today (verified: omp emits delta/thought/tool at `src/ai/omp/ompChatEngine.ts:279,288,299`; claude-code declares `onThought` at `src/ai/claudeCode/claudeCodeProcess.ts:63` with no emit site; codex declares `onToolStart`/`onToolEnd` at `src/ai/codex/codexProcess.ts:87` with no emit site). | Adapt into a common capability and event envelope; advertise only emitted kinds; do not parse provider-specific UI text in webview. |
-| `webview/styles.css` | Theme-aware current styles and VS Code CSS variable fallbacks. | Replace chat selectors incrementally under a new `.UnicDB-ai-chat-v2` root; do not change other webviews. |
+| `webview/styles.css` | Theme-aware current styles and VS Code CSS variable fallbacks. | Replace chat selectors incrementally under a new `.VSKit-ai-chat-v2` root; do not change other webviews. |
 
 ### Non-negotiable safety and privacy rules
 
@@ -38,9 +38,9 @@ No localStorage, sessionStorage or browser persistence API is permitted. Persist
 
 ### 2.1 Cutover status (TASK-CHATV2-017, 2026-09-16)
 
-V2 is the **authoritative boot**: `webview/aiChatPanelMain.ts` acquires the API once, mounts the `.UnicDB-ai-chat-v2` shell + `createChatController` once, posts `ready_v2`, routes typed V2 frames and disposes cleanly. The controller (the single keyboard/transport owner) also mounts the keyed transcript, activity timeline, scroll viewport and live announcer. The host emits the V2-native streaming family (`text_delta` / `reasoning_delta` / `tool_started` / `tool_finished` / `turn_finished`) from its central session choke points.
+V2 is the **authoritative boot**: `webview/aiChatPanelMain.ts` acquires the API once, mounts the `.VSKit-ai-chat-v2` shell + `createChatController` once, posts `ready_v2`, routes typed V2 frames and disposes cleanly. The controller (the single keyboard/transport owner) also mounts the keyed transcript, activity timeline, scroll viewport and live announcer. The host emits the V2-native streaming family (`text_delta` / `reasoning_delta` / `tool_started` / `tool_finished` / `turn_finished`) from its central session choke points.
 
-**Deleted (cutover complete):** `webview/aiChatPanelHeader.ts` and `webview/aiChatPanelComposer.ts` no longer exist; every V2 surface (composer, transcript, header/engine pill, model menu, schema chip, context chips, autocomplete, attach menu, sessions, change plan, errors, permissions) is mounted by the controller, and the dead `.UnicDB-chat` CSS was retired from `webview/styles.css`. Non-V2 host frames are still rendered by the legacy bridge in `aiChatPanelMain.ts` through the controller's single message listener.
+**Deleted (cutover complete):** `webview/aiChatPanelHeader.ts` and `webview/aiChatPanelComposer.ts` no longer exist; every V2 surface (composer, transcript, header/engine pill, model menu, schema chip, context chips, autocomplete, attach menu, sessions, change plan, errors, permissions) is mounted by the controller, and the dead `.VSKit-chat` CSS was retired from `webview/styles.css`. Non-V2 host frames are still rendered by the legacy bridge in `aiChatPanelMain.ts` through the controller's single message listener.
 
 ## 3. Technical architecture
 
@@ -183,10 +183,10 @@ The target composer mirrors the reference image: broad rounded shell, thin cool-
 
 ### 4.2 CSS tokens
 
-Declare below `.UnicDB-ai-chat-v2` only. Use `var(--vscode-...)` first.
+Declare below `.VSKit-ai-chat-v2` only. Use `var(--vscode-...)` first.
 
 ```css
-.UnicDB-ai-chat-v2 {
+.VSKit-ai-chat-v2 {
   --chat-canvas: var(--vscode-editor-background, #0d1117);
   --chat-surface: var(--vscode-editorWidget-background, #161b22);
   --chat-surface-raised: var(--vscode-quickInput-background, #1c2128);
@@ -220,7 +220,7 @@ Declare below `.UnicDB-ai-chat-v2` only. Use `var(--vscode-...)` first.
 }
 ```
 
-The visual fallback palette matches the image context: canvas `#0d1117`, composer input `#10151c`, border `#3b434d`, primary send `#8e3b43` only when the user explicitly chooses a Claude-inspired crimson accent mode. Default UnicDB accent remains VS Code blue. Do not force orange/red brand colors in all themes.
+The visual fallback palette matches the image context: canvas `#0d1117`, composer input `#10151c`, border `#3b434d`, primary send `#8e3b43` only when the user explicitly chooses a Claude-inspired crimson accent mode. Default VSKit accent remains VS Code blue. Do not force orange/red brand colors in all themes.
 
 ### 4.3 Typography
 
@@ -243,7 +243,7 @@ Never uppercase labels solely for decoration. Use sentence case: “Bypass permi
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────┐
-│ Header: [UnicDB] [session title] [engine status]              [⋯ menu]      │ 40px
+│ Header: [VSKit] [session title] [engine status]              [⋯ menu]      │ 40px
 ├────────────────────────────────────────────────────────────────────────────┤
 │ Optional context/status banner                                               │ 28–40px
 ├────────────────────────────────────────────────────────────────────────────┤
@@ -274,7 +274,7 @@ Header children are: product mark (16px), editable session title, engine status 
 
 | Control | Icon | Visible label / tooltip | Click behavior | Disabled/loading/error behavior |
 |---|---|---|---|---|
-| Product mark | `database` or existing UnicDB mark, 16px | `UnicDB AI` | Opens session list only if the session sidebar ships; otherwise no button behavior. | Decorative if no session list; `aria-hidden=true`. |
+| Product mark | `database` or existing VSKit mark, 16px | `VSKit AI` | Opens session list only if the session sidebar ships; otherwise no button behavior. | Decorative if no session list; `aria-hidden=true`. |
 | Session title | none | e.g. `Explain index.vue` | Click or F2 opens inline rename; Enter saves; Esc reverts. | During rename show 1px focus border; host failure retains title and toast. |
 | Engine pill | `plug` / provider-neutral glyph, 14px | `Claude Code · Ready` | Opens engine picker if idle; otherwise shows current engine details. | Starting has 12px spinner; unavailable is amber and opens fix instructions. |
 | Overflow | `ellipsis`, 16px | `More chat actions` | Menu: New chat, Rename, Export, Clear, View diagnostics, Open settings. | Items are individually capability-gated. |
@@ -303,7 +303,7 @@ A stalled-warning timer triggers after 12 seconds with no user-visible event: `S
 
 Composer outer shell: border 1px `--chat-border`, radius 16px, background `--chat-input`, `box-shadow: 0 8px 24px var(--chat-shadow)` only while focused or popover open. Idle has no heavy shadow. It has two fixed visual regions separated by 1px `--chat-border`.
 
-Top text region: min-height 64px, max-height 160px, inner padding 14px 16px 10px. The textarea is borderless, resize disabled, transparent background, `width:100%`, max 7 visual lines, overflow-y auto after limit, and auto-grows using measured `scrollHeight`; never use `rows` as its behavior model. Placeholder when panel focus is inactive: `⌘ Esc to focus or unfocus UnicDB AI`. Placeholder when focused: `Ask about this workspace or database…`. On Windows/Linux dynamically display `Ctrl+Esc` if the host supports the shortcut. Focus/blur controls are host commands, not fake text.
+Top text region: min-height 64px, max-height 160px, inner padding 14px 16px 10px. The textarea is borderless, resize disabled, transparent background, `width:100%`, max 7 visual lines, overflow-y auto after limit, and auto-grows using measured `scrollHeight`; never use `rows` as its behavior model. Placeholder when panel focus is inactive: `⌘ Esc to focus or unfocus VSKit AI`. Placeholder when focused: `Ask about this workspace or database…`. On Windows/Linux dynamically display `Ctrl+Esc` if the host supports the shortcut. Focus/blur controls are host commands, not fake text.
 
 Bottom action region: min-height 48px, padding 7px 10px, `display:flex`, gap 6px, align center. Left group contains attach and command controls; center group scrolls context/model chips; right group contains permission control and primary action. Use `min-width:0` on flex children and no hidden overlap.
 
@@ -381,7 +381,7 @@ Menu layout: header `Commands`, maximum 8 results before scrolling, 44px selecta
 | `/model` | `/model ` | Opens model/role picker or shows active model. | Host authoritative. |
 | `/context` | `/context` | Opens context inspector. | Shows exact selected refs and policy exclusions. |
 | `/export` | `/export ` | Opens export format/destination request. | Announce success only after host write confirmation. |
-| `/resume` | `/resume` | Opens saved UnicDB transcript picker. | Label provider-native resume only if `nativeSessionResume=true`. |
+| `/resume` | `/resume` | Opens saved VSKit transcript picker. | Label provider-native resume only if `nativeSessionResume=true`. |
 
 Engine-specific commands are never copied from another tool by assumption. OMP/Claude Code/Codex provider command descriptors are registered by host only when adapter has a verified semantic implementation. If a command name collides, show universal command first and disambiguate provider command as `Claude Code: <name>`.
 
@@ -552,7 +552,7 @@ Each phase is a separately reviewable PR/task. An AI implementor must finish tes
 5. Keep all user/provider strings in `textContent`; use the existing escape-first Markdown renderer for assistant Markdown only. Add regression tests before touching rendering.
 6. Do not ship a disabled microphone, disabled slash button or fake `streaming` label. Hide unsupported optional controls; show a truthful explanation where the missing feature impacts a user decision.
 7. Do not use third-party UI framework, CDN, remote icon font or browser storage. Use local inline SVG/icons and existing esbuild/webview setup.
-8. Keep all CSS scoped below `.UnicDB-ai-chat-v2`. Use VS Code theme variables. Do not alter SQL console/results panel styles.
+8. Keep all CSS scoped below `.VSKit-ai-chat-v2`. Use VS Code theme variables. Do not alter SQL console/results panel styles.
 9. After each phase, run focused Vitest tests and browser smoke. Test the extension host bundle, not just raw TypeScript, before claiming visual behavior works.
 10. Do not publish or bump version unless the user explicitly requests a release. When release is requested, follow repository release protocol exactly.
 
@@ -568,6 +568,6 @@ Each phase is a separately reviewable PR/task. An AI implementor must finish tes
 
 ## 13. External-reference research gate
 
-The requested Marketplace extensions are useful visual/function references, but their source/feature claims must be verified before copying any code or calling a behavior “the same as extension X.” During initial research, automated Marketplace/Web fetch access was unavailable in this environment. Before Phase 0 is approved, record for each extension: official Marketplace URL, source repository URL, license, current maintenance signal, actual command/mention implementation files, and a list of code-confirmed reusable patterns. Do not download/execute third-party extension code inside UnicDB until license and security review are complete.
+The requested Marketplace extensions are useful visual/function references, but their source/feature claims must be verified before copying any code or calling a behavior “the same as extension X.” During initial research, automated Marketplace/Web fetch access was unavailable in this environment. Before Phase 0 is approved, record for each extension: official Marketplace URL, source repository URL, license, current maintenance signal, actual command/mention implementation files, and a list of code-confirmed reusable patterns. Do not download/execute third-party extension code inside VSKit until license and security review are complete.
 
 The product requirement remains: match the quality of a professional AI Chat extension and respect the currently selected engine. This specification supplies the behavior contract independently of unverified third-party claims.

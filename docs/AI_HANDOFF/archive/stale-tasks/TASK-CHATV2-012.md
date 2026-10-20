@@ -86,7 +86,7 @@ FILES_CHANGED:
   - src/ui/aiChatPanelMessages.ts: additive optional clientRequestId on capabilities/models/toast frames.
   - src/ai/capabilities.ts: exported engineDisplayName() allowlisted label.
   - src/ui/__tests__/aiChatPanelEngineSwitchV2.test.ts: 8 host tests for validated/refused/correlated switching.
-  - webview/aiChat/styles.css: APPEND-only scoped styles under .UnicDB-ai-chat-v2 (header, pill, overlay menu/dialog).
+  - webview/aiChat/styles.css: APPEND-only scoped styles under .vskit-ai-chat-v2 (header, pill, overlay menu/dialog).
 TESTS_ADDED:
   - webview/aiChat/__tests__/engineModelMenus.test.ts: engine rows/labels, XSS-safe text, truthful pill, listbox keyboard/ARIA, model rows + vision gating, empty-menu opens settings, idle ack, failure toast, stale ack drop, busy stop-and-switch.
   - src/ui/__tests__/aiChatPanelEngineSwitchV2.test.ts: validated set_engine ack, refused engine copy, codex seam accept, unknown engine literal, correlated set_model ack, unconfigured role refusal, unknown role literal, no clientRequestId on first ready.

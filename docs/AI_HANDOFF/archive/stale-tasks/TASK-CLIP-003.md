@@ -40,7 +40,7 @@ padding the overhang with `""`.
   native paste event); (c) consume `suppressNextCellClickClear` in the capture `mousedown`
   listener: when `findCellFromEvent(ev)` returns null (toolbar/header/footer/non-cell) call
   `setCellRange(null)` unless the flag is set; reset the flag after every mousedown that
-  reads it; (d) add `__UnicDB.debugClipboard = { simulatePaste(text), getCellRange() }`
+  reads it; (d) add `__app.debugClipboard = { simulatePaste(text), getCellRange() }`
   test seam next to the existing debug object (`main.ts:4523`).
 - `src/ui/messages.ts` — additive message types: `ReadClipboardMessage { type:
   "readClipboard" }` (webview→host) and `ClipboardTextMessage { type: "clipboardText";
@@ -56,15 +56,15 @@ padding the overhang with `""`.
 
 | # | Type | Test name | Expected | Pre-state / Fixture |
 |---|------|----------|----------|---------------------|
-| 1 | happy | `Cmd+V pastes host clipboard text through the round-trip` | webview posts `{type:"readClipboard"}`; test stub replies `clipboardText` `"7\tseven"`; `dirtyCount === 2` at focused anchor; exactly ONE application (no double paste) | bundle loaded; `api.setFocusedCell(0,"id")`; fake host answers the `readClipboard` post via `__UnicDB.postMessage` echo |
+| 1 | happy | `Cmd+V pastes host clipboard text through the round-trip` | webview posts `{type:"readClipboard"}`; test stub replies `clipboardText` `"7\tseven"`; `dirtyCount === 2` at focused anchor; exactly ONE application (no double paste) | bundle loaded; `api.setFocusedCell(0,"id")`; fake host answers the `readClipboard` post via `__app.postMessage` echo |
 | 2 | happy | `Ctrl+V (ctrlKey variant) behaves identically` | same as #1 with `ctrlKey: true, metaKey: false` | same harness |
 | 3 | happy (production regression) | `1x1 clipboard tiles across every visible cell of the active range` | all four cells of the 2×2 range are `"z"`; `dirtyCount === 4`; the second column is NOT `""` | **Owned, frozen test = TASK-CLIP-002 `webviewClipboardPaste.test.ts` case `1x1 clipboard tiles into active 2x2 range`, currently RED with `0:0="z", 0:1="", 1:0="z", 1:1=""`; drag-range fixture + paste `"z"`. This task MUST make it GREEN by editing production only.** |
-| 4 | edge (stale-range, regression-vs-defect) | `click on non-cell clears stale range → paste anchors at focused cell` | after drag-range + toolbar click, `__UnicDB.debugClipboard.getCellRange()` returns `null`; paste lands at focused cell, NOT tiled into the dead rectangle | drag 2×2 range via mouse events; `mousedown` on toolbar element (outside `.ag-cell`); RED before fix: flag never read, range survives |
+| 4 | edge (stale-range, regression-vs-defect) | `click on non-cell clears stale range → paste anchors at focused cell` | after drag-range + toolbar click, `__app.debugClipboard.getCellRange()` returns `null`; paste lands at focused cell, NOT tiled into the dead rectangle | drag 2×2 range via mouse events; `mousedown` on toolbar element (outside `.ag-cell`); RED before fix: flag never read, range survives |
 | 5 | edge (input) | `Cmd+V with focus in filter input is not intercepted` | zero dirty; zero `readClipboard` posts; `isFilterInput` guard holds | `<input>` inside gridWrap, focused (pattern: `webviewKeybinding.test.ts` K1) |
 | 6 | edge (permission) | `clipboardText with empty string is a silent no-op` | zero dirty; no state change; no crash | host replies `text: ""` |
 | 7 | edge (permission) | `readClipboard with no active connection/statement still round-trips` | host still replies `clipboardText`; webview paste into empty grid is a safe no-op | bundle without prior `state` dispatch (fresh `ready` path) |
 | 8 | regression | existing keybinding suite K1-K3 + `webviewBundle` copy tests + drag-range tests (`tests/webviewEditHighlight.test.ts`) | unchanged GREEN | existing files |
-| 9 | regression | `aiChatPanelCloneCss.test.ts` structural pins (incl. `UnicDB-cell-range` CSS + toolbar column contract) | unchanged GREEN | existing file |
+| 9 | regression | `aiChatPanelCloneCss.test.ts` structural pins (incl. `vskit-cell-range` CSS + toolbar column contract) | unchanged GREEN | existing file |
 | 10 | regression (cross-task) | full TASK-CLIP-002 suite `src/ui/__tests__/webviewClipboardPaste.test.ts` (9 tests) | GREEN — in particular the formerly RED `1x1 clipboard tiles into active 2x2 range`; this is the acceptance proof for the tiling fix | existing test file, NOT edited by this task |
 
 ## Test Files
@@ -115,7 +115,7 @@ npx vitest run src/ui/__tests__/webviewKeybinding.test.ts src/ui/__tests__/webvi
 - Produces:
   - Corrected `pasteIntoRange` column-tiling behavior in `webview/main.ts` — signature unchanged, semantics now total over the active range (no `""` padding for a narrower clipboard).
   - `ReadClipboardMessage { type: "readClipboard" }` and `ClipboardTextMessage { type: "clipboardText"; text: string }` in `src/ui/messages.ts` (TASK-CLIP-004 does not consume them but must not collide with the union).
-  - `__UnicDB.debugClipboard = { simulatePaste(text: string): void; getCellRange(): CellRange | null }` — `webview/main.ts:4523` block (TASK-CLIP-004 tests MAY use `simulatePaste` to seed dirty cells).
+  - `__app.debugClipboard = { simulatePaste(text: string): void; getCellRange(): CellRange | null }` — `webview/main.ts:4523` block (TASK-CLIP-004 tests MAY use `simulatePaste` to seed dirty cells).
 
 ## Discussion
 
@@ -162,7 +162,7 @@ Test Files 1 failed (1); 4 failed, 7 passed
 Verification Output:
 ```text
 $ npm run typecheck
-> UnicDB@1.53.42 typecheck
+> VSKit@1.53.42 typecheck
 > tsc --noEmit
 exit 0
 

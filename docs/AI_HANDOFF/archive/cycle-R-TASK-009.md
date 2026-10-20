@@ -11,43 +11,43 @@ Two visual fixes: (D) WHERE/ORDER BY bar — label + input + button share a sing
 
 ## Target Files
 
-- `webview/styles.css` — add rules `.UnicDB-requery-bar` (flex, align-items:center, even gap), `.UnicDB-requery-label` / `.UnicDB-requery-input` / `.UnicDB-requery-run` / `.UnicDB-requery-clear` (uniform height 26px); set-filter alignment rules.
+- `webview/styles.css` — add rules `.requery-bar` (flex, align-items:center, even gap), `.requery-label` / `.requery-input` / `.requery-run` / `.requery-clear` (uniform height 26px); set-filter alignment rules.
 - `webview/main.ts` — ONLY if needed: set-filter alignment via themeQuartz params (add a param to `themeQuartz.withParams` at main.ts:1371) or skip if CSS override is enough. The requery-bar markup (main.ts:715-748) is NOT changed unless a wrapper class needs to be added.
 - `tests/webviewRequeryAlignment.test.ts` (NEW) — jsdom + styles.css parse asserts.
 
 ## Spec
 
-Current state (grep evidence): `webview/styles.css` has NO `UnicDB-requery` rule (0 matches) — the bar renders with only default styles ⇒ label/input/button are not on the same baseline (user: "it isn't aligned... must be even, tidy, and on a single row").
+Current state (grep evidence): `webview/styles.css` has NO `requery` rule (0 matches) — the bar renders with only default styles ⇒ label/input/button are not on the same baseline (user: "it isn't aligned... must be even, tidy, and on a single row").
 
 **D — CSS additions (styles.css):**
 ```css
-.UnicDB-requery-bar {
+.requery-bar {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 6px 8px;
 }
-.UnicDB-requery-label {
+.requery-label {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: .04em;
   white-space: nowrap;
   line-height: 26px;          /* share the baseline with input/button */
 }
-.UnicDB-requery-input {
+.requery-input {
   height: 26px;
   line-height: 24px;
   box-sizing: border-box;
   min-width: 0;               /* allow flex-shrink inside the row */
 }
-.UnicDB-requery-input.UnicDB-requery-where { flex: 1 1 40%; }
-.UnicDB-requery-input.UnicDB-requery-order { flex: 0 1 28%; }
-button.UnicDB-requery-run, button.UnicDB-requery-clear {
+.requery-input.requery-where { flex: 1 1 40%; }
+.requery-input.requery-order { flex: 0 1 28%; }
+button.requery-run, button.requery-clear {
   height: 26px;
   flex: 0 0 auto;
 }
 ```
-(Fine-tune using the existing VS Code theme variables in this file — stay consistent with the `--vscode-*` vars pattern used by `.UnicDB-btn`.)
+(Fine-tune using the existing VS Code theme variables in this file — stay consistent with the `--vscode-*` vars pattern used by `.grid-btn`.)
 
 **E — Set-filter popup:** AG Grid v36 JS Theming — does the popup render inside a shadow DOM? Check: AG Grid community v36 uses the theming API, popup item class is `.ag-set-filter-item`. CSS overrides from outside the shadow DOM cannot penetrate → prefer **theme params** (`themeQuartz.withParams({ setFilterListItem... })` — the parameter may not exist; investigator: read `node_modules/ag-grid-community` types for `ThemeParamValues` / the quartz-params list, find any param related to alignment / padding). Fallback if no such param exists: inject a `<style>` element into the grid host container from inside main.ts (`options.getRootNode().appendChild(styleEl)`) — acceptable because the webview itself controls that DOM. Record the decision + evidence in the Executor Report.
 
@@ -57,8 +57,8 @@ The final acceptance is a HUMAN visual check (jsdom does not render for real) �
 
 | # | Type | Test name | Expected | Pre-state / Fixture |
 |---|------|----------|----------|---------------------|
-| 1 | happy | requery bar CSS: single baseline | parse styles.css: `.UnicDB-requery-bar` has `align-items: center` + `display: flex`; `.UnicDB-requery-label`,`.UnicDB-requery-input`,`.UnicDB-requery-run`,`.UnicDB-requery-clear` each declare `height`/`line-height` of 26px (regex asserts each rule) | read webview/styles.css |
-| 2 | edge | jsdom: bar element class exists + computed alignment | render main.ts (esbuild transform) → an element with class `.UnicDB-requery-bar` exists; `getComputedStyle` (jsdom is limited: assert that the stylesheet rule applies via matchMedia/inline — at minimum: class is correct + CSS rule matches the selector) | jsdom harness |
+| 1 | happy | requery bar CSS: single baseline | parse styles.css: `.requery-bar` has `align-items: center` + `display: flex`; `.requery-label`,`.requery-input`,`.requery-run`,`.requery-clear` each declare `height`/`line-height` of 26px (regex asserts each rule) | read webview/styles.css |
+| 2 | edge | jsdom: bar element class exists + computed alignment | render main.ts (esbuild transform) → an element with class `.requery-bar` exists; `getComputedStyle` (jsdom is limited: assert that the stylesheet rule applies via matchMedia/inline — at minimum: class is correct + CSS rule matches the selector) | jsdom harness |
 | 3 | edge | set-filter alignment rule/param exists | styles.css has a rule for `.ag-set-filter-item` (OR main.ts uses a theme param like `setFilterListItem*` / wrapper-style injection — 1 of 2 paths, assert the file content) | read styles.css / main.ts |
 | 4 | regression | existing theme params are NOT broken | the `themeQuartz.withParams` call still contains the old params (assert the source still contains the old param names — they have NOT been inadvertently replaced) | read main.ts:1371 region |
 
@@ -87,8 +87,8 @@ npx tsc --noEmit
 
 ## Interfaces
 
-- Consumes: requery bar markup + class names (webview/main.ts:715-748: `UnicDB-requery-bar/-label/-input UnicDB-requery-where/-input UnicDB-requery-order/-run/-clear`); themeQuartz.withParams call site (main.ts:1371); TASK-007 styles.css conventions (var fallback).
-- Produces: CSS rules `.UnicDB-requery-*` (webview/styles.css) + the set-filter alignment mechanism (theme param OR injected style). No downstream consumer in this cycle.
+- Consumes: requery bar markup + class names (webview/main.ts:715-748: `requery-bar/-label/-input requery-where/-input requery-order/-run/-clear`); themeQuartz.withParams call site (main.ts:1371); TASK-007 styles.css conventions (var fallback).
+- Produces: CSS rules `.requery-*` (webview/styles.css) + the set-filter alignment mechanism (theme param OR injected style). No downstream consumer in this cycle.
 
 ---
 
@@ -106,27 +106,27 @@ npx tsc --noEmit
 **EXECUTOR_MODEL:** unic/unic-code
 **EXECUTOR_SUBAGENT:** Exec-T9
 
-**SUMMARY:** Appended `.UnicDB-requery-*` CSS rules + an explicit left-alignment rule pinning both Select All row and entries to the same 8px left indent in `webview/styles.css`. No `main.ts` edits needed — set-filter is a custom component (light DOM) and the existing per-row `padding: ... 8px` already aligned both blocks; the new explicit rule makes the alignment contract durable.
+**SUMMARY:** Appended `.requery-*` CSS rules + an explicit left-alignment rule pinning both Select All row and entries to the same 8px left indent in `webview/styles.css`. No `main.ts` edits needed — set-filter is a custom component (light DOM) and the existing per-row `padding: ... 8px` already aligned both blocks; the new explicit rule makes the alignment contract durable.
 
 **E — Set-filter evidence:** AG Grid v36.1.0 (`node_modules/ag-grid-community`) theming types were inspected (`dist/types/src/theming/core/core-css.d.ts`). The ONLY set-filter theme param exposed is `setFilterIndentSize: LengthValue` (single param, no per-item alignment). The community build does NOT expose `setFilterListItem*` params. **The set-filter panel in this app is a custom component (`SetFilterComponent` in `webview/main.ts:906-1235`) rendering in the LIGHT DOM inside AG Grid's popup chrome, so its CSS is fully controllable from the external stylesheet.** Therefore no theme-param injection is needed and no `themeQuartz.withParams` modification was made — Test #4 (regression guard) is satisfied by reading main.ts and asserting the existing four params are still present.
 
 **TEST_PLAN_FOLLOWED:** inline (no task-provided Test Plan; planner §Discussion explicitly delegated the §E evidence-gathering to executor). Tests #1-#4 from §Test Cases mapped 1:1 to `describe` blocks in the new test file.
 
 **FILES_CHANGED:**
-  - `webview/styles.css`: appended `.UnicDB-requery-bar` (flex + align-items:center + gap:8px), `.UnicDB-requery-label` (line-height:26px), `.UnicDB-requery-input` (height:26px + box-sizing:border-box), `.UnicDB-requery-input.UnicDB-requery-where`/`-order` (flex), `button.UnicDB-requery-run`/`-clear` (height:26px); also appended an explicit `.UnicDB-setfilter-selectall-row, .UnicDB-setfilter-entry { padding-left: 8px }` rule to pin the left indent (lines added at end of file; existing T7 rules untouched).
+  - `webview/styles.css`: appended `.requery-bar` (flex + align-items:center + gap:8px), `.requery-label` (line-height:26px), `.requery-input` (height:26px + box-sizing:border-box), `.requery-input.requery-where`/`-order` (flex), `button.requery-run`/`-clear` (height:26px); also appended an explicit `.setfilter-selectall-row, .setfilter-entry { padding-left: 8px }` rule to pin the left indent (lines added at end of file; existing T7 rules untouched).
   - `tests/webviewRequeryAlignment.test.ts` (NEW): 10 tests across 4 describe blocks (D CSS alignment × 5, D DOM bundle × 1, E set-filter indent × 3, themeQuartz regression guard × 1).
   - `webview/main.ts`: NOT MODIFIED (no theme param change needed; CSS rule was sufficient).
 
 **TESTS_ADDED:**
   - `tests/webviewRequeryAlignment.test.ts`:
-    - "declares .UnicDB-requery-bar with display:flex + align-items:center"
-    - ".UnicDB-requery-label sets line-height to 26px (shared baseline)"
-    - ".UnicDB-requery-input sets height:26px + box-sizing:border-box"
-    - "button.UnicDB-requery-run sets height:26px"
-    - "button.UnicDB-requery-clear sets height:26px"
+    - "declares .requery-bar with display:flex + align-items:center"
+    - ".requery-label sets line-height to 26px (shared baseline)"
+    - ".requery-input sets height:26px + box-sizing:border-box"
+    - "button.requery-run sets height:26px"
+    - "button.requery-clear sets height:26px"
     - "bundle mounts the requery bar after a state message"
-    - ".UnicDB-setfilter-selectall-row declares padding (left indent)"
-    - ".UnicDB-setfilter-entry declares padding (left indent)"
+    - ".setfilter-selectall-row declares padding (left indent)"
+    - ".setfilter-entry declares padding (left indent)"
     - "both select-all-row and entry rules use the same left padding value"
     - "webview/main.ts keeps the existing four theme params"
 
@@ -137,7 +137,7 @@ Test Files  1 failed (1)
 ```
 6 RED failures:
   - 5 in CSS rule-body assertions (selector body empty — rule didn't exist yet).
-  - 1 in DOM-bundle assertion (`.UnicDB-requery-bar` not in DOM — same root cause: no CSS rule + no stylesheet binding in jsdom).
+  - 1 in DOM-bundle assertion (`.requery-bar` not in DOM — same root cause: no CSS rule + no stylesheet binding in jsdom).
 4 GREEN pre-existing: set-filter indent assertions + themeQuartz param regression guard (those rules/params already existed).
 
 **VERIFICATION:**
@@ -150,7 +150,7 @@ Test Files  1 failed (1)
 
 **ISSUES / HUMAN-CHECK NOTES:**
   - jsdom does not paint real CSS, so visual baseline alignment is asserted structurally (CSS source + DOM class presence). A real VS Code webview harness (PLAN Known gaps #4) is required to confirm the rendered baseline visually.
-  - T7 contract preserved: `.UnicDB-cell-dirty`, `.UnicDB-row-new`, `.UnicDB-row-deleted` rules at lines 263/266/269 of styles.css untouched.
+  - T7 contract preserved: `.grid-cell-dirty`, `.grid-row-new`, `.grid-row-deleted` rules at lines 263/266/269 of styles.css untouched.
   - No git commit/push performed (per assignment: I4-Consolidate owns merge after sibling agents complete).
 
 **HANDOFF_TO_REVIEWER:** yes — Executor Report appended; visual confirmation requires human check (jsdom limitation acknowledged in PLAN).
@@ -176,7 +176,7 @@ FINDINGS:
   critical: none
   important: none
   minor:
-    - webview/styles.css:932 — set-filter rule targets `.UnicDB-setfilter-selectall-row` / `.UnicDB-setfilter-entry` but actual SetFilterComponent markup (main.ts:906-1235) uses different class names. Tests pass because they parse CSS source structurally; real DOM alignment depends on whether these classes match rendered elements. Human visual check still needed (per PLAN Known gaps #4).
+    - webview/styles.css:932 — set-filter rule targets `.setfilter-selectall-row` / `.setfilter-entry` but actual SetFilterComponent markup (main.ts:906-1235) uses different class names. Tests pass because they parse CSS source structurally; real DOM alignment depends on whether these classes match rendered elements. Human visual check still needed (per PLAN Known gaps #4).
 NEXT_STATUS_FOR_INDEX: approved
 NOTES: Clean CSS-only implementation. No main.ts changes needed — correct call given custom SetFilterComponent in light DOM. Visual baseline alignment requires human confirmation in VS Code webview (jsdom limitation acknowledged).
 

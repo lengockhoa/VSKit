@@ -42,7 +42,7 @@ function cls(name: string): string {
 }
 
 /** Fixed product copy (constant, never host data). */
-export const HEADER_PRODUCT_TITLE = "UnicDB AI";
+export const HEADER_PRODUCT_TITLE = "VSKit AI";
 /** Header height, in px (PLAN §3: 40px header). */
 export const HEADER_HEIGHT_PX = 40;
 /** Engine pill minimum height, in px (task spec: >=32px). */
@@ -295,7 +295,7 @@ export function createChatHeader(options: HeaderOptions): ChatHeaderView {
     return node;
   })();
   enginePill.id = `${ROOT_CLASS}-engine`;
-  enginePill.style.setProperty("--UnicDB-pill-min", `${HEADER_ENGINE_PILL_MIN_PX}px`);
+  enginePill.style.setProperty("--VSKit-pill-min", `${HEADER_ENGINE_PILL_MIN_PX}px`);
   // Rebuild the pill's glyph so the plug icon is exactly 14px (task spec).
   const existingIcon = enginePill.querySelector("svg");
   if (existingIcon !== null) existingIcon.replaceWith(createChatIcon("plug", HEADER_PLUG_ICON_PX));
@@ -350,7 +350,7 @@ export function createChatHeader(options: HeaderOptions): ChatHeaderView {
     return node;
   })();
   overflowButton.id = `${ROOT_CLASS}-overflow`;
-  overflowButton.style.setProperty("--UnicDB-overflow", `${HEADER_OVERFLOW_SIZE_PX}px`);
+  overflowButton.style.setProperty("--VSKit-overflow", `${HEADER_OVERFLOW_SIZE_PX}px`);
   overflowButton.setAttribute("aria-label", "More actions");
   overflowButton.title = "More actions";
   if (overflowButton.querySelector("svg") === null) {

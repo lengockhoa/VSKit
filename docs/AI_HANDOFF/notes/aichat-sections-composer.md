@@ -65,7 +65,7 @@ States (explicit, mutually exclusive):
 
 `COMPOSING` is an overlay, not a peer state: on `compositionstart` the controller enters
 `COMPOSING` from whatever state it held and on `compositionend` it returns to that state.
-This is the UnicDB-original IME requirement noted in the external ledger: no fetched vendor
+This extension-specific IME requirement is noted in the external ledger: no fetched vendor
 page documents composition handling, so it carries no upstream safety net (per Q22,
 Verified-with-URL for the surrounding analysis).
 
@@ -112,7 +112,7 @@ One rule per modifier key, all evaluated in this order by the controller:
   ordinary focus order (A11Y-06).
 
 Prefixing a message with `!` to run a terminal command is documented upstream as available
-only in Agent Host sessions (per Q07, Verified-with-URL). UnicDB must treat `!` as a
+only in Agent Host sessions (per Q07, Verified-with-URL). The extension must treat `!` as a
 provider-native, capability-gated behavior, never a universal composer rule.
 
 ### 1.3 Running-turn policy
@@ -161,7 +161,7 @@ Upstream, "Type `/` in the chat input to see all available commands" mixes built
 and contributed commands in one surface (per Q08, Verified-with-URL), and per-participant
 registration bounds the command set (per Q02, Verified-with-URL). Continue's shipped flow —
 type `/`, select the prompt, then type additional instructions — confirms select-then-execute
-as a real pattern (per Q15, Verified-with-URL). UnicDB's rule that selection never executes
+as a real pattern (per Q15, Verified-with-URL). The extension's rule that selection never executes
 and a second Enter runs matches this.
 
 **supersedes:** the draft's "at the beginning of an otherwise empty command line" is
@@ -273,9 +273,9 @@ tables with the same name show distinct connection/schema identifiers. A databas
 initially includes metadata, not table rows; obtaining rows remains a separate governed tool
 action. Continue's deprecated `@Database` provider stops at "table schemas," which is
 evidence the metadata-only boundary is reasonable (per Q14, Verified-with-URL), while the
-rows-via-tool-action rule is UnicDB-original with no upstream equivalent (per Q22). The
-duplicate-disambiguation rule likewise has no fetched upstream wording and stays a
-UnicDB-original requirement (per Q09, Could-not-verify sub-part).
+rows-via-tool-action rule is extension-specific with no upstream equivalent (per Q22). The
+duplicate-disambiguation rule likewise has no fetched upstream wording and remains an
+extension requirement (per Q09, Could-not-verify sub-part).
 
 ### 3.4 Async correlation and timing
 
@@ -285,7 +285,7 @@ menu. Show "Searching…" only if the request is still pending after **200 ms**.
 say "No matching context"; an error says "Could not search context" with Retry that
 preserves the query. No result, error or loading row is selectable (MENTION-09/A11Y-07).
 
-The combined `requestId` + draft-revision staleness guard is UnicDB-original: upstream docs
+The combined `requestId` + draft-revision staleness guard is extension-specific: upstream docs
 describe search but not this correlation contract (per Q22, Verified-with-URL). The current
 code posts a query-only request and caches the last-arrived reply unconditionally (deltas 5,
 10).

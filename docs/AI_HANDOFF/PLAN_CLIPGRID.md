@@ -23,7 +23,7 @@ the results table as edits; **Save or Cmd/Ctrl+Enter** persists the edits to the
 whole pipeline ALREADY EXISTS — heritage of TASK-501/TASK-502/TASK-RANGE-001/TASK-503:
 - Range selection: `webview/main.ts:476-558` (`cellRange`, `setCellRange`,
   `normalizeCellRange`), drag wiring at `main.ts:1254-1301`, Shift+Arrow at `main.ts:1412-1451`,
-  highlight via `cellClassRules` → `UnicDB-cell-range` (`main.ts:2343-2353`, `styles.css:518`).
+  highlight via `cellClassRules` → neutral `cell-range` selector (`main.ts:2343-2353`, `styles.css:518`).
 - Copy: `copySelectionToHost()` (`main.ts:4031`) — range takes precedence over row-checkbox
   selection over focused-row fallback; posts `{type:"copy", text}`; host writes the OS
   clipboard at `resultsPanel.ts:1033-1036` (`vscode.env.clipboard.writeText`).
@@ -118,7 +118,7 @@ operational serialization point, not a graph dependency.
 `webviewBundle.test.ts` / `webviewKeybinding.test.ts`: stub `acquireVsCodeApi`, eval
 `dist/webview.js`, dispatch a 3×2 state, drive `api.forEachNode(setSelected)` / synthetic
 `mousedown`+`mousemove` on `.ag-cell` elements to build ranges, dispatch Cmd/Ctrl+C
-`keydown` on `.UnicDB-grid-host`, assert the posted `copy` messages). Pins: 1×1 cell; N×M
+`keydown` on the grid host, assert the posted `copy` messages). Pins: 1×1 cell; N×M
 rectangle; full-row checkboxes; single column strip (drag down col `name`); hidden-column
 exclusion (via `debugSetSpecs` seam `main.ts:4510`); focused-row fallback. Pure-side
 `selectionRangeToText` shape cases (row-major, `\t`/`\n` joins) extend
@@ -168,7 +168,7 @@ wave-2 production task):**
    (set to false) after any mousedown that read it, so the documented
    "clicking a non-cell area clears" contract (`main.ts:469`) finally holds and a lingering
    rectangle can never redirect the next paste.
-4. Expose a `__UnicDB.debugClipboard` test seam (pattern: `main.ts:4523`) —
+4. Expose a test-only debug clipboard seam (pattern: `main.ts:4523`) —
    `simulatePaste(text: string)` that funnels into the same `onGridPaste` dispatch the real
    events use, and `getCellRange(): {startRow,startCol,endRow,endCol} | null` so tests can
    assert clears without DOM poking. Both are test-only additions to the existing debug
@@ -179,7 +179,7 @@ wave-2 production task):**
 keydown (meta AND ctrl variants) posts exactly ONE `saveEdits` whose `edits` match the
 dirty snapshot and carry `serverIndexByRowId`; empty-dirty Cmd/Ctrl+Enter posts nothing
 (no-op guard `main.ts:3783`); `saveResult ok:true` → `dirtyCount === 0` and no
-`UnicDB-cell-dirty` cells remain; `refused:true` → banner shows reason, dirty cleared.
+`saveResult ok:true` → `dirtyCount === 0` and no dirty-state cells remain; `refused:true` → banner shows reason, dirty cleared.
 Bundle test file only; production untouched — this is the acceptance pin that Cmd/Ctrl+Enter
 persists pasted edits end-to-end at the webview level (host side already covered by
 `resultsPanelSaveEdits.test.ts`).
@@ -219,7 +219,7 @@ files.
 | happy (CLIP-004 bundle) | Ctrl+Enter variant posts identically | 1 `saveEdits` per dispatch |
 | edge (CLIP-004 noop) | Cmd+Enter with dirtyCount 0 | zero `saveEdits` (guard) |
 | edge (CLIP-004 refused) | `saveResult {ok:true, refused:true, reason}` | banner shows reason; dirty cleared; no retry button state |
-| regression (CLIP-004) | `saveResult ok:true` → `dirtyCount === 0`, no `.UnicDB-cell-dirty` in DOM | mirrors existing `webviewEditHighlight.test.ts` #5 for the paste-origin path |
+| regression (CLIP-004) | `saveResult ok:true` → `dirtyCount === 0`, no dirty-state cells in DOM | mirrors existing `webviewEditHighlight.test.ts` #5 for the paste-origin path |
 | regression (CLIP-004) | existing `webviewKeybinding.test.ts` K1-K3 (input-focus guard, dirty commit) | unchanged GREEN |
 
 ## §5 Verification
@@ -261,7 +261,7 @@ NOT verified anything (treat self-skips as failures in review).
 - New message discriminators allowed ONLY: `readClipboard` (webview→host) and `clipboardText` (host→webview), additive to `WebviewMessage`/`HostMessage` unions; unknown-type fall-through must keep stale bundles safe.
 - Cmd/Ctrl+C and Cmd/Ctrl+V each bind in exactly ONE capture-phase listener on `gridWrap` (A16 double-fire rule, `main.ts:2505-2509`).
 - `isFilterInput` guard on every new keydown/paste entry point (filter/search typing is never a grid edit).
-- Preserve existing class names: `UnicDB-cell-range`, `UnicDB-cell-dirty`, `UnicDB-grid-host`, `UnicDB-save-banner` (pinned by existing tests).
+- Preserve existing neutral class names for range, dirty, grid-host, and save-banner elements (pinned by existing tests).
 - Paste must never target locally-added rows (`serverIndexByRowId` miss = stop) — INSERT marker integrity.
 - Coordinates stay in the established namespaces: display rows via `getDisplayedRowAtIndex`, cols via `currentSpecs` index (never live `getColumnDefs`).
 - TASK-CLIP-002's `src/ui/__tests__/webviewClipboardPaste.test.ts` is FROZEN contract: TASK-CLIP-003 satisfies it by fixing production (`pasteIntoRange` column tiling) and never by editing the test — a failure there means the fix is wrong, not the test.
@@ -292,7 +292,7 @@ CLARITY:
 SCOPE:
   - none — single surface (results-grid clipboard copy/paste + save pin), explicit out-of-scope list (headers-copy, cut, drag-fill, No-PK ctid, other panels), clean wave/file-disjointness plan.
 YAGNI:
-  - none — `readClipboard`/`clipboardText` is a minimal seam with a recorded rejected alternative; `debugClipboard` follows the existing `__UnicDB.debug*` seam pattern; no speculative features.
+  - none — `readClipboard`/`clipboardText` is a minimal seam with a recorded rejected alternative; the debug seam follows the existing webview test-seam pattern; no speculative features.
 
 NOTES: Both consistency findings are stale §1/§2 summary text contradicting the operative §3/§7 detail — surgical one-line edits, no re-planning required. Model transparency: reviewer runs as unic/unic-smart (= config `handoff.reviewer.model`); planner self-reported the same gateway model — config `mustDifferFromExecutor` binds at P5 vs the executor (hint `unic-code`), which this plan review does not gate.
 

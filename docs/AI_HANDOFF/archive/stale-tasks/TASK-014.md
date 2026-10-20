@@ -12,8 +12,8 @@ Add focused final integration coverage across settings resolution, AIChat dispat
 ## Target Files
 
 - `src/__tests__/agentEnginesIntegration.test.ts` (new) — cross-module settings/resolution/panel/manifest integration matrix using fakes (no real CLI/network).
-- `src/ai/claudeCode/__tests__/claudeCodeLiveSmoke.test.ts` (new) — `UnicDB_CLAUDE_CODE_SMOKE=1` gated real Claude CLI protocol smoke, skipped otherwise.
-- `src/ai/codex/__tests__/codexLiveSmoke.test.ts` (new) — `UnicDB_CODEX_SMOKE=1` gated real Codex CLI protocol smoke, skipped otherwise.
+- `src/ai/claudeCode/__tests__/claudeCodeLiveSmoke.test.ts` (new) — `EXTENSION_CLAUDE_CODE_SMOKE=1` gated real Claude CLI protocol smoke, skipped otherwise.
+- `src/ai/codex/__tests__/codexLiveSmoke.test.ts` (new) — `EXTENSION_CODEX_SMOKE=1` gated real Codex CLI protocol smoke, skipped otherwise.
 - `src/extension.test.ts` — only if final end-to-end wiring behavior cannot be exercised through exported/fake seams in the new integration test; if modified, add final cross-selection assertions without duplicating TASK-012 unit tests.
 - `docs/AI_HANDOFF/tasks/TASK-004.md` — append one short `## Follow-up disposition` subsection identifying audit findings intentionally queued vs already guarded by this cycle's tests; no source edits.
 
@@ -51,7 +51,7 @@ No lint script exists in this project — lint is N/A; typecheck is the static g
 ## Acceptance Criteria
 
 - [ ] New integration test passes with no installed external CLI or network access (all engine subprocesses mocked).
-- [ ] Smoke suites skip by default and name their enable env vars; `UnicDB_CLAUDE_CODE_SMOKE=1` and `UnicDB_CODEX_SMOKE=1` both use real detected binary paths, mandatory temp cwd, bounded timeout, and cleanup.
+- [ ] Smoke suites skip by default and name their enable env vars; `EXTENSION_CLAUDE_CODE_SMOKE=1` and `EXTENSION_CODEX_SMOKE=1` both use real detected binary paths, mandatory temp cwd, bounded timeout, and cleanup.
 - [ ] Live smoke never invokes a model prompt that can mutate workspace/DB, never passes DB credentials/apiKey, and avoids dangerous permission bypass flags.
 - [ ] TASK-004 follow-up disposition is appended; no omp source rewritten.
 - [ ] Focused commands, final `npm test`, `npm run typecheck`, and `npm run compile` are green.
@@ -89,7 +89,7 @@ EXECUTOR_SUBAGENT: feature-implementer (handoff-fullstack I3 — direct implemen
 
 Wrote 30 new tests across three files:
 
-- `src/__tests__/agentEnginesIntegration.test.ts` (28 tests) — engine resolution matrix, panel dispatch per engine, image pipeline (vision_unsupported vs accept + base64-not-in-error + base64-not-in-text), selected-engine-unavailable fallback semantics, explicit-builtin-wins-over-healthy-omp regression (P0.3), and package.json manifest regression for `UnicDB.ai.useWithClaudeCode` / `useWithCodex` / `useWithOmp` / `aiChat` command ids + their activation events. Plus a contract block pinning the new live-smoke file paths.
+- `src/__tests__/agentEnginesIntegration.test.ts` (28 tests) — engine resolution matrix, panel dispatch per engine, image pipeline (vision_unsupported vs accept + base64-not-in-error + base64-not-in-text), selected-engine-unavailable fallback semantics, explicit-builtin-wins-over-healthy-omp regression (P0.3), and manifest regression for `extension.ai.useWithClaudeCode` / `useWithCodex` / `useWithOmp` / `aiChat` command ids + their activation events. Plus a contract block pinning the new live-smoke file paths.
 - `src/ai/claudeCode/__tests__/claudeCodeLiveSmoke.test.ts` (1 test + 1 gate-contract test) — env-gated real-CLI handshake.
 - `src/ai/codex/__tests__/codexLiveSmoke.test.ts` (1 test + 1 gate-contract test) — env-gated real-CLI handshake.
 
@@ -111,12 +111,12 @@ Implementation step:
   - Test 3 — selected external agent unavailable (4 tests): claude-code/codex/omp not-installed each emit their own install hint; unknown engine value (`"copilot"`) fails closed to builtin with NO hint
   - Test 4 — vision capability distinction (5 tests): `engine=omp` rejects with `vision_unsupported` attach_error; `engine=claude-code` and `engine=codex` accept attachments intact; `defaultAiSettings().models.work.vision === true` confirms builtin gating
   - Test 7 — P0.3 regression (2 tests): explicit builtin wins over healthy omp/claude/codex detections; panel engine=builtin never invokes any chat-engine seam
-  - Manifest regression (5 tests): `package.json` declares `UnicDB.ai.useWithClaudeCode` / `useWithCodex` / `useWithOmp` / `aiChat` and the four `onCommand:UnicDB.ai.*` activation events
+  - Manifest regression (5 tests): `package.json` declares `extension.ai.useWithClaudeCode` / `useWithCodex` / `useWithOmp` / `aiChat` and the four `onCommand:extension.ai.*` activation events
   - Env-gate contract (2 tests): live smoke file paths exist at the documented locations
 
-- `src/ai/claudeCode/__tests__/claudeCodeLiveSmoke.test.ts` (new, 2 tests): `describe.skipIf(!process.env.UnicDB_CLAUDE_CODE_SMOKE)` mirroring `acpLiveSmoke.test.ts` proven shape. Real binary invoked with `--print ping --output-format stream-json --verbose --cwd <tmpdir>` (no apiKey, no `--dangerously-skip-permissions`, no DB credential). `mkdtempSync` workspace + `rmSync` cleanup via `afterEach`. Companion always-runs gate-name contract test pins `UnicDB_CLAUDE_CODE_SMOKE`.
+- `src/ai/claudeCode/__tests__/claudeCodeLiveSmoke.test.ts` (new, 2 tests): `describe.skipIf(!process.env.EXTENSION_CLAUDE_CODE_SMOKE)` mirrors the existing gated-smoke pattern. Real binary invoked with `--print ping --output-format stream-json --verbose --cwd <tmpdir>` (no apiKey, no permission bypass, no DB credential). `mkdtempSync` workspace + `rmSync` cleanup via `afterEach`. Companion gate-name contract test pins `EXTENSION_CLAUDE_CODE_SMOKE`.
 
-- `src/ai/codex/__tests__/codexLiveSmoke.test.ts` (new, 2 tests): `describe.skipIf(!process.env.UnicDB_CODEX_SMOKE)` mirroring the same proven shape. Real binary invoked with `codex exec --json - --cd <tmpdir>` (matches TASK-006 verified exec-mode flag set; no apiKey, no bypass). `mkdtempSync` workspace + `rmSync` cleanup via `afterEach`. Companion gate-name contract test pins `UnicDB_CODEX_SMOKE`.
+- `src/ai/codex/__tests__/codexLiveSmoke.test.ts` (new, 2 tests): `describe.skipIf(!process.env.EXTENSION_CODEX_SMOKE)` mirrors the same pattern. Real binary invoked with `codex exec --json - --cd <tmpdir>` (matches TASK-006 verified exec-mode flag set; no apiKey, no bypass). `mkdtempSync` workspace + `rmSync` cleanup via `afterEach`. Companion gate-name contract test pins `EXTENSION_CODEX_SMOKE`.
 
 - `docs/AI_HANDOFF/tasks/TASK-004.md` — appended `## Follow-up disposition (TASK-014 — 2026-09-07)` subsection identifying audit findings already guarded by this cycle's tests (engine routing matrix, image pipeline, hint mapping) vs intentionally queued for the next dedicated cycle (the **critical** `hostMcp.ts` standard-tool timeout, the `AgentChatEngine` extraction, all 22 minor findings). No omp source rewritten (P0.2 honored).
 
@@ -136,14 +136,14 @@ Both env-gated live smoke suites correctly **skip** under the default gate (env 
 
 ```
 > npm run typecheck
-> UnicDB@1.53.23 typecheck
+> extension@1.53.23 typecheck
 > tsc --noEmit
 (no output — clean)
 ```
 
 ```
 > npm run compile
-> UnicDB@1.53.23 compile
+> extension@1.53.23 compile
 (dist/webview.js 2.3mb, dist/webview.css 41.1kb, dist/extension.js 6.5mb)
 esbuild: build complete
 ```
@@ -156,7 +156,7 @@ esbuild: build complete
 ### Acceptance checklist
 
 - [x] New integration test passes with no installed external CLI or network access (all engine subprocesses mocked) — 28/28 pass in this file
-- [x] Smoke suites skip by default and name their enable env vars; `UnicDB_CLAUDE_CODE_SMOKE=1` and `UnicDB_CODEX_SMOKE=1` both use real detected binary paths, mandatory temp cwd, bounded timeout (30s awaitFirstEvent + 45s vitest timeout), and `rmSync` cleanup
+- [x] Smoke suites skip by default and name their enable env vars; `EXTENSION_CLAUDE_CODE_SMOKE=1` and `EXTENSION_CODEX_SMOKE=1` both use real detected binary paths, mandatory temp cwd, bounded timeout (30s awaitFirstEvent + 45s vitest timeout), and `rmSync` cleanup
 - [x] Live smoke never invokes a model prompt that can mutate workspace/DB — both use trivial non-prompt (`ping`); never passes DB credentials/apiKey — none in argv; avoids dangerous permission bypass flags — no `--dangerously-skip-permissions` or `--yolo`
 - [x] TASK-004 follow-up disposition appended; no omp source rewritten
 - [x] Focused commands green; final `npm run typecheck` and `npm run compile` green
@@ -185,4 +185,4 @@ FINDINGS:
     - claudeCodeLiveSmoke.test.ts:33-36 — comment/code drift: says --verbose is "unnecessary" while args include it, and "without ever hitting the model API" is inaccurate (--print ping does reach the model; harmless non-mutating prompt, fix the comment)
 R4_SCOPE_CHECKS: env-var guard honored (spawn only inside describe.skipIf block; default run reports 1 skipped per suite, zero spawns); test names descriptive (#T011-1/5/7 with failure-mode wording); temp-dir cleanup safe on skip (mkdtemp runs inside the gated test, so skip creates nothing; afterEach rmSync runs even on failure since cleanup=true is set right after mkdtemp); full suite green with env unset
 NEXT_STATUS_FOR_INDEX: approved_minor
-NOTES: The R3/R4 caller commands reference src/ai/__tests__/liveSmoke.test.ts and src/ai/**/__tests__/liveSmoke.test.ts — neither matches the actual filenames (claudeCodeLiveSmoke.test.ts / codexLiveSmoke.test.ts); vitest filter matched nothing and exited 1 on the gated invocation. Orchestrator runbook should use the real paths. INDEX row also named UnicDB_CLAUDE_SMOKE; actual gate is UnicDB_CLAUDE_CODE_SMOKE — row corrected.
+NOTES: The R3/R4 caller commands reference src/ai/__tests__/liveSmoke.test.ts and src/ai/**/__tests__/liveSmoke.test.ts — neither matches the actual filenames (claudeCodeLiveSmoke.test.ts / codexLiveSmoke.test.ts); vitest filter matched nothing and exited 1 on the gated invocation. The runbook's previous gate label is corrected to `EXTENSION_CLAUDE_CODE_SMOKE`.

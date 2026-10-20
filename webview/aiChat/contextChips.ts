@@ -34,7 +34,7 @@ import {
 import { createChatIcon } from "./icons";
 
 /** Root class every selector hangs off. */
-const ROOT_CLASS = "UnicDB-ai-chat-v2";
+const ROOT_CLASS = "VSKit-ai-chat-v2";
 
 /** Stable id prefix for a chip, derived from a SANITIZED ref id. */
 export const CONTEXT_CHIP_ID_PREFIX = `${ROOT_CLASS}-ctx-chip-`;
@@ -280,8 +280,8 @@ export function createContextChipStrip(options: ContextChipsOptions): ContextChi
       chip.setAttribute(CONTEXT_CHIP_MARKER, "1");
       chip.setAttribute("data-status", ref.status);
       // Geometry contract as custom properties; styles.css consumes them.
-      chip.style.setProperty("--UnicDB-chip-h", `${CONTEXT_CHIP_MIN_HEIGHT_PX}px`);
-      chip.style.setProperty("--UnicDB-chip-remove", `${CONTEXT_CHIP_REMOVE_SIZE_PX}px`);
+      chip.style.setProperty("--VSKit-chip-h", `${CONTEXT_CHIP_MIN_HEIGHT_PX}px`);
+      chip.style.setProperty("--VSKit-chip-remove", `${CONTEXT_CHIP_REMOVE_SIZE_PX}px`);
 
       // Root gets the FULL accessible name: status + full detail, so an
       // ellipsized label never hides identity.

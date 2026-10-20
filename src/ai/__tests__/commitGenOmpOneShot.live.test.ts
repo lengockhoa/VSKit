@@ -1,7 +1,7 @@
 // src/ai/__tests__/commitGenOmpOneShot.live.test.ts
 // Gated LIVE regression test for the Generate Commit Message hang.
 //
-// Activated only with UnicDB_OMP_SMOKE=1 (same gate as acpLiveSmoke.test.ts).
+// Activated only with VSKIT_OMP_SMOKE=1 (same gate as acpLiveSmoke.test.ts).
 // Drives the REAL omp binary through the SAME production shape the host wires
 // (AcpProcess → createOmpChatEngine → driveCommitGenOneShot + the auto-answer
 // server-request handler) and asserts the turn SETTLES.
@@ -31,7 +31,7 @@ function noopHostMcp(): HostMcp {
   };
 }
 
-describe.skipIf(!process.env.UnicDB_OMP_SMOKE)("commit-gen omp one-shot live", () => {
+describe.skipIf(!process.env.VSKIT_OMP_SMOKE)("commit-gen omp one-shot live", () => {
   it(
     "settles the turn even when omp asks for permission (regression: spinner hang)",
     async () => {

@@ -1,6 +1,6 @@
 // src/ai/codex/__tests__/codexLiveSmoke.test.ts
 // TASK-014 — env-gated live smoke for the real Codex CLI.
-// Activated ONLY when `UnicDB_CODEX_SMOKE=1`. Probes a minimal exec-mode
+// Activated ONLY when `VSKIT_CODEX_SMOKE=1`. Probes a minimal exec-mode
 // handshake (no prompt, no model use, no DB mutation, no credentials).
 //
 // Hard rules (TASK-014 acceptance + TASK-006 verification notes):
@@ -18,7 +18,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { ChildProcessWithoutNullStreams } from "child_process";
 
-const GATE_ENV = "UnicDB_CODEX_SMOKE";
+const GATE_ENV = "VSKIT_CODEX_SMOKE";
 
 interface CodexProbe {
   child: ChildProcessWithoutNullStreams;
@@ -130,7 +130,7 @@ describe.skipIf(!process.env[GATE_ENV])(
     it(
       "binary exists and produces a parseable exec-mode JSON event inside 30s",
       async () => {
-        workspace = mkdtempSync(join(tmpdir(), "unicdb-codex-smoke-"));
+        workspace = mkdtempSync(join(tmpdir(), "vskit-codex-smoke-"));
         cleanup = true;
 
         const { child, events, getSpawnError } = await startCodex(workspace);
@@ -167,19 +167,19 @@ describe.skipIf(!process.env[GATE_ENV])(
 );
 
 describe("codex CLI live smoke — pins the gate env-var name", () => {
-  it("GATE_ENV === 'UnicDB_CODEX_SMOKE'", () => {
-    expect(GATE_ENV).toBe("UnicDB_CODEX_SMOKE");
+  it("GATE_ENV === 'VSKIT_CODEX_SMOKE'", () => {
+    expect(GATE_ENV).toBe("VSKIT_CODEX_SMOKE");
   });
 
   it(
     "spawn error surfaces fast (missing binary)",
     async () => {
       const workspace = mkdtempSync(
-        join(tmpdir(), "unicdb-codex-smoke-missing-"),
+        join(tmpdir(), "vskit-codex-smoke-missing-"),
       );
       try {
         const probe = await startProbe(
-          "unicdb-smoke-missing-binary",
+          "vskit-smoke-missing-binary",
           ["--print", "ping"],
           workspace,
         );

@@ -1,4 +1,3 @@
 #!/bin/sh
-if [[ "$1" == "--install-extension" ]]; then exit 0; fi
-echo 'lengockhoa.UnicDB@9.9.9'
+echo 'fake-code-called: $*'
 exit 0

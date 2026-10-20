@@ -116,7 +116,7 @@ $ npx vitest run src/ui/__tests__/resultsPanel.test.ts
       Tests  52 passed (52)
 
 $ npm run typecheck
-> UnicDB@1.49.0 typecheck
+> package@1.49.0 typecheck
 > tsc --noEmit
 (clean exit, no output)
 

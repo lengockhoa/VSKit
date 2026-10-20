@@ -287,7 +287,7 @@ const MARKER_COL_DELETE = -2;
  *  array. A plain object literal (not `undefined` — arrays serialize it to
  *  `null` on the wire — nor a magic string that could collide with real
  *  data). */
-const DEFAULT_CELL = { __UnicDB_default__: true } as const;
+const DEFAULT_CELL = { __VSKit_default__: true } as const;
 
 
 // ---- Acquire VS Code API ---------------------------------------------------
@@ -303,13 +303,13 @@ function postToHost(msg: WebviewMsg): void {
   } else {
     // Dev fallback (outside VS Code): log to console.
     // eslint-disable-next-line no-console
-    console.log("[UnicDB webview → host]", msg);
+    console.log("[VSKit webview → host]", msg);
   }
 }
 
 // ---- App state -------------------------------------------------------------
 
-const root = document.getElementById("UnicDB-root") as HTMLDivElement;
+const root = document.getElementById("VSKit-root") as HTMLDivElement;
 // Clipboard reads must round-trip through the extension host: VS Code webviews
 // do not reliably expose navigator.clipboard.readText(). Keep this listener on
 // the persistent root so Cmd/Ctrl+V also works before a result grid is mounted.
@@ -668,7 +668,7 @@ function onCellValueChangedHandler(e: CellValueChangedEvent): void {
     oldValue: e.oldValue,
     newValue: e.newValue,
   });
-  // TASK-007: re-run cellClassRules for this cell so `UnicDB-cell-dirty`
+  // TASK-007: re-run cellClassRules for this cell so `VSKit-cell-dirty`
   // paints immediately. AG Grid only re-evaluates class rules when the
   // cell is refreshed (cellValueChanged alone doesn't trigger it).
   if (e.node && gridApi) {
@@ -718,8 +718,8 @@ interface PersistentDom {
   toolbar: HTMLDivElement;
   /** TASK-COLLAPSE-002 — row 1 of the 2-row column toolbar. Owns the
    *  icon buttons (cancel / refresh / add-row / delete-row / undo /
-   *  redo / commit / csv-toggle) + the two `.UnicDB-toolbar-sep`
-   *  dividers + the `.UnicDB-export-format` <select>. The manual
+   *  redo / commit / csv-toggle) + the two `.VSKit-toolbar-sep`
+   *  dividers + the `.VSKit-export-format` <select>. The manual
    *  transaction `transactionControls` wrapper inserts here too. */
   toolbarRow1: HTMLDivElement;
   /** TASK-COLLAPSE-002 — row 2 of the 2-row column toolbar. Owns
@@ -850,7 +850,7 @@ function render(): void {
   if (!dom) return;
 
   // Header text update.
-  dom.header.textContent = headerText || "UnicDB Results";
+  dom.header.textContent = headerText || "VSKit Results";
 
   // Cancel button state.
   dom.cancelBtn.disabled = !busy;
@@ -859,7 +859,7 @@ function render(): void {
   // children, and hidden controls should not change their default layout.
   if (transactionOpen && !dom.transactionControls.parentElement) {
     // TASK-COLLAPSE-002 — csvToggleBtn lives inside row 1 (the toolbar
-    // is a column of two `.UnicDB-toolbar-row` wrappers), so the
+    // is a column of two `.VSKit-toolbar-row` wrappers), so the
     // insertBefore anchor must also live in row 1. Inserting on
     // `dom.toolbar` directly would throw NotFoundError because the
     // reference child (`csvToggleBtn`) is no longer a direct child of
@@ -891,7 +891,7 @@ function makeIconButton(
   svgAttrs: string = "",
 ): HTMLButtonElement {
   const btn = document.createElement("button");
-  btn.className = `UnicDB-btn ${className}`.trim();
+  btn.className = `VSKit-btn ${className}`.trim();
   // TASK-RES-003: drop the native `btn.title` so the custom `data-tooltip`
   // pseudo-tooltip is the ONLY tooltip source (the native browser tooltip
   // has a 1-3s delay inside VS Code webviews, which produced the
@@ -911,7 +911,7 @@ function makeIconButton(
 
 function makeToolbarSep(): HTMLSpanElement {
   const sep = document.createElement("span");
-  sep.className = "UnicDB-toolbar-sep";
+  sep.className = "VSKit-toolbar-sep";
   sep.setAttribute("aria-hidden", "true");
   return sep;
 }
@@ -980,31 +980,31 @@ const ICON_CLEAR =
 
 function buildPersistentDom(): PersistentDom {
   const header = document.createElement("div");
-  header.className = "UnicDB-header";
+  header.className = "VSKit-header";
 
   const toolbar = document.createElement("div");
-  toolbar.className = "UnicDB-toolbar";
+  toolbar.className = "VSKit-toolbar";
 
   // TASK-COLLAPSE-002 — the toolbar is a column of EXACTLY two
-  // `.UnicDB-toolbar-row` wrapper divs. Row 1 owns the icon buttons +
-  // the `.UnicDB-export-format` <select>; row 2 owns the WHERE/ORDER BY
+  // `.VSKit-toolbar-row` wrapper divs. Row 1 owns the icon buttons +
+  // the `.VSKit-export-format` <select>; row 2 owns the WHERE/ORDER BY
   // inputs, Re-Run/Clear, header checkbox, Copy, Export-to-file, schema
   // chip, and Search (last). The split point is exactly WHERE.
   const toolbarRow1 = document.createElement("div");
-  toolbarRow1.className = "UnicDB-toolbar-row";
+  toolbarRow1.className = "VSKit-toolbar-row";
   const toolbarRow2 = document.createElement("div");
-  toolbarRow2.className = "UnicDB-toolbar-row";
+  toolbarRow2.className = "VSKit-toolbar-row";
   toolbar.append(toolbarRow1, toolbarRow2);
 
   // TASK-603 — all toolbar buttons are icon buttons (16×16 inline SVG,
   // currentColor stroke, title + aria-label, no visible text). Two
-  // `.UnicDB-toolbar-sep` dividers mark the query│edit│export groups. The
+  // `.VSKit-toolbar-sep` dividers mark the query│edit│export groups. The
   // search input is the last child so flex-shrink keeps it compact while
   // the fixed-size icon buttons stay on a single non-wrapping row.
 
   // Query group
   const cancelBtn = makeIconButton(
-    "UnicDB-btn-danger",
+    "VSKit-btn-danger",
     "Cancel",
     ICON_CANCEL,
     () => postToHost({ type: "cancel" }),
@@ -1062,7 +1062,7 @@ function buildPersistentDom(): PersistentDom {
   // dirty map is empty — we don't post a no-op message and don't disable
   // the button (the user can still trigger one; the handler short-circuits).
   const commitBtn = makeIconButton(
-    "UnicDB-commit",
+    "VSKit-commit",
     "Commit — save all dirty edits to the database (Cmd/Ctrl+Enter)",
     ICON_COMMIT,
     () => onCommitClick(),
@@ -1074,15 +1074,15 @@ function buildPersistentDom(): PersistentDom {
   // open manual transaction. This prevents commit/rollback actions from ever
   // being available outside that transaction window.
   const transactionControls = document.createElement("span");
-  transactionControls.className = "UnicDB-transaction-controls";
+  transactionControls.className = "VSKit-transaction-controls";
   const commitTransactionBtn = makeIconButton(
-    "UnicDB-transaction-commit",
+    "VSKit-transaction-commit",
     "Commit transaction",
     ICON_COMMIT,
     () => postToHost({ type: "commitTransaction" }),
   );
   const rollbackTransactionBtn = makeIconButton(
-    "UnicDB-transaction-rollback",
+    "VSKit-transaction-rollback",
     "Rollback transaction",
     ICON_ROLLBACK,
     () => postToHost({ type: "rollbackTransaction" }),
@@ -1101,7 +1101,7 @@ function buildPersistentDom(): PersistentDom {
 
   // Export group (format <select> + Header checkbox + Copy + Export-to-file)
   const exportFormat = document.createElement("select");
-  exportFormat.className = "UnicDB-export-format UnicDB-btn";
+  exportFormat.className = "VSKit-export-format VSKit-btn";
   for (const fmt of [
     "tsv",
     "csv",
@@ -1133,7 +1133,7 @@ function buildPersistentDom(): PersistentDom {
   const requeryWhere = document.createElement("input");
   requeryWhere.type = "text";
   requeryWhere.placeholder = "WHERE …";
-  requeryWhere.className = "UnicDB-requery-input UnicDB-requery-where";
+  requeryWhere.className = "VSKit-requery-input VSKit-requery-where";
   requeryWhere.setAttribute("aria-label", "WHERE filter fragment");
   requeryWhere.addEventListener("keydown", (ev) => {
     if (ev.key !== "Enter" || ev.isComposing) return;
@@ -1145,7 +1145,7 @@ function buildPersistentDom(): PersistentDom {
   const requeryOrderBy = document.createElement("input");
   requeryOrderBy.type = "text";
   requeryOrderBy.placeholder = "ORDER BY …";
-  requeryOrderBy.className = "UnicDB-requery-input UnicDB-requery-order";
+  requeryOrderBy.className = "VSKit-requery-input VSKit-requery-order";
   requeryOrderBy.setAttribute("aria-label", "ORDER BY clause");
   requeryOrderBy.addEventListener("keydown", (ev) => {
     if (ev.key !== "Enter" || ev.isComposing) return;
@@ -1155,7 +1155,7 @@ function buildPersistentDom(): PersistentDom {
   toolbarRow2.appendChild(requeryOrderBy);
 
   const requeryRunBtn = makeIconButton(
-    "UnicDB-requery-run",
+    "VSKit-requery-run",
     "Re-Run — re-run the active statement with the WHERE / ORDER BY filter",
     ICON_REQUERY,
     () => onRequeryClick(),
@@ -1163,7 +1163,7 @@ function buildPersistentDom(): PersistentDom {
   toolbarRow2.appendChild(requeryRunBtn);
 
   const requeryClearBtn = makeIconButton(
-    "UnicDB-requery-clear",
+    "VSKit-requery-clear",
     "Clear — clear the WHERE and ORDER BY inputs",
     ICON_CLEAR,
     () => {
@@ -1175,12 +1175,12 @@ function buildPersistentDom(): PersistentDom {
 
   const exportHeader = document.createElement("input");
   exportHeader.type = "checkbox";
-  exportHeader.className = "UnicDB-export-header";
+  exportHeader.className = "VSKit-export-header";
   exportHeader.title = "Include header row (TSV/CSV/XML/JSON only)";
   toolbarRow2.appendChild(exportHeader);
 
   const exportCopyBtn = makeIconButton(
-    "UnicDB-export-copy",
+    "VSKit-export-copy",
     "Copy — copy serialized export to clipboard",
     ICON_COPY,
     () => onExportCopyClick(),
@@ -1188,7 +1188,7 @@ function buildPersistentDom(): PersistentDom {
   toolbarRow2.appendChild(exportCopyBtn);
 
   const exportFileBtn = makeIconButton(
-    "UnicDB-export-file",
+    "VSKit-export-file",
     "Export to file — save serialized export to a file",
     ICON_EXPORT_FILE,
     () => onExportFileClick(),
@@ -1227,7 +1227,7 @@ function buildPersistentDom(): PersistentDom {
   const schemaChip = document.createElement("button");
   schemaChip.type = "button";
   schemaChip.id = "schemaChip";
-  schemaChip.className = "UnicDB-schema-chip";
+  schemaChip.className = "VSKit-schema-chip";
   schemaChip.setAttribute("aria-label", "Active schema");
   schemaChip.title = "Active schema — click to change. CREATE FUNCTION / unqualified SELECT run here.";
   schemaChip.textContent = "$(symbol-namespace) default";
@@ -1239,7 +1239,7 @@ function buildPersistentDom(): PersistentDom {
   const searchInput = document.createElement("input");
   searchInput.type = "text";
   searchInput.placeholder = "Search…";
-  searchInput.className = "UnicDB-search-input";
+  searchInput.className = "VSKit-search-input";
   searchInput.addEventListener("input", () => {
     const text = searchInput.value;
     quickFilterActive = text.length > 0;
@@ -1263,16 +1263,16 @@ function buildPersistentDom(): PersistentDom {
   toolbarRow2.appendChild(searchInput);
 
   const tabs = document.createElement("div");
-  tabs.className = "UnicDB-tabs";
+  tabs.className = "VSKit-tabs";
 
   const panel = document.createElement("div");
-  panel.className = "UnicDB-panel";
+  panel.className = "VSKit-panel";
 
   // Persistent grid wrapper + AG Grid host + footer. The AG Grid mounts on
   // gridHost and is NEVER detached once created. The wrapper survives every
   // re-render so the grid DOM stays live.
   const gridWrap = document.createElement("div");
-  gridWrap.className = "UnicDB-grid-host";
+  gridWrap.className = "VSKit-grid-host";
   gridWrap.style.display = "none"; // hidden until first grid render
 
   // ---- TASK-RANGE-001: mouse-drag cell range selection -----------------
@@ -1502,20 +1502,20 @@ function buildPersistentDom(): PersistentDom {
   const gridHost = document.createElement("div");
   // Theme class is managed by the JS Theming API (themeQuartz) — no legacy
   // `ag-theme-quartz` class (that is the legacy-CSS system, error #106 pair).
-  gridHost.className = "UnicDB-ag-host";
+  gridHost.className = "VSKit-ag-host";
   gridHost.style.flex = "1";
   gridHost.style.width = "100%";
   gridHost.style.minHeight = "0";
   gridWrap.appendChild(gridHost);
 
   const gridFooter = document.createElement("div");
-  gridFooter.className = "UnicDB-grid-footer";
+  gridFooter.className = "VSKit-grid-footer";
   gridWrap.appendChild(gridFooter);
   // TASK-503 — Persistent banner above the footer. Hidden by default;
   // populated on saveResult (ok:false → show; ok:true → hide). Sits
   // inside gridWrap so it scrolls with the grid panel.
   const saveBanner = document.createElement("div");
-  saveBanner.className = "UnicDB-save-banner UnicDB-hidden";
+  saveBanner.className = "VSKit-save-banner VSKit-hidden";
   saveBanner.setAttribute("hidden", "");
   saveBanner.setAttribute("role", "alert");
 
@@ -1576,7 +1576,7 @@ function closeOpenTabMenu(): void {
 function showTabMenu(tabEl: HTMLButtonElement, index: number, x: number, y: number): void {
   closeOpenTabMenu();
   const menu = document.createElement("ul");
-  menu.className = "UnicDB-tab-menu";
+  menu.className = "VSKit-tab-menu";
   menu.setAttribute("role", "menu");
   const items: Array<{ label: string; action: () => void }> = [
     { label: "Close Tab", action: () => postToHost({ type: "closeTab", index }) },
@@ -1585,7 +1585,7 @@ function showTabMenu(tabEl: HTMLButtonElement, index: number, x: number, y: numb
   ];
   for (const it of items) {
     const li = document.createElement("li");
-    li.className = "UnicDB-tab-menu-item";
+    li.className = "VSKit-tab-menu-item";
     li.setAttribute("role", "menuitem");
     li.textContent = it.label;
     li.addEventListener("click", (ev) => {
@@ -1637,7 +1637,7 @@ function rebuildTabs(tabsEl: HTMLDivElement): void {
     if (i === results.length) {
       // Messages tab — first in the strip.
       const msgTab = document.createElement("button");
-      msgTab.className = "UnicDB-tab" + (results.length === activeTab ? " UnicDB-tab-active" : "");
+      msgTab.className = "VSKit-tab" + (results.length === activeTab ? " VSKit-tab-active" : "");
       msgTab.textContent = `Messages${hasErrors ? " ⚠" : ""}`;
       // Native tooltip + CSS instant tooltip (mirrors the toolbar button
       // pattern). Hover text explains the purpose even when no errors.
@@ -1658,9 +1658,9 @@ function rebuildTabs(tabsEl: HTMLDivElement): void {
     const r = results[i];
     if (!r) return;
     const tab = document.createElement("button");
-    tab.className = "UnicDB-tab" + (i === activeTab ? " UnicDB-tab-active" : "");
-    if (r.status === "error") tab.classList.add("UnicDB-tab-error");
-    if (r.status === "cancelled") tab.classList.add("UnicDB-tab-cancelled");
+    tab.className = "VSKit-tab" + (i === activeTab ? " VSKit-tab-active" : "");
+    if (r.status === "error") tab.classList.add("VSKit-tab-error");
+    if (r.status === "cancelled") tab.classList.add("VSKit-tab-cancelled");
     tab.textContent = `${tabTitle(r, i)} ${tabBadge(r)}`;
     // Tooltip — native title + CSS instant tooltip. Describes the result
     // so the user can tell at a glance what each tab holds.
@@ -1681,7 +1681,7 @@ function rebuildTabs(tabsEl: HTMLDivElement): void {
     // TASK-UX3-001 — × close button (visible on hover/focus).
     const closeBtn = document.createElement("button");
     closeBtn.type = "button";
-    closeBtn.className = "UnicDB-tab-close";
+    closeBtn.className = "VSKit-tab-close";
     closeBtn.title = "Close tab";
     closeBtn.setAttribute("data-tooltip", "Close tab");
     closeBtn.setAttribute("aria-label", "Close tab");
@@ -1705,7 +1705,7 @@ function renderActivePanel(): void {
   const panel = dom.panel;
 
   if (results.length === 0) {
-    // TASK-UX3-001 — empty-state placeholder. Keeps the pinned `UnicDB-empty`
+    // TASK-UX3-001 — empty-state placeholder. Keeps the pinned `VSKit-empty`
     // class + "No results yet." copy verbatim (pinned by
     // src/ui/__tests__/webviewResultLimit.test.ts:225 + resultsGridModelNull
     // .test.ts:149 — contract for empty results). No copy change this round;
@@ -1714,7 +1714,7 @@ function renderActivePanel(): void {
     teardownGridWrap();
     panel.innerHTML = "";
     const empty = document.createElement("div");
-    empty.className = "UnicDB-empty";
+    empty.className = "VSKit-empty";
     empty.textContent = busy ? "Running…" : "No results yet.";
     panel.appendChild(empty);
     return;
@@ -1749,7 +1749,7 @@ function renderActivePanel(): void {
   panel.innerHTML = "";
   panel.appendChild(dom.gridWrap);
   // Restore grid visibility after a previous teardownGridWrap() call set
-  // `display: none`. The CSS class `.UnicDB-grid-host` defines `display: flex`
+  // `display: none`. The CSS class `.VSKit-grid-host` defines `display: flex`
   // — clearing the inline value lets the stylesheet govern again so the grid
   // is visible when the statement tab is active (fix for the 6ebe1a2
   // regression where the wrap stayed hidden on first real use).
@@ -1760,10 +1760,10 @@ function renderActivePanel(): void {
 /** TASK-UX1-010 — render a single DDL/DML status card into the panel.
  *  Pure DOM assembly; the text fields come from `buildDdlCardText`
  *  (testable from node) so the only jsdom-coupled code here is the DOM
- *  construction itself. Uses the `UnicDB-ddl-card` / `UnicDB-ddl-card-error`
- *  / `UnicDB-ddl-card-hint` classes — the `.UnicDB-ddl-*` family is
- *  append-only and disjoint from `.UnicDB-chat-*` (UX1-008) /
- *  `.UnicDB-setfilter-*` (UX1-005). */
+ *  construction itself. Uses the `VSKit-ddl-card` / `VSKit-ddl-card-error`
+ *  / `VSKit-ddl-card-hint` classes — the `.VSKit-ddl-*` family is
+ *  append-only and disjoint from `.VSKit-chat-*` (UX1-008) /
+ *  `.VSKit-setfilter-*` (UX1-005). */
 function renderDdlCardInto(panel: HTMLDivElement, r: StatementResult): void {
   const statementIndex = typeof r.runStmtNo === "number"
     ? r.runStmtNo - 1
@@ -1777,15 +1777,15 @@ function renderDdlCardInto(panel: HTMLDivElement, r: StatementResult): void {
   });
 
   const cardEl = document.createElement("div");
-  cardEl.className = "UnicDB-ddl-card" + (card.variant === "error" ? " UnicDB-ddl-card-error" : " UnicDB-ddl-card-success");
+  cardEl.className = "VSKit-ddl-card" + (card.variant === "error" ? " VSKit-ddl-card-error" : " VSKit-ddl-card-success");
 
   const titleEl = document.createElement("div");
-  titleEl.className = "UnicDB-ddl-card-title";
+  titleEl.className = "VSKit-ddl-card-title";
   titleEl.textContent = card.title;
   cardEl.appendChild(titleEl);
 
   const metaEl = document.createElement("div");
-  metaEl.className = "UnicDB-ddl-card-meta";
+  metaEl.className = "VSKit-ddl-card-meta";
   metaEl.textContent = card.meta;
   cardEl.appendChild(metaEl);
 
@@ -1793,13 +1793,13 @@ function renderDdlCardInto(panel: HTMLDivElement, r: StatementResult): void {
   // SQL stays text via textContent on the inner nodes — see sqlHighlight
   // for the no-innerHTML guarantee).
   const sqlEl = document.createElement("pre");
-  sqlEl.className = "UnicDB-ddl-card-sql";
+  sqlEl.className = "VSKit-ddl-card-sql";
   sqlEl.appendChild(highlightSql(r.sql));
   cardEl.appendChild(sqlEl);
 
   if (card.errorText !== undefined) {
     const errEl = document.createElement("div");
-    errEl.className = "UnicDB-ddl-card-error-text";
+    errEl.className = "VSKit-ddl-card-error-text";
     // Byte-identical verbatim preservation (no escaping, no innerHTML).
     errEl.textContent = card.errorText;
     cardEl.appendChild(errEl);
@@ -1807,7 +1807,7 @@ function renderDdlCardInto(panel: HTMLDivElement, r: StatementResult): void {
 
   if (card.hint !== undefined) {
     const hintEl = document.createElement("div");
-    hintEl.className = "UnicDB-ddl-card-hint";
+    hintEl.className = "VSKit-ddl-card-hint";
     hintEl.textContent = `Hint: ${card.hint}`;
     cardEl.appendChild(hintEl);
   }
@@ -1873,44 +1873,44 @@ class SetFilterComponent {
   private readonly closeBtn = document.createElement("button");
 
   constructor() {
-    this.root.className = "UnicDB-setfilter";
+    this.root.className = "VSKit-setfilter";
     this.searchInput.type = "search";
-    this.searchInput.className = "UnicDB-setfilter-search";
+    this.searchInput.className = "VSKit-setfilter-search";
     this.searchInput.placeholder = "Search…";
     this.searchInput.addEventListener("input", () => this.onSearchChanged());
     this.selectAllCheckbox.type = "checkbox";
-    this.selectAllCheckbox.className = "UnicDB-setfilter-selectall";
+    this.selectAllCheckbox.className = "VSKit-setfilter-selectall";
     this.selectAllCheckbox.addEventListener("change", () =>
       this.onSelectAllChanged(),
     );
-    this.listEl.className = "UnicDB-setfilter-list";
-    this.statusEl.className = "UnicDB-setfilter-status";
+    this.listEl.className = "VSKit-setfilter-list";
+    this.statusEl.className = "VSKit-setfilter-status";
     this.clearBtn.type = "button";
-    this.clearBtn.className = "UnicDB-setfilter-clear";
+    this.clearBtn.className = "VSKit-setfilter-clear";
     this.clearBtn.textContent = "Clear";
     this.clearBtn.addEventListener("click", () => this.onClear());
     this.closeBtn.type = "button";
-    this.closeBtn.className = "UnicDB-setfilter-close";
+    this.closeBtn.className = "VSKit-setfilter-close";
     this.closeBtn.textContent = "Close";
     this.closeBtn.addEventListener("click", () => this.onClose());
 
     const searchRow = document.createElement("div");
-    searchRow.className = "UnicDB-setfilter-search-row";
+    searchRow.className = "VSKit-setfilter-search-row";
     searchRow.appendChild(this.searchInput);
 
     const selectAllRow = document.createElement("div");
-    selectAllRow.className = "UnicDB-setfilter-selectall-row";
+    selectAllRow.className = "VSKit-setfilter-selectall-row";
     const selectAllLabel = document.createElement("label");
-    selectAllLabel.className = "UnicDB-setfilter-selectall-label";
+    selectAllLabel.className = "VSKit-setfilter-selectall-label";
     selectAllLabel.appendChild(this.selectAllCheckbox);
     selectAllLabel.appendChild(document.createTextNode("Select All"));
     selectAllRow.appendChild(selectAllLabel);
 
     const footerRow = document.createElement("div");
-    footerRow.className = "UnicDB-setfilter-footer";
+    footerRow.className = "VSKit-setfilter-footer";
     footerRow.appendChild(this.statusEl);
     const footerRight = document.createElement("div");
-    footerRight.className = "UnicDB-setfilter-footer-right";
+    footerRight.className = "VSKit-setfilter-footer-right";
     footerRight.appendChild(this.clearBtn);
     footerRight.appendChild(this.closeBtn);
     footerRow.appendChild(footerRight);
@@ -2074,22 +2074,22 @@ class SetFilterComponent {
 
     for (const entry of this.entries) {
       const row = document.createElement("label");
-      row.className = "UnicDB-setfilter-entry";
+      row.className = "VSKit-setfilter-entry";
       const cb = document.createElement("input");
       cb.type = "checkbox";
-      cb.className = "UnicDB-setfilter-entry-checkbox";
+      cb.className = "VSKit-setfilter-entry-checkbox";
       cb.checked = this.checked.has(entry.display);
       cb.addEventListener("change", () =>
         this.onEntryChanged(entry.display, cb.checked),
       );
       const label = document.createElement("span");
-      label.className = "UnicDB-setfilter-label";
+      label.className = "VSKit-setfilter-label";
       label.textContent = entry.display;
       const count = document.createElement("span");
-      count.className = "UnicDB-setfilter-count";
+      count.className = "VSKit-setfilter-count";
       count.textContent = String(entry.count);
       // Right-align within a flex row — same effect as the CSS
-      // `.UnicDB-setfilter-count { margin-left: auto }` rule, applied
+      // `.VSKit-setfilter-count { margin-left: auto }` rule, applied
       // inline so jsdom-based tests can assert the computed value
       // (jsdom doesn't apply external stylesheets).
       count.style.marginLeft = "auto";
@@ -2099,7 +2099,7 @@ class SetFilterComponent {
       const matches =
         needle === "" || entry.display.toLowerCase().includes(needle);
       if (!matches) {
-        row.classList.add("UnicDB-setfilter-entry-hidden");
+        row.classList.add("VSKit-setfilter-entry-hidden");
       } else {
         visibleCount += 1;
         if (cb.checked) checkedVisibleCount += 1;
@@ -2253,14 +2253,14 @@ function renderGrid(): void {
   // + footer intact.
   for (const child of Array.from(container.children)) {
     if (child === gridHost || child === footer || child === saveBanner) continue;
-    if ((child as HTMLElement).classList?.contains("UnicDB-requery-bar")) continue;
+    if ((child as HTMLElement).classList?.contains("VSKit-requery-bar")) continue;
     container.removeChild(child);
   }
 
   if (r.status === "error") {
     // Error placeholder lives next to the grid host, not in place of it.
     const err = document.createElement("div");
-    err.className = "UnicDB-error";
+    err.className = "VSKit-error";
     err.textContent = `Error: ${r.error ?? "unknown"}`;
     container.insertBefore(err, gridHost);
     setCurrentStatement(null);
@@ -2278,7 +2278,7 @@ function renderGrid(): void {
   // kết quả nổi bật thay vì grid trống (DataGrip-style "1 row affected").
   if (r.result.columns.length === 0 && r.result.rows.length === 0) {
     const msg = document.createElement("div");
-    msg.className = "UnicDB-ok-message";
+    msg.className = "VSKit-ok-message";
     const tag = r.result.commandTag ?? "OK";
     const affected = r.result.rowCount ?? 0;
     msg.textContent =
@@ -2344,7 +2344,7 @@ function renderGrid(): void {
       // TASK-004 — null/undefined cells render an italic muted "(NULL)"
       // placeholder. valueFormatter alone cannot attach a CSS class, so
       // this cellRenderer wraps the formatted display: null/undefined →
-      // `<span class="UnicDB-null">(NULL)</span>`; every other value → a
+      // `<span class="VSKit-null">(NULL)</span>`; every other value → a
       // plain text span. Text is set via textContent (never innerHTML),
       // so cell content can never inject markup. Only the DISPLAY
       // changes — the underlying row data (and everything editors,
@@ -2355,7 +2355,7 @@ function renderGrid(): void {
       }) => {
         const el = document.createElement("span");
         if (p.value === null || p.value === undefined) {
-          el.className = "UnicDB-null";
+          el.className = "VSKit-null";
           el.textContent = "(NULL)";
           return el;
         }
@@ -2364,19 +2364,19 @@ function renderGrid(): void {
           formatDataCell(p.value, stmtSchemaFields?.[colIndex], stmtDialect);
         return el;
       },
-      // TASK-007: cellClassRules paints `UnicDB-cell-dirty` on a cell whose
+      // TASK-007: cellClassRules paints `VSKit-cell-dirty` on a cell whose
       // (rowId, colIndex) is in the local EditState. The rule re-evaluates
       // when AG Grid calls `api.refreshCells({ rowNodes, force: true })` —
       // we trigger that from onCellValueChangedHandler, onAddRowClick, and
       // onDeleteRowClick so the highlight follows the user's edits live.
       //
-      // TASK-RANGE-001: cellClassRules ALSO paints `UnicDB-cell-range`
+      // TASK-RANGE-001: cellClassRules ALSO paints `VSKit-cell-range`
       // whenever the cell's display-row/colIndex is inside the live
       // `cellRange` rectangle. The predicate runs at full re-render too
       // (column drag / sort / filter), so the highlight survives viewport
       // changes without an explicit refresh.
       cellClassRules: {
-        "UnicDB-cell-dirty": (params: {
+        "VSKit-cell-dirty": (params: {
           data?: Record<string, unknown> | undefined;
         }): boolean => {
           const data = params.data;
@@ -2385,7 +2385,7 @@ function renderGrid(): void {
           if (id === undefined) return false;
           return editState.isCellDirty(id, colIndex);
         },
-        "UnicDB-cell-range": (params: {
+        "VSKit-cell-range": (params: {
           data?: Record<string, unknown> | undefined;
         }): boolean => {
           if (!cellRange) return false;
@@ -2441,7 +2441,7 @@ function renderGrid(): void {
   const model = ensureModel(activeTab);
   // TASK-ARP03-004 — a resultLimited statement has a closed cursor: force
   // hasMore off at the model sync so neither the scroll trigger
-  // (onBodyScroll) nor the __UnicDBCheckLoadMoreForHost hook posts loadMore
+  // (onBodyScroll) nor the __VSKitCheckLoadMoreForHost hook posts loadMore
   // again — even when rowCount is null (total unknown), the load-bearing
   // case where the model's EOF branch cannot close the gate itself.
   const syncResult = model.sync(
@@ -2512,8 +2512,8 @@ function renderGrid(): void {
       // EditState). We use the string form (single class) so we can
       // combine the new-row and deleted markers; AG Grid appends the
       // returned string to the row element's class list. The actual
-      // CSS rules live in styles.css (`UnicDB-row-new`,
-      // `UnicDB-row-deleted`).
+      // CSS rules live in styles.css (`VSKit-row-new`,
+      // `VSKit-row-deleted`).
       getRowClass: (params: {
         data?: Record<string, unknown> | undefined;
       }): string => {
@@ -2522,8 +2522,8 @@ function renderGrid(): void {
         const id = readRowId(data);
         if (id === undefined) return "";
         const classes: string[] = [];
-        if (editState.isRowNew(id)) classes.push("UnicDB-row-new");
-        if (editState.isRowDeleted(id)) classes.push("UnicDB-row-deleted");
+        if (editState.isRowNew(id)) classes.push("VSKit-row-new");
+        if (editState.isRowDeleted(id)) classes.push("VSKit-row-deleted");
         return classes.join(" ");
       },
       rowSelection: {
@@ -2613,7 +2613,7 @@ function renderGrid(): void {
       onModelUpdated: () => updateFooterNow(),
       onBodyScroll: (e: BodyScrollEvent) => onBodyScroll(e, activeTab, model),
     });
-    (gridHost as unknown as { __UnicDBApi: GridApi }).__UnicDBApi = gridApi;
+    (gridHost as unknown as { __VSKitApi: GridApi }).__VSKitApi = gridApi;
     statementRows.set(activeTab, r.result.rows.slice());
     lastColumnCount = specs.length;
     // Seed the high-water mark to the last server row's id. Locally-added
@@ -2853,9 +2853,9 @@ function renderGrid(): void {
     if (!model.getState().hasMore()) return;
     dispatchLoadMore();
   };
-  (window as unknown as { __UnicDBCheckLoadMoreForHost?: () => void }).__UnicDBCheckLoadMoreForHost =
+  (window as unknown as { __VSKitCheckLoadMoreForHost?: () => void }).__VSKitCheckLoadMoreForHost =
     () => {
-      const host = root.querySelector(".UnicDB-grid-host") as HTMLElement | null;
+      const host = root.querySelector(".VSKit-grid-host") as HTMLElement | null;
       if (!host) return;
       const hook = (host as unknown as { __checkLoadMore?: () => void }).__checkLoadMore;
       if (typeof hook === "function") hook();
@@ -3248,7 +3248,7 @@ function openValueViewer(
   if (!dom) return;
   closeValueViewer();
   const overlay = document.createElement("div");
-  overlay.className = "UnicDB-value-viewer";
+  overlay.className = "VSKit-value-viewer";
   overlay.setAttribute("role", "dialog");
   overlay.setAttribute("aria-label", "Cell value viewer");
   overlay.textContent =
@@ -3328,7 +3328,7 @@ function onCellDoubleClickedHandler(e: CellDoubleClickedEvent): void {
  *  csvMode on → raw (toString, so a Date renders as the Date object's
  *  toString rather than an ISO string). TASK-004: null and undefined
  *  both display as the "(NULL)" placeholder text (the cellRenderer above
- *  wraps it in the styled `.UnicDB-null` span) — the underlying data keeps
+ *  wraps it in the styled `.VSKit-null` span) — the underlying data keeps
  *  the real null, this only changes display.
  *
  *  TASK-BQ04-002 — `field` is the optional per-column schema descriptor
@@ -3584,7 +3584,7 @@ function pasteIntoRange(range: CellRange, parsed: string[][]): void {
  *  statement and sends back fresh rows. */
 function hideSaveBanner(): void {
   if (!dom?.saveBanner) return;
-  dom.saveBanner.classList.add("UnicDB-hidden");
+  dom.saveBanner.classList.add("VSKit-hidden");
   dom.saveBanner.setAttribute("hidden", "");
   dom.saveBanner.textContent = "";
 }
@@ -3604,14 +3604,14 @@ function showRefreshConfirm(): void {
   if (!banner) return;
   banner.textContent = "";
   const text = document.createElement("span");
-  text.className = "UnicDB-save-banner-text";
+  text.className = "VSKit-save-banner-text";
   text.textContent = "Discard unsaved edits and refresh?";
   banner.appendChild(text);
 
   const discard = document.createElement("button");
   discard.type = "button";
-  discard.className = "UnicDB-save-retry";
-  discard.setAttribute("data-UnicDB-refresh-discard", "");
+  discard.className = "VSKit-save-retry";
+  discard.setAttribute("data-VSKit-refresh-discard", "");
   discard.textContent = "Discard";
   discard.addEventListener("click", () => {
     hideSaveBanner();
@@ -3620,14 +3620,14 @@ function showRefreshConfirm(): void {
 
   const cancel = document.createElement("button");
   cancel.type = "button";
-  cancel.className = "UnicDB-save-retry";
-  cancel.setAttribute("data-UnicDB-refresh-cancel", "");
+  cancel.className = "VSKit-save-retry";
+  cancel.setAttribute("data-VSKit-refresh-cancel", "");
   cancel.textContent = "Cancel";
   cancel.addEventListener("click", () => hideSaveBanner());
 
   banner.appendChild(discard);
   banner.appendChild(cancel);
-  banner.classList.remove("UnicDB-hidden");
+  banner.classList.remove("VSKit-hidden");
   banner.removeAttribute("hidden");
 }
 
@@ -3660,7 +3660,7 @@ function onAddRowClick(): void {
   }
   // TASK-007: mark dirty FIRST so when AG Grid renders the new row,
   // getRowClass already sees isRowNew(newRowId)=true and appends the
-  // `UnicDB-row-new` class on first render — no second redraw needed.
+  // `VSKit-row-new` class on first render — no second redraw needed.
   //
   // A6/A11: the marker lives at MARKER_COL_INSERT (not colIndex 0 — that
   // would collide with a real edit on column 0's dirty key). `values` is
@@ -3671,7 +3671,7 @@ function onAddRowClick(): void {
     newRowId,
     MARKER_COL_INSERT,
     {
-      __UnicDB_new_row__: true,
+      __VSKit_new_row__: true,
       __rowId: newRowId,
       values: currentSpecs.map(() => DEFAULT_CELL),
     },
@@ -3712,7 +3712,7 @@ function onDeleteRowClick(): void {
   editState.markDirty(
     rowId,
     MARKER_COL_DELETE,
-    { __UnicDB_deleted__: true, __rowId: rowId },
+    { __VSKit_deleted__: true, __rowId: rowId },
     undefined,
   );
   if (focusedNode) {
@@ -3790,7 +3790,7 @@ function applyUndoAction(action: UndoAction, mode: "undo" | "redo"): void {
         action.rowId,
         MARKER_COL_INSERT,
         {
-          __UnicDB_new_row__: true,
+          __VSKit_new_row__: true,
           __rowId: action.rowId,
           values: currentSpecs.map(() => DEFAULT_CELL),
         },
@@ -3809,7 +3809,7 @@ function applyUndoAction(action: UndoAction, mode: "undo" | "redo"): void {
       editState.markDirty(
         action.rowId,
         MARKER_COL_DELETE,
-        { __UnicDB_deleted__: true, __rowId: action.rowId },
+        { __VSKit_deleted__: true, __rowId: action.rowId },
         undefined,
       );
     }
@@ -3879,7 +3879,7 @@ function onCommitClick(): void {
   // While the host is processing, hide any previous banner. Re-shown if
   // the host returns an error.
   if (dom?.saveBanner) {
-    dom.saveBanner.classList.add("UnicDB-hidden");
+    dom.saveBanner.classList.add("VSKit-hidden");
     dom.saveBanner.setAttribute("hidden", "");
     dom.saveBanner.textContent = "";
   }
@@ -3904,8 +3904,8 @@ function onRequeryClick(): void {
 function makeRetryButton(): HTMLButtonElement {
   const btn = document.createElement("button");
   btn.type = "button";
-  btn.className = "UnicDB-save-retry";
-  btn.setAttribute("data-UnicDB-retry-failed", "");
+  btn.className = "VSKit-save-retry";
+  btn.setAttribute("data-VSKit-retry-failed", "");
   btn.title = "Retry failed rows — resend only the rows that failed";
   btn.setAttribute("aria-label", "Retry failed rows");
   btn.textContent = "Retry failed rows";
@@ -3942,7 +3942,7 @@ function onRetryFailedRowsClick(): void {
   // While the host re-runs the subset, hide the banner (re-shown with
   // fresh rowErrors if rows fail again).
   if (dom?.saveBanner) {
-    dom.saveBanner.classList.add("UnicDB-hidden");
+    dom.saveBanner.classList.add("VSKit-hidden");
     dom.saveBanner.setAttribute("hidden", "");
     dom.saveBanner.textContent = "";
   }
@@ -4073,7 +4073,7 @@ function onExportCopyClick(): void {
     );
     postToHost({ type: "copy", text });
   } catch (err) {
-    console.error("UnicDB export copy failed:", err);
+    console.error("VSKit export copy failed:", err);
   }
 }
 function onExportFileClick(): void {
@@ -4097,7 +4097,7 @@ function onExportFileClick(): void {
     );
     postToHost({ type: "exportFile", format: input.format, text });
   } catch (err) {
-    console.error("UnicDB export file failed:", err);
+    console.error("VSKit export file failed:", err);
   }
 }
 
@@ -4206,7 +4206,7 @@ function updateFooter(
   // BEFORE footerText(...) so this copy REPLACES footerText's output
   // entirely (e.g. the "10000 of 10000" total branch in
   // src/ui/resultsGridModel.ts) — never appended onto a count. Distinct
-  // from the plain "N rows" EOF copy, from ".UnicDB-empty", and from the
+  // from the plain "N rows" EOF copy, from ".VSKit-empty", and from the
   // cancelled presentation (which renders no footer at all).
   const suffix =
     (transactionOpen ? "  Transaction open" : "") +
@@ -4250,27 +4250,27 @@ function updateFooterNow(): void {
 
 function renderMessagesInto(panel: HTMLDivElement): void {
   const wrap = document.createElement("div");
-  wrap.className = "UnicDB-messages";
+  wrap.className = "VSKit-messages";
   results.forEach((r, i) => {
     const card = document.createElement("div");
-    card.className = "UnicDB-msg-card";
-    if (r.status === "error") card.classList.add("UnicDB-msg-error");
-    if (r.status === "cancelled") card.classList.add("UnicDB-msg-cancelled");
+    card.className = "VSKit-msg-card";
+    if (r.status === "error") card.classList.add("VSKit-msg-error");
+    if (r.status === "cancelled") card.classList.add("VSKit-msg-cancelled");
 
     const title = document.createElement("div");
-    title.className = "UnicDB-msg-title";
+    title.className = "VSKit-msg-title";
     title.textContent = `Statement ${i + 1} — ${r.status.toUpperCase()}`;
     card.appendChild(title);
 
     const sql = document.createElement("pre");
-    sql.className = "UnicDB-msg-sql";
+    sql.className = "VSKit-msg-sql";
     // TASK-003: colorize the SQL (dependency-free tokenizer → fragment of
     // <span>s). highlightSql never uses innerHTML, so hostile SQL stays text.
     sql.appendChild(highlightSql(r.sql));
     card.appendChild(sql);
 
     const meta = document.createElement("div");
-    meta.className = "UnicDB-msg-meta";
+    meta.className = "VSKit-msg-meta";
     meta.textContent = `Duration: ${r.durationMs}ms`;
     if (r.result?.commandTag) meta.textContent += ` — ${r.result.commandTag}`;
     if (r.result?.rowCount !== undefined && r.result?.rowCount !== null) {
@@ -4280,7 +4280,7 @@ function renderMessagesInto(panel: HTMLDivElement): void {
 
     if (r.error) {
       const err = document.createElement("div");
-      err.className = "UnicDB-msg-error-text";
+      err.className = "VSKit-msg-error-text";
       err.textContent = r.error;
       card.appendChild(err);
     }
@@ -4317,7 +4317,7 @@ function handleSaveResult(msg: SaveResultMsg): void {
       if (banner) {
         banner.textContent = "";
         const text = document.createElement("span");
-        text.className = "UnicDB-save-banner-text";
+        text.className = "VSKit-save-banner-text";
         const lines = msg.rowErrors.map(
           (e) => `row ${e.rowId}: ${e.error}`,
         );
@@ -4326,7 +4326,7 @@ function handleSaveResult(msg: SaveResultMsg): void {
           lines.join(" · ");
         banner.appendChild(text);
         banner.appendChild(makeRetryButton());
-        banner.classList.remove("UnicDB-hidden");
+        banner.classList.remove("VSKit-hidden");
         banner.removeAttribute("hidden");
       }
       // Re-render cells so dirty highlights on errored rows remain
@@ -4348,11 +4348,11 @@ function handleSaveResult(msg: SaveResultMsg): void {
       hideSaveBanner();
       if (msg.warnings && msg.warnings.length > 0 && banner) {
         banner.textContent = msg.warnings.join(" · ");
-        banner.classList.remove("UnicDB-hidden");
+        banner.classList.remove("VSKit-hidden");
         banner.removeAttribute("hidden");
       }
       if (msg.refused && msg.reason && banner) {
-        banner.classList.remove("UnicDB-hidden");
+        banner.classList.remove("VSKit-hidden");
         banner.removeAttribute("hidden");
         banner.textContent = msg.reason;
       }
@@ -4388,7 +4388,7 @@ function handleSaveResult(msg: SaveResultMsg): void {
     const errs = msg.errors ?? ["Unknown save error"];
     if (banner) {
       banner.textContent = errs.join(" · ");
-      banner.classList.remove("UnicDB-hidden");
+      banner.classList.remove("VSKit-hidden");
       banner.removeAttribute("hidden");
     }
     // edit state preserved; user can retry after fixing.
@@ -4595,7 +4595,7 @@ function debugSetSpecs(specs: readonly ColumnSpec[]): void {
 }
 
 // Expose for debugging + tests.
-(window as unknown as { __UnicDB: unknown }).__UnicDB = {
+(window as unknown as { __VSKit: unknown }).__VSKit = {
   render,
   postToHost,
   getActiveTab: () => activeTab,
@@ -4605,7 +4605,7 @@ function debugSetSpecs(specs: readonly ColumnSpec[]): void {
   },
   get checkLoadMore(): () => void {
     return () => {
-      const host = root.querySelector(".UnicDB-grid-host") as HTMLElement | null;
+      const host = root.querySelector(".VSKit-grid-host") as HTMLElement | null;
       if (!host) return;
       const hook = (host as unknown as { __checkLoadMore?: () => void }).__checkLoadMore;
       if (typeof hook === "function") hook();

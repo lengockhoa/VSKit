@@ -1,24 +1,17 @@
 // src/ui/__tests__/userGuideContent.test.ts
-// TASK-UX1-004 (R2) — verify docs/UNICDB_USER_GUIDE.md exists and covers
-// every shipped feature required by §Acceptance. Pure file-read test,
-// no vscode mock.
-//
-// NOTE: filename case is significant — vsce's .vscodeignore glob is
-// case-sensitive on Linux/Windows (the Marketplace CI runs on ubuntu-latest).
-// Historical case `docs/UnicDB_USER_GUIDE.md` (mixed-case UnicDB prefix) was
-// a typo that caused the file to silently drop from the .vsix while macOS
-// dev (case-insensitive HFS+/APFS) masked it. Path strings here MUST match
-// the on-disk entry exactly so the test catches future drift on Linux CI.
+// Verify the VSKit user guide path and content shipped in the VSIX.
+// `.vscodeignore` paths are case-sensitive on Linux/Windows; keep these
+// assertions matched to the exact lowercase filesystem path.
 import { describe, it, expect } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-const guidePath = resolve(process.cwd(), "docs", "UNICDB_USER_GUIDE.md");
+const guidePath = resolve(process.cwd(), "docs", "vskit-user-guide.md");
 const exists = existsSync(guidePath);
 const content = exists ? readFileSync(guidePath, "utf8") : "";
 
-describe("TASK-UX1-004 (R2) — docs/UNICDB_USER_GUIDE.md", () => {
-  it("#1 file exists at docs/UNICDB_USER_GUIDE.md", () => {
+describe("VSKit user guide", () => {
+  it("exists at docs/vskit-user-guide.md", () => {
     expect(exists, "guide file must exist on disk").toBe(true);
   });
 
@@ -44,8 +37,8 @@ describe("TASK-UX1-004 (R2) — docs/UNICDB_USER_GUIDE.md", () => {
     });
   }
 
-  it("#4 does NOT mention the removed UnicDB.resultsPlacement setting", () => {
-    expect(content).not.toContain("UnicDB.resultsPlacement");
+  it("#4 does NOT mention the removed VSKit.resultsPlacement setting", () => {
+    expect(content).not.toContain("VSKit.resultsPlacement");
   });
 
   it("#4b no stale placement option words remain in a settings context", () => {
@@ -64,7 +57,7 @@ describe("TASK-UX1-004 (R2) — docs/UNICDB_USER_GUIDE.md", () => {
   });
 });
 
-describe("TASK-GC-005 — docs/UNICDB_USER_GUIDE.md (Generate Commit + Lite Model + Engine)", () => {
+describe("TASK-GC-005 — docs/VSKIT_USER_GUIDE.md (Generate Commit + Lite Model + Engine)", () => {
   const gcSectionKeywords = [
     "Generate Commit Message",
     "Source Control",

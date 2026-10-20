@@ -110,7 +110,7 @@ $ npx vitest run src/core/__tests__
       Tests  524 passed (524)
 
 $ npm run typecheck
-> UnicDB@1.54.1 typecheck
+> VSKit@1.54.1 typecheck
 > tsc --noEmit
 (exit 0, no errors)
 ```

@@ -19,8 +19,8 @@ New pure-DOM webview module building the Claude Code–style sticky composer: at
 | # | Type | Test name | Expected | Pre-state / Fixture |
 |---|------|----------|----------|---------------------|
 | 1 | happy | renders full clone row | composer element contains ids `prompt`, `sendBtn`, `stopBtn`, `attachBtn`, `attachStrip`, `modelChipBtn`, `bypassToggle`, `micBtn`, `slashHintBtn`; textarea placeholder non-empty; aria-labels present on all buttons | empty jsdom document |
-| 2 | edge (state/boundary) | busy swap to red square stop | `setBusy(true)` → `sendBtn` hidden+disabled, `stopBtn` visible with class `UnicDB-chat-stop UnicDB-chat-stop-live` (pulse class); `setBusy(false)` → inverse; prompt disabled while busy | toggle twice, assert both directions |
-| 3 | edge (default value) | bypass defaults OFF | `bypassToggle` initial `aria-checked="false"`, no `UnicDB-chat-toggle-on` class; click → callback `onBypassChange(true)` + ON class + `aria-checked="true"`; second click → `onBypassChange(false)` (exact alternation) | fresh composer |
+| 2 | edge (state/boundary) | busy swap to red square stop | `setBusy(true)` → `sendBtn` hidden+disabled, `stopBtn` visible with class `chat-stop chat-stop-live` (pulse class); `setBusy(false)` → inverse; prompt disabled while busy | toggle twice, assert both directions |
+| 3 | edge (default value) | bypass defaults OFF | `bypassToggle` initial `aria-checked="false"`, no `chat-toggle-on` class; click → callback `onBypassChange(true)` + ON class + `aria-checked="true"`; second click → `onBypassChange(false)` (exact alternation) | fresh composer |
 | 4 | edge (empty) | empty models list | `setModels([], "work")` → chip disabled, label `No models configured`, clicking it fires no callback | empty list |
 | 5 | edge (selection) | chip dropdown select | `setModels([{role:"work",modelId:"gpt-x",vision:false},{role:"smart",modelId:"o3",vision:true}], "smart")` → chip label shows active (`smart` · `o3`); opening menu renders one row per entry (textContent = role · modelId); clicking `work` row fires `onModelSelect("work")` exactly once and closes menu | 2-entry list |
 | 6 | edge (input guard) | send only when text non-empty | `onSend` fires with trimmed-nonempty value; whitespace-only value fires nothing (button click path) | `"   "` vs `"hi"` |
@@ -49,7 +49,7 @@ npm run typecheck
 
 ## Interfaces
 
-- Consumes: CSS classes `.UnicDB-chat-input`, `.UnicDB-chat-actions`, `.UnicDB-chat-chip`, `.UnicDB-chat-chipmenu`, `.UnicDB-chat-toggle(-on)`, `.UnicDB-chat-stop(-live)`, `.UnicDB-chat-primary/secondary`, `.UnicDB-chat-attachments` from TASK-AGTUI-001.
+- Consumes: CSS classes `.chat-input`, `.chat-actions`, `.chat-chip`, `.chat-chipmenu`, `.chat-toggle(-on)`, `.chat-stop(-live)`, `.chat-primary/secondary`, `.chat-attachments` from TASK-AGTUI-001.
 - Produces (exact signature — consumed by TASK-AGTUI-007):
 ```ts
 export interface ComposerModelEntry { role: string; modelId: string; vision: boolean }
@@ -60,7 +60,7 @@ export interface ComposerCallbacks {
   onBypassChange(enabled: boolean): void;
   onAttachPicker(): void;          // "+" click — main owns the hidden file input
 }
-export interface UnicDBComposer {
+export interface ChatComposer {
   el: HTMLElement;
   setBusy(busy: boolean): void;
   setModels(entries: ComposerModelEntry[], active: string): void;
@@ -69,7 +69,7 @@ export interface UnicDBComposer {
   value(): string; setValue(v: string): void; // textarea access for main's slash/mention logic
   attachments(): ComposerAttachment[]; addAttachments(files: FileList): void; clearAttachments(): void;
 }
-export function renderComposer(root: HTMLElement, cb: ComposerCallbacks): UnicDBComposer;
+export function renderComposer(root: HTMLElement, cb: ComposerCallbacks): ChatComposer;
 export interface ComposerAttachment { id: string; mime: string; base64: string; bytes: number }
 ```
   Note: `onSend` does NOT post — main keeps slash interception, mention dropdown, `liveTurnPending`, bubble echo (existing behavior in `aiChatPanelMain.ts` `wireControls()` lines 713-790).
@@ -105,7 +105,7 @@ TEST_PLAN_COVERAGE: all-followed — 8/8 §Test Cases implemented with real asse
 Findings:
   - minor (test gap) aiChatPanelComposer.ts:414-430 slash insert+focus, :228-234 mic disabled+title, :442-457 outside-click/Escape menu close are implemented but unpinned by tests — acceptance bullet 2 explicitly says "assertable via dispatched events"; add 2-3 small jsdom tests.
   - minor (assertion) webview/__tests__/aiChatPanelComposer.test.ts:133 asserts background truthiness only; BLUE #3b82f6 OFF / amber #f59e0b ON inline hexes (aiChatPanelComposer.ts:335-336) are unpinned.
-  - minor (CSS, cross-task) 5 invented class hooks have no styles.css rule at HEAD: .UnicDB-chat-composer, .UnicDB-chat-slash-hint, .UnicDB-chat-mic, .UnicDB-chat-actions-sep, .UnicDB-chat-chipmenu-row — slash/mic buttons + dropdown rows render unstyled; all contract-listed classes from the task Interfaces section ARE styled. Belongs to CSS owner (001/008) follow-up.
+  - minor (CSS, cross-task) 5 invented class hooks have no styles.css rule at HEAD: `.chat-composer`, `.chat-slash-hint`, `.chat-mic`, `.chat-actions-sep`, `.chat-chipmenu-row` — slash/mic buttons + dropdown rows render unstyled; all contract-listed classes from the task Interfaces section ARE styled. Belongs to CSS owner (001/008) follow-up.
   - minor webview/aiChatPanelComposer.ts:187-194 — chipBtn starts enabled with 0 models (disabled set only in refreshChipLabel); click is a guarded no-op (:432-433) so harmless.
   - info aiChatPanelComposer.ts:442-457 — permanent document-level click/keydown listeners, no teardown; fine for single-mount lifecycle, leaks only if a composer is ever re-created.
-NOTES: Caller scope memo listed #composerForm/#promptTextarea — PLAN §3 pins `prompt` (no #composerForm); implementation follows PLAN §3 and the pinned suites confirm. Model chip enumerates ALL setModels entries (renderChipMenu loops the full list, active row marked, onModelSelect fires once + closes). No frozen-selector leakage: diff touches no styles.css, all classes are .UnicDB-chat*-scoped, no id collisions (#attachFileInput stays owned by main on <body>).
+NOTES: Caller scope memo listed #composerForm/#promptTextarea — PLAN §3 pins `prompt` (no #composerForm); implementation follows PLAN §3 and the pinned suites confirm. Model chip enumerates ALL setModels entries (renderChipMenu loops the full list, active row marked, onModelSelect fires once + closes). No frozen-selector leakage: diff touches no styles.css, all classes are chat-scoped, no id collisions (#attachFileInput stays owned by main on <body>).

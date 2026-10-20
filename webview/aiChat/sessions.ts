@@ -11,7 +11,7 @@
 //   correlated by clientRequestId AND the sessionId they were issued against;
 //   a stale ack cannot mutate the live session.
 // - Saved-transcript copy is truthful: the picker is labelled
-//   `Resume saved UnicDB chat` and never claims provider-native resume.
+//   `Resume saved VSKit chat` and never claims provider-native resume.
 // - Success is announced ONLY on host confirmation (`export_completed` →
 //   `Exported chat`); cancel produces no success; failure is exactly
 //   `Could not export chat` + a safe reason.
@@ -35,14 +35,14 @@ export const SESSIONS_IDS = Object.freeze({
 } as const);
 
 /** Exact, locked copy. */
-export const RESUME_PICKER_LABEL = "Resume saved UnicDB chat";
-export const RESUME_EMPTY_LABEL = "No saved UnicDB chats in this workspace.";
+export const RESUME_PICKER_LABEL = "Resume saved VSKit chat";
+export const RESUME_EMPTY_LABEL = "No saved VSKit chats in this workspace.";
 export const NATIVE_RESUME_DISCLAIMER =
-  "Saved UnicDB transcript — this is not a provider-native session resume.";
+  "Saved VSKit transcript — this is not a provider-native session resume.";
 export const EXPORT_SUCCESS_LABEL = "Exported chat";
 export const EXPORT_FAILURE_LABEL = "Could not export chat";
 export const CLEAR_CONFIRM_COPY =
-  "This clears the current transcript. Your other saved UnicDB chats are kept.";
+  "This clears the current transcript. Your other saved VSKit chats are kept.";
 export const NEW_CHAT_CONFIRM_COPY =
   "Starting a new chat keeps this chat saved. You can resume it later.";
 export const OVERFLOW_LABEL = "More actions";

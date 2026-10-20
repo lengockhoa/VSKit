@@ -79,7 +79,7 @@ describe("core/schemaFilterStore — per-connection schema filter", () => {
 
   it("set persists to the underlying memento under the namespaced key", () => {
     store.set("c1", ["public", "app"]);
-    const raw = mem.get<string[]>("unicDb.schemaFilter.c1");
+    const raw = mem.get<string[]>("vskit.schemaFilter.c1");
     expect(raw).toBeDefined();
     // The store sorts internally so equality is stable; check as a set.
     expect(new Set(raw!)).toEqual(new Set(["public", "app"]));
@@ -89,7 +89,7 @@ describe("core/schemaFilterStore — per-connection schema filter", () => {
     store.set("c1", ["public", "app"]);
     store.clear("c1");
     expect(store.get("c1")).toBeNull();
-    expect(mem.get("unicDb.schemaFilter.c1")).toBeUndefined();
+    expect(mem.get("vskit.schemaFilter.c1")).toBeUndefined();
   });
 
   it("two different connectionIds have independent state", () => {
@@ -113,7 +113,7 @@ describe("core/schemaFilterStore — per-connection schema filter", () => {
   it("hydrates pre-existing memento keys on construction", () => {
     // Pre-populate the memento BEFORE the store is built.
     const mem2 = new FakeMemento();
-    void mem2.update("unicDb.schemaFilter.c9", ["public", "app"]);
+    void mem2.update("vskit.schemaFilter.c9", ["public", "app"]);
     const store2 = new SchemaFilterStore(
       mem2 as unknown as import("vscode").Memento,
     );
@@ -126,13 +126,13 @@ describe("core/schemaFilterStore — per-connection schema filter", () => {
 
   it("ignores memento keys outside the namespace prefix on hydrate", () => {
     const mem2 = new FakeMemento();
-    void mem2.update("UnicDB.connections", [{ id: "x" }]);
-    void mem2.update("unicDb.unrelated", ["nope"]);
+    void mem2.update("VSKit.connections", [{ id: "x" }]);
+    void mem2.update("vskit.unrelated", ["nope"]);
     const store2 = new SchemaFilterStore(
       mem2 as unknown as import("vscode").Memento,
     );
-    expect(store2.get("UnicDB.connections")).toBeNull();
-    expect(store2.get("unicDb.unrelated")).toBeNull();
+    expect(store2.get("VSKit.connections")).toBeNull();
+    expect(store2.get("vskit.unrelated")).toBeNull();
     expect(store2.get("connections")).toBeNull();
     expect(store2.get("unrelated")).toBeNull();
   });

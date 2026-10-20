@@ -49,11 +49,11 @@ interface EditStateHandle {
   snapshot: () => Array<{ rowId: number; colIndex: number; value: unknown }>;
 }
 
-interface UnicDBApi {
+interface VSKitApi {
   postMessage: (msg: unknown) => void;
 }
 
-interface UnicDBDebug {
+interface VSKitDebug {
   gridApi?: GridApi;
   editState?: EditStateHandle;
   commit?: () => void;
@@ -67,14 +67,14 @@ interface UnicDBDebug {
   ) => void;
 }
 
-function UnicDBApi(): UnicDBDebug | null {
+function VSKitApi(): VSKitDebug | null {
   if (typeof window === "undefined") return null;
-  const maybe = (window as unknown as { __UnicDB?: UnicDBDebug }).__UnicDB;
+  const maybe = (window as unknown as { __VSKit?: VSKitDebug }).__VSKit;
   return maybe ?? null;
 }
 
 function getEditState(): EditStateHandle | null {
-  return UnicDBApi()?.editState ?? null;
+  return VSKitApi()?.editState ?? null;
 }
 
 beforeAll(() => {
@@ -120,16 +120,16 @@ function loadBundle(): {
     );
   }
 
-  document.body.innerHTML = '<div id="UnicDB-root" class="UnicDB-webview"></div>';
-  const root = document.getElementById("UnicDB-root") as HTMLDivElement;
+  document.body.innerHTML = '<div id="VSKit-root" class="VSKit-webview"></div>';
+  const root = document.getElementById("VSKit-root") as HTMLDivElement;
 
   const received: Array<Record<string, unknown>> = [];
-  const api: UnicDBApi = {
+  const api: VSKitApi = {
     postMessage: (msg) => {
       received.push(msg as Record<string, unknown>);
     },
   };
-  (globalThis as unknown as { acquireVsCodeApi: () => UnicDBApi }).acquireVsCodeApi =
+  (globalThis as unknown as { acquireVsCodeApi: () => VSKitApi }).acquireVsCodeApi =
     () => api;
 
   (0, eval)(bundleSrc);
@@ -189,7 +189,7 @@ describeIfBundle("webview/main.ts bundle (TASK-503)", () => {
     expect(editState).toBeTruthy();
     expect(editState!.dirtyCount).toBe(0);
 
-    const sim = UnicDBApi()?.simulateCellEdit;
+    const sim = VSKitApi()?.simulateCellEdit;
     expect(sim).toBeTruthy();
     // Two rows × two cells. Single onCellValueChanged per edit = same code
     // path the real user edits follow.
@@ -204,8 +204,8 @@ describeIfBundle("webview/main.ts bundle (TASK-503)", () => {
     received.length = 0;
     // Invoke commit through the bundle's exposed handler (same call site as
     // Cmd+Enter and the Commit button).
-    expect(typeof UnicDBApi()?.commit).toBe("function");
-    UnicDBApi()!.commit!();
+    expect(typeof VSKitApi()?.commit).toBe("function");
+    VSKitApi()!.commit!();
     await flushGridEvents();
 
     const saveMsgs = received.filter((m) => m.type === "saveEdits");
@@ -238,7 +238,7 @@ describeIfBundle("webview/main.ts bundle (TASK-503)", () => {
 
     expect(getEditState()!.dirtyCount).toBe(0);
     received.length = 0;
-    UnicDBApi()!.commit!();
+    VSKitApi()!.commit!();
     await flushGridEvents();
 
     const saveMsgs = received.filter((m) => m.type === "saveEdits");
@@ -251,7 +251,7 @@ describeIfBundle("webview/main.ts bundle (TASK-503)", () => {
     dispatchState(threeRowsState());
     await flushGridEvents();
 
-    const sim = UnicDBApi()?.simulateCellEdit;
+    const sim = VSKitApi()?.simulateCellEdit;
     sim!(0, "name", "x", "alpha");
     sim!(1, "name", "y", "beta");
     await flushGridEvents();
@@ -262,7 +262,7 @@ describeIfBundle("webview/main.ts bundle (TASK-503)", () => {
     // time, so an unattached ack is harmless but the dirty state should
     // still be cleared on success).
     received.length = 0;
-    UnicDBApi()!.commit!();
+    VSKitApi()!.commit!();
     await flushGridEvents();
     expect(
       received.filter((m) => m.type === "saveEdits").length,
@@ -274,11 +274,11 @@ describeIfBundle("webview/main.ts bundle (TASK-503)", () => {
 
     expect(getEditState()!.dirtyCount).toBe(0);
     // Banner is removed (or at minimum has the hidden class).
-    const banner = document.querySelector(".UnicDB-save-banner");
+    const banner = document.querySelector(".VSKit-save-banner");
     if (banner) {
       expect(
-        banner.classList.contains("UnicDB-hidden") ||
-          banner.classList.contains("UnicDB-save-banner-hidden") ||
+        banner.classList.contains("VSKit-hidden") ||
+          banner.classList.contains("VSKit-save-banner-hidden") ||
           banner.getAttribute("hidden") !== null,
       ).toBe(true);
     }
@@ -297,9 +297,9 @@ describeIfBundle("webview/main.ts bundle (TASK-503)", () => {
     });
     await flushGridEvents();
 
-    const banner = root.querySelector(".UnicDB-save-banner");
+    const banner = root.querySelector(".VSKit-save-banner");
     expect(banner).toBeTruthy();
-    expect(banner!.classList.contains("UnicDB-hidden")).toBe(false);
+    expect(banner!.classList.contains("VSKit-hidden")).toBe(false);
     expect(banner!.getAttribute("hidden")).toBeNull();
     expect(banner!.textContent).toContain("not safe under concurrent writes");
   });
@@ -312,8 +312,8 @@ describeIfBundle("webview/main.ts bundle (TASK-503)", () => {
     for (const warnings of [undefined, []]) {
       dispatchHost({ type: "saveResult", index: 0, ok: true, warnings });
       await flushGridEvents();
-      const banner = root.querySelector(".UnicDB-save-banner")!;
-      expect(banner.classList.contains("UnicDB-hidden")).toBe(true);
+      const banner = root.querySelector(".VSKit-save-banner")!;
+      expect(banner.classList.contains("VSKit-hidden")).toBe(true);
       expect(banner.getAttribute("hidden")).not.toBeNull();
       expect(getEditState()!.dirtyCount).toBe(0);
     }
@@ -324,13 +324,13 @@ describeIfBundle("webview/main.ts bundle (TASK-503)", () => {
     dispatchState(threeRowsState());
     await flushGridEvents();
 
-    const sim = UnicDBApi()?.simulateCellEdit;
+    const sim = VSKitApi()?.simulateCellEdit;
     sim!(0, "name", "x", "alpha");
     await flushGridEvents();
     expect(getEditState()!.dirtyCount).toBe(1);
 
     received.length = 0;
-    UnicDBApi()!.commit!();
+    VSKitApi()!.commit!();
     await flushGridEvents();
 
     dispatchHost({
@@ -345,13 +345,13 @@ describeIfBundle("webview/main.ts bundle (TASK-503)", () => {
     expect(getEditState()!.dirtyCount).toBe(1);
 
     // Banner visible with the error text.
-    const banner = document.querySelector(".UnicDB-save-banner");
+    const banner = document.querySelector(".VSKit-save-banner");
     expect(banner).toBeTruthy();
     expect(banner!.textContent).toContain("ERROR");
     // Visible (no hidden class).
     const hidden =
-      banner!.classList.contains("UnicDB-hidden") ||
-      banner!.classList.contains("UnicDB-save-banner-hidden") ||
+      banner!.classList.contains("VSKit-hidden") ||
+      banner!.classList.contains("VSKit-save-banner-hidden") ||
       banner!.getAttribute("hidden") !== null;
     expect(hidden).toBe(false);
   });
@@ -365,7 +365,7 @@ describeIfBundle("webview/main.ts bundle (TASK-503)", () => {
       dispatchState(threeRowsState());
       await flushGridEvents();
 
-      const api = UnicDBApi()!;
+      const api = VSKitApi()!;
       expect(typeof api.addRow).toBe("function");
       api.addRow!();
       await flushGridEvents();
@@ -384,7 +384,7 @@ describeIfBundle("webview/main.ts bundle (TASK-503)", () => {
         (e) =>
           typeof e.value === "object" &&
           e.value !== null &&
-          (e.value as Record<string, unknown>).__UnicDB_new_row__ === true,
+          (e.value as Record<string, unknown>).__VSKit_new_row__ === true,
       );
       expect(markerEntry).toBeTruthy();
       // Marker colIndex is the MARKER_COL_INSERT sentinel (-1), never 0 —
@@ -395,7 +395,7 @@ describeIfBundle("webview/main.ts bundle (TASK-503)", () => {
       // threeRowsState has 2 columns (id, name).
       expect(values as unknown[]).toHaveLength(2);
       for (const cell of values as unknown[]) {
-        expect(cell).toEqual({ __UnicDB_default__: true });
+        expect(cell).toEqual({ __VSKit_default__: true });
       }
       expect(payload.serverIndexByRowId).toBeTruthy();
       expect(payload.serverIndexByRowId).toMatchObject({

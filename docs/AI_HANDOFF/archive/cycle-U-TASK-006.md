@@ -106,7 +106,7 @@ $ npm test            (final run; one earlier full run hit a known load-timing f
    Duration  10.00s
 
 $ npm run typecheck
-> UnicDB@1.6.3 typecheck
+> extension@1.6.3 typecheck
 > tsc --noEmit
 (exit 0, no output)
 ```

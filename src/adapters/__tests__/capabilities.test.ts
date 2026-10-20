@@ -42,8 +42,8 @@ function cfg(driver: ConnectionConfig["driver"]): ConnectionConfig {
     driver,
     host: "127.0.0.1",
     port: 5432,
-    user: "UnicDB",
-    database: "UnicDB",
+    user: "VSKit",
+    database: "VSKit",
   };
 }
 

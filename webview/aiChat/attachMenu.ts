@@ -37,7 +37,7 @@ import {
 } from "./overlays";
 
 /** The V2 root class every selector hangs off. */
-const ROOT_CLASS = "UnicDB-ai-chat-v2";
+const ROOT_CLASS = "VSKit-ai-chat-v2";
 
 /** Marker attribute identifying the attach menu listbox. */
 export const ATTACH_MENU_MARKER = "data-chat-attach-menu";
@@ -286,12 +286,12 @@ export function createAttachMenu(options: AttachMenuOptions): AttachMenu {
     list.setAttribute(ATTACH_MENU_MARKER, "1");
     list.classList.add(`${ROOT_CLASS}-attach-menu`);
     list.dataset.rowHeight = String(ATTACH_MENU_ROW_HEIGHT_PX);
-    list.style.setProperty("--UnicDB-row-h", `${ATTACH_MENU_ROW_HEIGHT_PX}px`);
-    list.style.setProperty("--UnicDB-attach-icon", `${ATTACH_MENU_ICON_PX}px`);
-    list.style.setProperty("--UnicDB-attach-title", `${ATTACH_MENU_TITLE_PX}px`);
-    list.style.setProperty("--UnicDB-attach-detail", `${ATTACH_MENU_DETAIL_PX}px`);
-    list.style.setProperty("--UnicDB-list-min", `${ATTACH_MENU_WIDTH_MIN}px`);
-    list.style.setProperty("--UnicDB-list-max", `${ATTACH_MENU_WIDTH_MAX}px`);
+    list.style.setProperty("--VSKit-row-h", `${ATTACH_MENU_ROW_HEIGHT_PX}px`);
+    list.style.setProperty("--VSKit-attach-icon", `${ATTACH_MENU_ICON_PX}px`);
+    list.style.setProperty("--VSKit-attach-title", `${ATTACH_MENU_TITLE_PX}px`);
+    list.style.setProperty("--VSKit-attach-detail", `${ATTACH_MENU_DETAIL_PX}px`);
+    list.style.setProperty("--VSKit-list-min", `${ATTACH_MENU_WIDTH_MIN}px`);
+    list.style.setProperty("--VSKit-list-max", `${ATTACH_MENU_WIDTH_MAX}px`);
 
     // Bind each painted option back to its action and give the Image… row its
     // CSS-rendered 16px glyph (there is no `image` glyph in the allowlist).

@@ -36,12 +36,12 @@ interface MediaQueryListLike {
   dispatchEvent: () => boolean;
 }
 
-interface UnicDBApi {
+interface VSKitApi {
   postMessage: (msg: unknown) => void;
 }
 
-interface UnicDBGlobal {
-  acquireVsCodeApi?: () => UnicDBApi;
+interface VSKitGlobal {
+  acquireVsCodeApi?: () => VSKitApi;
 }
 
 // Local alias for the global object so we can assign and read typed members
@@ -91,14 +91,14 @@ function loadBundle(): BundleHandle {
       "dist/webview.js missing — run `npm run compile` before this test",
     );
   }
-  document.body.innerHTML = '<div id="UnicDB-root" class="UnicDB-webview"></div>';
-  const root = document.getElementById("UnicDB-root");
+  document.body.innerHTML = '<div id="VSKit-root" class="VSKit-webview"></div>';
+  const root = document.getElementById("VSKit-root");
   if (!root) {
-    throw new Error("UnicDB-root missing after body.innerHTML");
+    throw new Error("VSKit-root missing after body.innerHTML");
   }
-  const api: UnicDBApi = { postMessage: () => {} };
-  const UnicDBGlobal: UnicDBGlobal = globalThis;
-  UnicDBGlobal.acquireVsCodeApi = () => api;
+  const api: VSKitApi = { postMessage: () => {} };
+  const VSKitGlobal: VSKitGlobal = globalThis;
+  VSKitGlobal.acquireVsCodeApi = () => api;
   // eslint-disable-next-line no-eval
   (0, eval)(bundleSrc);
   return { root };
@@ -162,15 +162,15 @@ function readRuleBody(src: string, selector: string): string {
 // Test #1 — happy: requery input CSS rules (TASK-RES-001 toolbar slot)
 // -----------------------------------------------------------------------
 //
-// TASK-009 D tested the OLD standalone requery bar — .UnicDB-requery-bar
-// (display:flex + align-items:center wrapper) and .UnicDB-requery-label
+// TASK-009 D tested the OLD standalone requery bar — .VSKit-requery-bar
+// (display:flex + align-items:center wrapper) and .VSKit-requery-label
 // (shared 26px baseline label). TASK-RES-001 moved the inputs into the
 // toolbar row, dropped the bar wrapper + labels, and re-tuned the input
-// height to 24px so it lines up with the 24-26px .UnicDB-btn height in
-// the same flex row. The buttons are .UnicDB-btn (height from the shared
+// height to 24px so it lines up with the 24-26px .VSKit-btn height in
+// the same flex row. The buttons are .VSKit-btn (height from the shared
 // rule) and need no extra height override.
 //
-// TASK-COLLAPSE-002: the toolbar is now a column of two `.UnicDB-toolbar-row`
+// TASK-COLLAPSE-002: the toolbar is now a column of two `.VSKit-toolbar-row`
 // wrappers, each `flex-wrap: nowrap` + `overflow: hidden` so a third row
 // can never appear. The WHERE / ORDER BY inputs live on row 2 and SHARE
 // the leftover horizontal space inside that nowrap row via
@@ -180,16 +180,16 @@ function readRuleBody(src: string, selector: string): string {
 // FORBIDDEN.
 
 describe("TASK-RES-001 / TASK-COLLAPSE-002 — requery input CSS alignment (row-2 toolbar slot)", () => {
-  it(".UnicDB-requery-input sets height:24px + box-sizing:border-box", () => {
-    const body = readRuleBody(stylesSrc, ".UnicDB-requery-input");
-    expect(body, "rule body for .UnicDB-requery-input").not.toBe("");
+  it(".VSKit-requery-input sets height:24px + box-sizing:border-box", () => {
+    const body = readRuleBody(stylesSrc, ".VSKit-requery-input");
+    expect(body, "rule body for .VSKit-requery-input").not.toBe("");
     expect(body).toMatch(/height\s*:\s*24px/);
     expect(body).toMatch(/box-sizing\s*:\s*border-box/);
   });
 
-  it(".UnicDB-requery-input.UnicDB-requery-where fills row 2 (flex 1 1 100% + min-width 0, NOT 140px/80px)", () => {
-    const body = readRuleBody(stylesSrc, ".UnicDB-requery-input.UnicDB-requery-where");
-    expect(body, "rule body for .UnicDB-requery-input.UnicDB-requery-where").not.toBe("");
+  it(".VSKit-requery-input.VSKit-requery-where fills row 2 (flex 1 1 100% + min-width 0, NOT 140px/80px)", () => {
+    const body = readRuleBody(stylesSrc, ".VSKit-requery-input.VSKit-requery-where");
+    expect(body, "rule body for .VSKit-requery-input.VSKit-requery-where").not.toBe("");
     expect(body).toMatch(/flex\s*:\s*1\s+1\s+100\s*%/);
     expect(body).toMatch(/min-width\s*:\s*0/);
     // The OLD single-row TASK-RES-002 / TASK-COLLAPSE-001 contract used
@@ -200,29 +200,29 @@ describe("TASK-RES-001 / TASK-COLLAPSE-002 — requery input CSS alignment (row-
     expect(body).not.toMatch(/min-width\s*:\s*80px/);
   });
 
-  it(".UnicDB-requery-input.UnicDB-requery-order fills row 2 (flex 1 1 100% + min-width 0, NOT 140px/80px)", () => {
-    const body = readRuleBody(stylesSrc, ".UnicDB-requery-input.UnicDB-requery-order");
-    expect(body, "rule body for .UnicDB-requery-input.UnicDB-requery-order").not.toBe("");
+  it(".VSKit-requery-input.VSKit-requery-order fills row 2 (flex 1 1 100% + min-width 0, NOT 140px/80px)", () => {
+    const body = readRuleBody(stylesSrc, ".VSKit-requery-input.VSKit-requery-order");
+    expect(body, "rule body for .VSKit-requery-input.VSKit-requery-order").not.toBe("");
     expect(body).toMatch(/flex\s*:\s*1\s+1\s+100\s*%/);
     expect(body).toMatch(/min-width\s*:\s*0/);
     expect(body).not.toMatch(/flex\s*:\s*1\s+1\s+140px/);
     expect(body).not.toMatch(/min-width\s*:\s*80px/);
   });
 
-  it("button.UnicDB-requery-run + button.UnicDB-requery-clear set flex:0 0 auto", () => {
-    const runBody = readRuleBody(stylesSrc, "button.UnicDB-requery-run");
-    const clearBody = readRuleBody(stylesSrc, "button.UnicDB-requery-clear");
-    expect(runBody, "rule body for button.UnicDB-requery-run").not.toBe("");
-    expect(clearBody, "rule body for button.UnicDB-requery-clear").not.toBe("");
+  it("button.VSKit-requery-run + button.VSKit-requery-clear set flex:0 0 auto", () => {
+    const runBody = readRuleBody(stylesSrc, "button.VSKit-requery-run");
+    const clearBody = readRuleBody(stylesSrc, "button.VSKit-requery-clear");
+    expect(runBody, "rule body for button.VSKit-requery-run").not.toBe("");
+    expect(clearBody, "rule body for button.VSKit-requery-clear").not.toBe("");
     expect(runBody).toMatch(/flex\s*:\s*0\s+0\s+auto/);
     expect(clearBody).toMatch(/flex\s*:\s*0\s+0\s+auto/);
   });
 
-  it(".UnicDB-requery-bar + .UnicDB-requery-label rules are gone (TASK-RES-001 removed them)", () => {
+  it(".VSKit-requery-bar + .VSKit-requery-label rules are gone (TASK-RES-001 removed them)", () => {
     // The bar wrapper and label were dropped when the inputs moved into
     // the toolbar. Make sure no stale rules survive.
-    expect(readRuleBody(stylesSrc, ".UnicDB-requery-bar")).toBe("");
-    expect(readRuleBody(stylesSrc, ".UnicDB-requery-label")).toBe("");
+    expect(readRuleBody(stylesSrc, ".VSKit-requery-bar")).toBe("");
+    expect(readRuleBody(stylesSrc, ".VSKit-requery-label")).toBe("");
   });
 });
 
@@ -239,25 +239,25 @@ describeIfBundle("TASK-RES-001 — requery elements mounted in toolbar", () => {
       await flushGridEvents();
 
       // No standalone requery-bar wrapper.
-      expect(root.querySelector(".UnicDB-requery-bar")).toBeNull();
-      expect(root.querySelector("[data-UnicDB-requery-bar]")).toBeNull();
+      expect(root.querySelector(".VSKit-requery-bar")).toBeNull();
+      expect(root.querySelector("[data-VSKit-requery-bar]")).toBeNull();
 
       // Toolbar owns all four elements.
-      const toolbar = root.querySelector(".UnicDB-toolbar") as HTMLElement | null;
-      expect(toolbar, "expected .UnicDB-toolbar element").toBeTruthy();
+      const toolbar = root.querySelector(".VSKit-toolbar") as HTMLElement | null;
+      expect(toolbar, "expected .VSKit-toolbar element").toBeTruthy();
       if (!toolbar) return;
 
       const whereInput = toolbar.querySelector(
-        ".UnicDB-requery-where",
+        ".VSKit-requery-where",
       ) as HTMLInputElement | null;
       const orderInput = toolbar.querySelector(
-        ".UnicDB-requery-order",
+        ".VSKit-requery-order",
       ) as HTMLInputElement | null;
       const runBtn = toolbar.querySelector(
-        "button.UnicDB-requery-run",
+        "button.VSKit-requery-run",
       ) as HTMLButtonElement | null;
       const clearBtn = toolbar.querySelector(
-        "button.UnicDB-requery-clear",
+        "button.VSKit-requery-clear",
       ) as HTMLButtonElement | null;
       expect(whereInput).toBeTruthy();
       expect(orderInput).toBeTruthy();
@@ -292,21 +292,21 @@ describe("TASK-009 E — set-filter popup left alignment", () => {
     return "";
   }
 
-  it(".UnicDB-setfilter-selectall-row declares padding (left indent)", () => {
-    const body = readRuleBody(stylesSrc, ".UnicDB-setfilter-selectall-row");
-    expect(body, "selector .UnicDB-setfilter-selectall-row must exist").not.toBe("");
+  it(".VSKit-setfilter-selectall-row declares padding (left indent)", () => {
+    const body = readRuleBody(stylesSrc, ".VSKit-setfilter-selectall-row");
+    expect(body, "selector .VSKit-setfilter-selectall-row must exist").not.toBe("");
     expect(body).toMatch(/padding(-left)?\s*:/);
   });
 
-  it(".UnicDB-setfilter-entry declares padding (left indent)", () => {
-    const body = readRuleBody(stylesSrc, ".UnicDB-setfilter-entry");
-    expect(body, "selector .UnicDB-setfilter-entry must exist").not.toBe("");
+  it(".VSKit-setfilter-entry declares padding (left indent)", () => {
+    const body = readRuleBody(stylesSrc, ".VSKit-setfilter-entry");
+    expect(body, "selector .VSKit-setfilter-entry must exist").not.toBe("");
     expect(body).toMatch(/padding(-left)?\s*:/);
   });
 
   it("both select-all-row and entry rules use the same left padding value", () => {
-    const selectAllLeft = extractLeftPadding(".UnicDB-setfilter-selectall-row");
-    const entryLeft = extractLeftPadding(".UnicDB-setfilter-entry");
+    const selectAllLeft = extractLeftPadding(".VSKit-setfilter-selectall-row");
+    const entryLeft = extractLeftPadding(".VSKit-setfilter-entry");
     expect(selectAllLeft, "select-all-row must have a left padding value").not.toBe("");
     expect(entryLeft, "entry must have a left padding value").not.toBe("");
     expect(selectAllLeft).toBe(entryLeft);

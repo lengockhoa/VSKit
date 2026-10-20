@@ -35,7 +35,7 @@ duplicate activity timeline renderer and the nested `#thread` scroller.
   `deriveEngineState`, `engineStateLabel`, `isActivePhase`,
   `ActivityToolState`.
 - `webview/aiChat/styles.css` — delete the `-activity-*` block
-  (~1382-1662); add `.UnicDB-ai-chat-v2-transcript > .UnicDB-chat-thread
+  (~1382-1662); add `.VSKit-ai-chat-v2-transcript > .VSKit-chat-thread
   { flex: 0 0 auto; overflow: visible; scroll-behavior: auto;
   margin-bottom: 0; }` (single scroll owner — `#thread` becomes a normal
   flow child).
@@ -136,7 +136,7 @@ preventDefault + `STEER_ENQUEUED`; `turn_finished` → `flushSteerQueue()`
 Deleted the duplicate activity timeline renderer (`createActivityTimeline`,
 `activity.render`, `activity.dispose`, imports), pruned `activity.ts` to pure
 helpers (`isActivePhase` now exported), deleted the `-activity-*` CSS block
-and added the `transcript > .UnicDB-chat-thread` flow-child override.
+and added the `transcript > .VSKit-chat-thread` flow-child override.
 TEST_PLAN_FOLLOWED: task §Test Cases — all 8 cases implemented (case 3 in
 controllerSurfaces #14, case 4 in shellGrid CHATUX2-004 describe, cases
 1/2/5/6/7/8 in controller.test.ts steer-queue describe + rewritten
@@ -144,7 +144,7 @@ busy-submit test).
 FILES_CHANGED:
   - webview/aiChat/controller.ts: steer case in handleDecision; flushSteerQueue; turn_finished flush call; removed createActivityTimeline/activity.render/activity.dispose + import
   - webview/aiChat/activity.ts: DOM renderer deleted; pure helpers kept; isActivePhase exported
-  - webview/aiChat/styles.css: -activity-* block (~280 lines) deleted; transcript > .UnicDB-chat-thread override added
+  - webview/aiChat/styles.css: -activity-* block (~280 lines) deleted; transcript > .VSKit-chat-thread override added
   - webview/aiChat/__tests__/controller.test.ts: busy-submit test rewritten to assert steer; new "steer queue (CHATUX2-004)" describe (6 tests)
   - webview/aiChat/__tests__/controllerSurfaces.test.ts: #14 single-renderer regression; #3 updated to await announcer coalesce via fake timers (announcer is now the only polite-region writer)
   - webview/aiChat/__tests__/activity.test.ts: rewritten to pure-helper tests only

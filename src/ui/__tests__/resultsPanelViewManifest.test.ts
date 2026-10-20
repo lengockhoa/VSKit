@@ -2,14 +2,14 @@
 // TASK-RP-003 — manifest guards for the Results panel home.
 //
 // Asserts that `package.json` declares:
-//   - `contributes.viewsContainers.panel` containing { id: "UnicDB-results", ... }
-//   - `contributes.views["UnicDB-results"]` containing the webview view
-//   - `activationEvents` includes "onView:UnicDB.results"
-//   - `contributes.configuration.properties["UnicDB.resultsPlacement"]` is gone
-//   - existing `contributes.views.UnicDB` (schemaTree, adminTree) is intact
-//   - the help-grid menu key `webview/UnicDB.results/context` is intact
-//   - the view id matches `ResultsPanel.viewId === "UnicDB.results"`
-//   - and that the panel view id + ".focus" === "UnicDB.results.focus".
+//   - `contributes.viewsContainers.panel` containing { id: "VSKit-results", ... }
+//   - `contributes.views["VSKit-results"]` containing the webview view
+//   - `activationEvents` includes "onView:VSKit.results"
+//   - `contributes.configuration.properties["VSKit.resultsPlacement"]` is gone
+//   - existing `contributes.views.VSKit` (schemaTree, adminTree) is intact
+//   - the help-grid menu key `webview/VSKit.results/context` is intact
+//   - the view id matches `ResultsPanel.viewId === "VSKit.results"`
+//   - and that the panel view id + ".focus" === "VSKit.results.focus".
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { readFileSync } from "node:fs";
@@ -109,76 +109,76 @@ describe("TASK-RP-003 — package.json manifest guards for Results panel home", 
     // 1. panel container exists with the right shape
     expect(Array.isArray(containers.panel)).toBe(true);
     const panelContainer = (containers.panel as Array<Record<string, unknown>>).find(
-      (c) => c.id === "UnicDB-results",
+      (c) => c.id === "VSKit-results",
     );
     expect(panelContainer).toBeDefined();
-    expect(panelContainer!.title).toBe("UnicDB Results");
+    expect(panelContainer!.title).toBe("VSKit Results");
     expect(typeof panelContainer!.icon).toBe("string");
     expect((panelContainer!.icon as string).length).toBeGreaterThan(0);
 
     // 2. the webview view is registered into that container
-    const panelViews = views["UnicDB-results"];
+    const panelViews = views["VSKit-results"];
     expect(Array.isArray(panelViews)).toBe(true);
     const resultsView = (panelViews as Array<Record<string, unknown>>).find(
-      (v) => v.id === "UnicDB.results",
+      (v) => v.id === "VSKit.results",
     );
     expect(resultsView).toBeDefined();
     expect(resultsView!.type).toBe("webview");
 
-    // 3. existing UnicDB activitybar container + views are untouched.
+    // 3. existing VSKit activitybar container + views are untouched.
     const activityBar = containers.activitybar;
     expect(Array.isArray(activityBar)).toBe(true);
     const activityContainer = (activityBar as Array<Record<string, unknown>>).find(
-      (c) => c.id === "UnicDB",
+      (c) => c.id === "VSKit",
     );
     expect(activityContainer).toBeDefined();
 
-    const unicDBViews = views.UnicDB;
-    expect(Array.isArray(unicDBViews)).toBe(true);
-    const ids = (unicDBViews as Array<Record<string, unknown>>).map((v) => v.id);
-    expect(ids).toContain("UnicDB.schemaTree");
-    expect(ids).toContain("UnicDB.adminTree");
+    const vskitViews = views.VSKit;
+    expect(Array.isArray(vskitViews)).toBe(true);
+    const ids = (vskitViews as Array<Record<string, unknown>>).map((v) => v.id);
+    expect(ids).toContain("VSKit.schemaTree");
+    expect(ids).toContain("VSKit.adminTree");
   });
 
   // ---- Case 2 — edge (negative) ------------------------------------------
   it("case 2: resultsPlacement configuration property is gone", () => {
     const { json, raw } = loadManifest();
     const props = json.contributes.configuration?.properties ?? {};
-    expect("UnicDB.resultsPlacement" in props).toBe(false);
+    expect("VSKit.resultsPlacement" in props).toBe(false);
     // Catches leftovers in descriptions / titles / anywhere in the file.
     expect(raw.includes("resultsPlacement")).toBe(false);
   });
 
   // ---- Case 3 — edge (consistency / malformed guard) ---------------------
-  it("case 3: manifest is valid JSON with activation event and intact UnicDB config keys", () => {
+  it("case 3: manifest is valid JSON with activation event and intact VSKit config keys", () => {
     const { json } = loadManifest();
     // JSON.parse already ran in loadManifest; throwing in it would fail this
     // test before the expect() block. Also sanity-check the activation event.
     expect(Array.isArray(json.activationEvents)).toBe(true);
-    expect(json.activationEvents).toContain("onView:UnicDB.results");
+    expect(json.activationEvents).toContain("onView:VSKit.results");
 
     // Pre-existing config keys still present.
     const props = json.contributes.configuration?.properties ?? {};
-    expect("UnicDB.batchSize" in props).toBe(true);
-    expect("UnicDB.showRunLens" in props).toBe(true);
+    expect("VSKit.batchSize" in props).toBe(true);
+    expect("VSKit.showRunLens" in props).toBe(true);
 
     // Help-Grid menu for the results webview is preserved.
     const menus = json.contributes.menus ?? {};
-    expect("webview/UnicDB.results/context" in menus).toBe(true);
+    expect("webview/VSKit.results/context" in menus).toBe(true);
   });
 
   // ---- Case 4 — unit (cross-check with code) -----------------------------
   it("case 4: view id matches ResultsPanel.viewId from TASK-RP-001", () => {
     const { json } = loadManifest();
     const viewIdFromCode = ResultsPanel.viewId;
-    expect(viewIdFromCode).toBe("UnicDB.results");
+    expect(viewIdFromCode).toBe("VSKit.results");
 
     const views = json.contributes.views ?? {};
-    const panelViews = views["UnicDB-results"] as Array<Record<string, unknown>>;
+    const panelViews = views["VSKit-results"] as Array<Record<string, unknown>>;
     expect(panelViews).toBeDefined();
     expect(panelViews[0]!.id).toBe(viewIdFromCode);
 
     // The view id + ".focus" is what `show()` executes to reveal the view.
-    expect(`${panelViews[0]!.id}.focus`).toBe("UnicDB.results.focus");
+    expect(`${panelViews[0]!.id}.focus`).toBe("VSKit.results.focus");
   });
 });

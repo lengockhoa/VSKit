@@ -7,17 +7,17 @@
 
 ## Goal
 
-Add `UnicDB.aiChat` to the schema-tree view/title navigation menu directly after
-`UnicDB.openAiSettings`, and update the scaffold toolbar-order assertion. The command, icon
+Add the AI chat command to the schema-tree view/title navigation menu directly after
+the settings command, and update the scaffold toolbar-order assertion. The command, icon
 (`$(comment-discussion)`), and activation event already exist — this is menu placement only.
 
 ## Target Files
 
-- `package.json` (modify) — inside `menus.view/title`, insert after the `UnicDB.openAiSettings`
-  entry (~L293-297): `{ "command": "UnicDB.aiChat", "when": "view == UnicDB.schemaTree", "group":
+- `package.json` (modify) — inside `menus.view/title`, insert after the settings command
+  entry (~L293-297): `{ "command": "<chat-command>", "when": "view == <schema-tree-view>", "group":
   "navigation" }`. ADDITIVE — no other edits (file carries unrelated uncommitted content).
 - `src/scaffold.test.ts` (modify) — toolbar-order block (~L124-139): insert
-  `expect(viewTitle[4].command).toBe("UnicDB.aiChat");` and shift the clearFilter assertion to
+  `expect(viewTitle[4].command).toBe("<chat-command>");` and shift the clearFilter assertion to
   index 5. Update the comment line describing the order.
 
 ## Test Cases (REQUIRED — TDD)
@@ -26,7 +26,7 @@ Add `UnicDB.aiChat` to the schema-tree view/title navigation menu directly after
 |---|------|----------|----------|---------------------|
 | 1 | happy (behavior change) | toolbar order | view/title order: refreshSchema, addConnection, filterSchemaTree, openAiSettings, **aiChat**, clearSchemaTreeFilter — RED before the menu insert (index 4 is clearFilter today) | read package.json in scaffold.test.ts |
 | 2 | regression | all entries navigation group | every view/title entry still `group === "navigation"` (existing assertion stays green) | existing check |
-| 3 | edge (manifest integrity) | command + icon + activation exist | `contributes.commands` contains UnicDB.aiChat with `$(comment-discussion)`-style icon; activationEvents contains `onCommand:UnicDB.aiChat` (pre-existing — guards against accidental removal) | fs read |
+| 3 | edge (manifest integrity) | command + icon + activation exist | `contributes.commands` contains the chat command with a `$(comment-discussion)`-style icon; activationEvents contains its command activation (pre-existing — guards against accidental removal) | fs read |
 
 ## Test Files
 
@@ -58,7 +58,7 @@ tests-map — this file is the selection by convention. No lint script exists �
 
 ## Interfaces
 
-- Consumes: existing command `UnicDB.aiChat` (registered in src/extension.ts, opens the cached
+- Consumes: existing AI chat command (registered in src/extension.ts, opens the cached
   AiChatPanel), existing manifest structure `contributes.menus["view/title"]` with
   `group: "navigation"`.
 - Produces: (none) — manifest-only placement; TASK-008 sequences its package.json edit after
@@ -88,28 +88,28 @@ EXECUTOR_TOOL: claude-code
 EXECUTOR_MODEL: unic-code
 EXECUTOR_SUBAGENT: W4-T009
 
-SUMMARY: Inserted `UnicDB.aiChat` entry into `menus.view/title` after `UnicDB.openAiSettings` and
-updated the toolbar-order assertion in `src/scaffold.test.ts` (added `viewTitle[4] === "UnicDB.aiChat"`,
+SUMMARY: Inserted the AI chat command entry into `menus.view/title` after the settings command and
+updated the toolbar-order assertion in `src/scaffold.test.ts` (added `viewTitle[4]` assertion,
 shifted `clearSchemaTreeFilter` to index 5, updated descriptive comment). No other edits.
 
 TEST_PLAN_FOLLOWED: task §4 — TDD with toolbar order assertion updated first (RED), then
 manifest edit (GREEN).
 
 FILES_CHANGED:
-  - package.json: +5 lines (one new menu entry: UnicDB.aiChat, when: view==UnicDB.schemaTree,
-    group: navigation, inserted after UnicDB.openAiSettings)
+  - package.json: +5 lines (one new menu entry for the chat command, scoped to the schema-tree view,
+    group: navigation, inserted after the settings command)
   - src/scaffold.test.ts: +3/-3 lines (toolbar-order block L131-139: index 4 now aiChat,
     index 5 now clearSchemaTreeFilter; comment updated to mention TASK-009)
 
 TESTS_ADDED:
   - src/scaffold.test.ts: existing `package.json manifest valid` test extended with new
-    `expect(viewTitle[4].command).toBe("UnicDB.aiChat");` and shifted `viewTitle[5]` assertion.
+    `expect(viewTitle[4].command)` assertion and shifted `viewTitle[5]` assertion.
 
 VERIFICATION:
   command: npx vitest run src/scaffold.test.ts && npm run typecheck
   result: typecheck PASS (0 errors); vitest FAILS pre-existing on L126
   output_excerpt: |
-    > UnicDB@1.6.0 typecheck
+    > extension@1.6.0 typecheck
     > tsc --noEmit
     (clean)
 
@@ -120,21 +120,21 @@ VERIFICATION:
         126|       expect(cmd.icon, `command ${cmd.command} must have an icon`).toMatch(/^\$\(/);
 
   RED captured (pre-menu-insert state, via standalone order-extract script):
-    [0] UnicDB.refreshSchema
-    [1] UnicDB.addConnection
-    [2] UnicDB.filterSchemaTree
-    [3] UnicDB.openAiSettings
-    [4] UnicDB.clearSchemaTreeFilter   ← was at index 4 (RED — test expects aiChat)
+    [0] schema refresh command
+    [1] add connection command
+    [2] schema filter command
+    [3] settings command
+    [4] clear schema-tree filter   ← was at index 4 (RED — test expects AI chat)
   GREEN captured (post-menu-insert state):
-    [0] UnicDB.refreshSchema
-    [1] UnicDB.addConnection
-    [2] UnicDB.filterSchemaTree
-    [3] UnicDB.openAiSettings
-    [4] UnicDB.aiChat                   ← matches new assertion (GREEN)
-    [5] UnicDB.clearSchemaTreeFilter    ← matches shifted assertion (GREEN)
+    [0] schema refresh command
+    [1] add connection command
+    [2] schema filter command
+    [3] settings command
+    [4] AI chat command             ← matches new assertion (GREEN)
+    [5] clear schema-tree filter   ← matches shifted assertion (GREEN)
 
 ISSUES:
-  - Pre-existing failure on L126: `UnicDB.browseTableData` is registered without an icon (introduced
+  - Pre-existing failure on L126: the browse-table command is registered without an icon (introduced
     by TASK-002 in commit 5add346). This causes the manifest test to throw BEFORE reaching the
     toolbar-order assertions at L134-139. The failure is unrelated to TASK-009 and the spec
     explicitly forbids touching it ("package.json diff is exactly the one menu entry"). RED/GREEN
@@ -142,7 +142,7 @@ ISSUES:
     not via the vitest pass/fail signal. The icon fix belongs to a follow-up task (TASK-002 follow-up
     or new TASK). Verified via `node -e` extractor that the new menu order matches the updated
     assertions exactly.
-  - Test file does NOT have an icon for `UnicDB.browseTableData` (TASK-002 regression). The toolbar
+  - Test file does NOT have an icon for the browse-table command (TASK-002 regression). The toolbar
     assertions are correct; the L126 throw pre-dates this task and persists post-fix.
 
 HANDOFF_TO_REVIEWER: yes — package.json manifest edit + test assertion change is small,
@@ -163,14 +163,14 @@ FINDINGS:
   critical:
     - none
   important:
-    - none (the src/scaffold.test.ts:126 icon failure on UnicDB.browseTableData is TASK-002's
+    - none (the src/scaffold.test.ts:126 icon failure on the browse-table command is TASK-002's
       regression — assigned to that task's verdict, not blocking here)
   minor:
     - none (task acceptance bullet "All cases PASS" is unmet only because of that cross-task
       L126 throw; T009's own assertions L128-139 verified green via direct manifest read)
 NEXT_STATUS_FOR_INDEX: approved
-NOTES: T009 wave-4 commit d227b27 slice is exactly +5 lines in package.json (one UnicDB.aiChat
-  view/title navigation entry after UnicDB.openAiSettings) and the assertion/comment update in
-  src/scaffold.test.ts — nothing else. Command UnicDB.aiChat carries icon "$(comment-discussion)"
-  and activation event onCommand:UnicDB.aiChat; view/title order now
-  refresh/add/filter/openAiSettings/aiChat/clearFilter matching L134-139.
+NOTES: T009 wave-4 commit d227b27 slice is exactly +5 lines in package.json (one AI chat
+  view/title navigation entry after the settings command) and the assertion/comment update in
+  src/scaffold.test.ts — nothing else. The chat command carries icon `$(comment-discussion)`
+  and its activation event is present; view/title order now
+  refresh/add/filter/settings/AI chat/clearFilter matching L134-139.

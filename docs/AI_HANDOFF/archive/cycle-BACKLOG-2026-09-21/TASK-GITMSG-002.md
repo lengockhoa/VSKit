@@ -8,7 +8,7 @@
 
 ## Goal
 
-Wire the host side of the commit-gen UX fix: the `UnicDB.generateCommitMessage`
+Wire the host side of the commit-gen UX fix: the `VSKit.generateCommitMessage`
 command acquires the single-flight gate, runs inside a cancellable
 `withProgress`, forwards stage reports + an `AbortSignal` into the deps, and
 the omp one-shot driver gains `cancel()` so a user cancel settles the turn
@@ -33,7 +33,7 @@ early instead of waiting out the 120s ceiling.
 | 1 | unit (happy) | `driver.cancel()` mid-turn | `driver.promise` rejects with `commit-gen: cancelled`; `onSettle` called exactly once | `driveCommitGenOneShot` with fake timers |
 | 2 | edge (ordering) | cancel after `onDone` | no-op — promise stays resolved with buffered text, `onSettle` still once | driver settled via `events.onDone()` |
 | 3 | edge (boundary) | cancel before any event | rejects `commit-gen: cancelled`; timer cleared (no later timeout reject) | driver, fake timers advanced past timeoutMs after cancel |
-| 4 | regression | command wiring source-scan + manifest unchanged | `extension.ts` registers `UnicDB.generateCommitMessage` with `cancellable: true` and a gate acquire before `withProgress` (fails today — neither exists); existing manifest guards in `commitGenManifest.test.ts` still pass | readFileSync of `src/extension.ts` + `package.json` |
+| 4 | regression | command wiring source-scan + manifest unchanged | `extension.ts` registers `VSKit.generateCommitMessage` with `cancellable: true` and a gate acquire before `withProgress` (fails today — neither exists); existing manifest guards in `commitGenManifest.test.ts` still pass | readFileSync of `src/extension.ts` + `package.json` |
 | 5 | unit (happy) | `OmpOneShot.cancel` reaches driver | calling `oneShot.cancel()` settles the in-flight `generate()` promise | `buildCommitGenOmpOneShot`-shaped fake or driver-level wiring test |
 | 6 | edge (concurrent) | second invocation while first in flight | gate returns `null` → toast `TOAST_GENERATION_IN_PROGRESS`, `runGenerateCommitMessage` not called | deps-level test through the exported wiring seam (or source-scan asserting the early-return order) |
 
@@ -97,7 +97,7 @@ EXECUTOR_MODEL: unic-code
 EXECUTOR_SUBAGENT: ExecG2
 SUMMARY: Wired the host side of the commit-gen UX fix: module-scope
   commitGenGate + cancellable withProgress((progress, token)) in the
-  UnicDB.generateCommitMessage registration; buildCommitGenDeps now takes
+  `VSKit.generateCommitMessage` registration; buildCommitGenDeps now takes
   progress+token and supplies report/isCancelled/signal ports (token →
   AbortController → ProviderRequest.signal); builtinComplete client pinned
   to COMMIT_GEN_TIMEOUT_MS; token.onCancellationRequested → oneShot.cancel()

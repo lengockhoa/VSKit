@@ -39,7 +39,7 @@ import {
 } from "./overlays";
 
 /** The V2 root class every selector hangs off. */
-const ROOT_CLASS = "UnicDB-ai-chat-v2";
+const ROOT_CLASS = "VSKit-ai-chat-v2";
 
 function cls(name: string): string {
   return `${ROOT_CLASS}-${name}`;
@@ -367,8 +367,8 @@ export function createPermissionRequestSheet(
   container.setAttribute(PERMISSION_REQUEST_MARKER, "1");
   container.setAttribute("role", "dialog");
   container.setAttribute("aria-modal", "true");
-  container.style.setProperty("--UnicDB-request-min", `${PERMISSION_REQUEST_WIDTH_MIN}px`);
-  container.style.setProperty("--UnicDB-request-max", `${PERMISSION_REQUEST_WIDTH_MAX}px`);
+  container.style.setProperty("--VSKit-request-min", `${PERMISSION_REQUEST_WIDTH_MIN}px`);
+  container.style.setProperty("--VSKit-request-max", `${PERMISSION_REQUEST_WIDTH_MAX}px`);
   container.hidden = true;
 
   const titleId = `${ROOT_CLASS}-permission-request-title`;

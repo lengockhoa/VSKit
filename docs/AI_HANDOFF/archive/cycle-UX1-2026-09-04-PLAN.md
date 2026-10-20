@@ -6,7 +6,7 @@ This is a fresh cycle on `main`.
 ## §1 Intent
 
 The user submitted 13 UX requests in one batched session, all around the day-to-day
-developer loop in UnicDB: schema-tree polish, console templates, an in-extension user guide,
+developer loop in the extension: schema-tree polish, console templates, an in-extension user guide,
 DataGrip-parity SQL Generator, filter alignment, results placement, a settings hub, chat
 UX fixes, DDL result handling, and auto-refresh of the schema tree. Success = every active
 request (R1–R13) ships in one cycle with behaviour pinned by tests; the suite stays at the
@@ -31,7 +31,7 @@ Requests (R0 already shipped in MENU commit `1e96f89` — do NOT duplicate):
 | R3+R4 | Right-click View/Function → "SQL Generator" fetches `pg_get_viewdef`/`pg_get_functiondef`, opens new console with the DDL, savable as .sql | Confirmed |
 | R5 | Filter dropdown: Select All checkbox offset vs item checkboxes — align | Confirmed |
 | R6+R7 | Cannot open any console from the left pane | Confirmed bug fix |
-| R8a | Results pane at BOTTOM by default, configurable via setting | Confirmed; extend existing `UnicDB.resultsPlacement` |
+| R8a | Results pane at BOTTOM by default, configurable via setting | Confirmed; preserve default and add an opt-in position |
 | R8b | Gear icon on left pane top → settings hub | Confirmed |
 | R9 | Chat pending: text renders one-char-per-line vertically before colour arrives | Confirmed |
 | R10 | Chat left padding too tight ("dính vô viền") | Confirmed |
@@ -44,11 +44,10 @@ Requests (R0 already shipped in MENU commit `1e96f89` — do NOT duplicate):
 **In-scope**
 
 - `package.json` — `contributes.commands`, `contributes.menus` (`view/title`,
-  `view/item/context`), `contributes.configuration` (extend existing
-  `UnicDB.resultsPlacement`), `activationEvents` additions for new commands.
+  `view/item/context`), a results-placement configuration option, and new activation events.
 - `src/extension.ts` — new command handlers; console-open fix (R6+R7); `runStatements`
   post-success refresh hook (R13); DDL kind stamping call-site (R12).
-- `src/ui/tableCommands.ts` — R1 rewire of `UnicDB.generateSampleData` to console templates.
+- `src/ui/tableCommands.ts` — R1 rewire of the table's sample-data action to console templates.
 - `src/ui/consolePanel.ts` — R6+R7 `show()` view-column fix.
 - `webview/aiChatPanelMain.ts` + `webview/styles.css` — chat UX (R9, R10, R11).
 - `webview/main.ts` + `webview/styles.css` — filter alignment (R5), DDL status card (R12).
@@ -57,7 +56,7 @@ Requests (R0 already shipped in MENU commit `1e96f89` — do NOT duplicate):
 - `src/core/schemaImpact.ts` — `shouldRefreshAfter` classification (R13).
 - `src/adapters/__tests__/bq04SurfaceGuard.test.ts` — guard-filter extension for
   `activationEvents` + `contributes.configuration` lines (UX1-006 only).
-- `docs/UnicDB_USER_GUIDE.md` — new authored Vietnamese user guide (R2).
+- `docs/USER_GUIDE.md` — new authored Vietnamese user guide (R2).
 - Tests in existing homes per `.cache/index/tests-map.json` (listed per task).
 - `CHANGELOG.md` — user-facing entries per repo convention.
 
@@ -78,8 +77,8 @@ Requests (R0 already shipped in MENU commit `1e96f89` — do NOT duplicate):
 exact region it owns — for `webview/styles.css` a selector prefix, for `src/extension.ts`
 a named function/slot, for `package.json` a contributes block. Overlap that is NOT
 governed by a written region contract must be broken with a `Dependencies` edge. Region
-contracts in force: styles.css → UX1-005 `.UnicDB-setfilter-*`, UX1-008 `.UnicDB-chat-*`,
-UX1-010 `.UnicDB-ddl-*` (append-only); extension.ts wave-1 → UX1-001 `commandGenerateSelect`
+contracts in force: styles.css → UX1-005 `.setfilter-*`, UX1-008 `.chat-*`,
+UX1-010 `.ddl-*` (append-only); extension.ts wave-1 → UX1-001 `commandGenerateSelect`
 only vs UX1-010 `runStatements` stamping slot only; extension.ts wave-2 lane → serialised
 by edges, not regions. package.json and src/extension.ts are the hot files — tasks owning
 them are chained (dependency = file exclusivity + UX1-006's guard fix, not logic).
@@ -89,23 +88,23 @@ them are chained (dependency = file exclusivity + UX1-006's guard fix, not logic
 | Task | Title | Wave | Owns (files — region contracts in §3) |
 |------|-------|------|--------------|
 | UX1-001 | Console open from left pane (R6+R7) | 1 | `src/ui/consolePanel.ts`, `src/extension.ts` (commandGenerateSelect ONLY), `src/ui/__tests__/consolePanel.test.ts`, `src/extension.test.ts` (generateSelect describe ONLY) |
-| UX1-005 | Filter Select All alignment (R5) | 1 | `webview/main.ts` (SetFilterComponent ONLY), `webview/styles.css` (.UnicDB-setfilter-* ONLY), `src/ui/__tests__/webviewSetFilter.test.ts` |
+| UX1-005 | Filter Select All alignment (R5) | 1 | `webview/main.ts` (SetFilterComponent ONLY), `webview/styles.css` (.setfilter-* ONLY), `src/ui/__tests__/webviewSetFilter.test.ts` |
 | UX1-006 | Results placement `top` + guard filter extension (R8a) | 1 | `package.json`, `src/ui/resultsPanel.ts`, `src/ui/__tests__/resultsPanel.test.ts`, `src/adapters/__tests__/bq04SurfaceGuard.test.ts` |
-| UX1-008 | Chat pending garble + left padding (R9+R10) | 1 | `webview/aiChatPanelMain.ts`, `webview/styles.css` (.UnicDB-chat-* ONLY), `src/ui/__tests__/chatLayoutCss.test.ts` |
-| UX1-010 | DDL result handling (R12) | 1 | `src/core/queryRunner.ts`, `src/core/__tests__/queryRunner.test.ts`, `src/ui/resultsGridModel.ts`, `src/ui/__tests__/resultsGridModel.test.ts`, `webview/main.ts` (renderActivePanel/state-tab regions ONLY), `webview/styles.css` (.UnicDB-ddl-* APPEND-ONLY), `src/extension.ts` (runStatements kind-stamping ONLY), `src/ui/__tests__/ddlStatusCard.test.ts` (new) |
+| UX1-008 | Chat pending garble + left padding (R9+R10) | 1 | `webview/aiChatPanelMain.ts`, `webview/styles.css` (.chat-* ONLY), `src/ui/__tests__/chatLayoutCss.test.ts` |
+| UX1-010 | DDL result handling (R12) | 1 | `src/core/queryRunner.ts`, `src/core/__tests__/queryRunner.test.ts`, `src/ui/resultsGridModel.ts`, `src/ui/__tests__/resultsGridModel.test.ts`, `webview/main.ts` (renderActivePanel/state-tab regions ONLY), `webview/styles.css` (.ddl-* APPEND-ONLY), `src/extension.ts` (runStatements kind-stamping ONLY), `src/ui/__tests__/ddlStatusCard.test.ts` (new) |
 | UX1-002 | SQL Generator view/function (R3+R4) | 2 | `package.json`, `src/extension.ts` (full ownership from UX1-002 onward), `src/extension.test.ts` |
 | UX1-007 | Settings hub icon (R8b) | 3 | `package.json`, `src/extension.ts`, `src/extension.test.ts` |
 | UX1-009 | Chat thinking row + streamed code blocks (R11) | 2 | `webview/aiChatPanelMain.ts`, `webview/styles.css`, `src/ui/__tests__/aiChatPanelBundle.test.ts` |
 | UX1-011 | Auto-refresh after any query (R13) | 4 | `src/extension.ts`, `src/core/schemaImpact.ts`, `src/core/__tests__/schemaImpact.test.ts`, `src/extension.test.ts` |
 | UX1-003 | Sample Data → console templates (R1) | 3 | `package.json`, `src/ui/tableCommands.ts`, `src/ui/__tests__/tableCommands.test.ts` |
-| UX1-004 | User guide icon + guide doc (R2) | 4 | `package.json`, `src/extension.ts`, `src/extension.test.ts`, `docs/UnicDB_USER_GUIDE.md` (new) |
+| UX1-004 | User guide icon + guide doc (R2) | 4 | `package.json`, `src/extension.ts`, `src/extension.test.ts`, `docs/USER_GUIDE.md` (new) |
 
 Same-wave file overlap analysis (audited, P2.5 round-1 revision — full audit including
 UX1-005 and UX1-001):
 
 - Wave 1 — `webview/styles.css`: owned by THREE tasks (UX1-005, UX1-008, UX1-010) under
-  the region-contract rule above; regions are disjoint selector families (`.UnicDB-setfilter-*`
-  / `.UnicDB-chat-*` / append-only `.UnicDB-ddl-*` block), so the P3 merge is conflict-free.
+  the region-contract rule above; regions are disjoint selector families (`.setfilter-*`
+  / `.chat-*` / append-only `.ddl-*` block), so the P3 merge is conflict-free.
   Each task's Target Files names its selectors and its acceptance criteria include a
   `git diff -- webview/styles.css` scoping check.
 - Wave 1 — `src/extension.ts` / `src/extension.test.ts`: owned by UX1-001 and UX1-010 under
@@ -145,181 +144,31 @@ wave 2, UX1-003 in wave 3).
 
 ## §3 Approach
 
-**Frozen surfaces + guard.** `bq04SurfaceGuard.test.ts` (base `75cdb08`) filters
-`[+-] "command|title|category|icon|when|group|order|keybinding|mac|win|linux":` lines and
-menu-block header keys from the package.json dependency diff. Verified green today (4/4).
-Risk verified: **`activationEvents` lines (`"onCommand:UnicDB.x",`) and
-`contributes.configuration` property keys (`"UnicDB.resultsPlacement": {`) match NEITHER
-whitelist** — they survive the filter and fail guard test 3. UX1-006 therefore extends the
-filter with narrowly-anchored patterns (`/^[+-]\s+"onCommand:[a-zA-Z0-9.]+",?\s*$/` and a
-`"UnicDB\.[a-zA-Z.]+"\s*:\s*\{` configuration-block key pattern) and pins them with a test.
-This is a filter extension over NON-dependency keys; the dependency-manifest assertion
-(dedication of the guard) is untouched, and the sanity-check block keeps proving
-non-tautology. All later package.json tasks (UX1-002/003/004/007) chain AFTER UX1-006.
+**Frozen surfaces + guard.** The manifest guard protects dependency changes while allowing unrelated command, menu, keybinding, and configuration contributions. This cycle adds activation-event and settings contributions; the guard recognizes only anchored activation lines and configuration keys inside the configuration block. Dependency-manifest assertions remain active, and a negative-control dependency change must still fail.
 
-**UX1-001 (R6+R7).** Verified root cause — NOT the brief's guess. `UnicDB.openConsoleForObject`
-takes a node argument and never checks for an editor; the actual defect is in
-`ConsolePanel.show()` (src/ui/consolePanel.ts:178): the panel is created with
-`ViewColumn.Active`, which resolves to nothing when no text editor is active — the panel is
-created but never becomes visible ("không mở được console"). Fix: in `show()`, when
-`vscode.window.activeTextEditor === undefined && visibleTextEditors.length === 0`, create
-with `ViewColumn.One`. Secondary path: `commandGenerateSelect` (extension.ts:2530) toasts
-"UnicDB: no active editor." on the same left-pane trigger — that fix lives in extension.ts,
-so UX1-001 carries a wave-1 extension.ts edit under a **region contract**: UX1-001 owns
-ONLY the `commandGenerateSelect` function (its `!editor` branch) and the corresponding
-`src/extension.test.ts` describe block. The wave-1 overlap audit above names the co-owner
-(UX1-010, which owns ONLY the `runStatements` kind-stamping slot) — disjoint functions,
-disjoint test describes; no serialisation edge needed. (This corrects the earlier draft
-claim that "no other wave-1 task touches extension.ts", flagged by P2.5 round 1.)
+**UX1-001 — console without an editor.** A panel created with the active-editor column may remain invisible when no editor is active. Choose the first editor column in that case; keep editor-present behavior unchanged. The table-to-SELECT action copies generated SQL to the clipboard and informs the user when insertion is unavailable. Test zero editors, inactive visible editors, and the editor-present path.
 
-**UX1-002 (R3+R4).** Two commands `UnicDB.generateViewDdl` / `UnicDB.generateFunctionDdl`
-(+ `onCommand:` activations, + two `view/item/context` entries with `when: viewItem ==
-view` / `viewItem == routine` — **the tree's routine contextValue is `"routine"`, NOT
-`"function"`**, verified schemaTree.ts:565; the brief's suggested `when` clause would have
-produced dead menu entries). Handler: resolve node meta (schemaTree node shape
-`{ meta: { connection, schema, objectName } }`, verified schemaTree.ts:541-549/565-575) →
-pg gate → `adapter.catalog.objectDdl(kind, name, schema)` — **already implemented** at
-src/adapters/postgres.ts:975 over `objectDdlSql` (pgCatalog.ts:258 emits
-`pg_get_viewdef(schema.name::regclass, true)` / `pg_get_functiondef(qualified::regproc::oid)`)
-→ open console singleton via the OC4O `commandOpenConsole` + `seedTab("DDL schema.name",
-ddl + missing ";")` pattern. Nothing new is invented at the SQL layer.
+**UX1-002 — view/routine DDL.** Add context actions for views and routines, using the tree's actual `routine` context value for both functions and procedures. Resolve connection/schema/name, gate to supported PostgreSQL capability, fetch existing catalog DDL, and seed a fresh console tab without executing it. Preserve a trailing semicolon and report errors without opening a tab.
 
-**UX1-003 (R1).** Keep the command id `UnicDB.generateSampleData` (no id churn). Rewire in
-src/ui/tableCommands.ts: resolve node → `introspectTable` (already used there) → build
-5–10 typed INSERT template statements from `format_type` (int → number, text/varchar →
-quoted string, bool → true/false, timestamp → NOW(), numeric → 0, uuid → gen_random_uuid()
-wrapped in a comment noting pgcrypto) → open the console via the same
-`commandOpenConsole`+`seedTab` seam (import from extension.ts is not possible — instead
-execute `UnicDB.openConsoleForObject` then use `ConsolePanel.seedTab` through a new tiny
-exported helper `openConsoleWithTemplate(mgr, {name, buffer})` placed in tableCommands.ts
-and wired in extension.ts in the SAME task — extension.ts is unowned in wave 3 except by
-UX1-003 itself). Never auto-execute. AI path retained behind an explicit second command
-palette entry only if zero-cost; otherwise the AI flow is dropped from the menu but its
-code stays (dead-code-free rule: the AI branch remains reachable through the existing
-`sampleDataAi` module tests). Edge: 0 insertable columns → commented header-only template.
+**UX1-003 — sample-data templates.** Make the default table action introspect columns and seed the SQL console with 5–10 typed INSERT templates for manual review, never automatic execution. Render safe placeholders for unknown types and a comment-only template when no columns are insertable. Keep the separate AI implementation and tests available.
 
-**UX1-004 (R2).** New `UnicDB.openUserGuide`: resolve `docs/UnicDB_USER_GUIDE.md` against
-`context.extensionUri` (NOT `process.cwd()`), then
-`vscode.commands.executeCommand("markdown.showPreview", uri)`; missing-file fallback =
-toast, never throw. One `view/title` entry (`$(book)`, group `navigation`) on
-`UnicDB.schemaTree`. Serialisation note: UX1-004 is the last extension.ts +
-package.json consumer (edge on UX1-003); its appended contributes entries land in
-different blocks than UX1-007's (guide `view/title` vs settings command+icon). The guide (Vietnamese) covers: connections, schema tree, console,
-results placement, AI chat, sample data, SQL Generator, settings hub, filter, refresh —
-cross-referenced against §1's R list so the reviewer can check coverage.
+**UX1-004 — user guide.** Add a Vietnamese guide covering connection setup, schema browsing, console/history, DDL generation, sample-data templates, results, AI chat, settings, filtering, and refresh. Open it using an extension-relative URI and Markdown preview; missing files produce an information message without throwing.
 
-**UX1-005 (R5).** Code-derived hypothesis (pixels unusable): the Select All row nests its
-checkbox inside `label.UnicDB-setfilter-selectall-label` (gap 6px, row padding `4px 8px`)
-while entries are flat `label.UnicDB-setfilter-entry` rows (gap 6px, row padding `2px 8px`,
-styles.css:602) — the TASK-009 pin (styles.css:1113 `padding-left: 8px` on both) equalised
-left edges but NOT the checkbox x-position when label/row vertical padding and any
-inherited margins differ in the popup's flex context. Fix: one shared rule in
-webview/styles.css giving both rows an identical flex scaffold + explicit identical
-checkbox indent (e.g. both `display:flex; align-items:center; gap:6px; padding:4px 8px`,
-label identical), keep the `border-bottom` divider. Pinned by extending
-`webviewSetFilter.test.ts` with a CSS-source contract (chatLayoutCss.test.ts pattern —
-jsdom does not apply stylesheets) asserting the two selectors carry byte-identical
-indent-bearing declarations. Region contract: UX1-005's styles.css edits stay inside the
-`.UnicDB-setfilter-*` selectors (plus the TASK-009 shared-indent rule at :1113);
-`.UnicDB-chat-*` belongs to UX1-008, `.UnicDB-ddl-*` to UX1-010's append-only block.
-Executor FIRST reproduces at runtime; if the true cause
-differs, fix the cause but keep the pinned contract green (contract = observable
-equal-indent outcome).
+**UX1-005 — filter alignment.** Give Select All and entry rows identical flex scaffolding and checkbox indentation while retaining the divider. Pin equality with a stylesheet-source test because jsdom does not apply CSS. Keep filter, chat, and DDL style regions separate; adapt if runtime reproduction reveals a different cause while preserving the observable alignment contract.
 
-**UX1-006 (R8a + guard).** Existing: `UnicDB.resultsPlacement` enum `below|beside`, default
-`below`, `readPlacementSetting()` (resultsPanel.ts:231) + `moveEditorToBelowGroup` at
-CREATE (resultsPanel.ts:286). User still sees top-right → their config likely says
-`beside`, or the panel predates the setting. Changes: (a) add `"top"` enum value →
-`workbench.action.moveEditorToAboveGroup` with a runtime availability check + silent
-degrade to beside (same `canExecuteCommands()` defensive pattern); (b) sharpen the setting
-description (CREATE-time only; panel reveal never moves it); (c) extend the bq04 guard
-filter as described above + pin with tests. Default stays `bottom`-equivalent (`below`) —
-new users get bottom, existing configs are respected; a test must assert
-`readPlacementSetting(undefined)` → `"below"` so the new `top` value cannot silently shift
-the default (P2.5 YAGNI guard: the task must prove the user's original complaint — results
-not at bottom — already has a correct default, and `top` is strictly opt-in).
+**UX1-006 — results placement and manifest guard.** Preserve `below` as default, retain `beside`, and add opt-in `top` placement with a runtime command-availability check and silent degrade. Read placement only when creating a panel. Extend the manifest-diff guard narrowly and test allowed contribution lines plus a rejected dependency change.
 
-**UX1-007 (R8b).** `UnicDB.openSettings` →
-`vscode.commands.executeCommand("workbench.action.openSettings", "@ext:lengockhoa.UnicDB")`
-(publisher `lengockhoa`, name `UnicDB` — package.json:2-6). One `view/title` entry with
-`$(settings-gear)` (differs from `UnicDB.openAiSettings`'s `$(gear)`). Serialisation: UX1-007
-waits for UX1-002 (extension.ts exclusivity, wave-2 lane) and precedes UX1-011 — the
-extension.ts lane across the cycle is `UX1-002 → UX1-007 → UX1-011 → (UX1-004 last)`.
-Later settings land in `contributes.configuration` automatically — this is the hub seed
-the user asked for.
+**UX1-007 — settings entry.** Add a schema-tree title-bar gear that opens Settings filtered to this extension. Keep its icon distinct from the existing AI-settings action. Chain ownership after view/routine DDL work and before refresh wiring.
 
-**UX1-008 (R9+R10).** R9 code-derived hypothesis: `.UnicDB-chat-assistant.UnicDB-chat-streaming`
-re-declares `white-space: pre-wrap` (styles.css:935) and `.UnicDB-chat-caret` is
-`display:inline-block` (styles.css:1491) — an inline-block atom after a trailing space /
-at a wrap opportunity can drop to its own line, and during the pre-first-delta phase the
-queued dot (`.UnicDB-chat-queued`, inline-block 6px) sits in the USER bubble while the
-assistant side shows nothing; with narrow widths this reads as vertical one-char-per-line
-text. Fix: `.UnicDB-chat-bubble { min-height: 1lh; width: fit-content; max-width: 95%; }`
-+ caret `display:inline` (no line-box of its own) + keep `pre-wrap` (streamed SQL needs
-newlines). R10: assistant/streaming bubbles get `padding-left: 12px` and the thread gets
-left inset so bubbles no longer touch the panel border. Region contract: this task's
-styles.css edits stay inside `.UnicDB-chat-*` selectors (including the bubble padding);
-`.UnicDB-setfilter-*` belongs to UX1-005 and `.UnicDB-ddl-*` to UX1-010's append-only block. Pinned by extending
-chatLayoutCss.test.ts (CSS-source contract, jsdom pattern). Executor reproduces first; the
-pinned contract is the observable outcome (no forced-break child on the streaming bubble;
-min-height; fit-content), not a specific property.
+**UX1-008 — chat layout.** An inline-block streaming caret can wrap onto its own line and the bubble may collapse vertically. Preserve pre-wrapped newlines, give the bubble positive minimum height and content width, render the caret inline, and inset assistant content from the left border. Pin CSS-source contracts and keep style regions separate.
 
-**UX1-009 (R11).** Copy button + boxed fenced code ALREADY ship (`renderMarkdown` →
-`<pre class="UnicDB-md-code" data-raw=...><button class="UnicDB-md-copy">Copy</button></pre>`,
-aiChatPanelMain.ts:455; `wireCopyButtons` :1291; `.UnicDB-md-copy` styles.css:1455). Real
-gaps, verified in source: (a) the only loading affordance is the 6px pulsing dot on the
-QUEUED USER bubble — user wants an assistant-side "AI is thinking…" row: add
-`appendThinking()` rendering a `.UnicDB-chat-thinking-row` (spinner glyph via CSS animation
-+ text), invoked on send, removed on first delta/error/done (same lifecycle as
-`resolveQueuedUserBubble`, aiChatPanelMain.ts:986); (b) streamed deltas render as plain
-text nodes (appendDelta :1128) — code blocks only format on the TERMINAL message, so
-mid-stream SQL arrives unboxed: in `appendDelta`, when the accumulated bubble text
-contains a closed fence, re-render through `renderMarkdown` (escapes first — safe) and
-re-wire copy buttons; (c) right-edge truncation: `overflow-wrap: anywhere` on
-`.UnicDB-chat-bubble`. Pinned via aiChatPanelBundle.test.ts (bundle test — needs
-`npm run compile` first).
+**UX1-009 — streaming feedback.** Preserve the escape-first Markdown and code-copy path. Add an assistant thinking row that appears on send and disappears on first delta/error/completion. Re-render closed fenced blocks during streaming, preserve raw-code copy data, and use safe text/fragment APIs; cover unterminated fences, hostile HTML, repeated deltas, and long lines.
 
-**UX1-010 (R12).** Pure helper `classifyStatementKind(sql: string, dialect?: SqlDialect):
-"select" | "ddl" | "dml" | "other"` in src/core/queryRunner.ts (first significant keyword
-after comment/whitespace stripping; `WITH … SELECT` → select; `SELECT … INTO` → ddl;
-`EXPLAIN`/`SHOW` → other) + additive `kind?: …` on `StatementResult` (undefined on
-BQ-pending shapes; stamped in extension.ts `runStatements` next to `stampBqDialect` —
-extension.ts edit is one line, declared in Target Files; extension.ts is unowned in
-wave 1 by any other task). Webview (webview/main.ts `renderActivePanel` :1174 + tab
-creation): statements with `kind !== "select"` suppress the grid tab and render a status
-card (`.UnicDB-ddl-card` in styles.css — UX1-010's styles.css contract is APPEND-ONLY: one
-new `.UnicDB-ddl-*` block, zero edits to existing selectors owned by UX1-005/008):
-success → commandTag-derived line + duration;
-failure → verbatim `r.error` + `hint` (regex `LINE \d+:` / `character \d+` from pg error
-text; multi-statement → "statement N of M" + failing SQL). Region contracts per §2:
-UX1-005 owns `.UnicDB-setfilter-*` selectors in styles.css, UX1-008 owns `.UnicDB-chat-*`
-(+ the chat bubble padding inside them), UX1-010 appends `.UnicDB-ddl-*` only — disjoint
-families, so their P3 merge is trivial.
-src/ui/resultsGridModel.ts
-carries `kind` through reconstruction (the `dialect` precedent, BQ04-001). Regression:
-SELECT statements render a grid unchanged.
+**UX1-010 — DDL/DML status cards.** Classify completed statements as select, DDL, DML, or other; leave pending batch results unclassified. Keep SELECT grids unchanged; suppress grids for non-SELECT statements and show success command/duration or verbatim error plus location/multi-statement hint. Carry the additive kind field through result reconstruction and append CSS without changing other style regions.
 
-**UX1-011 (R13).** Serialisation: lands LAST on the extension.ts lane
-(`Dependencies: TASK-UX1-002, TASK-UX1-007`) so it never races UX1-007 on extension.ts or
-extension.test.ts (P2.5 finding 1). Extend the existing seam instead of inventing a path:
-`invalidateAfterSchemaDdl` (extension.ts:881) already classifies + refreshes for DDL.
-Add `shouldRefreshAfter(completed: readonly string[], dialect?: SqlDialect):
-"full" | "tree" | "none"` as a PURE export in src/core/schemaImpact.ts (next to
-`completedSchemaImpact` :129): DDL → full, DML-only → tree, SELECT-only → none. In
-extension.ts, replace the closure body: full → `schemaCache.invalidate() +
-acSchemaCache.invalidate() + sqlSemanticTokens.refresh() + tree.refresh()` (exact
-`UnicDB.refreshSchema` semantics, extension.ts:673) + `UnicDB.commands.executeCommand(
-"UnicDB.refreshSchema")` is NOT re-fired (avoids double-invalidate); tree → `tree.refresh()`
-only. 200ms trailing debounce (module-level timer; `deactivate()` clears it —
-extension.ts:1299 region). Multi-statement runs already arrive as one `completed` array →
-one decision per run; debounce coalesces back-to-back runs.
+**UX1-011 — post-run refresh.** Extend the existing refresh seam: DDL invalidates schema and semantic-token caches and refreshes the tree; DML refreshes only the tree; SELECT and failed/empty runs do nothing. Keep one 200ms trailing debounce, coalesce rapid runs, and clear pending work on deactivate. Full refresh matches manual-refresh semantics without re-invoking its command or double-invalidating.
 
-**Alternatives rejected (cycle-level).** One mega-task (unreviewable); renaming the sample
-data command id (activationEvents + docs churn, zero benefit); bespoke docs viewer (R2
-markdown preview is native); SQL Generator as clipboard-only (user explicitly wants a
-console); adapter-level DDL grammar for R12 (fragile cross-driver); unconditioned refresh
-after every statement (tree churn).
-
+Rejected alternatives: a mega-task, unnecessary command-ID churn, a bespoke guide viewer, clipboard-only DDL, adapter-specific DDL parsing, and unconditional refresh after every statement. These choices retain focused review, native platform behavior, and low-noise refreshes.
 ## §4 Test Plan
 
 Per-task matrices live in each TASK-UX1-NNN.md (every task: ≥1 happy + ≥2 edge cases of
@@ -333,7 +182,7 @@ DIFFERENT kinds + regression where the task fixes a bug). Cycle-level digest:
 | happy (UX1-005) | select-all vs entry checkbox indent | CSS contract: both selectors carry identical padding-left declaration |
 | happy (UX1-006) | resultsPlacement=top → moveEditorToAboveGroup attempted | executeCommand called with moveEditorToAboveGroup; unavailable → silent beside fallback |
 | happy (UX1-008) | streaming bubble layout contract | bubble rule carries min-height + width:fit-content; caret rule has no inline-block |
-| happy (UX1-009) | thinking row appears on send | `.UnicDB-chat-thinking-row` present after send, removed on first delta |
+| happy (UX1-009) | thinking row appears on send | `.chat-thinking-row` present after send, removed on first delta |
 | happy (UX1-010) | CREATE FUNCTION success → card not grid | statement card shows `CREATE FUNCTION` + duration; grid tab count excludes the DDL statement |
 | happy (UX1-011) | CREATE TABLE run → full refresh once | 1 refresh-path call; 3 DDL statements in one run → still exactly 1 |
 | edge-kind A — empty/none (UX1-003) | 0 insertable columns | header-comment-only template, 0 INSERT lines, no throw |
@@ -374,7 +223,7 @@ Cycle-level:
       src/adapters/bigqueryAdc.ts src/adapters/types.ts` empty; guard-filtered package.json
       dependency diff empty.
 - [ ] No version bump, no tag, no push, no executor commits (P3 owns the commit).
-- [ ] `CHANGELOG.md` updated for the user-facing batch; `docs/UnicDB_USER_GUIDE.md` covers
+- [ ] `CHANGELOG.md` updated for the user-facing batch; `docs/USER_GUIDE.md` covers
       every shipped feature in §1's R list.
 - [ ] R0 untouched.
 
@@ -413,12 +262,12 @@ command takes a node arg; the real defect is `ConsolePanel.show()` creating with
 `ViewColumn.Active`, invisible with no editor (consolePanel.ts:178). (4) R11 descoped to
 the two real gaps (assistant-side thinking row; mid-stream fence formatting) after
 verifying copy button + boxed code already ship (aiChatPanelMain.ts:455,1291).
-(5) R8a reframed: bottom-default already exists (`UnicDB.resultsPlacement`); task adds `top`
+(5) R8a reframed: bottom-default already exists; task adds `top`
 enum + guard filter, keeps default. (6) R13 wired onto the existing
 `invalidateAfterSchemaDdl` seam via a new pure `shouldRefreshAfter` in schemaImpact.ts
 instead of a parallel refresh path. (7) Wave overlap audit found UX1-008/UX1-010 sharing
-webview/styles.css in wave 1 — resolved by region contracts (`.UnicDB-chat-*` vs new
-`.UnicDB-ddl-*` block) with an explicit fallback (UX1-008 CSS to wave 2) documented in both
+webview/styles.css in wave 1 — resolved by region contracts (`.chat-*` vs new
+`.ddl-*` block) with an explicit fallback (UX1-008 CSS to wave 2) documented in both
 task files; extension.ts/extension.test.ts collisions in wave 2 resolved with explicit
 UX1-011→UX1-002 and UX1-007→UX1-002 dependency edges.
 Known gaps: (a) R5's exact pixel offset unverifiable (vision receipts: 9 unrelated, 3
@@ -464,7 +313,7 @@ CONSISTENCY:
     wave-1 tasks (UX1-005, UX1-008, UX1-010) own webview/styles.css (PLAN.md:85,88;
     TASK-UX1-005.md:17-20), while the audit discusses only UX1-008 vs UX1-010. The strict
     invariant at PLAN.md:76-77 ("no two same-wave tasks share a file") is already violated
-    threefold. The per-task region contracts (setfilter / chat / append-only .UnicDB-ddl-*)
+    threefold. The per-task region contracts (setfilter / chat / append-only `.ddl-*`)
     with git-diff acceptance checks are a sound mitigation — promote them to the operative
     rule in PLAN.md and add UX1-005 to the audit, instead of presenting strict no-overlap
     as the constraint.
@@ -517,13 +366,13 @@ Status: all 3 important + 1 minor findings addressed
 - Finding 3 (wave-1 styles.css triple overlap) — FIXED. The wave-constraint rule at the
   top of §2 is rewritten: the operative rule is per-REGION file ownership with written
   contracts, not strict per-file exclusivity. Full audit now includes UX1-005: three
-  disjoint selector families (UX1-005 `.UnicDB-setfilter-*`, UX1-008 `.UnicDB-chat-*`,
-  UX1-010 append-only `.UnicDB-ddl-*`). §3 entries for UX1-005/008/010 each state the
+  disjoint selector families (UX1-005 `.setfilter-*`, UX1-008 `.chat-*`,
+  UX1-010 append-only `.ddl-*`). §3 entries for UX1-005/008/010 each state the
   contract. Task files updated (005 Target Files, 008 Dependencies — the "move CSS to
   wave 2" fallback retired, 010 Target Files + Dependencies). Executor P3 merge is
   selector-disjoint.
 - Finding 4 (minor, UX1-006 YAGNI guard) — FIXED. TASK-UX1-006 Verification Commands now
-  end with a `node -e` manifest assertion: `UnicDB.resultsPlacement` must keep
+  end with a manifest assertion: results placement must keep
   `default: "below"` while its enum gains `top` (verified RED today — enum is
   `["below","beside"]` — and green after the task). Case 2 already pins the runtime
   counterpart (`readPlacementSetting(undefined)` → `"below"`, resultsPanel.ts:226-239
@@ -555,8 +404,8 @@ the four finding-fix entries above):
   ownership, not per-file"; the false "extension.ts is unowned in wave 1" claim is
   removed.
 - **Finding 3 fix verified** — PLAN.md §2 wave-constraint rule now reads
-  "per-REGION file ownership, not per-file"; UX1-005 region `.UnicDB-setfilter-*`,
-  UX1-008 region `.UnicDB-chat-*`, UX1-010 region `.UnicDB-ddl-*` (append-only). Executor
+  "per-REGION file ownership, not per-file"; UX1-005 region `.setfilter-*`,
+  UX1-008 region `.chat-*`, UX1-010 region `.ddl-*` (append-only). Executor
   P3 merge is selector-disjoint; the §3 narrative states the contract for each task.
 - **Finding 4 fix verified** — TASK-UX1-006 Verification Commands end with a
   `node -e` manifest assertion that the JSON manifest keeps `default: "below"` and a

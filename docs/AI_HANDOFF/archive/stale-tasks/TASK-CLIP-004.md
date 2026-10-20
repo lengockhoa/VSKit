@@ -27,13 +27,13 @@ shows the banner reason. Host-side save mechanics are already covered by
 
 | # | Type | Test name | Expected | Pre-state / Fixture |
 |---|------|----------|----------|---------------------|
-| 1 | happy | `paste 2 cells then Cmd+Enter posts exactly one saveEdits` | exactly 1 `{type:"saveEdits"}`; `edits.length === 2`; `index === 0`; `tableName === null`; `pkColumns === []`; `serverIndexByRowId` maps `"0"`→`0`,`"1"`→`1` | 3×2 state; `__UnicDB.debugClipboard.simulatePaste("11\ta")` at focused (0,0) spans 2 cells; `new KeyboardEvent("keydown", {key:"Enter", metaKey:true})` on `.UnicDB-grid-host` (pattern: `webviewKeybinding.test.ts` K3) |
+| 1 | happy | `paste 2 cells then Cmd+Enter posts exactly one saveEdits` | exactly 1 `{type:"saveEdits"}`; `edits.length === 2`; `index === 0`; `tableName === null`; `pkColumns === []`; `serverIndexByRowId` maps `"0"`→`0`,`"1"`→`1` | 3×2 state; `__app.debugClipboard.simulatePaste("11\ta")` at focused (0,0) spans 2 cells; `new KeyboardEvent("keydown", {key:"Enter", metaKey:true})` on `.vskit-grid-host` (pattern: `webviewKeybinding.test.ts` K3) |
 | 2 | happy | `Ctrl+Enter (ctrlKey variant) posts identically` | same message count + payload shape as #1 | same harness, `ctrlKey: true` |
-| 3 | happy | `commit ✓ button persists pasted edits identically` | 1 `saveEdits` with same `edits.length` | `__UnicDB.commit()` (pattern: `tests/webviewEditHighlight.test.ts` #3) |
+| 3 | happy | `commit ✓ button persists pasted edits identically` | 1 `saveEdits` with same `edits.length` | `__app.commit()` (pattern: `tests/webviewEditHighlight.test.ts` #3) |
 | 4 | edge (noop) | `Cmd+Enter with zero dirty posts nothing` | zero `saveEdits` posts (guard `webview/main.ts:3783`) | fresh bundle + state, no paste |
-| 5 | edge (refused) | `refused saveResult shows banner reason and clears dirty` | after `{type:"saveResult", ok:true, refused:true, reason:"no PK"}`: `.UnicDB-save-banner` visible containing `"no PK"`; `dirtyCount === 0` | seed via simulatePaste then commit |
+| 5 | edge (refused) | `refused saveResult shows banner reason and clears dirty` | after `{type:"saveResult", ok:true, refused:true, reason:"no PK"}`: `.vskit-save-banner` visible containing `"no PK"`; `dirtyCount === 0` | seed via simulatePaste then commit |
 | 6 | edge (failure) | `ok:false errors banner; dirty preserved for retry` | banner shows joined `errors`; `dirtyCount` unchanged from pre-commit | paste 2 cells, commit, ack `ok:false, errors:["boom"]` |
-| 7 | regression | `saveResult ok:true clears highlights (paste-origin)` | `dirtyCount === 0`; `gridHost.querySelectorAll(".UnicDB-cell-dirty").length === 0` (mirror of `webviewEditHighlight.test.ts` #5) | paste-origin dirty cells |
+| 7 | regression | `saveResult ok:true clears highlights (paste-origin)` | `dirtyCount === 0`; `gridHost.querySelectorAll(".vskit-cell-dirty").length === 0` (mirror of `webviewEditHighlight.test.ts` #5) | paste-origin dirty cells |
 | 8 | regression | existing `webviewKeybinding.test.ts` K1-K3 + `webviewEditHighlight.test.ts` + `webviewSaveEdits.test.ts` suites | unchanged GREEN | existing files |
 
 ## Test Files
@@ -57,15 +57,15 @@ npx vitest run src/ui/__tests__/webviewClipboardSave.test.ts src/ui/__tests__/we
 
 ## Dependencies
 
-- TASK-CLIP-003 (consumes `__UnicDB.debugClipboard.simulatePaste` seam; its Cmd/Ctrl+V listener must already be wired so the paste-seed path equals the shipped path). Wave 3.
+- TASK-CLIP-003 (consumes `__app.debugClipboard.simulatePaste` seam; its Cmd/Ctrl+V listener must already be wired so the paste-seed path equals the shipped path). Wave 3.
 
 ## Interfaces
 
 - Consumes:
-  - `__UnicDB.debugClipboard.simulatePaste(text: string): void` — produced by TASK-CLIP-003 (`webview/main.ts` debug block ~`:4523`).
-  - `__UnicDB.commit` (= `onCommitClick`, `webview/main.ts:3782`) and the capture-phase Cmd/Ctrl+Enter listener (`main.ts:1355-1370`).
+  - `__app.debugClipboard.simulatePaste(text: string): void` — produced by TASK-CLIP-003 (`webview/main.ts` debug block ~`:4523`).
+  - `__app.commit` (= `onCommitClick`, `webview/main.ts:3782`) and the capture-phase Cmd/Ctrl+Enter listener (`main.ts:1355-1370`).
   - `SaveEditsMessage` shape — `src/ui/messages.ts:216-234`; `SaveResultMessage` — `messages.ts:260-287`.
-  - Banner selection `.UnicDB-save-banner` + hidden-class contract (pattern: `webviewKeybinding.test.ts` B1).
+  - Banner selection `.vskit-save-banner` + hidden-class contract (pattern: `webviewKeybinding.test.ts` B1).
 - Produces: (none) — final acceptance pin for the cycle.
 
 ## Discussion
@@ -108,7 +108,7 @@ VERIFICATION:
   command: npm run typecheck
   result: exit code 0
   full_output: |
-    > UnicDB@1.53.42 typecheck
+    > VSKit@1.53.42 typecheck
     > tsc --noEmit
     Wall time: 1.49 seconds
   command: npm run compile

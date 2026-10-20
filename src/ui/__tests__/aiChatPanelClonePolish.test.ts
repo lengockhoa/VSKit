@@ -6,7 +6,7 @@
 //   - tool card expand/collapse idempotent (clicking the card header toggles
 //     a collapsed class, N rapid clicks settle deterministically,
 //     collapsed state keeps the card in the DOM),
-//   - reduced-motion honored (.UnicDB-chat-pulse, .UnicDB-chat-caret,
+//   - reduced-motion honored (.VSKit-chat-pulse, .VSKit-chat-caret,
 //     smooth-scroll override),
 //   - easing tokens exact (toggle = 100ms ease-in-out, tool card body
 //     expand = 150ms ease),
@@ -42,7 +42,7 @@ function compileBundle(): void {
   execFileSync("npm", ["run", "compile"], { stdio: "pipe", cwd: process.cwd() });
 }
 
-interface UnicDBApi {
+interface VSKitApi {
   postMessage: (msg: unknown) => void;
 }
 
@@ -143,15 +143,15 @@ function loadBundle(): BundleHandle {
   }
   bundleListeners.length = 0;
   document.body.innerHTML =
-    '<div id="UnicDB-root" class="UnicDB-form-body UnicDB-chat-body"></div>';
+    '<div id="VSKit-root" class="VSKit-form-body VSKit-chat-body"></div>';
 
   const received: Array<Record<string, unknown>> = [];
-  const api: UnicDBApi = {
+  const api: VSKitApi = {
     postMessage: (msg) => {
       received.push(msg as Record<string, unknown>);
     },
   };
-  (globalThis as unknown as { acquireVsCodeApi: () => UnicDBApi }).acquireVsCodeApi =
+  (globalThis as unknown as { acquireVsCodeApi: () => VSKitApi }).acquireVsCodeApi =
     () => api;
 
   (0, eval)(bundleSrcRef.value ?? bundleSrc);
@@ -163,7 +163,7 @@ function dispatch(msg: Record<string, unknown>): void {
 }
 
 function rootEl(): HTMLDivElement {
-  return document.getElementById("UnicDB-root") as HTMLDivElement;
+  return document.getElementById("VSKit-root") as HTMLDivElement;
 }
 
 function btn(id: string): HTMLButtonElement {
@@ -193,18 +193,18 @@ describeIfCss("TASK-AGTUI-008 - polish CSS contract (easing + reduced-motion)", 
   // Test case #4 — timing token.
   //   tool card body = 150ms ease
   // Accept ms or s decimal forms; case-insensitive.
-  // TASK-CHATV2-017 Lane 3: the V1 bypass toggle (.UnicDB-chat-toggle) is
+  // TASK-CHATV2-017 Lane 3: the V1 bypass toggle (.VSKit-chat-toggle) is
   // deleted with the V1 composer; its 100ms pin is retired with it.
 
-  it(".UnicDB-chat-tool-collapsible transition timing token is 150ms ease", () => {
+  it(".VSKit-chat-tool-collapsible transition timing token is 150ms ease", () => {
     // The collapse/expand affordance on the legacy tool result card
     // declares a 150ms ease transition. Accept either ms or s decimal.
     const re =
-      /\.UnicDB-chat-tool-collapsible[^}]*transition:\s*(?:all\s+)?(?:0?\.15s|150ms)\s+ease\b/i;
+      /\.VSKit-chat-tool-collapsible[^}]*transition:\s*(?:all\s+)?(?:0?\.15s|150ms)\s+ease\b/i;
     // Tolerate both ms and s forms on the body element. Reuse a permissive
     // selector that catches either form.
     const permissiveRe =
-      /\.UnicDB-chat-tool-(?:collapsible|collapsed)[^{]*\{[^}]*(?:0?\.15s|150ms)[^;]*ease/i;
+      /\.VSKit-chat-tool-(?:collapsible|collapsed)[^{]*\{[^}]*(?:0?\.15s|150ms)[^;]*ease/i;
     expect(
       re.test(css) || permissiveRe.test(css),
       "tool collapsible section must transition with 150ms ease",
@@ -212,8 +212,8 @@ describeIfCss("TASK-AGTUI-008 - polish CSS contract (easing + reduced-motion)", 
   });
 
   // Test case #3 — reduced-motion honored.
-  //   - .UnicDB-chat-pulse animation → none
-  //   - .UnicDB-chat-caret animation → none
+  //   - .VSKit-chat-pulse animation → none
+  //   - .VSKit-chat-caret animation → none
   //   - smooth-scroll → scroll-behavior: auto override
   it("prefers-reduced-motion media query disables pulse / caret / smooth scroll", () => {
     const body = mediaBlockBody();
@@ -222,22 +222,22 @@ describeIfCss("TASK-AGTUI-008 - polish CSS contract (easing + reduced-motion)", 
       "@media (prefers-reduced-motion: reduce) block must exist",
     ).not.toBe("");
     // Pulse animation neutralised. The pulse keyframes drive
-    // `.UnicDB-chat-stop-live`, so the proof is that the live-stop rule
-    // sets `animation: none`. Either `.UnicDB-chat-stop-live` or
-    // `.UnicDB-chat-pulse` (defensive) satisfies the contract. The
+    // `.VSKit-chat-stop-live`, so the proof is that the live-stop rule
+    // sets `animation: none`. Either `.VSKit-chat-stop-live` or
+    // `.VSKit-chat-pulse` (defensive) satisfies the contract. The
     // selector list in a single block may be comma-separated, so we
     // grep the WHOLE body for `animation: none` and the carrier token
     // rather than trying to span across comma-joined selectors.
-    const hasPulseCarrier = /\.UnicDB-chat-stop-live/.test(body);
+    const hasPulseCarrier = /\.VSKit-chat-stop-live/.test(body);
     const hasAnimationNone = /animation\s*:\s*none/i.test(body);
     expect(
       hasPulseCarrier && hasAnimationNone,
-      "reduced-motion must set animation:none on .UnicDB-chat-stop-live (the pulse carrier)",
+      "reduced-motion must set animation:none on .VSKit-chat-stop-live (the pulse carrier)",
     ).toBe(true);
     // Caret animation neutralised.
     expect(
-      /\.UnicDB-chat-caret/.test(body) && /animation\s*:\s*none/i.test(body),
-      "reduced-motion must set animation:none on .UnicDB-chat-caret",
+      /\.VSKit-chat-caret/.test(body) && /animation\s*:\s*none/i.test(body),
+      "reduced-motion must set animation:none on .VSKit-chat-caret",
     ).toBe(true);
     // Smooth-scroll disabled — `scroll-behavior: auto` overrides earlier
     // `scroll-behavior: smooth` declarations.
@@ -253,10 +253,10 @@ describeIfCss("TASK-AGTUI-008 - polish CSS contract (easing + reduced-motion)", 
   it("chat thread declares scroll-behavior:smooth OUTSIDE reduced-motion", () => {
     // The `@media (prefers-reduced-motion: reduce)` block must NOT carry
     // `scroll-behavior: smooth` (would be redundant + a regression for
-    // users who opt-in). The declaration lives on `.UnicDB-chat-thread` or
-    // `.UnicDB-chat` instead.
-    const threadBody = ruleBody(".UnicDB-chat-thread");
-    const chatBody = ruleBody(".UnicDB-chat");
+    // users who opt-in). The declaration lives on `.VSKit-chat-thread` or
+    // `.VSKit-chat` instead.
+    const threadBody = ruleBody(".VSKit-chat-thread");
+    const chatBody = ruleBody(".VSKit-chat");
     const merged = `${threadBody}\n${chatBody}`;
     expect(
       /scroll-behavior:\s*smooth/i.test(merged),
@@ -287,13 +287,13 @@ describeIfBundle(
           dispatch({ type: "delta", text: t });
         }
         let bubble = rootEl().querySelector<HTMLDivElement>(
-          ".UnicDB-chat-bubble.UnicDB-chat-assistant.UnicDB-chat-streaming",
+          ".VSKit-chat-bubble.VSKit-chat-assistant.VSKit-chat-streaming",
         );
         expect(bubble, "deltas must open a streaming assistant bubble").not.toBeNull();
-        const caret = bubble?.querySelector<HTMLSpanElement>(".UnicDB-chat-caret");
+        const caret = bubble?.querySelector<HTMLSpanElement>(".VSKit-chat-caret");
         expect(
           caret,
-          "open streaming bubble must carry a child .UnicDB-chat-caret (R8 parity)",
+          "open streaming bubble must carry a child .VSKit-chat-caret (R8 parity)",
         ).not.toBeNull();
         // Concatenation invariant — the parity rule prohibits the host
         // from synthesizing characters. textContent of the bubble
@@ -308,12 +308,12 @@ describeIfBundle(
         // bubble so the next turn opens fresh.
         dispatch({ type: "done" });
         bubble = rootEl().querySelector<HTMLDivElement>(
-          ".UnicDB-chat-bubble.UnicDB-chat-assistant.UnicDB-chat-streaming",
+          ".VSKit-chat-bubble.VSKit-chat-assistant.VSKit-chat-streaming",
         );
         expect(bubble, "done must close the streaming bubble").toBeNull();
         expect(
-          rootEl().querySelector(".UnicDB-chat-caret"),
-          "done must remove the .UnicDB-chat-caret span",
+          rootEl().querySelector(".VSKit-chat-caret"),
+          "done must remove the .VSKit-chat-caret span",
         ).toBeNull();
       },
     );
@@ -331,26 +331,26 @@ describeIfBundle(
           summary: "→ sql_query — 42 rows",
         });
         const root = rootEl();
-        // The legacy tool card carries .UnicDB-chat-tool-result and a status
+        // The legacy tool card carries .VSKit-chat-tool-result and a status
         // suffix. Both class hooks must remain so prior suite (DbAwareWebview)
-        // assertions on .UnicDB-chat-tool-result-ok stay green.
+        // assertions on .VSKit-chat-tool-result-ok stay green.
         const card = root.querySelector<HTMLDivElement>(
-          ".UnicDB-chat-tool-result.UnicDB-chat-tool-result-ok",
+          ".VSKit-chat-tool-result.VSKit-chat-tool-result-ok",
         );
         expect(card, "tool_result must render the legacy tool card").not.toBeNull();
-        // The collapse affordance lives on a child `.UnicDB-chat-tool-header`.
+        // The collapse affordance lives on a child `.VSKit-chat-tool-header`.
         const header = card?.querySelector<HTMLDivElement>(
-          ".UnicDB-chat-tool-header",
+          ".VSKit-chat-tool-header",
         );
         expect(
           header,
-          "tool card must include a clickable .UnicDB-chat-tool-header",
+          "tool card must include a clickable .VSKit-chat-tool-header",
         ).not.toBeNull();
         if (!card || !header) return;
 
         // 0 clicks → not collapsed.
         expect(
-          card.classList.contains("UnicDB-chat-tool-collapsed"),
+          card.classList.contains("VSKit-chat-tool-collapsed"),
           "card must NOT be collapsed before any click",
         ).toBe(false);
 
@@ -361,7 +361,7 @@ describeIfBundle(
         // Single click → collapsed.
         click();
         expect(
-          card.classList.contains("UnicDB-chat-tool-collapsed"),
+          card.classList.contains("VSKit-chat-tool-collapsed"),
           "first click must add the collapsed class",
         ).toBe(true);
         // Card stays in the DOM even while collapsed.
@@ -370,28 +370,28 @@ describeIfBundle(
         // 5 more rapid clicks → settle back to NOT collapsed (6 total → even).
         for (let i = 0; i < 5; i++) click();
         expect(
-          card.classList.contains("UnicDB-chat-tool-collapsed"),
+          card.classList.contains("VSKit-chat-tool-collapsed"),
           "6 rapid clicks must end NOT collapsed (even parity)",
         ).toBe(false);
 
         // 1 more → collapsed again (odd parity).
         click();
         expect(
-          card.classList.contains("UnicDB-chat-tool-collapsed"),
+          card.classList.contains("VSKit-chat-tool-collapsed"),
           "7 rapid clicks must end collapsed (odd parity)",
         ).toBe(true);
 
         // 999 more rapid clicks → still collapsed (even parity).
         for (let i = 0; i < 999; i++) click();
         expect(
-          card.classList.contains("UnicDB-chat-tool-collapsed"),
+          card.classList.contains("VSKit-chat-tool-collapsed"),
           "1006 clicks (even) must end NOT collapsed",
         ).toBe(false);
       },
     );
 
     // Test case #5 retired — TASK-CHATV2-017 Lane 3: the V1 send/stop swap
-    // (#sendBtn/#stopBtn + .UnicDB-chat-stop-live) is deleted; V2 busy state
+    // (#sendBtn/#stopBtn + .VSKit-chat-stop-live) is deleted; V2 busy state
     // is pinned by webview/aiChat/__tests__ composer + controller suites.
   },
 );

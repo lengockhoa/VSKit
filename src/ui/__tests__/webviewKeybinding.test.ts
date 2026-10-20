@@ -44,7 +44,7 @@ interface ClipboardDebug {
   getCellRange?: () => unknown;
 }
 
-interface UnicDBApiHandle {
+interface VSKitApiHandle {
   postMessage: (msg: unknown) => void;
   commit?: () => void;
   simulateCellEdit?: (
@@ -56,23 +56,23 @@ interface UnicDBApiHandle {
   editState?: EditStateHandle;
 }
 
-interface UnicDBDebug {
+interface VSKitDebug {
   render?: () => void;
   postToHost?: (msg: unknown) => void;
   formatCell?: (v: unknown) => string;
   gridApi?: GridApi | null;
   editState?: EditStateHandle;
   commit?: () => void;
-  simulateCellEdit?: UnicDBApiHandle["simulateCellEdit"];
+  simulateCellEdit?: VSKitApiHandle["simulateCellEdit"];
   debugClipboard?: ClipboardDebug;
 }
 
-function UnicDBApi(): UnicDBDebug | null {
-  return (window as unknown as { __UnicDB?: UnicDBDebug }).__UnicDB ?? null;
+function VSKitApi(): VSKitDebug | null {
+  return (window as unknown as { __VSKit?: VSKitDebug }).__VSKit ?? null;
 }
 
 function getEditState(): EditStateHandle | null {
-  return UnicDBApi()?.editState ?? null;
+  return VSKitApi()?.editState ?? null;
 }
 
 function dispatchPaste(target: EventTarget, text: string): void {
@@ -144,7 +144,7 @@ function loadBundle(): LoadResult {
     },
   });
   // Reset DOM so each test starts clean.
-  document.body.innerHTML = '<div id="UnicDB-root"></div>';
+  document.body.innerHTML = '<div id="VSKit-root"></div>';
   // eslint-disable-next-line @typescript-eslint/no-implied-eval, no-new-func
   const fn = new Function(bundleSrc ?? "") as () => void;
   fn();
@@ -194,14 +194,14 @@ describeIfBundle("webview/main.ts — keybinding filter (Fix R1)", () => {
 
     const editState = getEditState();
     expect(editState).toBeTruthy();
-    const sim = UnicDBApi()?.simulateCellEdit;
+    const sim = VSKitApi()?.simulateCellEdit;
     expect(sim).toBeTruthy();
     sim!(0, "name", "x", "a");
     await flush();
 
     // Build a stand-alone <input> appended INSIDE the grid wrap (so the
     // capture-phase listener on the wrap actually sees the event).
-    const wrap = document.querySelector(".UnicDB-grid-host") as HTMLElement | null;
+    const wrap = document.querySelector(".VSKit-grid-host") as HTMLElement | null;
     expect(wrap).toBeTruthy();
     const input = document.createElement("input");
     wrap!.appendChild(input);
@@ -231,13 +231,13 @@ describeIfBundle("webview/main.ts — keybinding filter (Fix R1)", () => {
     await flush();
 
     const editState = getEditState();
-    const sim = UnicDBApi()?.simulateCellEdit;
+    const sim = VSKitApi()?.simulateCellEdit;
     sim!(0, "name", "x", "a");
     await flush();
     expect(editState!.dirtyCount).toBe(1);
 
     // The persistent searchInput lives inside the grid wrap toolbar.
-    const wrap = document.querySelector(".UnicDB-grid-host") as HTMLElement | null;
+    const wrap = document.querySelector(".VSKit-grid-host") as HTMLElement | null;
     expect(wrap).toBeTruthy();
     const input = document.createElement("input");
     input.type = "search";
@@ -265,12 +265,12 @@ describeIfBundle("webview/main.ts — keybinding filter (Fix R1)", () => {
     await flush();
 
     const editState = getEditState();
-    const sim = UnicDBApi()?.simulateCellEdit;
+    const sim = VSKitApi()?.simulateCellEdit;
     sim!(0, "name", "x", "a");
     await flush();
     expect(editState!.dirtyCount).toBe(1);
 
-    const wrap = document.querySelector(".UnicDB-grid-host") as HTMLElement | null;
+    const wrap = document.querySelector(".VSKit-grid-host") as HTMLElement | null;
     expect(wrap).toBeTruthy();
 
     received.length = 0;
@@ -295,11 +295,11 @@ describeIfBundle("webview/main.ts — Cmd/Ctrl+V clipboard round-trip", () => {
     const { received } = loadBundle();
     dispatchState();
     await flush();
-    const api = UnicDBApi()!;
+    const api = VSKitApi()!;
     api.gridApi!.setFocusedCell(0, "id");
     received.length = 0;
 
-    const wrap = document.querySelector(".UnicDB-grid-host") as HTMLElement;
+    const wrap = document.querySelector(".VSKit-grid-host") as HTMLElement;
     const ev = dispatchClipboardShortcut(wrap, { metaKey: true });
     expect(ev.defaultPrevented).toBe(true);
     expect(received.filter((m) => m.type === "readClipboard")).toHaveLength(1);
@@ -315,11 +315,11 @@ describeIfBundle("webview/main.ts — Cmd/Ctrl+V clipboard round-trip", () => {
     const { received } = loadBundle();
     dispatchState();
     await flush();
-    const api = UnicDBApi()!;
+    const api = VSKitApi()!;
     api.gridApi!.setFocusedCell(0, "id");
     received.length = 0;
 
-    dispatchClipboardShortcut(document.querySelector(".UnicDB-grid-host")!, { ctrlKey: true });
+    dispatchClipboardShortcut(document.querySelector(".VSKit-grid-host")!, { ctrlKey: true });
     expect(received.filter((m) => m.type === "readClipboard")).toHaveLength(1);
     dispatchHost({ type: "clipboardText", text: "8\teight" });
     await flush();
@@ -331,8 +331,8 @@ describeIfBundle("webview/main.ts — Cmd/Ctrl+V clipboard round-trip", () => {
     const { received } = loadBundle();
     dispatchState();
     await flush();
-    const api = UnicDBApi()!;
-    const wrap = document.querySelector(".UnicDB-grid-host") as HTMLElement;
+    const api = VSKitApi()!;
+    const wrap = document.querySelector(".VSKit-grid-host") as HTMLElement;
     const first =
       (wrap.querySelector('.ag-cell[row-index="0"][col-id="id"]') as HTMLElement | null) ??
       (wrap.querySelector('.ag-row[row-index="0"] .ag-cell[col-id="id"]') as HTMLElement | null);
@@ -346,7 +346,7 @@ describeIfBundle("webview/main.ts — Cmd/Ctrl+V clipboard round-trip", () => {
     window.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
     expect(api.debugClipboard?.getCellRange?.()).not.toBeNull();
 
-    const toolbar = document.querySelector(".UnicDB-toolbar") as HTMLElement;
+    const toolbar = document.querySelector(".VSKit-toolbar") as HTMLElement;
     toolbar.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
     expect(api.debugClipboard?.getCellRange?.()).toBeNull();
     api.gridApi!.setFocusedCell(0, "id");
@@ -362,7 +362,7 @@ describeIfBundle("webview/main.ts — Cmd/Ctrl+V clipboard round-trip", () => {
     const { received } = loadBundle();
     dispatchState();
     await flush();
-    const wrap = document.querySelector(".UnicDB-grid-host") as HTMLElement;
+    const wrap = document.querySelector(".VSKit-grid-host") as HTMLElement;
     const input = document.createElement("input");
     wrap.appendChild(input);
     input.focus();
@@ -378,7 +378,7 @@ describeIfBundle("webview/main.ts — Cmd/Ctrl+V clipboard round-trip", () => {
     dispatchState();
     await flush();
     received.length = 0;
-    const wrap = document.querySelector(".UnicDB-grid-host") as HTMLElement;
+    const wrap = document.querySelector(".VSKit-grid-host") as HTMLElement;
     dispatchClipboardShortcut(wrap, { metaKey: true });
     dispatchHost({ type: "clipboardText", text: "" });
     await flush();
@@ -388,7 +388,7 @@ describeIfBundle("webview/main.ts — Cmd/Ctrl+V clipboard round-trip", () => {
   itIfBundle("clipboard round-trip without state is a safe no-op", async () => {
     const { received } = loadBundle();
     received.length = 0;
-    const root = document.getElementById("UnicDB-root")!;
+    const root = document.getElementById("VSKit-root")!;
     dispatchClipboardShortcut(root, { ctrlKey: true });
     expect(received.filter((m) => m.type === "readClipboard")).toHaveLength(1);
     dispatchHost({ type: "clipboardText", text: "orphan" });
@@ -412,13 +412,13 @@ describeIfBundle("webview/main.ts — banner refusal persistence (Fix R1)", () =
     });
     await flush();
 
-    const banner = document.querySelector(".UnicDB-save-banner");
+    const banner = document.querySelector(".VSKit-save-banner");
     expect(banner).toBeTruthy();
     expect(banner!.textContent).toContain("PRIMARY KEY");
     // Banner is visible (no hidden attribute).
     const hidden =
-      banner!.classList.contains("UnicDB-hidden") ||
-      banner!.classList.contains("UnicDB-save-banner-hidden") ||
+      banner!.classList.contains("VSKit-hidden") ||
+      banner!.classList.contains("VSKit-save-banner-hidden") ||
       banner!.getAttribute("hidden") !== null;
     expect(hidden).toBe(false);
   });
@@ -436,7 +436,7 @@ describeIfBundle("webview/main.ts — banner refusal persistence (Fix R1)", () =
     });
     await flush();
 
-    const before = document.querySelector(".UnicDB-save-banner");
+    const before = document.querySelector(".VSKit-save-banner");
     expect(before).toBeTruthy();
     const beforeText = before!.textContent;
 
@@ -462,7 +462,7 @@ describeIfBundle("webview/main.ts — banner refusal persistence (Fix R1)", () =
     });
     await flush();
 
-    const after = document.querySelector(".UnicDB-save-banner");
+    const after = document.querySelector(".VSKit-save-banner");
     expect(after).toBeTruthy();
     expect(after!.textContent).toBe(beforeText);
   });

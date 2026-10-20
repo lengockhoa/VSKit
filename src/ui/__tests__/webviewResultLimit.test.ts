@@ -68,7 +68,7 @@ beforeAll(() => {
 const distPath = resolve(process.cwd(), "dist", "webview.js");
 const bundleSrc = existsSync(distPath) ? readFileSync(distPath, "utf8") : null;
 
-interface UnicDBApi {
+interface VSKitApi {
   postMessage: (msg: unknown) => void;
 }
 
@@ -82,16 +82,16 @@ function loadBundle(): {
     );
   }
 
-  document.body.innerHTML = '<div id="UnicDB-root" class="UnicDB-webview"></div>';
-  const root = document.getElementById("UnicDB-root") as HTMLDivElement;
+  document.body.innerHTML = '<div id="VSKit-root" class="VSKit-webview"></div>';
+  const root = document.getElementById("VSKit-root") as HTMLDivElement;
 
   const received: Array<Record<string, unknown>> = [];
-  const api: UnicDBApi = {
+  const api: VSKitApi = {
     postMessage: (msg) => {
       received.push(msg as Record<string, unknown>);
     },
   };
-  (globalThis as unknown as { acquireVsCodeApi: () => UnicDBApi }).acquireVsCodeApi =
+  (globalThis as unknown as { acquireVsCodeApi: () => VSKitApi }).acquireVsCodeApi =
     () => api;
 
   // The bundle is an IIFE — running it under jsdom installs globals + listeners.
@@ -105,13 +105,13 @@ function dispatchState(msg: Record<string, unknown>): void {
 }
 
 function getGridApi(): GridApi | null {
-  const w = window as unknown as { __UnicDB?: { gridApi?: GridApi } };
-  return w.__UnicDB?.gridApi ?? null;
+  const w = window as unknown as { __VSKit?: { gridApi?: GridApi } };
+  return w.__VSKit?.gridApi ?? null;
 }
 
 function checkLoadMoreForHost(): void {
-  const fn = (window as unknown as { __UnicDBCheckLoadMoreForHost?: () => void })
-    .__UnicDBCheckLoadMoreForHost;
+  const fn = (window as unknown as { __VSKitCheckLoadMoreForHost?: () => void })
+    .__VSKitCheckLoadMoreForHost;
   if (typeof fn === "function") fn();
 }
 
@@ -167,7 +167,7 @@ describeIfBundle("webview resultLimited UX (TASK-ARP03-004)", () => {
     const { root } = loadBundle();
     dispatchState(selectState({ results: [limitedResult({ rowCount: 20 })] }));
 
-    const footer = root.querySelector(".UnicDB-grid-footer");
+    const footer = root.querySelector(".VSKit-grid-footer");
     expect(footer).toBeTruthy();
     const text = footer!.textContent ?? "";
     // Truncation copy must WIN over footerText's "20 of 20" total branch:
@@ -175,7 +175,7 @@ describeIfBundle("webview resultLimited UX (TASK-ARP03-004)", () => {
     expect(text).toMatch(/truncated/i);
     expect(text).not.toMatch(/\d+ of \d+/);
     // Not an error presentation — truncation is its own state.
-    expect(root.querySelector(".UnicDB-error")).toBeNull();
+    expect(root.querySelector(".VSKit-error")).toBeNull();
   });
 
   it("2. limited statement never posts loadMore (rowCount: null — gate closed by flag)", () => {
@@ -214,7 +214,7 @@ describeIfBundle("webview resultLimited UX (TASK-ARP03-004)", () => {
         ],
       }),
     );
-    const footer = root.querySelector(".UnicDB-grid-footer");
+    const footer = root.querySelector(".VSKit-grid-footer");
     expect(footer).toBeTruthy();
     const text = footer!.textContent ?? "";
     // Plain footerText output ("20 of 20" total branch) — NOT the truncation marker.
@@ -222,11 +222,11 @@ describeIfBundle("webview resultLimited UX (TASK-ARP03-004)", () => {
     expect(text).not.toMatch(/truncated/i);
   });
 
-  it("4. distinct from empty — empty results keep the .UnicDB-empty placeholder", () => {
+  it("4. distinct from empty — empty results keep the .VSKit-empty placeholder", () => {
     const { root } = loadBundle();
     dispatchState(selectState({ results: [] }));
 
-    const empty = root.querySelector(".UnicDB-empty");
+    const empty = root.querySelector(".VSKit-empty");
     expect(empty).toBeTruthy();
     expect(empty!.textContent).toBe("No results yet.");
     expect(root.textContent ?? "").not.toMatch(/truncated/i);
@@ -251,18 +251,18 @@ describeIfBundle("webview resultLimited UX (TASK-ARP03-004)", () => {
     expect(root.textContent ?? "").not.toMatch(/truncated/i);
 
     // TASK-UX2-002 — tabBadge returns "" for non-error statuses; cancelled
-    // has no badge but still carries the .UnicDB-tab-cancelled CSS class.
-    const tab = root.querySelector(".UnicDB-tab.UnicDB-tab-cancelled");
+    // has no badge but still carries the .VSKit-tab-cancelled CSS class.
+    const tab = root.querySelector(".VSKit-tab.VSKit-tab-cancelled");
     expect(tab).toBeTruthy();
     expect(tab!.textContent ?? "").not.toMatch(/[⌀✗⚠]/);
 
     // ...and the cancelled message card on the Messages tab.
     // Tab order is Messages first, then statements in reverse-chrono:
     //   tabs[0] = Messages, tabs[1] = statement[0].
-    const tabs = root.querySelectorAll(".UnicDB-tab");
+    const tabs = root.querySelectorAll(".VSKit-tab");
     expect(tabs.length).toBe(2);
     (tabs[0] as HTMLButtonElement).click();
-    const card = root.querySelector(".UnicDB-msg-card.UnicDB-msg-cancelled");
+    const card = root.querySelector(".VSKit-msg-card.VSKit-msg-cancelled");
     expect(card).toBeTruthy();
     expect(card!.textContent ?? "").toContain("Statement 1 — CANCELLED");
   });

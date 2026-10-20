@@ -11,8 +11,8 @@ interface MediaQueryListLike {
   addListener(): void; removeListener(): void; addEventListener(): void;
   removeEventListener(): void; dispatchEvent(): boolean;
 }
-interface UnicDBApi { postMessage: (msg: unknown) => void; }
-interface UnicDBDebug { getActiveTab: () => number; gridApi?: unknown; }
+interface VSKitApi { postMessage: (msg: unknown) => void; }
+interface VSKitDebug { getActiveTab: () => number; gridApi?: unknown; }
 
 beforeAll(() => {
   const g = globalThis as unknown as {
@@ -42,11 +42,11 @@ const describeIfBundle = describe.runIf(bundleSrc !== null);
 
 function loadBundle(): { received: Array<Record<string, unknown>>; root: HTMLDivElement } {
   if (!bundleSrc) throw new Error("dist/webview.js missing — run `npm run compile` first");
-  document.body.innerHTML = '<div id="UnicDB-root" class="UnicDB-webview"></div>';
-  const root = document.getElementById("UnicDB-root") as HTMLDivElement;
+  document.body.innerHTML = '<div id="VSKit-root" class="VSKit-webview"></div>';
+  const root = document.getElementById("VSKit-root") as HTMLDivElement;
   const received: Array<Record<string, unknown>> = [];
-  const api: UnicDBApi = { postMessage: (msg) => received.push(msg as Record<string, unknown>) };
-  (globalThis as unknown as { acquireVsCodeApi: () => UnicDBApi }).acquireVsCodeApi = () => api;
+  const api: VSKitApi = { postMessage: (msg) => received.push(msg as Record<string, unknown>) };
+  (globalThis as unknown as { acquireVsCodeApi: () => VSKitApi }).acquireVsCodeApi = () => api;
   (0, eval)(bundleSrc);
   return { received, root };
 }
@@ -67,11 +67,11 @@ function state(results: Record<string, unknown>[]): Record<string, unknown> {
 function dispatch(msg: Record<string, unknown>): void {
   window.dispatchEvent(new MessageEvent("message", { data: msg }));
 }
-function debug(): UnicDBDebug {
-  return (window as unknown as { __UnicDB: UnicDBDebug }).__UnicDB;
+function debug(): VSKitDebug {
+  return (window as unknown as { __VSKit: VSKitDebug }).__VSKit;
 }
 function tabs(root: HTMLDivElement): HTMLButtonElement[] {
-  return Array.from(root.querySelectorAll<HTMLButtonElement>(".UnicDB-tab"));
+  return Array.from(root.querySelectorAll<HTMLButtonElement>(".VSKit-tab"));
 }
 
 describeIfBundle("TASK-AH-003 append-only result tabs", () => {
@@ -90,7 +90,7 @@ describeIfBundle("TASK-AH-003 append-only result tabs", () => {
     // After the first dispatch, active = first appended = canonical 0 →
     // visual tabs[2] (result[0] is the first item of the run that was active
     // when activeTab was last set; appendBase logic picks the first new tab).
-    expect(oldTabs[oldTabs.length - 1]?.classList.contains("UnicDB-tab-active")).toBe(true);
+    expect(oldTabs[oldTabs.length - 1]?.classList.contains("VSKit-tab-active")).toBe(true);
     dispatch(state([
       ...firstRun,
       result(2, { runNo: 2, runStmtNo: 1 }),
@@ -106,7 +106,7 @@ describeIfBundle("TASK-AH-003 append-only result tabs", () => {
     // (canonical 2 → visual tabs[3]).
     expect(nextTabs[0]?.textContent ?? "").toMatch(/^Messages/);
     expect(nextTabs[3]?.textContent ?? "").toMatch(/^Run 2 · SELECT 2/);
-    expect(nextTabs[3]?.classList.contains("UnicDB-tab-active")).toBe(true);
+    expect(nextTabs[3]?.classList.contains("VSKit-tab-active")).toBe(true);
     expect(debug().getActiveTab()).toBe(2);
   });
 
@@ -195,7 +195,7 @@ describeIfBundle("TASK-AH-003 append-only result tabs", () => {
     // canonical index 0 still survives → active stays at 0.
     expect(debug().getActiveTab()).toBe(0);
     // Visual tabs[3] in NEW order = result[10] (canonical 0) → still active.
-    expect(tabs(root)[3]?.classList.contains("UnicDB-tab-active")).toBe(true);
+    expect(tabs(root)[3]?.classList.contains("VSKit-tab-active")).toBe(true);
   });
 
   itIfBundle("switching between accumulated tabs keeps each tab's rows readable", async () => {

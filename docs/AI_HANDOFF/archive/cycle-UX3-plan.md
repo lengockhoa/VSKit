@@ -53,8 +53,8 @@ through to find their current work.
 
 Render surface (webview-owned):
 - `webview/main.ts` — `rebuildTabs()` (currently at `webview/main.ts:638`):
-  - Add × button (`<button class="UnicDB-tab-close">`) per tab, hidden by default,
-    visible on `.UnicDB-tab:hover`.
+  - Add × button (`<button class="result-tab-close">`) per tab, hidden by default,
+    visible on `.result-tab:hover`.
   - × button click stops propagation, fires `postMessage({type: "closeTab",
     index})` to host.
   - Right-click (`contextmenu` event) on tab fires
@@ -140,8 +140,8 @@ in the webview and post the trimmed array back would double-source state.
 **Empty state.** Rendered inside the existing panel body slot. When
 `results.length === 0`, the renderer (`renderPanel()` or equivalent) returns
 the empty-state DOM instead of the grid/error-card. The tabs strip collapses
-to zero height (no `.UnicDB-tab` children), but the strip container
-(`.UnicDB-tabs`) keeps its CSS-reserved height for layout stability — the
+to zero height (no `.result-tab` children), but the strip container
+(`.result-tabs`) keeps its CSS-reserved height for layout stability — the
 `align-items` and `border-bottom` remain so a new run instantly drops a tab
 in without layout shift.
 
@@ -161,8 +161,8 @@ show the × button avoids per-mouse-move JS and is keyboard-accessible via
 **No persistence — explicit design.** Per user P0 decision 5, closed tabs are
 gone. There is no `workspaceState` restore on panel reopen; the panel always
 starts empty (or with whatever the next `runStatements` call produces).
-This is enforced by simply not adding any `workspaceState.get('UnicDB.tabs')`
-read path — there's nothing to remove, the absence is the design.
+This is enforced by simply not adding any per-tab persistence read path —
+there's nothing to remove, the absence is the design.
 
 **Rejected alternatives.**
 - *Native VS Code context menu.* — 30-50ms latency per right-click, focus
@@ -181,11 +181,11 @@ read path — there's nothing to remove, the absence is the design.
 **TASK-UX3-001 — webview close affordances + empty state**
 | # | Type | Test | Expected | Pre-state |
 |---|------|------|----------|-----------|
-| 1 | unit | `rebuildTabs()` renders one `<button class="UnicDB-tab-close">` per tab | count = tabs.length | 2 results |
-| 2 | unit | `UnicDB-tab-close` has `aria-label="Close tab"` and is `type="button"` | match | 1 tab |
+| 1 | unit | `rebuildTabs()` renders one `<button class="result-tab-close">` per tab | count = tabs.length | 2 results |
+| 2 | unit | `result-tab-close` has `aria-label="Close tab"` and is `type="button"` | match | 1 tab |
 | 3 | unit | Clicking × fires `postMessage({type: "closeTab", index: i})` and stops propagation | message posted, no click-bubble | 3 results, click index 1 |
 | 4 | edge | `renderPanel()` with `state.results.length === 0` renders an empty-state element with text containing "No runs yet" | match | empty results |
-| 5 | edge | Right-click on tab shows a `<ul class="UnicDB-tab-menu">` with 3 items (`Close Tab`, `Close All Tabs`, `Close Other Tabs`) | match | 3 tabs, right-click index 1 |
+| 5 | edge | Right-click on tab shows a `<ul class="result-tab-menu">` with 3 items (`Close Tab`, `Close All Tabs`, `Close Other Tabs`) | match | 3 tabs, right-click index 1 |
 | 6 | regression | `tabTitle` and `tabBadge` from UX2 unchanged (run UX2 tests still green) | match | 1 result with sql + status error |
 | 7 | regression | Healthy SELECT grid still renders when results.length > 0 (no empty-state in this branch) | grid path | 1 SELECT result |
 
@@ -250,7 +250,6 @@ npm run verify:fast
 - [ ] No persistence — closing and reopening the panel starts empty.
 - [ ] CHANGELOG updated for v1.51.4 with: × button on hover, right-click Close
       menu, active-tab close + auto-activate, empty state.
-- [ ] **Release: v1.51.4 published to GitHub** at R5.
 
 ## §7 Task Split
 

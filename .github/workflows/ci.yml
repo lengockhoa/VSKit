@@ -1,0 +1,30 @@
+name: VSKit CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      # Compile before tests: some tests load generated dist files at module init.
+      - name: Compile
+        run: npm run compile
+      - name: Typecheck and tests
+        run: npm test && npm run typecheck

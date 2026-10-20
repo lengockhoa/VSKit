@@ -2,11 +2,8 @@
 
 ## Cycle COMMITGUARD — commit-message guard + retry cho Generate Commit Message
 
-Feature/bugfix cycle: Generate Commit Message (SCM sparkle) phải chặn chuỗi rác
-(hash/reasoning leak — bug với "chatgpt luna"), retry đúng 1 lần với corrective prompt,
-rồi mới toast lỗi; message bắt buộc tiếng Việt (type prefix English), subject ≤ 12 từ,
-tổng ≤ 100 từ. Plan: `docs/AI_HANDOFF/PLAN.md`. Spec: `docs/AI_HANDOFF/SPEC.md`.
-(Previous cycles STOPERR — 3/3 done và CHATFIX — complete; xem `RUN.md`/`HISTORY.md`.)
+Feature cycle: Generated commit messages must reject hash-like or reasoning-leak output, retry once with a corrective prompt, and report an error if still invalid. Messages are in Vietnamese (English type prefix), subject ≤ 12 words, total ≤ 100 words. Plan and specification are in this archived cycle.
+(Previous cycles STOPERR — 3/3 done and CHATFIX — complete; see their archived records.)
 
 | Task | Title | Status | Dependencies | Wave |
 |---|---|---|---|---:|

@@ -251,7 +251,7 @@ describe("TASK-CHATV2-008 composer — state rendering (#2)", () => {
     view.render(idleValid());
     expect(view.primaryButton.disabled).toBe(false);
     expect(view.primaryButton.getAttribute("aria-label")).toBe(COMPOSER_SEND_LABEL);
-    expect(view.primaryButton.classList.contains("UnicDB-ai-chat-v2-primary-send")).toBe(true);
+    expect(view.primaryButton.classList.contains("VSKit-ai-chat-v2-primary-send")).toBe(true);
     expect(view.primaryButton.querySelector('[data-icon="arrow-up"]')).not.toBeNull();
   });
 
@@ -259,7 +259,7 @@ describe("TASK-CHATV2-008 composer — state rendering (#2)", () => {
     view.render(idleValid({ phase: "streaming" }));
     expect(view.primaryButton.querySelector('[data-icon="stop-square"]')).not.toBeNull();
     expect(view.primaryButton.getAttribute("aria-label")).toBe(COMPOSER_STOP_LABEL);
-    expect(view.primaryButton.classList.contains("UnicDB-ai-chat-v2-primary-busy")).toBe(true);
+    expect(view.primaryButton.classList.contains("VSKit-ai-chat-v2-primary-busy")).toBe(true);
     expect(view.hint.hidden).toBe(false);
     expect(view.hint.textContent).toBe(COMPOSER_BUSY_HINT);
   });
@@ -434,8 +434,8 @@ describe("TASK-CHATV2-008 composer — invalid draft edge (#4)", () => {
       }),
     );
     expect(view.contextList.querySelectorAll(`[${CONTEXT_CHIP_MARKER}]`)).toHaveLength(1);
-    view.contextList.querySelector<HTMLButtonElement>(".UnicDB-ai-chat-v2-context-chip-preview")!.click();
-    view.contextList.querySelector<HTMLButtonElement>(".UnicDB-ai-chat-v2-context-chip-remove")!.click();
+    view.contextList.querySelector<HTMLButtonElement>(".VSKit-ai-chat-v2-context-chip-preview")!.click();
+    view.contextList.querySelector<HTMLButtonElement>(".VSKit-ai-chat-v2-context-chip-remove")!.click();
     expect(cb.previews).toHaveLength(1);
     expect(cb.removals).toEqual(["table:main.public.users"]);
     strip.destroy();
@@ -461,17 +461,17 @@ describe("TASK-CHATV2-008 composer — auto-grow boundary (#5)", () => {
     stubScrollHeight(view.prompt, 20);
     view.render(idleValid());
     expect(view.prompt.style.height).toBe("36px");
-    expect(view.prompt.classList.contains("UnicDB-ai-chat-v2-input-scroll")).toBe(false);
+    expect(view.prompt.classList.contains("VSKit-ai-chat-v2-input-scroll")).toBe(false);
 
     stubScrollHeight(view.prompt, 60);
     view.render(idleValid());
     expect(view.prompt.style.height).toBe("60px");
-    expect(view.prompt.classList.contains("UnicDB-ai-chat-v2-input-scroll")).toBe(false);
+    expect(view.prompt.classList.contains("VSKit-ai-chat-v2-input-scroll")).toBe(false);
 
     stubScrollHeight(view.prompt, 400);
     view.render(idleValid());
     expect(view.prompt.style.height).toBe("88px");
-    expect(view.prompt.classList.contains("UnicDB-ai-chat-v2-input-scroll")).toBe(true);
+    expect(view.prompt.classList.contains("VSKit-ai-chat-v2-input-scroll")).toBe(true);
   });
 });
 
@@ -482,7 +482,7 @@ describe("TASK-CHATV2-008 composer — narrow mode CSS branches (#6)", () => {
     );
     expect(composerRules.length).toBeGreaterThan(0);
     for (const line of composerRules) {
-      expect(line.includes("UnicDB-ai-chat-v2")).toBe(true);
+      expect(line.includes("VSKit-ai-chat-v2")).toBe(true);
     }
   });
 
@@ -560,22 +560,22 @@ describe("TASK-CHATUX-004 composer — compact metrics + pinned contracts", () =
     };
 
     // Top region: 36–88px auto-grow clamp, tighter padding.
-    const top = ruleBody("\\.UnicDB-ai-chat-v2-composer-top");
+    const top = ruleBody("\\.VSKit-ai-chat-v2-composer-top");
     expect(top).toContain("min-height: 36px");
     expect(top).toContain("max-height: 88px");
     expect(top).toContain("padding: 6px 10px 4px");
 
     // Textarea scrolls past ~3.5 lines instead of seven.
-    expect(ruleBody("\\.UnicDB-ai-chat-v2-input")).toContain("max-height: 76px");
-    expect(ruleBody("\\.UnicDB-ai-chat-v2-input-v2")).toContain("max-height: 76px");
+    expect(ruleBody("\\.VSKit-ai-chat-v2-input")).toContain("max-height: 76px");
+    expect(ruleBody("\\.VSKit-ai-chat-v2-input-v2")).toContain("max-height: 76px");
 
     // Bottom lane: 36px minimum, tighter padding.
-    const bottom = ruleBody("\\.UnicDB-ai-chat-v2-composer-bottom");
+    const bottom = ruleBody("\\.VSKit-ai-chat-v2-composer-bottom");
     expect(bottom).toContain("min-height: 36px");
     expect(bottom).toContain("padding: 4px 8px");
 
     // Send + primary slots shrink to a 32px box.
-    for (const selector of ["\\.UnicDB-ai-chat-v2-send", "\\.UnicDB-ai-chat-v2-primary"]) {
+    for (const selector of ["\\.VSKit-ai-chat-v2-send", "\\.VSKit-ai-chat-v2-primary"]) {
       const body = ruleBody(selector);
       expect(body).toContain("width: 32px");
       expect(body).toContain("height: 32px");

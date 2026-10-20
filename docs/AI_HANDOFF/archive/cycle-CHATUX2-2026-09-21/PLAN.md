@@ -1,4 +1,4 @@
-# PLAN — CHATUX2-2026-09-21: AIChat composer/footer redesign + steering + transcript fixes
+# PLAN — 2026-09-21: AI chat composer/footer redesign + steering + transcript fixes
 
 ## §1 Intent
 
@@ -17,17 +17,10 @@ consecutive tool/reasoning steps render as one tree with dimmed reasoning.
 ## §2 Scope
 
 **In scope (4 tasks):**
-- TASK-CHATUX2-001 — footer removal + header stats + all tree-step CSS:
-  `shell.ts`, `styles.css`, `aiChatPanelMain.ts` (+ `shell.test.ts`,
-  `shellGrid.test.ts`, `src/ui/__tests__/aiChatPanel.test.ts`).
-- TASK-CHATUX2-002 — steer queue core (pure/view): `keyboard.ts`,
-  `store.ts`, `composer.ts` (+ `keyboard.test.ts`, `store.test.ts`,
-  `composer.test.ts`).
-- TASK-CHATUX2-003 — tree `data-tree` marking: `transcript.ts`
-  (+ `transcript.test.ts`).
-- TASK-CHATUX2-004 — steer wiring + overlap cutover: `controller.ts`,
-  `activity.ts`, `styles.css` (+ `controller.test.ts`,
-  `controllerSurfaces.test.ts`, `activity.test.ts`, `shellGrid.test.ts`).
+- TASK-001 — footer removal + header stats + tree-step CSS: `shell.ts`, `styles.css`, `aiChatPanelMain.ts` and related tests.
+- TASK-002 — steer queue core: `keyboard.ts`, `store.ts`, `composer.ts` and related tests.
+- TASK-003 — tree `data-tree` marking: `transcript.ts` and its tests.
+- TASK-004 — steer wiring + overlap cutover: `controller.ts`, `activity.ts`, `styles.css` and related tests.
 
 **Out of scope:** host/protocol changes (`src/ui/aiChatPanel.ts`,
 `aiChatPanelMessages.ts`), engine mid-turn injection (does not exist —
@@ -87,8 +80,8 @@ version bump/publish.
 | edge (invalid input) | Enter busy + unresolved context / blank draft | `native` — no queue of a blocked/empty draft |
 | edge (lifecycle) | steer during `stopping`; session reset | queued; flushes after close; queue cleared on session reset |
 | regression | mounted controller → transcript children | zero `-activity-*` nodes; each tool id = one `[data-chat-key]` node; `#thread` not a scroller |
-| regression | `applyUsage` target | writes into `#UnicDB-ai-chat-v2-usage`, never appends to root |
-| regression | `applyEngineState` target | writes into `#UnicDB-ai-chat-v2-engine-state`, never appends to root |
+| regression | usage target | writes into the header usage span, never appends to root |
+| regression | engine-state target | writes into the header engine-state span, never appends to root |
 | regression | `activity.ts` exports only pure helpers | no `createActivityTimeline`/`ChatActivityRefs`/`ActivityTimeline` exports; `phaseCopyLabel`/`mapToolState`/`toolStateLabel`/`formatDuration`/`deriveEngineState`/`engineStateLabel`/`isActivePhase` remain (activity.test.ts pruned to pure-helper tests) |
 
 ## §5 Verification
@@ -116,8 +109,8 @@ wave-boundary net per RULES.md.)
       `-hint` element+rule deleted; footnote inside composer with the
       exact hint copy.
 - [ ] `#usageChip`/`#engineLifecycle` render inside header spans
-      (`#UnicDB-ai-chat-v2-usage`, `#UnicDB-ai-chat-v2-engine-state`);
-      `applyUsage`/`applyEngineState` never append to `#UnicDB-root`.
+      (`#VSKit-ai-chat-v2-usage`, `#VSKit-ai-chat-v2-engine-state`);
+      `applyUsage`/`applyEngineState` never append to `#VSKit-root`.
 - [ ] Enter while busy on a valid draft → `steer` → `STEER_ENQUEUED`;
       `turn_finished` drains FIFO via `submit_turn`; cap 8 → `steer`
       decision + `STEER_ENQUEUED` no-op (draft kept, no newline).
@@ -130,7 +123,7 @@ wave-boundary net per RULES.md.)
 
 ## §7 Global Constraints
 
-- VS Code theme tokens / existing `--UnicDB-ai-chat-v2-*` vars only — no
+- VS Code theme tokens / existing `--VSKit-ai-chat-v2-*` vars only — no
   hard-coded colors.
 - `textContent` only for all new text — no `innerHTML`.
 - No new dependencies; no new wire message kinds; no version bump/publish.
@@ -154,12 +147,12 @@ nested `#thread` scroller); if a third cause exists it will surface in
 manual visual verification (CHAT_V2_SCREENSHOT_FIXTURES).
 
 ## Planner Report
-PLANNER_MODEL: devin/swe-2 (handoff-planner agent; strong-tier unavailable on this gateway — content self-audited 14/14) — substitution reviewed and accepted by unic-smart plan review, Round 1 (2026-09-21)
-PLAN_REVIEW: Round 1 Issues Found → findings applied 2026-09-21 (see Plan Review Log)
+PLANNER_MODEL: planner agent; content self-audited and reviewed.
+PLAN_REVIEW: Round 1 issues were applied 2026-09-21 (see Plan Review Log).
 
 ## Plan Review Log
 
-### Round 1 — 2026-09-21 · unic-smart
+### Round 1 — 2026-09-21
 Status: Issues Found
 
 COMPLETENESS:

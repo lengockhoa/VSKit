@@ -29,7 +29,7 @@ import {
 } from "../sessions";
 import type { AiChatHostFrameV2 } from "../../../src/ui/aiChatPanelMessages";
 
-const PREFIX = "UnicDB-ai-chat-v2";
+const PREFIX = "VSKit-ai-chat-v2";
 const NATIVE_RESUME_LABEL = RESUME_PICKER_LABEL;
 
 const STYLES = readFileSync(resolve(process.cwd(), "webview", "aiChat", "styles.css"), "utf8");
@@ -150,7 +150,7 @@ describe("CHATV2-015 #5 — overflow menu", () => {
 
   it("rows are >=40px and dialogs declare modal semantics in CSS/source", () => {
     // Row height is a CSS contract (jsdom cannot prove layout).
-    expect(STYLES).toMatch(/\.UnicDB-ai-chat-v2-menu-row[\s\S]*?min-height:\s*(4[0-9]|[5-9][0-9])px/);
+    expect(STYLES).toMatch(/\.VSKit-ai-chat-v2-menu-row[\s\S]*?min-height:\s*(4[0-9]|[5-9][0-9])px/);
     controller.openExportDialog();
     const d = dialog()!;
     expect(d.getAttribute("role")).toBe("dialog");
@@ -202,7 +202,7 @@ describe("CHATV2-015 #5 — new / clear confirmations", () => {
   it("Clear states it clears only the current transcript and never deletes siblings", () => {
     controller.openMenu();
     menuRows().find((r) => r.textContent === "Clear")!.click();
-    expect(dialog()!.textContent).toContain("other saved UnicDB chats are kept");
+    expect(dialog()!.textContent).toContain("other saved VSKit chats are kept");
     dialogButtons().find((b) => b.textContent === "Clear transcript")!.click();
     const clearCall = recorder.calls.find((c) => c.kind === "clear");
     expect(clearCall).toBeDefined();
@@ -268,12 +268,12 @@ describe("CHATV2-015 #5 — inline rename", () => {
 // ---------------------------------------------------------------------------
 
 describe("CHATV2-015 #5/#7 — resume picker", () => {
-  it("labels the picker as a saved UnicDB chat and never claims native resume", () => {
+  it("labels the picker as a saved VSKit chat and never claims native resume", () => {
     controller.openResumePicker();
     expect(recorder.calls.some((c) => c.kind === "list")).toBe(true);
     const d = dialog()!;
     expect(d.getAttribute("aria-label")).toBe(NATIVE_RESUME_LABEL);
-    expect(NATIVE_RESUME_LABEL).toBe("Resume saved UnicDB chat");
+    expect(NATIVE_RESUME_LABEL).toBe("Resume saved VSKit chat");
     expect(d.textContent).toContain(NATIVE_RESUME_DISCLAIMER);
     expect(d.dataset["nativeResume"]).toBe("false");
   });

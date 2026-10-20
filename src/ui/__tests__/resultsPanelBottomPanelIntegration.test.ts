@@ -3,7 +3,7 @@
 // `resultsPanelViewProvider.test.ts` (TASK-RP-001) and
 // `resultsPanelViewManifest.test.ts` (TASK-RP-003), prove the SQL Results
 // home lives in the bottom panel — never the editor area — and that the
-// `UnicDB.resultsPlacement` setting is fully gone.
+// `VSKit.resultsPlacement` setting is fully gone.
 //
 // What this file adds on top of the two upstream suites:
 //   * case 1 — raw source scan of resultsPanel.ts: after stripping
@@ -61,7 +61,7 @@ class FakeWebviewView {
   webview = new FakeWebview();
   description: string | undefined;
   title: string | undefined;
-  viewType = "UnicDB.results";
+  viewType = "VSKit.results";
   visible = true;
   /** Disposable spy for the view's dispose(). */
   dispose = vi.fn();
@@ -244,28 +244,28 @@ describe("TASK-RP-004 — Bottom-panel regression net", () => {
 
     // Sanity: the legacy `show()` no longer takes a `placement` arg and
     // does not call `vscode.window.createWebviewPanel`. The actual code
-    // path is a one-liner `executeCommand("UnicDB.results.focus")`.
-    expect(code).toContain('executeCommand("UnicDB.results.focus")');
+    // path is a one-liner `executeCommand("VSKit.results.focus")`.
+    expect(code).toContain('executeCommand("VSKit.results.focus")');
   });
 
   // ---- Case 2 — regression (manifest scan) -----------------------------
   it("case 2: package.json has a panel container, the onView activation event, and zero placement config", () => {
     const { raw, json } = loadManifest();
 
-    // 2a — panel container declared with id "UnicDB-results".
+    // 2a — panel container declared with id "VSKit-results".
     const containers = json.contributes.viewsContainers ?? {};
     const panelContainerList = containers.panel as
       | Array<Record<string, unknown>>
       | undefined;
     expect(Array.isArray(panelContainerList)).toBe(true);
     const panelContainer = panelContainerList?.find(
-      (c) => c.id === "UnicDB-results",
+      (c) => c.id === "VSKit-results",
     );
     expect(panelContainer).toBeDefined();
 
     // 2b — activation event is present.
     expect(Array.isArray(json.activationEvents)).toBe(true);
-    expect(json.activationEvents).toContain("onView:UnicDB.results");
+    expect(json.activationEvents).toContain("onView:VSKit.results");
 
     // 2c — the `resultsPlacement` token does NOT exist anywhere in the
     // raw manifest (covers descriptions, command titles, accidental
@@ -276,7 +276,7 @@ describe("TASK-RP-004 — Bottom-panel regression net", () => {
     // (JSON.parse-level double-check on top of the raw scan).
     const props =
       json.contributes.configuration?.properties ?? {};
-    expect("UnicDB.resultsPlacement" in props).toBe(false);
+    expect("VSKit.resultsPlacement" in props).toBe(false);
   });
 
   // ---- Case 3 — happy end-to-end render --------------------------------
@@ -369,7 +369,7 @@ describe("TASK-RP-004 — Bottom-panel regression net", () => {
     // container's built-in focus command.
     expect(execMock).toHaveBeenCalledTimes(2);
     const focusCalls = execMock.mock.calls.filter(
-      (c) => c[0] === "UnicDB.results.focus",
+      (c) => c[0] === "VSKit.results.focus",
     );
     expect(focusCalls).toHaveLength(2);
 
@@ -380,15 +380,15 @@ describe("TASK-RP-004 — Bottom-panel regression net", () => {
       | Array<Record<string, unknown>>
       | undefined;
     const container = panelContainerList?.find(
-      (c) => c.id === "UnicDB-results",
+      (c) => c.id === "VSKit-results",
     );
     expect(container).toBeDefined();
-    const views = json.contributes.views?.["UnicDB-results"] as
+    const views = json.contributes.views?.["VSKit-results"] as
       | Array<Record<string, unknown>>
       | undefined;
     expect(Array.isArray(views)).toBe(true);
     const derivedCommand = `${views![0]!.id}.focus`;
-    expect(derivedCommand).toBe("UnicDB.results.focus");
+    expect(derivedCommand).toBe("VSKit.results.focus");
     // The executed command matches the derived command for every call.
     for (const call of focusCalls) {
       expect(call[0]).toBe(derivedCommand);
@@ -405,14 +405,14 @@ describe("TASK-RP-004 — Bottom-panel regression net", () => {
     } as unknown as vscode.Uri);
 
     const viewId = ResultsPanel.viewId;
-    expect(viewId).toBe("UnicDB.results");
+    expect(viewId).toBe("VSKit.results");
 
     vscode.window.registerWebviewViewProvider(viewId, panel);
     const captured = registeredProviders[registeredProviders.length - 1]!;
     expect(captured.viewId).toBe(viewId);
 
     const { json } = loadManifest();
-    const manifestViews = json.contributes.views?.["UnicDB-results"] as
+    const manifestViews = json.contributes.views?.["VSKit-results"] as
       | Array<Record<string, unknown>>
       | undefined;
     expect(Array.isArray(manifestViews)).toBe(true);
@@ -420,7 +420,7 @@ describe("TASK-RP-004 — Bottom-panel regression net", () => {
 
     // View focus command (`<viewId>.focus`) is what `show()` executes —
     // VS Code registers focus commands per view, not per container.
-    expect(`${manifestViews![0]!.id}.focus`).toBe("UnicDB.results.focus");
+    expect(`${manifestViews![0]!.id}.focus`).toBe("VSKit.results.focus");
   });
 
   // ---- Case 6 — regression (stale buffer overwrite) ---------------------

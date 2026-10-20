@@ -8,8 +8,8 @@
 //   - `buildBrowseSelect(driver, schema, table)` — pure per-dialect SELECT builder
 //     using identifier-appropriate quoting + doubling (pg: ", mysql: `, mssql: []).
 //     Empty schema → unqualified form (`"t"`, `` `t` ``, `[t]`).
-//   - `registerBrowseCommands(deps)` — registers `UnicDB.browseTableData` command
-//     against the schema-tree node argument contract: receives the whole UnicDBNode
+//   - `registerBrowseCommands(deps)` — registers `VSKit.browseTableData` command
+//     against the schema-tree node argument contract: receives the whole VSKitNode
 //     (with `.meta`) as `arguments[0]`, aligns the active connection if needed,
 //     drives `runner.run → panel.render` with the standard busy/run/render
 //     pipeline (no `confirmDangerousStatements` — generated SELECT, never
@@ -131,10 +131,10 @@ async function maybeGetAdapter(
 }
 
 /**
- * Register the `UnicDB.browseTableData` command.
+ * Register the `VSKit.browseTableData` command.
  *
  * Steps:
- *  1. Resolve the UnicDBNode arg (palette fallback → showInformationMessage).
+ *  1. Resolve the VSKitNode arg (palette fallback → showInformationMessage).
  *  2. Align the active connection if the node's conn differs.
  *  3. Build the per-dialect SELECT.
  *  4. TASK-007: apply qualifyKeywordTables via the active adapter
@@ -145,12 +145,12 @@ async function maybeGetAdapter(
 export function registerBrowseCommands(deps: RegisterBrowseDeps): void {
   const { mgr, runner, panel } = deps;
   vscode.commands.registerCommand(
-    "UnicDB.browseTableData",
+    "VSKit.browseTableData",
     async (arg?: unknown) => {
       const resolved = resolveBrowseNode(arg);
       if (!resolved) {
         void vscode.window.showInformationMessage(
-          "UnicDB: Browse Table Data — open a table node from the schema tree.",
+          "VSKit: Browse Table Data — open a table node from the schema tree.",
         );
         return;
       }
@@ -162,7 +162,7 @@ export function registerBrowseCommands(deps: RegisterBrowseDeps): void {
       // and return without touching busy state or the panel.
       if (runner.isRunning()) {
         void vscode.window.showInformationMessage(
-          "UnicDB: a query is already running. Please wait for it to finish, then browse again.",
+          "VSKit: a query is already running. Please wait for it to finish, then browse again.",
         );
         return;
       }
@@ -202,7 +202,7 @@ export function registerBrowseCommands(deps: RegisterBrowseDeps): void {
         panel.render(results, header);
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        void vscode.window.showErrorMessage(`UnicDB browseTableData failed: ${msg}`);
+        void vscode.window.showErrorMessage(`VSKit browseTableData failed: ${msg}`);
       } finally {
         panel.setBusy(false);
       }

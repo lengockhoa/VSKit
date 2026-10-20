@@ -21,7 +21,7 @@ import { afterEach, describe, expect, it, vi, type Mock } from "vitest";
 
 import { createCodeBlock, renderMarkdownInto } from "../markdown";
 
-const PREFIX = "UnicDB-ai-chat-v2";
+const PREFIX = "VSKit-ai-chat-v2";
 const COPY_LABEL = "Copy";
 const COPIED_LABEL = "Copied";
 const FAILED_LABEL = "Failed";

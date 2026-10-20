@@ -1,26 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-  <title>UnicDB Generate Commit — large blue U on sparkle frame</title>
-  <!--
-    Distinct from generic $(sparkle): four-point sparkle frame + bold blue
-    "U" monogram. The U is intentionally large (≈130% relative scale vs the
-    original sparkle-only icon) so it is the dominant element at 16x16
-    toolbar size. Frame uses currentColor so VS Code can theme it for
-    light/dark; the U stays UnicDB brand blue in both themes so the brand
-    mark is consistent.
-  -->
-  <!-- Sparkle frame (4-point star), slightly inset so the U has room to fill -->
+  <title>VSKit commit generation sparkle</title>
+  <!-- Generic four-point sparkle frame; no legacy monogram. -->
   <path
     d="M12 1.4 L13.5 8.4 L20.4 10.4 L13.5 12.4 L12 19.6 L10.5 12.4 L3.6 10.4 L10.5 8.4 Z"
     fill="currentColor"
-  />
-  <!--
-    Bold U monogram — drawn as a single closed path so the shape is crisp at
-    all sizes. Width ≈ 12 (was 9.6), height ≈ 15 (was 13.5), spanning the
-    vertical midline of the 24x24 viewBox.
-  -->
-  <path
-    d="M6 4 L6 14.5 C6 17.85 8.55 20.2 12 20.2 C15.45 20.2 18 17.85 18 14.5 L18 4 L14.6 4 L14.6 14.3 C14.6 16.1 13.55 17.15 12 17.15 C10.45 17.15 9.4 16.1 9.4 14.3 L9.4 4 Z"
-    fill="#1E88E5"
   />
 </svg>

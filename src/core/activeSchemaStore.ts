@@ -19,7 +19,7 @@
 //   - `set(id, "<name>")`            → pin to `<name>`. Fire onDidChange.
 //
 // Persistence:
-//   key   = `unicDb.activeSchema.<connectionId>`
+//   key   = `vskit.activeSchema.<connectionId>`
 //   value = "<name>" (string) or absent (no pin)
 //   store hydrated from existing keys at construction (matches the
 //   `SchemaFilterStore` discipline so a fresh store on a fresh window
@@ -30,7 +30,7 @@
 // `SchemaFilterStore` "no event on equal value" rule).
 import * as vscode from "vscode";
 
-const KEY_PREFIX = "unicDb.activeSchema.";
+const KEY_PREFIX = "vskit.activeSchema.";
 
 export interface ActiveSchemaChangeEvent {
   /** Connection id whose active schema changed. */

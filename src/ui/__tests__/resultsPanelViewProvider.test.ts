@@ -2,7 +2,7 @@
 // TASK-RP-001 — bottom-panel WebviewViewProvider conversion. 6 TDD cases
 // that lock the new shell: implement vscode.WebviewViewProvider, register
 // via vscode.window.registerWebviewViewProvider, never call
-// createWebviewPanel, and stop reading the UnicDB.resultsPlacement setting
+// createWebviewPanel, and stop reading the VSKit.resultsPlacement setting
 // or registering onDidChangeConfiguration.
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
@@ -35,7 +35,7 @@ class FakeWebviewView {
   webview = new FakeWebview();
   description: string | undefined;
   title: string | undefined;
-  viewType = "UnicDB.results";
+  viewType = "VSKit.results";
   visible = true;
   /** Disposable spy for the view's dispose(). */
   dispose = vi.fn();
@@ -312,7 +312,7 @@ describe("ResultsPanel — WebviewViewProvider shell (TASK-RP-001)", () => {
   });
 
   // ---- Case 4 — regression: show() focuses the bottom panel, not editor --
-  it("case 4: show() never creates an editor-area WebviewPanel; reveals via UnicDB.results.focus", () => {
+  it("case 4: show() never creates an editor-area WebviewPanel; reveals via VSKit.results.focus", () => {
     const runner = makeRunnerStub();
     const panel = new ResultsPanel({ runner });
 
@@ -326,7 +326,7 @@ describe("ResultsPanel — WebviewViewProvider shell (TASK-RP-001)", () => {
 
     expect(cwvpMock).not.toHaveBeenCalled();
     const focusCalls = execMock.mock.calls.filter(
-      (c) => c[0] === "UnicDB.results.focus",
+      (c) => c[0] === "VSKit.results.focus",
     );
     expect(focusCalls).toHaveLength(2);
   });

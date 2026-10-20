@@ -9,7 +9,7 @@
 // CONTRACT
 // - Focus NEVER leaves the textarea. The listbox is not focusable; the active
 //   row is announced through `aria-activedescendant` on the textarea, and the
-//   option ids are stable (`UnicDB-ai-chat-v2-ac-opt-<id>`).
+//   option ids are stable (`VSKit-ai-chat-v2-ac-opt-<id>`).
 // - All row copy is written with `textContent`. A descriptor is DATA: hostile
 //   text renders as text and can never create an element, an attribute or a
 //   class.
@@ -31,7 +31,7 @@ import {
 } from "./slash";
 
 /** The V2 root class every selector hangs off. */
-const ROOT_CLASS = "UnicDB-ai-chat-v2";
+const ROOT_CLASS = "VSKit-ai-chat-v2";
 
 /** Marker attribute that identifies the listbox without a class lookup. */
 export const AUTOCOMPLETE_LISTBOX_MARKER = "data-chat-autocomplete";
@@ -229,10 +229,10 @@ export function createAutocompleteView(options: AutocompleteViewOptions): Autoco
     list.setAttribute("aria-label", ariaLabel);
     list.dataset.rowHeight = String(AUTOCOMPLETE_ROW_HEIGHT_PX);
     // Geometry contract as custom properties; styles.css consumes them.
-    list.style.setProperty("--UnicDB-row-h", `${AUTOCOMPLETE_ROW_HEIGHT_PX}px`);
-    list.style.setProperty("--UnicDB-list-min", `${AUTOCOMPLETE_WIDTH_MIN}px`);
-    list.style.setProperty("--UnicDB-list-max", `${AUTOCOMPLETE_WIDTH_MAX}px`);
-    list.style.setProperty("--UnicDB-list-pad", `${AUTOCOMPLETE_VERTICAL_PADDING_PX}px`);
+    list.style.setProperty("--VSKit-row-h", `${AUTOCOMPLETE_ROW_HEIGHT_PX}px`);
+    list.style.setProperty("--VSKit-list-min", `${AUTOCOMPLETE_WIDTH_MIN}px`);
+    list.style.setProperty("--VSKit-list-max", `${AUTOCOMPLETE_WIDTH_MAX}px`);
+    list.style.setProperty("--VSKit-list-pad", `${AUTOCOMPLETE_VERTICAL_PADDING_PX}px`);
     // Align to the composer shell; the slash button is the visual origin when
     // it exists, so a pointer user sees the popover grow from the button.
     if (slashButton !== undefined) list.dataset.anchor = slashButton.id;

@@ -101,7 +101,7 @@ describe("statementErrorMarks", () => {
     expect(diags).toHaveLength(1);
     expect(diags[0].message).toBe("syntax error");
     expect(diags[0].severity).toBe(vscode.DiagnosticSeverity.Error);
-    expect(diags[0].source).toBe("UnicDB");
+    expect(diags[0].source).toBe("VSKit");
   });
 
   it("no-ops when failedIndex is out of range or statements empty", () => {

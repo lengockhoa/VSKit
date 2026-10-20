@@ -13,18 +13,18 @@ Mount the new semantic V2 skeleton and complete scoped design primitives without
 - `webview/aiChat/icons.ts` — new local SVG factory with closed icon names.
 - `webview/aiChat/styles.css` — new V2-only tokens/layout/component primitives.
 - `webview/aiChatPanelMain.ts` — mount V2 shell from existing esbuild entry.
-- `src/ui/aiChatPanel.ts` — root class becomes `UnicDB-chat UnicDB-ai-chat-v2` only during migration.
+- `src/ui/aiChatPanel.ts` — root class becomes `vskit-chat vskit-ai-chat-v2` only during migration.
 - `webview/aiChat/__tests__/shell.test.ts` — semantics and class-scope tests.
 - `src/ui/__tests__/aiChatPanelBundle.test.ts` — V2 bundle marker.
 
 ## Required Work / Exact Spec
-Create one `.UnicDB-ai-chat-v2` vertical grid: 40px header; conditional 28–40px banner; `minmax(0,1fr)` transcript viewport; conditional context strip max 72px; sticky composer area; 20px keyboard hint. Root padding 10px vertical/12px horizontal; transcript padding 8px horizontal with 16px turn gaps. Use `min-width:0`, `min-height:0` at every flex/grid overflow boundary.
+Create one `.vskit-ai-chat-v2` vertical grid: 40px header; conditional 28–40px banner; `minmax(0,1fr)` transcript viewport; conditional context strip max 72px; sticky composer area; 20px keyboard hint. Root padding 10px vertical/12px horizontal; transcript padding 8px horizontal with 16px turn gaps. Use `min-width:0`, `min-height:0` at every flex/grid overflow boundary.
 
-Header mount points: 16px product mark + `UnicDB AI`, session title, engine status pill, 32×32 overflow. Product mark is not clickable unless session list behavior exists. Add one `aria-live=polite` region and one `aria-live=assertive` error/permission region; both visually hidden, not `display:none`.
+Header mount points: 16px product mark + `VSKit AI`, session title, engine status pill, 32×32 overflow. Product mark is not clickable unless session list behavior exists. Add one `aria-live=polite` region and one `aria-live=assertive` error/permission region; both visually hidden, not `display:none`.
 
 Implement `createChatIcon(name,size): SVGSVGElement` using `createElementNS`; closed names: database, plug, ellipsis, plus, slash, chevron-down/right, file, selection, table, view, routine, schema, shield-check, shield-alert, arrow-up, stop-square, copy, edit, retry, check, x, warning, spinner. SVG has `viewBox=0 0 24 24`, currentColor, aria-hidden and cannot accept raw SVG/string markup.
 
-Styles use exact tokens/typography/radii/spacing/colors in PLAN §3. All selectors begin `.UnicDB-ai-chat-v2` except keyframes and visually-hidden utility specifically namespaced. No remote font, icon library, CSS framework, inline unsafe user-derived style, or global `.button/.chat` selector. At <420px hide optional visible labels via class while retaining `aria-label`; at <320px define two-row action grid. Controls minimum 32×32, send slot 40×40.
+Styles use exact tokens/typography/radii/spacing/colors in PLAN §3. All selectors begin `.vskit-ai-chat-v2` except keyframes and visually-hidden utility specifically namespaced. No remote font, icon library, CSS framework, inline unsafe user-derived style, or global `.button/.chat` selector. At <420px hide optional visible labels via class while retaining `aria-label`; at <320px define two-row action grid. Controls minimum 32×32, send slot 40×40.
 
 This task renders placeholders only—no duplicate production V1 controls/listeners. Existing functionality may remain temporarily delegated by adapter, but there must be one visible root tree. No visual claim is accepted from jsdom alone; create screenshot checklist fixture names for 320/420/768 dark/light/high contrast.
 
@@ -94,7 +94,7 @@ Verification Output:
     Test Files  3 passed (3)   Tests  55 passed (55)
   CMD2: npm run typecheck → tsc --noEmit, exit=0 (no output)
   CMD3: npm run compile → "esbuild: build complete", exit=0
-    emits dist/aiChatPanel.css (10.4kb, 136 .UnicDB-ai-chat-v2 occurrences)
+    emits dist/aiChatPanel.css (10.4kb, 136 .vskit-ai-chat-v2 occurrences)
   ADDITIONAL: full `npm test` = 286 files passed | 2 skipped, 4253 tests
     passed | 5 skipped. The 9-file chat webview regression suite
     (aiChatPanelWebview / Clone* / Task002 / Task005 / DbAware / SessionState /
@@ -108,10 +108,10 @@ Note: Two implementation decisions beyond the literal step list:
       and a CSS import makes esbuild error ("Cannot import … without an
       output path configured"). This keeps the stdout-bundling harness valid.
   (2) #thread nests INSIDE the shell's `transcript` mount point (the shell
-      mounts on #UnicDB-root) instead of the shell mounting inside #thread.
+      mounts on #vskit-root) instead of the shell mounting inside #thread.
       Mounting inside #thread shifted `thread.children[0]` and broke
       aiChatPanelWebview.test.ts:671 (notice-above-items). Nesting preserves
       every legacy `thread.children` assertion. Migration is otherwise inert:
-      the root class is now `UnicDB-chat UnicDB-ai-chat-v2`.
+  the root class is now `vskit-chat vskit-ai-chat-v2`.
   vitest.config.ts was widened to `webview/**/*.test.ts` (TASK-CHATV2-004's
   main-tree change, absent from this pre-wave-3 worktree base).

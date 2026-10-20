@@ -116,14 +116,14 @@ Claude Code `--print` exits after one turn; a clean exit (code 0) after a `resul
 
 RED_OUTPUT:
 ```
-RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-005
+RUN  v1.6.1 /workspace/.worktrees/task-005
 
  ❯ src/ai/claudeCode/__tests__/claudeCodeProcess.test.ts  (0 test)
 
 ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
 
  FAIL  src/ai/claudeCode/__tests__/claudeCodeProcess.test.ts [ src/ai/claudeCode/__tests__/claudeCodeProcess.test.ts ]
-Error: Failed to load url ../claudeCodeProcess (resolved id: ../claudeCodeProcess) in /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-005/src/ai/claudeCode/__tests__/claudeCodeProcess.test.ts. Does the file exist?
+Error: Failed to load url ../claudeCodeProcess (resolved id: ../claudeCodeProcess) in /workspace/.worktrees/task-005/src/ai/claudeCode/__tests__/claudeCodeProcess.test.ts. Does the file exist?
  ❯ loadAndTransform ../../node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
 
  Test Files  1 failed (1)
@@ -135,7 +135,7 @@ Error: Failed to load url ../claudeCodeProcess (resolved id: ../claudeCodeProces
 Verification Output:
 ```
 $ npx vitest run src/ai/claudeCode/__tests__/claudeCodeProcess.test.ts
- RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-005
+ RUN  v1.6.1 /workspace/.worktrees/task-005
 
  ✓ src/ai/claudeCode/__tests__/claudeCodeProcess.test.ts  (5 tests) 6ms
 
@@ -145,7 +145,7 @@ $ npx vitest run src/ai/claudeCode/__tests__/claudeCodeProcess.test.ts
    Duration  178ms
 
 $ npm run typecheck
-> UnicDB@1.53.23 typecheck
+> Extension@1.53.23 typecheck
 > tsc --noEmit
 (exit 0, no errors)
 ```

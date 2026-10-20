@@ -11,7 +11,7 @@
 import * as vscode from "vscode";
 import { alwaysQuote } from "../core/ddl/alterTable";
 
-const PANEL_ID = "UnicDB.schemaForm";
+const PANEL_ID = "VSKit.schemaForm";
 
 /** Identifier shape: PG bare identifier (no quoting). */
 const IDENT_RE = /^[A-Za-z_][A-Za-z0-9_$]*$/;
@@ -210,10 +210,10 @@ export class SchemaForm {
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy" content="${csp}" />
   <link rel="stylesheet" href="${styleUri}" />
-  <title>UnicDB Create Schema</title>
+  <title>VSKit Create Schema</title>
 </head>
-<body class="UnicDB-form-body">
-  <div id="UnicDB-root" class="UnicDB-form"></div>
+<body class="VSKit-form-body">
+  <div id="VSKit-root" class="VSKit-form"></div>
   <script src="${scriptUri}"></script>
 </body>
 </html>`;

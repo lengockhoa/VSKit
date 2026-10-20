@@ -4,8 +4,8 @@
 // Quy tắc lưu trữ:
 //   - Metadata (name/driver/host/port/user/database/ssl) → Memento
 //     workspaceState nếu có workspace mở, globalState nếu không (design §8).
-//   - Password → SecretStorage với key `UnicDB.pass.<id>`.
-//   - Active connection id → Memento `UnicDB.activeConnection` (cùng scope với metadata).
+//   - Password → SecretStorage với key `VSKit.pass.<id>`.
+//   - Active connection id → Memento `VSKit.activeConnection` (cùng scope với metadata).
 //
 // Test-connect: gọi adapter.testConnection() trước khi lưu (add/edit). Fail → throw, không lưu.
 //
@@ -30,9 +30,9 @@ import type { TunnelExit } from "./sshTunnelManager";
 import { withSchemaSearchPath } from "./schemaEnforce";
 import type { ActiveSchemaStore } from "./activeSchemaStore";
 
-const KEY_CONNECTIONS = "UnicDB.connections";
-const KEY_ACTIVE = "UnicDB.activeConnection";
-const KEY_PASS_PREFIX = "UnicDB.pass.";
+const KEY_CONNECTIONS = "VSKit.connections";
+const KEY_ACTIVE = "VSKit.activeConnection";
+const KEY_PASS_PREFIX = "VSKit.pass.";
 
 /** 10 phút idle. */
 const IDLE_TIMEOUT_MS = 10 * 60 * 1000;
@@ -188,7 +188,7 @@ export class ConnectionManager {
    *
    * TASK-BQ01-003 — BigQuery is password-less. `tryStorePassword` /
    * `tryGetPassword` / `tryDeletePassword` are SKIPPED entirely for
-   * `driver === "bigquery"`: no `UnicDB.pass.<id>` SecretStorage key is ever
+   * `driver === "bigquery"`: no `VSKit.pass.<id>` SecretStorage key is ever
    * created, queried, or deleted on the bigquery path. ADC is fetched
    * externally by the BigQuery adapter (BQ-00 boundary).
    */
@@ -827,7 +827,7 @@ export class ConnectionManager {
    *
    * The wrap reads the pin DYNAMICALLY on every `runQuery` call (NOT at
    * construction time) so a user picking a new schema via the
-   * `UnicDB.selectActiveSchema` command takes effect on the very next
+   * `VSKit.selectActiveSchema` command takes effect on the very next
    * run — no need to reconnect or rebuild the adapter. The pin lookup
    * is a Map.get (microsecond); the prepend is a single string concat.
    *

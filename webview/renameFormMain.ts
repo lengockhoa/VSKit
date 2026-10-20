@@ -32,7 +32,7 @@ let state: State = {
   approved: false,
 };
 
-const root = document.getElementById("UnicDB-root") as HTMLDivElement;
+const root = document.getElementById("VSKit-root") as HTMLDivElement;
 
 // ---- DOM helpers (textContent only — CSP/scaffold safe) --------------------
 
@@ -48,7 +48,7 @@ function el(
 }
 
 function line(e: HTMLElement, text: string): void {
-  e.appendChild(el("div", "UnicDB-rename-line", text));
+  e.appendChild(el("div", "VSKit-rename-line", text));
 }
 
 function humanLabelForStep(kind: string): string {
@@ -77,35 +77,35 @@ function humanLabelForStep(kind: string): string {
 
 function renderInit(): void {
   root.textContent = "";
-  const form = el("div", "UnicDB-rename-form");
+  const form = el("div", "VSKit-rename-form");
 
   const title = el(
     "h2",
-    "UnicDB-rename-title",
+    "VSKit-rename-title",
     `Rename ${state.mode} — ${state.schema}.${state.table}`,
   );
   form.appendChild(title);
 
-  const row = el("div", "UnicDB-rename-row");
+  const row = el("div", "VSKit-rename-row");
   row.appendChild(
-    el("label", "UnicDB-rename-label", `New ${state.mode} name for "${state.oldName}":`),
+    el("label", "VSKit-rename-label", `New ${state.mode} name for "${state.oldName}":`),
   );
-  const input = el("input", "UnicDB-rename-input") as HTMLInputElement;
+  const input = el("input", "VSKit-rename-input") as HTMLInputElement;
   input.type = "text";
-  input.id = "UnicDB-rename-input";
+  input.id = "VSKit-rename-input";
   input.value = state.oldName;
   row.appendChild(input);
   form.appendChild(row);
 
-  const analyzeBtn = el("button", "UnicDB-rename-analyze", "Analyze");
-  analyzeBtn.id = "UnicDB-rename-analyze";
+  const analyzeBtn = el("button", "VSKit-rename-analyze", "Analyze");
+  analyzeBtn.id = "VSKit-rename-analyze";
   analyzeBtn.addEventListener("click", () => {
     post({ type: "analyze", newName: input.value });
   });
   form.appendChild(analyzeBtn);
 
-  const approveBtn = el("button", "UnicDB-rename-approve", "Approve & Run");
-  approveBtn.id = "UnicDB-rename-approve";
+  const approveBtn = el("button", "VSKit-rename-approve", "Approve & Run");
+  approveBtn.id = "VSKit-rename-approve";
   approveBtn.disabled = true; // enabled only after a clean analysis
   approveBtn.addEventListener("click", () => {
     state.approved = true;
@@ -113,20 +113,20 @@ function renderInit(): void {
   });
   form.appendChild(approveBtn);
 
-  const cancelBtn = el("button", "UnicDB-rename-cancel", "Cancel");
-  cancelBtn.id = "UnicDB-rename-cancel";
+  const cancelBtn = el("button", "VSKit-rename-cancel", "Cancel");
+  cancelBtn.id = "VSKit-rename-cancel";
   cancelBtn.addEventListener("click", () => {
     post({ type: "cancel" });
-    form.appendChild(el("div", "UnicDB-rename-status", "Cancelling…"));
+    form.appendChild(el("div", "VSKit-rename-status", "Cancelling…"));
   });
   form.appendChild(cancelBtn);
 
-  const analysis = el("div", "UnicDB-rename-analysis");
-  analysis.id = "UnicDB-rename-analysis";
+  const analysis = el("div", "VSKit-rename-analysis");
+  analysis.id = "VSKit-rename-analysis";
   form.appendChild(analysis);
 
-  const progress = el("div", "UnicDB-rename-progress");
-  progress.id = "UnicDB-rename-progress";
+  const progress = el("div", "VSKit-rename-progress");
+  progress.id = "VSKit-rename-progress";
   form.appendChild(progress);
 
   root.appendChild(form);
@@ -153,13 +153,13 @@ interface AnalysisPayload {
 
 function renderAnalysis(payload: AnalysisPayload): void {
   const box = document.getElementById(
-    "UnicDB-rename-analysis",
+    "VSKit-rename-analysis",
   ) as HTMLDivElement | null;
   if (!box) return;
   box.textContent = "";
 
   const approveBtn = document.getElementById(
-    "UnicDB-rename-approve",
+    "VSKit-rename-approve",
   ) as HTMLButtonElement | null;
 
   if (payload.errors.length > 0) {
@@ -190,8 +190,8 @@ function renderAnalysis(payload: AnalysisPayload): void {
   }
   for (const c of r.collisions) line(box, `Collision: ${c}`);
 
-  const steps = el("div", "UnicDB-rename-steps");
-  steps.id = "UnicDB-rename-steps";
+  const steps = el("div", "VSKit-rename-steps");
+  steps.id = "VSKit-rename-steps";
   for (const s of payload.steps) {
     if (s.executable) {
       line(steps, `${humanLabelForStep(s.kind)}: ${s.statement}`);
@@ -212,7 +212,7 @@ interface ProgressPayload {
 
 function renderProgress(payload: ProgressPayload): void {
   const box = document.getElementById(
-    "UnicDB-rename-progress",
+    "VSKit-rename-progress",
   ) as HTMLDivElement | null;
   if (!box) return;
   box.textContent = "";
@@ -232,7 +232,7 @@ interface DonePayload {
 
 function renderDone(payload: DonePayload): void {
   const box = document.getElementById(
-    "UnicDB-rename-progress",
+    "VSKit-rename-progress",
   ) as HTMLDivElement | null;
   if (!box) return;
   box.textContent = "";

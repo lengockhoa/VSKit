@@ -160,16 +160,16 @@ no consumer is forbidden (`PLAN.md:86`).
 | `#modelChipBtn` | `webview/__tests__/aiChatPanelComposer.test.ts:154` | replace test (CHATV2-012) |
 | `#modelChipMenu` | `src/ui/__tests__/aiChatPanelCloneWebview.test.ts:206` | replace test (CHATV2-012) |
 | `#bypassToggle` | `webview/__tests__/aiChatPanelComposer.test.ts:129` | replace test (CHATV2-014) |
-| `.UnicDB-chat-chipmenu` | `webview/__tests__/aiChatPanelComposer.test.ts:179` | delete at CHATV2-017 |
-| `.UnicDB-chat-actions-left` / `-right` | `webview/__tests__/aiChatPanelComposer.test.ts:230` | delete at CHATV2-017 |
+| `.chat-chipmenu` | `webview/__tests__/aiChatPanelComposer.test.ts:179` | delete at CHATV2-017 |
+| `.chat-actions-left` / `-right` | `webview/__tests__/aiChatPanelComposer.test.ts:230` | delete at CHATV2-017 |
 | `#thread` | `src/ui/__tests__/aiChatPanelDbAwareWebview.test.ts:182` | preserve temporarily (CHATV2-006) |
 | `#jumpLatest` | `src/ui/__tests__/aiChatPanelWebviewTask002.test.ts:382` | preserve temporarily (CHATV2-016) |
 | `#engineBanner` | `webview/__tests__/aiChatPanelHeader.test.ts:61` | replace test (CHATV2-012) |
 | `#sessionChip` | `webview/__tests__/aiChatPanelHeader.test.ts:121` | replace test (CHATV2-015) |
 | `#chatBrandMark` | `webview/__tests__/aiChatPanelHeader.test.ts:42` | delete at CHATV2-017 |
 | `#attachFileInput` | `src/ui/__tests__/aiChatPanelWebviewTask002.test.ts:927` | replace test (CHATV2-013) |
-| `.UnicDB-chat-usage` | `webview/__tests__/aiChatPanelThread.test.ts:325` | preserve temporarily (CHATV2-007) |
-| `.UnicDB-chat` root rule | `src/ui/__tests__/aiChatPanelCloneCss.test.ts:66` | delete at CHATV2-017 (superseded by `.UnicDB-ai-chat-v2`) |
+| `.chat-usage` | `webview/__tests__/aiChatPanelThread.test.ts:325` | preserve temporarily (CHATV2-007) |
+| `.chat` root rule | `src/ui/__tests__/aiChatPanelCloneCss.test.ts:66` | delete at CHATV2-017 (superseded by `.ai-chat-v2`) |
 
 No selector in this table keeps a permanent compatibility shim: every row names either a
 replacement test, a temporary carry-over with a task, or CHATV2-017 deletion.
@@ -178,7 +178,7 @@ replacement test, a temporary carry-over with a task, or CHATV2-017 deletion.
 
 - esbuild webview entry remains `webview/aiChatPanelMain.ts` → `dist/aiChatPanel.js`
   (`esbuild.js:88`, `esbuild.js:89`).
-- Chat CSS remains scoped under `.UnicDB-chat` (`webview/styles.css:1104`) and is disjoint
+- Chat CSS remains scoped under `.chat` (`webview/styles.css:1104`) and is disjoint
   from the console/results webviews (`webview/main.ts:1765`).
 - No CDN, no UI framework, no new runtime dependency: package scripts
   (`package.json` scripts: `compile`, `test`, `typecheck`) are unchanged by this task, and no

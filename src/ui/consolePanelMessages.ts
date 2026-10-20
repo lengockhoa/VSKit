@@ -53,7 +53,7 @@ export type ConsoleToHostMessage =
   // type-only: the host ignores any extra payload, mirroring `historyList`.
   | { type: "clearDrafts" }
   // ACTIVE-SCHEMA chip — user clicked the schema chip in the console
-  // toolbar. The host re-runs `UnicDB.selectActiveSchema` for the
+  // toolbar. The host re-runs `VSKit.selectActiveSchema` for the
   // active connection; the store mutation re-broadcasts as a
   // `schemaChanged` message back to every webview.
   | { type: "pickActiveSchema" };
@@ -189,7 +189,7 @@ export function newTabId(): string {
 }
 
 /** Memento key for persisted query history. Capped at 200 entries by the host. */
-export const CONSOLE_HISTORY_KEY = "UnicDB.consoleHistory";
+export const CONSOLE_HISTORY_KEY = "VSKit.consoleHistory";
 
 /** Cap on persisted history entries — the 201st run evicts the oldest. */
 export const CONSOLE_HISTORY_CAP = 200;
@@ -197,7 +197,7 @@ export const CONSOLE_HISTORY_CAP = 200;
 // ---- ARP-08 — Persisted draft model (TASK-ARP08-001) -------------------------
 
 /** Memento key for persisted console drafts (all tabs + active tab). */
-export const CONSOLE_DRAFTS_KEY = "UnicDB.consoleDrafts";
+export const CONSOLE_DRAFTS_KEY = "VSKit.consoleDrafts";
 
 /** Snapshot schema version. `parse` rejects any other value (fail-closed). */
 export const CONSOLE_DRAFT_SNAPSHOT_VERSION = 1;

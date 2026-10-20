@@ -68,12 +68,12 @@ beforeAll(() => {
 const distPath = resolve(process.cwd(), "dist", "webview.js");
 const bundleSrc = existsSync(distPath) ? readFileSync(distPath, "utf8") : null;
 
-interface UnicDBGlobals {
+interface VSKitGlobals {
   gridApi?: GridApi;
   checkLoadMore?: () => void;
 }
 
-interface UnicDBApi {
+interface VSKitApi {
   postMessage: (msg: unknown) => void;
 }
 
@@ -89,16 +89,16 @@ function loadBundle(): {
     );
   }
 
-  document.body.innerHTML = '<div id="UnicDB-root" class="UnicDB-webview"></div>';
-  const root = document.getElementById("UnicDB-root") as HTMLDivElement;
+  document.body.innerHTML = '<div id="VSKit-root" class="VSKit-webview"></div>';
+  const root = document.getElementById("VSKit-root") as HTMLDivElement;
 
   const received: Array<Record<string, unknown>> = [];
-  const api: UnicDBApi = {
+  const api: VSKitApi = {
     postMessage: (msg) => {
       received.push(msg as Record<string, unknown>);
     },
   };
-  (globalThis as unknown as { acquireVsCodeApi: () => UnicDBApi }).acquireVsCodeApi =
+  (globalThis as unknown as { acquireVsCodeApi: () => VSKitApi }).acquireVsCodeApi =
     () => api;
 
   // The bundle is an IIFE — running it under jsdom installs globals + listeners.
@@ -112,8 +112,8 @@ function dispatchState(msg: Record<string, unknown>): void {
 }
 
 function getGridApi(): GridApi | null {
-  const w = window as unknown as { __UnicDB?: UnicDBGlobals };
-  return w.__UnicDB?.gridApi ?? null;
+  const w = window as unknown as { __VSKit?: VSKitGlobals };
+  return w.__VSKit?.gridApi ?? null;
 }
 
 function buildRows(count: number, cols: readonly string[]): unknown[][] {
@@ -185,7 +185,7 @@ describeIfBundle("webview/main.ts bundle (TASK-203)", () => {
     );
     void received;
 
-    const tabs = root.querySelectorAll(".UnicDB-tab");
+    const tabs = root.querySelectorAll(".VSKit-tab");
     expect(tabs.length).toBe(4);
 
     // TASK-UX2-002 — auto-open Messages when any error row is present.
@@ -196,10 +196,10 @@ describeIfBundle("webview/main.ts bundle (TASK-203)", () => {
     //   tabs[3] = statement[0] (SELECT — click here to verify 200-row grid)
     const messagesTab = tabs[0] as HTMLElement;
     expect(messagesTab.textContent ?? "").toMatch(/^Messages/);
-    expect(messagesTab.classList.contains("UnicDB-tab-active")).toBe(true);
+    expect(messagesTab.classList.contains("VSKit-tab-active")).toBe(true);
     (tabs[3] as HTMLElement).click();
 
-    const gridHost = root.querySelector(".UnicDB-grid-host");
+    const gridHost = root.querySelector(".VSKit-grid-host");
     expect(gridHost).toBeTruthy();
     expect(gridHost!.querySelector('[class*="ag-root"]')).toBeTruthy();
 
@@ -233,14 +233,14 @@ describeIfBundle("webview/main.ts bundle (TASK-203)", () => {
       }),
     );
     void received;
-    const input = root.querySelector(".UnicDB-search-input") as HTMLInputElement;
+    const input = root.querySelector(".VSKit-search-input") as HTMLInputElement;
     expect(input).toBeTruthy();
     input.value = "beta";
     input.dispatchEvent(new Event("input", { bubbles: true }));
     const api = getGridApi();
     expect(api).toBeTruthy();
     expect(api!.getDisplayedRowCount()).toBe(1);
-    const footer = root.querySelector(".UnicDB-grid-footer") as HTMLElement;
+    const footer = root.querySelector(".VSKit-grid-footer") as HTMLElement;
     expect(footer).toBeTruthy();
     expect(footer.textContent).toMatch(/1 of 3/);
   });
@@ -278,7 +278,7 @@ describeIfBundle("webview/main.ts bundle (TASK-203)", () => {
     });
     expect(api!.getSelectedRows().length).toBe(2);
 
-    const gridHost = root.querySelector(".UnicDB-grid-host") as HTMLElement;
+    const gridHost = root.querySelector(".VSKit-grid-host") as HTMLElement;
     expect(gridHost).toBeTruthy();
     const ev = new KeyboardEvent("keydown", {
       key: "c",
@@ -387,7 +387,7 @@ describeIfBundle("webview/main.ts bundle (TASK-203)", () => {
     expect(api).toBeTruthy();
     expect(api!.getDisplayedRowCount()).toBe(500);
 
-    const hook = (window as unknown as { __UnicDB?: UnicDBGlobals }).__UnicDB?.checkLoadMore;
+    const hook = (window as unknown as { __VSKit?: VSKitGlobals }).__VSKit?.checkLoadMore;
     if (typeof hook === "function") hook();
     const loadMoreCount = received.filter((m) => m.type === "loadMore").length;
     expect(loadMoreCount).toBe(1);
@@ -456,10 +456,10 @@ describeIfBundle("webview/main.ts bundle (TASK-203)", () => {
       }),
     );
     void received;
-    const tabs = root.querySelectorAll(".UnicDB-tab");
+    const tabs = root.querySelectorAll(".VSKit-tab");
     (tabs[1] as HTMLElement).click();
     await new Promise((resolve) => setTimeout(resolve, 10));
-    const ok = root.querySelector(".UnicDB-ok-message") as HTMLElement;
+    const ok = root.querySelector(".VSKit-ok-message") as HTMLElement;
     expect(ok).toBeTruthy();
     expect(ok.textContent).toContain("✓ INSERT");
     expect(ok.textContent).toContain("1 row affected");
@@ -485,21 +485,21 @@ describeIfBundle("webview/main.ts bundle (TASK-203)", () => {
     // first, then statements in reverse-chrono:
     //   tabs[0] = Messages (AUTO-ACTIVE due to error)
     //   tabs[1] = statement[0] (the failing SELECT) — click here to see card.
-    const tabs = root.querySelectorAll(".UnicDB-tab");
+    const tabs = root.querySelectorAll(".VSKit-tab");
     expect(tabs.length).toBe(2);
     const messagesTab = tabs[0] as HTMLElement;
     expect(messagesTab.textContent ?? "").toMatch(/^Messages/);
-    expect(messagesTab.classList.contains("UnicDB-tab-active")).toBe(true);
+    expect(messagesTab.classList.contains("VSKit-tab-active")).toBe(true);
     (tabs[1] as HTMLElement).click();
 
     // The error card renders the verbatim pg error text under
-    // .UnicDB-ddl-card-error-text (TASK-UX1-010 surface).
-    const err = root.querySelector(".UnicDB-ddl-card-error-text") as HTMLElement;
+    // .VSKit-ddl-card-error-text (TASK-UX1-010 surface).
+    const err = root.querySelector(".VSKit-ddl-card-error-text") as HTMLElement;
     expect(err).toBeTruthy();
     expect(err.textContent).toContain("table not found");
   });
 
-  itIfBundle("8. regression (CRITICAL 1) — after second render cycle, .UnicDB-grid-host still contains .ag-root and rows reflect latest state", () => {
+  itIfBundle("8. regression (CRITICAL 1) — after second render cycle, .VSKit-grid-host still contains .ag-root and rows reflect latest state", () => {
     // Reproduces the bug R4.5 reviewer flagged: render() wiped the DOM root
     // on every message, detaching the AG Grid GUI after the first render.
     // After a busy toggle + a state append, the live grid host must still
@@ -528,7 +528,7 @@ describeIfBundle("webview/main.ts bundle (TASK-203)", () => {
         ],
       }),
     );
-    const host1 = root.querySelector(".UnicDB-grid-host") as HTMLElement;
+    const host1 = root.querySelector(".VSKit-grid-host") as HTMLElement;
     expect(host1).toBeTruthy();
     expect(host1.querySelector('[class*="ag-root"]')).toBeTruthy();
     expect(getGridApi()!.getDisplayedRowCount()).toBe(3);
@@ -537,7 +537,7 @@ describeIfBundle("webview/main.ts bundle (TASK-203)", () => {
     window.dispatchEvent(
       new MessageEvent("message", { data: { type: "busy", busy: true } }),
     );
-    const host2 = root.querySelector(".UnicDB-grid-host") as HTMLElement;
+    const host2 = root.querySelector(".VSKit-grid-host") as HTMLElement;
     expect(host2).toBeTruthy();
     expect(host2.querySelector('[class*="ag-root"]')).toBeTruthy();
     // Grid still mounted and still shows the same rows.
@@ -567,7 +567,7 @@ describeIfBundle("webview/main.ts bundle (TASK-203)", () => {
         ],
       }),
     );
-    const host3 = root.querySelector(".UnicDB-grid-host") as HTMLElement;
+    const host3 = root.querySelector(".VSKit-grid-host") as HTMLElement;
     expect(host3).toBeTruthy();
     expect(host3.querySelector('[class*="ag-root"]')).toBeTruthy();
     expect(getGridApi()!.getDisplayedRowCount()).toBe(4);
@@ -576,7 +576,7 @@ describeIfBundle("webview/main.ts bundle (TASK-203)", () => {
     window.dispatchEvent(
       new MessageEvent("message", { data: { type: "busy", busy: false } }),
     );
-    const host4 = root.querySelector(".UnicDB-grid-host") as HTMLElement;
+    const host4 = root.querySelector(".VSKit-grid-host") as HTMLElement;
     expect(host4).toBeTruthy();
     expect(host4.querySelector('[class*="ag-root"]')).toBeTruthy();
     expect(getGridApi()!.getDisplayedRowCount()).toBe(4);

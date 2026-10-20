@@ -8,4 +8,4 @@ Spec: docs/AI_HANDOFF/SPEC.md
 Plan: docs/AI_HANDOFF/PLAN.md
 Tasks: 4 total (TASK-CHATUX-001..004)
 Status: planning_done — ready for executor
-Next: run /ukit:handoff-implement — wave 1: TASK-CHATUX-001 ∥ TASK-CHATUX-002
+Next: run the handoff implementation workflow — wave 1: TASK-CHATUX-001 ∥ TASK-CHATUX-002

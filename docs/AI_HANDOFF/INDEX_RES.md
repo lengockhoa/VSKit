@@ -19,7 +19,7 @@ Prior cycle AGT-CLEANUP-2 (7/7 done) archived at `docs/AI_HANDOFF/INDEX_CLEAN2.m
 |------|-------|--------|------|-------|----------|
 | TASK-RES-001 | Webview: relocate WHERE/ORDER BY inputs into the toolbar; placeholder + Enter keydown handlers with IME-composition guard | done | none | webview/main.ts, webview/styles.css, src/ui/__tests__/webviewRequery.test.ts, src/ui/__tests__/webviewToolbar.test.ts | unic-smart |
 | TASK-RES-002 | Extension: `stripLeadingClauseKeyword` helper at the `handleRequery` message boundary (defensive contract enforcement) | done | none | src/ui/queryComposer.ts, src/ui/resultsPanel.ts, src/ui/__tests__/requeryClauseNormalize.test.ts (new), src/ui/__tests__/resultsPanelRequery.test.ts | unic-smart |
-| TASK-RES-003 | Webview wave 2: drop `btn.title` from `makeIconButton` + smooth hover `transition: background-color 80ms ease-out` on `.UnicDB-btn` | done | TASK-RES-001 (shares webview/main.ts + webview/styles.css) | webview/main.ts, webview/styles.css, src/ui/__tests__/webviewRequery.test.ts, src/ui/__tests__/webviewToolbar.test.ts | unic-smart |
+| TASK-RES-003 | Webview wave 2: drop `btn.title` from `makeIconButton` + smooth hover `transition: background-color 80ms ease-out` on `.extension-btn` | done | TASK-RES-001 (shares webview/main.ts + webview/styles.css) | webview/main.ts, webview/styles.css, src/ui/__tests__/webviewRequery.test.ts, src/ui/__tests__/webviewToolbar.test.ts | unic-smart |
 
 Waves: **wave 1 = TASK-RES-001 ∥ TASK-RES-002** (parallel, disjoint file sets: webview/* vs
 src/ui/{queryComposer,resultsPanel}.ts and disjoint test files). **wave 2 = TASK-RES-003**
@@ -31,5 +31,5 @@ skips DO NOT count as green) · full `npm test` GREEN at final closeout.
 
 Constraints: no version bump this cycle (maintainer folds into next release); the existing
 `requery` message discriminator is the only webview→extension contract (no new message
-type); no `transition: all` on `.UnicDB-btn` (RES-003); no change to the
+type); no `transition: all` on `.extension-btn` (RES-003); no change to the
 `data-tooltip` pseudo-element block at `webview/styles.css:78-115`.

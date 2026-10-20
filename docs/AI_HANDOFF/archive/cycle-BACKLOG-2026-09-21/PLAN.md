@@ -126,12 +126,12 @@ npm test   # full suite at wave boundary (regression net)
 - No `innerHTML` anywhere; markdown stays escape-first (textContent nodes).
 - Frozen strings live in the owning module as exported consts — tests import, never retype.
 - No new dependencies; no version bump; no publish steps inside tasks.
-- VS Code theme tokens / existing `--UnicDB-ai-chat-v2-*` vars only — no hard-coded colors.
+ - VS Code theme tokens / existing `--ai-chat-v2-*` vars only — no hard-coded colors.
 - jsdom compat: guard `requestAnimationFrame`/`ResizeObserver` with setTimeout fallbacks.
 
 ## Planner Report
-PLANNER_MODEL: unic-smart
-PLAN_REVIEW: Approved by unic-smart
+PLANNER_MODEL: [redacted]
+PLAN_REVIEW: Approved
 
 ## Planner Self-Audit
 Checklist: 14/14 pass
@@ -146,7 +146,7 @@ cross-task.
 
 ## Plan Review Log
 
-### Round 1 — 2026-09-21 · unic-smart
+### Round 1 — 2026-09-21 · planner
 Status: Issues Found
 
 COMPLETENESS:
@@ -186,7 +186,7 @@ the plan's silence there is acceptable.
 - §6: acceptance line now requires `npm run compile` green per SPEC §12.
 - Task files: GITMSG-001 gained the matching export-pin + mid-retry-cancel test rows; GITMSG-002's wiring source-scan row now names the manifest-guard expectation explicitly.
 
-### Round 2 — 2026-09-21 · unic-smart
+### Round 2 — 2026-09-21 · planner
 Status: Approved
 
 COMPLETENESS:

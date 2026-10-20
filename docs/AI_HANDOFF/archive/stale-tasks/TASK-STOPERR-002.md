@@ -16,7 +16,8 @@ each new run.
 
 - `src/ui/statementErrorMarks.ts` — NEW. Owns one `TextEditorDecorationType`
   (`textDecoration: "underline wavy"` + theme-aware `overviewRulerColor`/gutter tint) and
-  one `vscode.languages.createDiagnosticCollection("unicdb-run")`.
+  (`textDecoration: "underline wavy"` + theme-aware `overviewRulerColor`/gutter tint) and
+  one `vscode.languages.createDiagnosticCollection("extension-run")`.
 - `src/ui/__tests__/statementErrorMarks.test.ts` — NEW tests (mock vscode surface minimal:
   the file must keep vscode access injectable or the test provides a light `vi.mock`).
 
@@ -47,7 +48,7 @@ npm run compile
 - [ ] Module exports `createStatementErrorMarker()` → `{ mark, clear, dispose }`.
 - [ ] `mark(editor: vscode.TextEditor, statements: ParsedStatement[], failedIndex: number, message: string): void`
       decorates `editor.document.positionAt(stmt.start)..positionAt(stmt.end)` and publishes
-      a `Diagnostic` (severity Error, source "UnicDB") on the document URI.
+      a `Diagnostic` (severity Error, source "Extension") on the document URI.
 - [ ] `clear()` removes decorations + diagnostics; called by consumers at run start.
 - [ ] No regression; typecheck + compile clean.
 - [ ] Reviewer verdict APPROVED or APPROVED-WITH-MINOR.
@@ -102,7 +103,7 @@ $ npx vitest run src/ui/__tests__/statementErrorMarks.test.ts
       Tests  5 passed (5)
 
 $ npm run typecheck
-> UnicDB@1.54.1 typecheck
+> Extension@1.54.1 typecheck
 > tsc --noEmit
 (clean, exit 0)
 

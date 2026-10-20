@@ -12,13 +12,13 @@ Stabilize the V2 shell layout: keep the existing `40px auto minmax(0,1fr) auto a
 
 ## Target Files
 
-- `webview/aiChat/styles.css` — remove `width: 880px` from `.UnicDB-ai-chat-v2-item-text, .UnicDB-ai-chat-v2-item-reasoning` (~line 579); verify/normalize `-md-paragraph`/`md-heading` margins; confirm no `position: fixed` and no second `overflow-y: auto` scroll region; update stale comments.
+- `webview/aiChat/styles.css` — remove `width: 880px` from `.VSKit-ai-chat-v2-item-text, .VSKit-ai-chat-v2-item-reasoning` (~line 579); verify/normalize `-md-paragraph`/`md-heading` margins; confirm no `position: fixed` and no second `overflow-y: auto` scroll region; update stale comments.
 
 ## Test Cases (REQUIRED — TDD)
 
 | # | Type | Test name | Expected | Pre-state / Fixture |
 |---|------|-----------|----------|---------------------|
-| 1 | happy | `root grid keeps minmax(0,1fr) transcript track and transcript is the sole overflow-y:auto region` | styles.css contains `grid-template-rows: 40px auto minmax(0, 1fr) auto auto 20px`; exactly ONE `overflow-y: auto` inside `.UnicDB-ai-chat-v2-transcript` rule (context strip uses overflow-x only) | readFileSync styles.css |
+| 1 | happy | `root grid keeps minmax(0,1fr) transcript track and transcript is the sole overflow-y:auto region` | styles.css contains `grid-template-rows: 40px auto minmax(0, 1fr) auto auto 20px`; exactly ONE `overflow-y: auto` inside `.VSKit-ai-chat-v2-transcript` rule (context strip uses overflow-x only) | readFileSync styles.css |
 | 2 | edge (contract) | `no fixed positioning or fixed widths on message blocks` | zero `position: fixed` file-wide; the `-item-text`/`-item-reasoning` rule body contains NO `width:`/`max-inline-size` declaration and keeps `max-width: 92%`. Scan is scoped to that rule — `-error-card` `width: 880px` (:2650) + `max-width: 880px` (:2836) and `-change-plan` `max-inline-size: 880px` (:2512) are intentional and stay | readFileSync styles.css |
 | 3 | edge (spacing) | `Markdown spacing normalized` | `-md-paragraph` margin `0 0 8px`; `-md-heading` margin `12px 0 6px`; `-code` keeps `overflow-x: auto` + `white-space: pre` | readFileSync styles.css |
 
@@ -48,7 +48,7 @@ npm run compile
 ## Interfaces
 
 - Consumes: `(none)`
-- Produces: `styles.css` layout contract that TASK-CHATUX-003/004 build on — root grid rows `40px auto minmax(0,1fr) auto auto 20px`; `.UnicDB-ai-chat-v2-transcript` sole `overflow-y:auto`; `-item-text`/`-item-reasoning` `max-width: 92%` with NO fixed width.
+- Produces: `styles.css` layout contract that TASK-CHATUX-003/004 build on — root grid rows `40px auto minmax(0,1fr) auto auto 20px`; `.VSKit-ai-chat-v2-transcript` sole `overflow-y:auto`; `-item-text`/`-item-reasoning` `max-width: 92%` with NO fixed width.
 
 ---
 
@@ -74,7 +74,7 @@ Phase 4 reviewer appends `## Reviewer Verdict` BELOW the Executor Report.
 
 ### Summary
 
-Removed the fixed `width: 880px` from `.UnicDB-ai-chat-v2-item-text, .UnicDB-ai-chat-v2-item-reasoning` (styles.css:579) so assistant items size in normal flow under `max-width: 92%`, and updated the stale `max 880px/92%` comment to `max 92%`. Added the three TASK-CHATUX-001 contract tests to `shellGrid.test.ts` (root grid rows + sole `overflow-y:auto` transcript, no `position:fixed`/fixed widths on message blocks, normalized md spacing). Migrated the stale `transcript.test.ts` case that pinned `width: 880px` to assert the new contract (no `width:`/`max-inline-size`, keeps `max-width: 92%` + `padding: 4px 0`).
+Removed the fixed `width: 880px` from `.VSKit-ai-chat-v2-item-text, .VSKit-ai-chat-v2-item-reasoning` (styles.css:579) so assistant items size in normal flow under `max-width: 92%`, and updated the stale `max 880px/92%` comment to `max 92%`. Added the three TASK-CHATUX-001 contract tests to `shellGrid.test.ts` (root grid rows + sole `overflow-y:auto` transcript, no `position:fixed`/fixed widths on message blocks, normalized md spacing). Migrated the stale `transcript.test.ts` case that pinned `width: 880px` to assert the new contract (no `width:`/`max-inline-size`, keeps `max-width: 92%` + `padding: 4px 0`).
 
 ### RED_OUTPUT
 

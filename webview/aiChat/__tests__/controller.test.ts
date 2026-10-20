@@ -28,7 +28,7 @@ let controllers: ChatController[] = [];
 
 function makeHarness(): Harness {
   const root = document.createElement("div");
-  root.id = "UnicDB-root";
+  root.id = "VSKit-root";
   document.body.appendChild(root);
 
   const sent: Array<Record<string, unknown>> = [];

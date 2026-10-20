@@ -1,6 +1,6 @@
 // src/ui/helpGridPanel.ts
 //
-// TASK-OC4O-002 — UnicDB Help Grid panel. Singleton lifecycle mirroring
+// TASK-OC4O-002 — VSKit Help Grid panel. Singleton lifecycle mirroring
 // `ConsolePanel`: create on first `show()`, reveal on subsequent calls,
 // drop the singleton when the user closes it (AiChatPanel Finding 7
 // precedent). The webview renders a responsive grid of help cards; each
@@ -38,8 +38,8 @@ export class HelpGridPanel {
       return;
     }
     const panel = vscode.window.createWebviewPanel(
-      "UnicDB.helpGrid",
-      "UnicDB: Help",
+      "VSKit.helpGrid",
+      "VSKit: Help",
       vscode.ViewColumn.Active,
       {
         enableScripts: true,
@@ -80,10 +80,10 @@ export class HelpGridPanel {
 <meta charset="utf-8" />
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${csp} 'unsafe-inline'; script-src ${csp};" />
 <link rel="stylesheet" href="${styleUri}" />
-<title>UnicDB Help</title>
+<title>VSKit Help</title>
 </head>
 <body>
-<div id="UnicDB-help-root" data-cards="${safeCards}"></div>
+<div id="VSKit-help-root" data-cards="${safeCards}"></div>
 <script src="${scriptUri}"></script>
 </body>
 </html>`;
@@ -95,7 +95,7 @@ export class HelpGridPanel {
     if (m.type !== "runCommand") return;
     if (typeof m.commandId !== "string" || m.commandId.length === 0) return;
     if (
-      !m.commandId.startsWith("UnicDB.") &&
+      !m.commandId.startsWith("VSKit.") &&
       !m.commandId.startsWith("workbench.")
     ) {
       return;

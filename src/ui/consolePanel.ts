@@ -1,6 +1,6 @@
 // src/ui/consolePanel.ts
 // TASK-003 (cycle Z) — DataGrip-style SQL Console host panel: owns the
-//   `UnicDB.console` webview, validates every inbound message against the
+//   `VSKit.console` webview, validates every inbound message against the
 //   consolePanelMessages guard, routes valid runs to an injected callback
 //   (extension.ts delegates to the shared runStatements flow), and saves the
 //   buffer through the OS save dialog.
@@ -39,7 +39,7 @@ import {
   guardTier,
 } from "../core/dangerousStatement";
 
-const PANEL_ID = "UnicDB.console";
+const PANEL_ID = "VSKit.console";
 
 export interface ConsoleTabSpec {
   id: string;
@@ -92,7 +92,7 @@ export interface ConsolePanelOptions {
   /**
    * ACTIVE-SCHEMA chip — fired when the user clicks the schema chip in
    * the console toolbar. extension.ts wires this to
-   * `vscode.commands.executeCommand("UnicDB.selectActiveSchema", undefined)`
+   * `vscode.commands.executeCommand("VSKit.selectActiveSchema", undefined)`
    * (no argument → uses the active connection, same as the status-bar
    * chip). Optional so test doubles keep compiling — without it the
    * click is a no-op.
@@ -222,11 +222,11 @@ export class ConsolePanel {
         : vscode.ViewColumn.Active;
     this.panel = vscode.window.createWebviewPanel(
       PANEL_ID,
-      "UnicDB Console",
+      "VSKit Console",
       targetColumn,
       {
         enableScripts: true,
-        // Every existing UnicDB form/results panel retains context when hidden;
+        // Every existing VSKit form/results panel retains context when hidden;
         // Console keeps typing/scroll state across tab switches the same way.
         retainContextWhenHidden: true,
         localResourceRoots: [vscode.Uri.joinPath(this.extensionUri, "dist")],
@@ -670,7 +670,7 @@ export class ConsolePanel {
     // the user pressed Run and got zero feedback. Surface the no-op.
     if (!text || text.trim().length === 0) {
       void vscode.window.showInformationMessage(
-        "UnicDB: nothing selected to run — select SQL text first.",
+        "VSKit: nothing selected to run — select SQL text first.",
       );
       return;
     }
@@ -720,7 +720,7 @@ export class ConsolePanel {
       // Pure SELECT under EXPLAIN ANALYZE → still prompt because ANALYZE
       // executes the query.
       const picked = await vscode.window.showWarningMessage(
-        "UnicDB: EXPLAIN ANALYZE sẽ THỰC SỰ CHẠY câu lệnh (đo timing thật). Tiếp tục?",
+        "VSKit: EXPLAIN ANALYZE sẽ THỰC SỰ CHẠY câu lệnh (đo timing thật). Tiếp tục?",
         { modal: true },
         "Run",
       );
@@ -733,8 +733,8 @@ export class ConsolePanel {
     const isRed = tier === "red";
     const picked = await vscode.window.showWarningMessage(
       isRed
-        ? "UnicDB: EXPLAIN ANALYZE trên câu lệnh PHÁ HOẠI — sẽ XÓA DỮ LIỆU. Kiểm tra lại query!"
-        : "UnicDB: EXPLAIN ANALYZE trên câu lệnh nguy hiểm có điều kiện — chạy câu lệnh này?",
+        ? "VSKit: EXPLAIN ANALYZE trên câu lệnh PHÁ HOẠI — sẽ XÓA DỮ LIỆU. Kiểm tra lại query!"
+        : "VSKit: EXPLAIN ANALYZE trên câu lệnh nguy hiểm có điều kiện — chạy câu lệnh này?",
       { modal: true },
       isRed ? "Vẫn chạy (nguy hiểm)" : "Run",
     );
@@ -886,10 +886,10 @@ export class ConsolePanel {
   <meta http-equiv="Content-Security-Policy" content="${csp}" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="${styleUri}" />
-  <title>UnicDB Console</title>
+  <title>VSKit Console</title>
 </head>
-<body class="UnicDB-console-body">
-  <div id="UnicDB-root" class="UnicDB-console"></div>
+<body class="VSKit-console-body">
+  <div id="VSKit-root" class="VSKit-console"></div>
   <script src="${scriptUri}"></script>
 </body>
 </html>`;

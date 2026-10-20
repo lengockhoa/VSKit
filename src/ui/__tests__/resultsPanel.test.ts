@@ -32,7 +32,7 @@ class FakeWebviewView {
   visible = true;
   description: string | undefined;
   title: string | undefined;
-  viewType = "UnicDB.results";
+  viewType = "VSKit.results";
   /** True after dispose() fires once. The mock uses this to know when
    *  to re-resolve on the next focus call. */
   isDisposed = false;
@@ -115,16 +115,16 @@ vi.mock("vscode", () => {
         // NOTE: the mock does NOT auto-resolve at register time — VS Code
         // resolves the view lazily on first focus, so any `ready` handshake
         // POSTS the live `lastResults` (not an empty initial state). The
-        // `UnicDB.results.focus` executeCommand path below drives that.
+        // `VSKit.results.focus` executeCommand path below drives that.
         return { dispose: () => undefined };
       },
       showErrorMessage: vi.fn(async () => undefined),
     },
     commands: {
       executeCommand: vi.fn(async (cmd: string, ..._rest: unknown[]) => {
-        // The real `UnicDB.results.focus` triggers VS Code to resolve the
+        // The real `VSKit.results.focus` triggers VS Code to resolve the
         // provider's view if it isn't materialized yet — simulate that.
-        if (cmd === "UnicDB.results.focus") {
+        if (cmd === "VSKit.results.focus") {
           ensureResolved();
         }
         return undefined;
@@ -1065,7 +1065,7 @@ describe("ResultsPanel — TASK-RLX02-003 cancel path", () => {
 
     const errors = showErr.mock.calls.map((c) => String(c[0]));
     const noise = errors.find((m) =>
-      /UnicDB:|Load more failed:|UnicDB requery failed:/.test(m) &&
+      /VSKit:|Load more failed:|VSKit requery failed:/.test(m) &&
       /cancel/i.test(m),
     );
     expect(noise).toBeUndefined();

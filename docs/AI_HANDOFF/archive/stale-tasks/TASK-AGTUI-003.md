@@ -18,10 +18,10 @@ New pure-DOM webview module that builds the Claude Code–style header bar: larg
 
 | # | Type | Test name | Expected | Pre-state / Fixture |
 |---|------|----------|----------|---------------------|
-| 1 | happy | renders brand + title | `renderHeader()` returns element `.UnicDB-chat-header` containing `#chatBrandMark` with textContent exactly `"U"`, class `UnicDB-chat-brand`, `aria-hidden="true"`, `title="UnicDB"`; `setEngine("claude-code")` → banner text `Engine: Claude Code — streaming` (legacy format), banner element carries class `UnicDB-chat-engine UnicDB-chat-engine-claude-code`, static title node still `UnicDB AI` | empty jsdom document |
-| 2 | edge (malformed input) | unknown engine falls back | `setEngine("skynet")` → banner text `Engine: builtin — streaming` + banner class `builtin` (legacy `safeEngineLabel` whitelist fallback, never raw wire string in className/textContent); static title node remains `UnicDB AI` (static, never wire-derived) | unknown wire literal |
+| 1 | happy | renders header and title | `renderHeader()` returns element `.chat-header` containing `#chatBrandMark` with textContent exactly `"C"`, class `chat-mark`, `aria-hidden="true"`; `setEngine("claude-code")` → banner text `Engine: Claude Code — streaming`; banner has `chat-engine chat-engine-claude-code` classes and a neutral static title | empty jsdom document |
+| 2 | edge (malformed input) | unknown engine falls back | `setEngine("skynet")` → banner text `Engine: builtin — streaming` + banner class `builtin` (legacy `safeEngineLabel` whitelist fallback, never raw wire string in className/textContent); static title remains neutral | unknown wire literal |
 | 3 | edge (boundary) | optional version + absent version | `setEngine("omp","18.0.1")` → banner text contains `oh-my-pi (omp)` and `v18.0.1` (legacy label: `Engine: oh-my-pi (omp) v18.0.1 — streaming`); `setEngine("omp")` (no version) → no version fragment rendered (no stray "undefined") | two calls |
-| 4 | edge (state repeat) | session chip replaces, not appends | calling `setSessionState("connecting")` then `setSessionState("running")` leaves exactly ONE `#sessionChip` node; its `className` carries the LEGACY classes `UnicDB-chat-session UnicDB-chat-session-running` (state suffix swapped per call) PLUS the additional clone class `UnicDB-chat-sessionchip` (additive — never a replacement for the legacy classes), textContent-only label `Running…` with zero child nodes; legacy label map `connecting→"Connecting…"`, `running→"Running…"`, `done→"Done"`, `error→"Error"` (pinned by `aiChatPanelSessionStateWebview.test.ts:85-118`, which TASK-AGTUI-007 must pass UNMODIFIED); `setSessionState(null)` removes the chip | repeated calls |
+| 4 | edge (state repeat) | session chip replaces, not appends | calling `setSessionState("connecting")` then `setSessionState("running")` leaves exactly ONE `#sessionChip` node; its `className` carries `chat-session chat-session-running` plus `chat-sessionchip`; textContent-only label is `Running…` with zero child nodes; legacy labels remain Connecting…/Running…/Done/Error and `setSessionState(null)` removes the chip | repeated calls |
 | 5 | edge (XSS) | hostile label safe | header never uses innerHTML with wire-derived strings; `setEngine` with a string containing `<img onerror>` renders as inert text or falls back to the `builtin` label (whitelist wins, legacy `safeEngineLabel` semantics) | hostile input |
 
 ## Test Files
@@ -38,8 +38,8 @@ npm run typecheck
 ## Acceptance Criteria
 
 - [ ] All §Test Cases pass; module has zero imports from host-only code (webview-safe: no `vscode` import).
-- [ ] Brand "U" is a plain glyph styled via `.UnicDB-chat-brand` (TASK-AGTUI-001 tokens) — no image/SVG asset.
-- [ ] Banner compatibility contract: engine title node carries `id="engineBanner"` + whitelisted `UnicDB-chat-engine UnicDB-chat-engine-<name>` classes, and its textContent uses the LEGACY closed map verbatim (`webview/aiChatPanelMain.ts:1437-1465`): `omp→"oh-my-pi (omp)"`, `claude-code→"Claude Code"`, `codex→"Codex"`, `builtin|unknown|null→"builtin"`, format `Engine: <label>[ v<version>] — <state>` — pinned 15x by `aiChatPanelWebview.test.ts:424-461,880-935`, which TASK-AGTUI-007 must pass UNMODIFIED. "UnicDB AI" branding lives ONLY in the brand "U" glyph (`title="UnicDB"`) + the separate static title node, NEVER in `#engineBanner` textContent.
+- [ ] Header mark is a plain glyph styled via `.chat-mark` (TASK-AGTUI-001 tokens) — no image/SVG asset.
+- [ ] Banner compatibility contract: engine title node carries `id="engineBanner"` + whitelisted `chat-engine chat-engine-<name>` classes, and textContent uses the closed map: `omp→"oh-my-pi (omp)"`, `claude-code→"Claude Code"`, `codex→"Codex"`, `builtin|unknown|null→"builtin"`; format `Engine: <label>[ v<version>] — <state>`. Keep static title neutral and never put product branding in `#engineBanner`; legacy selector tests remain unmodified.
 
 ## Dependencies
 
@@ -47,24 +47,24 @@ npm run typecheck
 
 ## Interfaces
 
-- Consumes: CSS `.UnicDB-chat-header`, `.UnicDB-chat-brand`, `.UnicDB-chat-title`, `.UnicDB-chat-sessionchip` from TASK-AGTUI-001 (classes only; this task compiles without it).
+- Consumes: CSS `.chat-header`, `.chat-mark`, `.chat-title`, `.chat-sessionchip` from TASK-AGTUI-001 (classes only; this task compiles without it).
 - Produces (exact signature):
 ```ts
 export type HeaderEngine = "omp" | "claude-code" | "codex" | "builtin";
-export interface UnicDBHeader {
-  el: HTMLElement;              // .UnicDB-chat-header, contains #engineBanner + #chatBrandMark + #sessionChip
+export interface ChatHeader {
+  el: HTMLElement;              // .chat-header, contains #engineBanner + #chatBrandMark + #sessionChip
   setEngine(name: HeaderEngine | null, version?: string): void; // null → "builtin"
   setSessionState(state: "connecting" | "running" | "done" | "error" | null): void;
   //   Legacy contract (pinned by aiChatPanelSessionStateWebview.test.ts:85-118 — TASK-AGTUI-007
   //   must pass UNMODIFIED; legacy source webview/aiChatPanelMain.ts:1503-1525): creates/reuses
-  //   ONE node id="sessionChip"; className = `UnicDB-chat-session UnicDB-chat-session-<state>`
-  //   + the ADDITIONAL clone class `UnicDB-chat-sessionchip`; textContent-only labels —
+  //   ONE node id="sessionChip"; className = `chat-session chat-session-<state>`
+  //   + the ADDITIONAL clone class `chat-sessionchip`; textContent-only labels —
   //   connecting→"Connecting…", running→"Running…", done→"Done", error→"Error" (no child
   //   nodes, never innerHTML); null → removes the chip.
 }
-export function renderHeader(root: HTMLElement): UnicDBHeader; // appends el to root
+export function renderHeader(root: HTMLElement): ChatHeader; // appends el to root
 ```
-  Engine→banner label map (closed — MUST reuse the legacy strings verbatim from `ENGINE_LABELS`/`safeEngineLabel`, `webview/aiChatPanelMain.ts:1437-1465`): `omp→"oh-my-pi (omp)"`, `claude-code→"Claude Code"`, `codex→"Codex"`, `builtin|unknown|null→"builtin"`; banner text format `Engine: <label>[ v<version>] — <state>`. "UnicDB AI" branding lives ONLY in the brand "U" glyph (`title="UnicDB"`) + the separate static title node — NEVER inside `#engineBanner` textContent. Consumed by TASK-AGTUI-007.
+  Engine→banner label map (closed — MUST reuse legacy strings verbatim from `ENGINE_LABELS`/`safeEngineLabel`, `webview/aiChatPanelMain.ts:1437-1465`): `omp→"oh-my-pi (omp)"`, `claude-code→"Claude Code"`, `codex→"Codex"`, `builtin|unknown|null→"builtin"`; banner text format `Engine: <label>[ v<version>] — <state>`. Keep all static title copy neutral, with branding NEVER inside `#engineBanner` textContent. Consumed by TASK-AGTUI-007.
 
 ## Executor Report
 
@@ -89,11 +89,11 @@ RED_OUTPUT: |
   Test Files  1 failed (1)
        Tests  no tests
 Verification Output: |
-  RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-agtui-003
+  RUN  v1.6.1 /workspace/.worktrees/task-agtui-003
    ✓ webview/__tests__/aiChatPanelHeader.test.ts  (10 tests) 14ms
    Test Files  1 passed (1)
         Tests  10 passed (10)
-  > UnicDB@1.53.24 typecheck
+  > extension@1.53.24 typecheck
   > tsc --noEmit
   (clean exit, no output)
 Status: PASS
@@ -112,7 +112,7 @@ Findings:
   - minor (spec bug, per review scope #2): pinned fixture #5b (`src/ui/__tests__/aiChatPanelWebview.test.ts:433-443`) requires `Engine: builtin — <hint> — streaming`, but the spec's `setEngine(name, version?)` signature has no `hint` parameter, so this module alone cannot render the hint variant (legacy `applyEngine` at base 515d87e supported `msg.hint`). Fixture currently passes (43/43 at HEAD), so wave-2 integration must be serving hint via another path — flag to TASK-AGTUI-007's reviewer to confirm hint is still reachable.
   - minor (test gap): new unit test never calls `setEngine("codex")`; the fourth closed-map label ("Codex") is only pinned indirectly by legacy fixture #T12-engine-3. Add one assertion to `webview/__tests__/aiChatPanelHeader.test.ts`.
   - minor (type nit): `aiChatPanelHeader.ts:137` declares `name: HeaderEngine | null | unknown` — union collapses to `unknown`; write `unknown` alone.
-  - clean: engine label map verbatim vs legacy `ENGINE_LABELS` (base 515d87e aiChatPanelMain.ts:1437); format `Engine: <label>[ v<version>] — streaming` exact; unknown/hostile inputs closed-mapped to builtin (never raw wire string in className/textContent); chip reuses one node, legacy classes + additive `UnicDB-chat-sessionchip`, old suffix dropped, labels Connecting…/Running…/Done/Error, `querySelectorAll("*").length===0` + `innerHTML` contract matches legacy fixture line 116-118; null removes chip; brand "U" plain text, aria-hidden, title="UnicDB", blue 28px via `.UnicDB-chat-brand` (styles.css:1947-1956); no innerHTML, no vscode import, no foreign selectors touched (frozen-selector guard clean).
+  - clean: engine labels match the closed map; banner format is exact; unknown/hostile inputs fall back to builtin without raw wire strings in className/textContent; the session chip reuses one node with `chat-session` and `chat-sessionchip` classes and text-only labels; the plain mark is aria-hidden; no innerHTML, no vscode import, and no unrelated selectors touched (frozen-selector guard clean).
   - clean: TDD RED genuine — RED_OUTPUT shows real module-resolution failure (file absent), not a bare claim.
 Verification rerun (this reviewer, HEAD 6324c43):
   - `npx vitest run webview/__tests__/aiChatPanelHeader.test.ts` → 10 passed (10)

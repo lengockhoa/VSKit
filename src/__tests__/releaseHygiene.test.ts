@@ -1,8 +1,8 @@
 // src/__tests__/releaseHygiene.test.ts
 // Release hygiene guards (TASK-703):
-//   - lock root version phải khớp package.json version (no hardcoded version).
-//   - README giữ pattern install `UnicDB-<version>.vsix`.
-//   - package.json version phải là semver hợp lệ X.Y.Z.
+//   - lock root name/version and package identity match package.json.
+//   - README documents the lowercase VSKit VSIX pattern.
+//   - package.json version remains valid semver.
 //
 // Đọc động từ file on disk; bump version không phải sửa test.
 import { describe, it, expect } from "vitest";
@@ -18,11 +18,16 @@ function readJson<T>(relPath: string): T {
 
 interface PackageJson {
   version: string;
+  name: string;
+  displayName: string;
+  publisher: string;
+  repository: { url: string };
 }
 
 interface PackageLock {
+  name?: string;
   version?: string;
-  packages?: { "": { version?: string } };
+  packages?: { "": { name?: string; version?: string } };
 }
 
 describe("release hygiene (TASK-703)", () => {
@@ -45,14 +50,30 @@ describe("release hygiene (TASK-703)", () => {
       .toBe(pkg.version);
   });
 
-  it("README giữ pattern install UnicDB-<version>.vsix", () => {
+  it("package identity and lock root agree on the VSKit extension id", () => {
+    const pkg = readJson<PackageJson>("package.json");
+    const lock = readJson<PackageLock>("package-lock.json");
+    expect(pkg.name).toBe("vskit");
+    expect(pkg.displayName).toContain("VSKit");
+    expect(pkg.publisher).toBe("lengockhoa");
+    expect(pkg.repository.url).toBe("https://github.com/lengockhoa/VSKit");
+    expect(lock.name).toBe(pkg.name);
+    expect(lock.packages?.[""]?.name).toBe(pkg.name);
+  });
+
+  it("README documents lowercase VSKit VSIX placeholder and current package artifact", () => {
+    const pkg = readJson<PackageJson>("package.json");
     const readme = fs.readFileSync(path.join(repoRoot, "README.md"), "utf-8");
-    // README phải giữ placeholder '<version>' (không hardcode số) để bump version
-    // không phải sửa README. Test đọc từ file — không hardcode version cụ thể.
-    expect(
-      readme,
-      "README phải chứa pattern 'UnicDB-<version>.vsix' (placeholder, không hardcode số)",
-    ).toContain("UnicDB-<version>.vsix");
+    expect(readme).toContain("dist/vskit-<version>.vsix");
+    expect(readme).toContain(`dist/vskit-${pkg.version}.vsix`);
+  });
+  it("the paused CI workflow and package scripts do not publish to Marketplace", () => {
+    const workflow = fs.readFileSync(path.join(repoRoot, ".github/workflows/ci.yml"), "utf-8");
+    const scripts = readJson<{ scripts?: Record<string, string> }>("package.json").scripts ?? {};
+    expect(workflow).toContain("npm run compile");
+    expect(workflow).not.toMatch(/\bvsce\s+publish\b/i);
+    expect(workflow).not.toContain("VSCE_PAT");
+    expect(Object.keys(scripts).filter((key) => key.startsWith("publish:"))).toEqual([]);
   });
 
   it("package.json version match semver X.Y.Z (3 thành phần số)", () => {
@@ -65,7 +86,7 @@ describe("release hygiene (TASK-703)", () => {
 //   - `.vscodeignore` phải exclude `node_modules_backup/**` và `.tmp-debug/**`
 //     (vsce không đọc .gitignore; chỉ đọc .vscodeignore — guard against the
 //     leak that shipped `node_modules_backup/.vite/vitest/results.json` 21 KB
-//     + `.tmp-debug/refs.test.ts` vào UnicDB-1.53.28.vsix trước khi fix).
+//     + `.tmp-debug/refs.test.ts` vào VSKit-1.53.28.vsix trước khi fix).
 //   - `.gitignore` cũng phải có cùng 2 entry — git-side safety net giữ cho
 //     working tree clean sau khi các test runner dump cache.
 //   - Cả hai guard đọc file on disk, không hardcode — bump version không phải
@@ -209,9 +230,9 @@ describe("release confidence profiles (ARP-09)", () => {
     }
   });
 
-  it("contributes.configuration.properties does NOT add UnicDB.diagnostics.verbosity (YAGNI rejection — PLAN §3)", () => {
+  it("contributes.configuration.properties does NOT add VSKit.diagnostics.verbosity (YAGNI rejection — PLAN §3)", () => {
     const pkg = readJson<ScriptsPackageJson>("package.json");
     const props = pkg.contributes?.configuration?.properties ?? {};
-    expect(Object.keys(props)).not.toContain("UnicDB.diagnostics.verbosity");
+    expect(Object.keys(props)).not.toContain("VSKit.diagnostics.verbosity");
   });
 });

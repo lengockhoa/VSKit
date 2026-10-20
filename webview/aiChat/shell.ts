@@ -12,7 +12,7 @@
 // - The shell only creates STRUCTURE + placeholder mount points. It never
 //   wires production behavior, never duplicates a V1 control that carries a
 //   legacy id, and never renders untrusted text (all copy is `textContent`).
-// - Every element it creates is class-scoped with the `UnicDB-ai-chat-v2`
+// - Every element it creates is class-scoped with the `VSKit-ai-chat-v2`
 //   prefix so `webview/aiChat/styles.css` owns all styling.
 //
 // Pure DOM TypeScript: no `vscode`, no node builtins.
@@ -20,12 +20,12 @@
 import { createChatIcon } from "./icons";
 
 /** Root class the V2 shell (and the migration root) carries. */
-export const CHAT_V2_ROOT_CLASS = "UnicDB-ai-chat-v2";
+export const CHAT_V2_ROOT_CLASS = "VSKit-ai-chat-v2";
 
 /** Stable, closed set of live-region ids. Never renamed — assistive tech and
  * later tasks address these by id. */
-export const CHAT_V2_STATUS_LIVE_ID = "UnicDB-ai-chat-v2-status-live";
-export const CHAT_V2_ALERT_LIVE_ID = "UnicDB-ai-chat-v2-alert-live";
+export const CHAT_V2_STATUS_LIVE_ID = "VSKit-ai-chat-v2-status-live";
+export const CHAT_V2_ALERT_LIVE_ID = "VSKit-ai-chat-v2-alert-live";
 
 /** Marker attribute proving the shell mounted exactly once on a root. */
 export const CHAT_V2_SHELL_MARKER = "data-chat-v2-shell";
@@ -33,7 +33,7 @@ export const CHAT_V2_SHELL_MARKER = "data-chat-v2-shell";
 export const CHAT_V2_LISTENER_MARKER = "data-chat-v2-listeners";
 
 /** Product display name shown in the header. Constant copy, never host data. */
-const PRODUCT_TITLE = "UnicDB AI";
+const PRODUCT_TITLE = "VSKit AI";
 
 
 /** Canonical screenshot fixtures for manual visual verification (PLAN §8:

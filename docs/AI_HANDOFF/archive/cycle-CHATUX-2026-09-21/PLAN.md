@@ -106,7 +106,7 @@ Wave-boundary regression net (RULES.md): `npm test` (full vitest suite).
 ## §7 Global Constraints
 
 - Pure-DOM TypeScript in `webview/aiChat/` — no `vscode`, no node builtins, no framework, no `innerHTML` (createElement/textContent only).
-- All CSS scoped under `.UnicDB-ai-chat-v2`; colors via `var(--vscode-*)` / existing `--UnicDB-ai-chat-v2-*` tokens only — no hard-coded colors.
+- All CSS scoped under `.VSKit-ai-chat-v2`; colors via `var(--vscode-*)` / existing `--VSKit-ai-chat-v2-*` tokens only — no hard-coded colors.
 - No new npm dependencies; no version bump/package/publish this cycle.
 - Frozen labels: `Copy`/`Copied`/`Failed` (code block); pill `↓ Jump to latest — N new`; existing `COPY_OK_LABEL`/`COPY_FAIL_LABEL` for message copy.
 - Frozen metrics: follow enter 72px / exit 96px; composer clamp 36/88px; input cap 76px; send 32px; disclosure rows 28–32px; copy-label restore 1500ms; composer collapsed ≤104px.

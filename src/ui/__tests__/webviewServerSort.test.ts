@@ -83,10 +83,10 @@ beforeAll(() => {
 const distPath = resolve(process.cwd(), "dist", "webview.js");
 const bundleSrc = existsSync(distPath) ? readFileSync(distPath, "utf8") : null;
 
-interface UnicDBGlobals {
+interface VSKitGlobals {
   gridApi?: GridApi;
 }
-interface UnicDBApi {
+interface VSKitApi {
   postMessage: (msg: unknown) => void;
 }
 
@@ -94,15 +94,15 @@ interface UnicDBApi {
 function evaluateBundleOnce(): {
   received: Array<Record<string, unknown>>;
 } {
-  document.body.innerHTML = '<div id="UnicDB-root" class="UnicDB-webview"></div>';
+  document.body.innerHTML = '<div id="VSKit-root" class="VSKit-webview"></div>';
 
   const received: Array<Record<string, unknown>> = [];
-  const api: UnicDBApi = {
+  const api: VSKitApi = {
     postMessage: (msg) => {
       received.push(msg as Record<string, unknown>);
     },
   };
-  (globalThis as unknown as { acquireVsCodeApi: () => UnicDBApi }).acquireVsCodeApi =
+  (globalThis as unknown as { acquireVsCodeApi: () => VSKitApi }).acquireVsCodeApi =
     () => api;
 
   (0, eval)(bundleSrc);
@@ -120,8 +120,8 @@ function dispatchState(msg: Record<string, unknown>): void {
 }
 
 function getGridApi(): GridApi | null {
-  const w = window as unknown as { __UnicDB?: UnicDBGlobals };
-  return w.__UnicDB?.gridApi ?? null;
+  const w = window as unknown as { __VSKit?: VSKitGlobals };
+  return w.__VSKit?.gridApi ?? null;
 }
 
 // ---- timing model (TASK-008) ------------------------------------------------
@@ -428,10 +428,10 @@ describeIfBundle("webview/main.ts bundle — TASK-003 server-side sort", () => {
       // The webview restores the host-supplied sort after a state message —
       // a user click never went through this path, so nothing may be posted.
       const w = window as unknown as {
-        __UnicDB?: { applyHostColumnState?: (s: unknown[]) => void };
+        __VSKit?: { applyHostColumnState?: (s: unknown[]) => void };
       };
-      expect(typeof w.__UnicDB!.applyHostColumnState).toBe("function");
-      w.__UnicDB!.applyHostColumnState!([
+      expect(typeof w.__VSKit!.applyHostColumnState).toBe("function");
+      w.__VSKit!.applyHostColumnState!([
         { colId: "name", sort: "asc", sortIndex: 0 },
       ]);
       await flushGridEvents();
@@ -484,10 +484,10 @@ describeIfBundle("webview/main.ts bundle — TASK-003 server-side sort", () => {
         ],
       );
       const w = window as unknown as {
-        __UnicDB?: { debugSetSpecs?: (specs: unknown[]) => void };
+        __VSKit?: { debugSetSpecs?: (specs: unknown[]) => void };
       };
-      expect(typeof w.__UnicDB?.debugSetSpecs).toBe("function");
-      w.__UnicDB!.debugSetSpecs!([
+      expect(typeof w.__VSKit?.debugSetSpecs).toBe("function");
+      w.__VSKit!.debugSetSpecs!([
         { field: "id", headerName: "id", kind: "number" },
         { field: "id__2", headerName: "id", kind: "number" },
       ]);
@@ -520,9 +520,9 @@ describeIfBundle("webview/main.ts bundle — TASK-003 server-side sort", () => {
           dialect: "mysql",
         });
         const w = window as unknown as {
-          __UnicDB?: { debugSetSpecs?: (specs: unknown[]) => void };
+          __VSKit?: { debugSetSpecs?: (specs: unknown[]) => void };
         };
-        w.__UnicDB!.debugSetSpecs!([
+        w.__VSKit!.debugSetSpecs!([
           { field: "id", headerName: "id", kind: "number" },
           { field: "First Name", headerName: "First Name", kind: "string" },
         ]);
@@ -552,9 +552,9 @@ describeIfBundle("webview/main.ts bundle — TASK-003 server-side sort", () => {
       {
         dispatchState(rowsState("still garbled", ["id", "First Name"], [[1, "beta"]]));
         const w = window as unknown as {
-          __UnicDB?: { debugSetSpecs?: (specs: unknown[]) => void };
+          __VSKit?: { debugSetSpecs?: (specs: unknown[]) => void };
         };
-        w.__UnicDB!.debugSetSpecs!([
+        w.__VSKit!.debugSetSpecs!([
           { field: "id", headerName: "id", kind: "number" },
           { field: "First Name", headerName: "First Name", kind: "string" },
         ]);
@@ -611,9 +611,9 @@ describeIfBundle("webview/main.ts bundle — TASK-003 server-side sort", () => {
       await waitForSettledStream("TASK-007 types mount");
 
       const w = window as unknown as {
-        __UnicDB?: { currentSpecs?: readonly unknown[] };
+        __VSKit?: { currentSpecs?: readonly unknown[] };
       };
-      const specs = w.__UnicDB?.currentSpecs;
+      const specs = w.__VSKit?.currentSpecs;
       expect(specs).toBeTruthy();
       expect(specs).toHaveLength(2);
       expect(specs![0]).toMatchObject({ field: "code", kind: "string" });

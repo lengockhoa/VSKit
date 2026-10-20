@@ -541,7 +541,7 @@ describe("AcpProcess", () => {
   it("session/new forwards a non-empty mcpServers array verbatim when AcpProcessOptions.mcpServers is set", async () => {
     const descriptor = {
       type: "http",
-      name: "UnicDB",
+      name: "VSKit",
       url: "http://127.0.0.1:54321",
       headers: [{ name: "Authorization", value: "Bearer test-token" }],
     };

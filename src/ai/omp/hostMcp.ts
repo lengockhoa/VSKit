@@ -93,7 +93,7 @@ export interface HostMcp {
 // ---------------------------------------------------------------------------
 
 const MCP_PROTOCOL_VERSION = "2025-11-25";
-const HOST_INFO = { name: "UnicDB-host-mcp", version: "1.11.0" } as const;
+const HOST_INFO = { name: "VSKit-host-mcp", version: "1.11.0" } as const;
 
 /** Default per-call timeout for standard (non-curated) MCP tools. Curated
  * tools carry their own validated `timeoutMs` (see

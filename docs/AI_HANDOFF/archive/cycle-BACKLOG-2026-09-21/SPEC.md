@@ -16,9 +16,9 @@ Two queued backlog items, disjoint file sets.
 slow, the loading state hangs/loops forever, and the loading UI appears
 repeatedly. Verified current state:
 
-- `src/extension.ts:1277-1289` registers `UnicDB.generateCommitMessage`
+- `src/extension.ts:1277-1289` registers `VSKit.generateCommitMessage`
   (manifest `package.json:456`, `scm/title` menu `:539`) as
-  `vscode.window.withProgress({ location: SourceControl, title: "UnicDB:
+  `vscode.window.withProgress({ location: SourceControl, title: "VSKit:
   generating commit message…" }, () => runGenerateCommitMessage(...))`.
   Defects: (a) `cancellable` is not set → no Cancel button; (b) no re-entrancy
   guard → every click spawns another `withProgress` notification (the
@@ -115,7 +115,7 @@ cycle CHATUX-2026-09-21). Verified current state:
   scope; the command callback acquires first and, on `null`, shows
   `TOAST_GENERATION_IN_PROGRESS` and returns without calling `withProgress`.
 - **FR-002 (cancellable progress + stages):** `withProgress` options become
-  `{ location: SourceControl, title: "UnicDB: generating commit message…",
+  `{ location: SourceControl, title: "VSKit: generating commit message…",
   cancellable: true }`; the callback signature becomes
   `(progress, token)`. `CommitGenDeps` gains:
   ```ts
@@ -166,7 +166,7 @@ cycle CHATUX-2026-09-21). Verified current state:
   `-overlay-modal-action`, `-change-plan-action`, `-error-card-action`,
   `-scroll-pill`, `-codeblock-copy`, `-load-earlier`, `-reasoning-toggle`,
   `-tool-head`. Any interactive selector found without a rule → add the
-  rule (2px `var(--UnicDB-ai-chat-v2-focus)` + 2px offset).
+  rule (2px `var(--vskit-ai-chat-v2-focus)` + 2px offset).
 - **FR-008 (aria audit):** pin existing invariants with tests (no behavior
   change unless a gap is found): exactly one polite + one assertive live
   region per shell (`countLiveRegions`); every icon-only `actionButton`
@@ -260,7 +260,7 @@ export function createCommitGenGate(): { acquire(): (() => void) | null };
 ```ts
 export const COMMIT_GEN_TIMEOUT_MS = 120_000;
 export const TOAST_GENERATION_IN_PROGRESS =
-  "UnicDB: a commit message is already being generated — wait for it to finish or cancel it.";
+  "VSKit: a commit message is already being generated — wait for it to finish or cancel it.";
 export const PROGRESS_COLLECTING_DIFF = "Collecting diff…";
 export const PROGRESS_CONTACTING_MODEL = "Contacting model…";
 export const PROGRESS_VALIDATING = "Validating message…";

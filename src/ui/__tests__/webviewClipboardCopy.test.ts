@@ -64,11 +64,11 @@ afterEach(async () => {
 const distPath = resolve(process.cwd(), "dist", "webview.js");
 const bundleSrc = existsSync(distPath) ? readFileSync(distPath, "utf8") : null;
 
-interface UnicDBApi {
+interface VSKitApi {
   postMessage: (msg: unknown) => void;
 }
 
-interface UnicDBDebug {
+interface VSKitDebug {
   gridApi?: GridApi;
   debugSetSpecs?: (specs: ReadonlyArray<Record<string, unknown>>) => void;
 }
@@ -82,13 +82,13 @@ function loadBundle(): {
       "dist/webview.js missing — run `npm run compile` before this test",
     );
   }
-  document.body.innerHTML = '<div id="UnicDB-root" class="UnicDB-webview"></div>';
-  const root = document.getElementById("UnicDB-root") as HTMLDivElement;
+  document.body.innerHTML = '<div id="VSKit-root" class="VSKit-webview"></div>';
+  const root = document.getElementById("VSKit-root") as HTMLDivElement;
   const received: Array<Record<string, unknown>> = [];
-  const api: UnicDBApi = {
+  const api: VSKitApi = {
     postMessage: (msg) => received.push(msg as Record<string, unknown>),
   };
-  (globalThis as unknown as { acquireVsCodeApi: () => UnicDBApi }).acquireVsCodeApi =
+  (globalThis as unknown as { acquireVsCodeApi: () => VSKitApi }).acquireVsCodeApi =
     () => api;
   (0, eval)(bundleSrc);
   return { received, root };
@@ -124,8 +124,8 @@ async function flushGrid(): Promise<void> {
   await new Promise<void>((resolve) => setTimeout(resolve, 0));
 }
 
-function getDebug(): UnicDBDebug {
-  return (window as unknown as { __UnicDB: UnicDBDebug }).__UnicDB;
+function getDebug(): VSKitDebug {
+  return (window as unknown as { __VSKit: VSKitDebug }).__VSKit;
 }
 
 function getCell(root: HTMLElement, row: number, field: string): HTMLElement {
@@ -173,7 +173,7 @@ describeIfBundle("webview/main.ts clipboard copy shapes (TASK-CLIP-001)", () => 
     await flushGrid();
     const cell = getCell(root, 0, "name");
     drag(cell, cell);
-    ctrlC(root.querySelector(".UnicDB-grid-host")!);
+    ctrlC(root.querySelector(".VSKit-grid-host")!);
     const copies = copyMessages(received);
     expect(copies).toHaveLength(1);
     expect(copies[0].text).toBe("alpha");
@@ -185,7 +185,7 @@ describeIfBundle("webview/main.ts clipboard copy shapes (TASK-CLIP-001)", () => 
     dispatchState([[1, "alpha"], [2, "beta"], [3, "gamma"]]);
     await flushGrid();
     drag(getCell(root, 0, "id"), getCell(root, 1, "name"));
-    ctrlC(root.querySelector(".UnicDB-grid-host")!);
+    ctrlC(root.querySelector(".VSKit-grid-host")!);
     const copies = copyMessages(received);
     expect(copies).toHaveLength(1);
     expect(copies[0].text).toBe("1\talpha\n2\tbeta");
@@ -201,7 +201,7 @@ describeIfBundle("webview/main.ts clipboard copy shapes (TASK-CLIP-001)", () => 
       if (index < 2 && node.data) node.setSelected(true, false, "api");
       index++;
     });
-    ctrlC(root.querySelector(".UnicDB-grid-host")!);
+    ctrlC(root.querySelector(".VSKit-grid-host")!);
     const copies = copyMessages(received);
     expect(copies).toHaveLength(1);
     expect(copies[0].text.split("\n")).toHaveLength(2);
@@ -213,7 +213,7 @@ describeIfBundle("webview/main.ts clipboard copy shapes (TASK-CLIP-001)", () => 
     dispatchState([[1, "alpha"], [2, "beta"], [3, "gamma"]]);
     await flushGrid();
     drag(getCell(root, 0, "name"), getCell(root, 2, "name"));
-    ctrlC(root.querySelector(".UnicDB-grid-host")!);
+    ctrlC(root.querySelector(".VSKit-grid-host")!);
     const copies = copyMessages(received);
     expect(copies).toHaveLength(1);
     expect(copies[0].text).toBe("alpha\nbeta\ngamma");
@@ -230,7 +230,7 @@ describeIfBundle("webview/main.ts clipboard copy shapes (TASK-CLIP-001)", () => 
       { field: "name", headerName: "name", kind: "string", hidden: false },
     ]);
     await flushGrid();
-    ctrlC(root.querySelector(".UnicDB-grid-host")!);
+    ctrlC(root.querySelector(".VSKit-grid-host")!);
     const copies = copyMessages(received);
     expect(copies).toHaveLength(1);
     expect(copies[0].text).toBe("alpha\nbeta");
@@ -242,7 +242,7 @@ describeIfBundle("webview/main.ts clipboard copy shapes (TASK-CLIP-001)", () => 
     const { received, root } = loadBundle();
     dispatchState([[1, "alpha"], [2, "beta"], [3, "gamma"]]);
     await flushGrid();
-    ctrlC(root.querySelector(".UnicDB-grid-host")!);
+    ctrlC(root.querySelector(".VSKit-grid-host")!);
     expect(copyMessages(received)).toHaveLength(0);
   });
 
@@ -250,7 +250,7 @@ describeIfBundle("webview/main.ts clipboard copy shapes (TASK-CLIP-001)", () => 
     const { received, root } = loadBundle();
     dispatchState([[1, "alpha"], [2, "beta"], [3, "gamma"]]);
     await flushGrid();
-    const gridHost = root.querySelector(".UnicDB-grid-host")!;
+    const gridHost = root.querySelector(".VSKit-grid-host")!;
     const grid = getDebug().gridApi!;
     grid.setFocusedCell(0, "name");
     const first = getCell(root, 0, "name");

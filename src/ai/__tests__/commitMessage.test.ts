@@ -14,7 +14,7 @@ import type { ChatMessage } from "../provider";
 describe("ai/commitMessage — buildCommitPrompt", () => {
   it("Test #1 — prompt carries repo, files, diff", () => {
     const messages = buildCommitPrompt({
-      repoName: "UnicDB",
+      repoName: "VSKit",
       files: ["src/a.ts"],
       diffText: "diff --git a/src/a.ts b/src/a.ts\n@@ -1 +1 @@",
     });
@@ -23,20 +23,20 @@ describe("ai/commitMessage — buildCommitPrompt", () => {
     expect(messages[0].content).toContain("Conventional Commits");
     expect(typeof messages[1].content).toBe("string");
     const user = messages[1].content as string;
-    expect(user).toContain("UnicDB");
+    expect(user).toContain("VSKit");
     expect(user).toContain("src/a.ts");
     expect(user).toContain("diff --git a/src/a.ts b/src/a.ts");
   });
 
   it("Test #1b — branch line included when provided", () => {
     const messages = buildCommitPrompt({
-      repoName: "UnicDB",
+      repoName: "VSKit",
       branch: "feature/gc-003",
       files: ["src/ai/commitMessage.ts"],
       diffText: "+// new module",
     });
     const user = messages[1].content as string;
-    expect(user).toContain("Repo: UnicDB");
+    expect(user).toContain("Repo: VSKit");
     expect(user).toContain("Branch: feature/gc-003");
     expect(user).toContain("Changed files:");
     expect(user).toContain("src/ai/commitMessage.ts");
@@ -46,7 +46,7 @@ describe("ai/commitMessage — buildCommitPrompt", () => {
 
   it("Test #1c — branch line omitted when not provided", () => {
     const messages = buildCommitPrompt({
-      repoName: "UnicDB",
+      repoName: "VSKit",
       files: ["src/a.ts"],
       diffText: "x",
     });
@@ -174,7 +174,7 @@ describe("ai/commitMessage — serializeCommitPrompt", () => {
 describe("ai/commitMessage — SYSTEM_PROMPT (Vietnamese contract, SPEC §8.1)", () => {
   it("Test #2 — teaches Vietnamese output + word/char limits + example", () => {
     const messages = buildCommitPrompt({
-      repoName: "UnicDB",
+      repoName: "VSKit",
       files: ["src/a.ts"],
       diffText: "+a",
     });

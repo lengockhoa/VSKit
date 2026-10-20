@@ -64,7 +64,7 @@ No lint script exists in this project — lint is N/A; typecheck is the static g
 ## Discussion
 
 ### 2026-09-07 · planner · unic-smart
-Codex is not installed in this workspace (`command -v codex` failed), so CLI protocol syntax is deliberately unverified. This is NOT permission to guess. Resolve against official OpenAI Codex CLI documentation at implementation time; put the actual command/flags/frame source in this Discussion. TASK-014's `UnicDB_CODEX_SMOKE=1` live smoke is the required final proof when a Codex-installed environment is available.
+Codex is not installed in this workspace (`command -v codex` failed), so CLI protocol syntax is deliberately unverified. This is NOT permission to guess. Resolve against official OpenAI Codex CLI documentation at implementation time; put the actual command/flags/frame source in this Discussion. TASK-014's `CODEX_SMOKE=1` live smoke is the required final proof when a Codex-installed environment is available.
 
 ---
 
@@ -114,7 +114,7 @@ Top-level event envelope (one JSON object per line on stdout):
 **Adapter translation (what the implementation will do, derived from the above):**
 
 1. Spawn: `<codexPath> exec --json -` with mandatory `cwd` spawn option (no shell interpolation). The `-` sentinel forces stdin-prompt so the adapter can stream the input payload deterministically regardless of length / special chars.
-2. Wire input frame (one JSON object written to stdin, followed by EOF): `{ "prompt": "<text>", "parts": [{ "type": "text", "text": "..." }, { "type": "image", "mime": "image/png", "base64": "..." }, ...] }`. This is a UnicDB-defined translation; the upstream Codex CLI consumes the `<stdin>` block as appended context for the prompt (per noninteractive doc, "stdin is appended as a `<stdin>` block"). The adapter's contract is to encode the input in this documented frame so the panel can recover the original parts (test #5).
+2. Wire input frame (one JSON object written to stdin, followed by EOF): `{ "prompt": "<text>", "parts": [{ "type": "text", "text": "..." }, { "type": "image", "mime": "image/png", "base64": "..." }, ...] }`. This is an application-defined translation; the upstream Codex CLI consumes the `<stdin>` block as appended context for the prompt (per noninteractive doc, "stdin is appended as a `<stdin>` block"). The adapter's contract is to encode the input in this documented frame so the panel can recover the original payload.
 3. JSONL stdout → normalized callbacks:
    - `thread.started.thread_id` → captured as sessionId (replaces omp's `sessionId` from `session/new`).
    - `item.completed` with `item.type === "agent_message"` and non-empty `text` → `onDelta(text)`; the subsequent `turn.completed` (or final `item.completed` of agent_message with no further turn event) → `onDone()`.
@@ -141,14 +141,14 @@ EXECUTOR_SUBAGENT: feature-implementer
 RED_OUTPUT:
 
 ```
- RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-006
+ RUN  v1.6.1 /workspace/.worktrees/task-006
 
  ❯ src/ai/codex/__tests__/codexProcess.test.ts  (0 test)
 
 ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
 
  FAIL  src/ai/codex/__tests__/codexProcess.test.ts [ src/ai/codex/__tests__/codexProcess.test.ts ]
-Error: Failed to load url ../codexProcess (resolved id: ../codexProcess) in /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-006/src/ai/codex/__tests__/codexProcess.test.ts. Does the file exist?
+  Error: Failed to load url ../codexProcess (resolved id: ../codexProcess) in /workspace/.worktrees/task-006/src/ai/codex/__tests__/codexProcess.test.ts. Does the file exist?
 
  Test Files  1 failed (1)
       Tests  no tests
@@ -159,12 +159,12 @@ Error: Failed to load url ../codexProcess (resolved id: ../codexProcess) in /Vol
 Verification Output:
 
 ```
-> UnicDB@1.53.23 typecheck
+> Extension@1.53.23 typecheck
 > tsc --noEmit
 
 (exit 0, no output)
 
- RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-006
+ RUN  v1.6.1 /workspace/.worktrees/task-006
 
  ✓ src/ai/codex/__tests__/codexProcess.test.ts  (10 tests) 2040ms
 
@@ -202,7 +202,7 @@ FINDINGS:
   minor:
     - src/ai/codex/codexProcess.ts:638 — dispose() after a crash sets state "stopped", erasing the observed "crashed"/"fallback-builtin" terminal state for state observers.
     - src/ai/codex/codexProcess.ts:335 — version probe interpolates codexPath into an unquoted shell string while the spawn path is carefully cmd.exe-quoted (lines 250-257); a Windows install path with spaces breaks the probe (falls back to "unknown" — cosmetic) and bypasses the quoting discipline. Reuse quoteForCmdExe.
-    - src/ai/codex/codexProcess.ts:703-721 — the `{prompt, parts}` stdin frame is a UnicDB-defined translation; upstream Codex treats stdin as a `<stdin>` text block per the cited noninteractive doc. Honestly disclosed in Discussion and gated by TASK-014 live smoke, but TASK-010 must not assume upstream parses `parts` (image transport unproven until smoke).
+    - src/ai/codex/codexProcess.ts:703-721 — the `{prompt, parts}` stdin frame is an application-defined translation; upstream Codex treats stdin as a `<stdin>` text block per the cited noninteractive doc. Honestly disclosed in Discussion and gated by TASK-014 live smoke, but TASK-010 must not assume upstream parses `parts` (image transport unproven until smoke).
 NEXT_STATUS_FOR_INDEX: changes_requested
 NOTES: Implementation, protocol citations, and tests are solid; the single important defect is the un-removed per-turn exit listener that misreports completed turns as failed once the child exits. Scope fix to ChildLike.off + settle() + one regression test, then re-verify.
 
@@ -229,7 +229,7 @@ EXECUTOR_SUBAGENT: feature-implementer
 ### RED Output (before fix)
 
 ```
- RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB
+ RUN  v1.6.1 /workspace
 
  ❯ src/ai/codex/__tests__/codexProcess.test.ts > CodexProcess > R4.5: stale per-turn exit listeners must NOT fire onError on completed turns after child exit
 AssertionError: expected [ Array(1) ] to deeply equal []
@@ -250,12 +250,12 @@ RED confirmed: stale `onExit` from turn 1 fired onError on the actual child exit
 ### Verification (after fix)
 
 ```
-> UnicDB@1.53.23 typecheck
+> Extension@1.53.23 typecheck
 > tsc --noEmit
 
 (exit 0, no output)
 
- RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB
+ RUN  v1.6.1 /workspace
 
  ✓ src/ai/codex/__tests__/codexProcess.test.ts  (11 tests) 2063ms
 
@@ -292,7 +292,7 @@ FINDINGS:
   important:
     - (none) — R4.5 important finding VERIFIED FIXED on disk: `ChildLike.off` overloads exist (codexProcess.ts:167-168); `send()` hoists `onExit` (line 429) and `settle()` calls `child.off("exit", onExit)` (line 445) on every settle path; spawnLike wrapper now forwards the SAME cb reference to on/off (lines 283-298) so removal actually matches registration. Regression test (codexProcess.test.ts:459-516) drives 2 sends → turn.completed → real emitChildExit(0) and asserts errors1/errors2 empty; FakeChildProcess extends EventEmitter so off() genuinely removes the listener.
   minor:
-    - (carried from R3, intentionally out of R4.5 scope, non-blocking): dispose() after crash erases "crashed"/"fallback-builtin" state (codexProcess.ts ~638); version probe interpolates codexPath unquoted while spawn path is cmd.exe-quoted (~335); `{prompt, parts}` stdin frame is a UnicDB-defined translation, upstream parses stdin as a text block — image transport unproven until TASK-014 live smoke.
+    - (carried from R3, intentionally out of R4.5 scope, non-blocking): dispose() after crash erases "crashed"/"fallback-builtin" state (codexProcess.ts ~638); version probe interpolates codexPath unquoted while spawn path is cmd.exe-quoted (~335); `{prompt, parts}` stdin frame is an application-defined translation, upstream parses stdin as a text block — image transport unproven until TASK-014 live smoke.
     - commit hygiene — R4.5 test-file changes landed in 9926866 (TASK-005-titled commit) while the source fix is in 29df740; both are on HEAD and the tree is clean, non-blocking.
 NEXT_STATUS_FOR_INDEX: approved_minor
 NOTES: Fix is genuine, verified fresh (11/11 + tsc clean), and the regression test would fail without the off() wiring. Carry the three R3 minors plus the stdin-frame TASK-014 smoke dependency forward; none block handoff.

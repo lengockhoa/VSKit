@@ -30,7 +30,7 @@ tests so the audit stays green permanently.
 | # | Type | Test name | Expected | Pre-state / Fixture |
 |---|------|----------|----------|---------------------|
 | 1 | regression (CSS scan) | reduced-motion coverage | every selector carrying `animation:`/`transition:` outside a reduce block appears inside one — fails today (`-live-dot`, `-activity-state-running`, `-autocomplete-spinner` uncovered) | readFileSync styles.css, parse reduce blocks |
-| 2 | edge (CSS invariant) | `outline: none` uniqueness | exactly 1 occurrence, on `.UnicDB-ai-chat-v2-input` | styles.css scan |
+| 2 | edge (CSS invariant) | `outline: none` uniqueness | exactly 1 occurrence, on `.VSKit-ai-chat-v2-input` | styles.css scan |
 | 3 | happy (CSS scan) | focus-visible pinned list | every selector in SPEC FR-007's list has a `:focus-visible` rule with `outline` + `outline-offset` | styles.css scan |
 | 4 | unit (happy) | live-region invariant | `countLiveRegions(shell)` → `{ polite: 1, assertive: 1 }` after `mountChatShell` | jsdom shell mount |
 | 5 | edge (malformed) | announcer refuses stream text | `isAnnounceablePhase(longMultiLine)` → false; announcer drops it | `createLiveAnnouncer` fake regions |
@@ -53,7 +53,7 @@ npm run typecheck
 - [ ] Every test in §Test Cases passes (RED first for #1).
 - [ ] No `animation:`/`transition:` declaration outside reduced-motion coverage.
 - [ ] `outline: none` only on `-input`; all pinned `:focus-visible` selectors present.
-- [ ] No hard-coded colors — `var(--UnicDB-ai-chat-v2-focus)` / `--vscode-focusBorder` only.
+- [ ] No hard-coded colors — `var(--VSKit-ai-chat-v2-focus)` / `--vscode-focusBorder` only.
 - [ ] No regression in `webview/aiChat/__tests__/`.
 
 ## Dependencies
@@ -94,7 +94,7 @@ Audit findings beyond the planner's verified gaps:
   — left untouched.
 - `-toast`/`-menu-row`/`-overlay-modal`/`-dialog` carry no
   `animation:`/`transition:` declarations — nothing to suppress there.
-- `.UnicDB-ai-chat-v2-composer .UnicDB-ai-chat-v2-control` out-specified the
+- `.VSKit-ai-chat-v2-composer .VSKit-ai-chat-v2-control` out-specified the
   old RM rule (real specificity bug, not just a scan gap) — fixed by listing
   the descendant selector in the new composer RM block.
 - No a11y.ts gap found: live regions, announcer, combobox, tooltip helpers all
@@ -129,11 +129,11 @@ TESTS_ADDED:
     "focus-visible: every pinned interactive selector has an outline + offset ring"
 RED_OUTPUT: |
   FAIL > reduced-motion coverage … expected [ …(5) ] to deeply equal []
-    + ".UnicDB-ai-chat-v2-tool-status[data-status=\"running\"]"
-    + ".UnicDB-ai-chat-v2-live-dot"
-    + ".UnicDB-ai-chat-v2-composer .UnicDB-ai-chat-v2-control"
-    + ".UnicDB-ai-chat-v2-primary"
-    + ".UnicDB-ai-chat-v2-autocomplete-spinner"
+    + ".VSKit-ai-chat-v2-tool-status[data-status=\"running\"]"
+    + ".VSKit-ai-chat-v2-live-dot"
+    + ".VSKit-ai-chat-v2-composer .VSKit-ai-chat-v2-control"
+    + ".VSKit-ai-chat-v2-primary"
+    + ".VSKit-ai-chat-v2-autocomplete-spinner"
   FAIL > focus-visible … expected [ …(16) ] to deeply equal []
     (+16 selectors incl. -codeblock-copy, -load-earlier, -reasoning-toggle,
      -tool-head, -mark, -title, -engine, -overflow, -composer-menu-row,
@@ -184,7 +184,7 @@ FINDINGS:
       this is a future-proofing gap, not a present defect.
     - file: webview/aiChat/styles.css:2020,2224,2462 — three new rings use
       `var(--vscode-focusBorder, #5f9eff)` while most use
-      `var(--UnicDB-ai-chat-v2-focus)`; matches the pre-existing convention in
+      `var(--VSKit-ai-chat-v2-focus)`; matches the pre-existing convention in
       this file (:2592, :2666, :2796) and the test accepts both, so consistent —
       noted only for awareness.
 NEXT_STATUS_FOR_INDEX: approved_minor

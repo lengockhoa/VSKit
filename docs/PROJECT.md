@@ -1,4 +1,4 @@
-# UnicDB — Project Context
+# VSKit — Project Context
 
 ## Stack
 
@@ -8,7 +8,7 @@
 
 ## Architecture
 
-UnicDB is a **VS Code extension** (single `vscode` host process, no backend server) that turns
+VSKit is a **VS Code extension** (single `vscode` host process, no backend server) that turns
 the editor into a database client for PostgreSQL / MySQL / MSSQL. Host side (`src/`) wires
 commands (`src/extension.ts`), a schema tree (`src/ui/schemaTree.ts`), and singleton
 WebviewPanels per surface (Results grid, Connection form, Table Designer, AI Chat, SQL
@@ -16,8 +16,8 @@ Console). Webview side (`webview/`) ships as separate esbuild bundles under `dis
 (`webview.js`, `consolePanel.js`, …) loaded through strict-CSP HTML built by each panel.
 Pure logic (SQL parsing, DDL diff/generation, paging, grid filter model) lives dependency-free
 under `src/core/` + selected `src/ui/*Model|Messages` modules so vitest can cover it without
-`vscode`. Distribution is a `.vsix` attached to GitHub Releases; users install via a curl
-one-liner (see MEMORY → Active Constraints).
+`vscode`. The conversion artifact is a local `.vsix`; no VSKit GitHub release asset or
+Marketplace listing is asserted. See `docs/RELEASE.md` before choosing a distribution path.
 
 ## Key Modules
 
@@ -39,11 +39,12 @@ adapter on pooled clients.
 
 ## Business Rules & Domain Constraints
 
-- Destructive statements (`DELETE` no WHERE, `TRUNCATE`, `DROP`, `UPDATE` no WHERE) MUST pass the red confirm modal before execution (`UnicDB.confirmDestructive` opt-out only).
+- Destructive statements (`DELETE` no WHERE, `TRUNCATE`, `DROP`, `UPDATE` no WHERE) MUST pass the red confirm modal before execution (`VSKit.confirmDestructive` opt-out only).
 - AI-chat `run_sql` tool is SELECT/SHOW/EXPLAIN/clean-CTE only — never receives DML/DDL.
-- AI-chat V2 (TASK-CHATV2-017): the webview boots the `.UnicDB-ai-chat-v2` shell + single `createChatController` (webview/aiChat/) and posts `ready_v2`; the host emits V2-native `text_delta`/`reasoning_delta`/`tool_started`/`tool_finished`/`turn_finished` frames on the ordered V2 seam. V1 is deleted (Lane 3): `aiChatPanelHeader.ts`/`aiChatPanelComposer.ts` and their tests are gone, the dead `.UnicDB-chat` CSS was retired from `webview/styles.css`, and the V2 E2E asserts V1-id absence in the production bundle.
+- AI-chat V2 (TASK-CHATV2-017): the webview boots the `.VSKit-ai-chat-v2` shell + single `createChatController` (webview/aiChat/) and posts `ready_v2`; the host emits V2-native `text_delta`/`reasoning_delta`/`tool_started`/`tool_finished`/`turn_finished` frames on the ordered V2 seam. V1 is deleted (Lane 3): `aiChatPanelHeader.ts`/`aiChatPanelComposer.ts` and their tests are gone, the dead `.VSKit-chat` CSS was retired from `webview/styles.css`, and the V2 E2E asserts V1-id absence in the production bundle.
 - Keyset paging may replace OFFSET ONLY when the structural browse gate passes AND no term carries NULLS ordering; every other shape keeps legacy composition byte-identical.
-- A user-visible change is NOT shipped until a GitHub Release exists (merged ≠ shipped); releaseHygiene fails builds when package-lock version drifts.
+- This conversion is not remotely released: a local VSIX is a test artifact until an explicit
+  GitHub release or Marketplace listing is verified.
 
 ## Known Dangerous Areas
 

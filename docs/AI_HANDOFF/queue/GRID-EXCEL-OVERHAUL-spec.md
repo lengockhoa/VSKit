@@ -55,8 +55,8 @@ which is removed). Source quotes:
 ### D. Requery bar alignment (visual)
 - WHERE label + input, ORDER BY label + input, run + clear buttons on ONE baseline row:
   flexbox `align-items: center`, equal heights (inputs/buttons same height, e.g. 26px),
-  consistent gaps. Styles currently NOT in `webview/styles.css` (grep: no `UnicDB-requery`
-  rules — check how bar is styled today; likely missing → add proper rules).
+  consistent gaps. Styles currently NOT in `webview/styles.css` (no matching requery-bar rules
+  found — check how bar is styled today; likely missing → add proper rules).
 
 ### E. Set filter popup alignment (visual)
 - Column filter dropdown: "Select All" and each item left-aligned on the same column edge

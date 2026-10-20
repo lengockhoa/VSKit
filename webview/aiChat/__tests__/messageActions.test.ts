@@ -63,7 +63,7 @@ import {
 } from "../transcript";
 import { OVERLAY_MENU_MARKER } from "../overlays";
 
-const TOAST_CLASS = ".UnicDB-ai-chat-v2-toast";
+const TOAST_CLASS = ".VSKit-ai-chat-v2-toast";
 
 // ---------------------------------------------------------------------------
 // Harness (controllerSurfaces.test.ts:44 pattern — stub postMessage, real
@@ -81,7 +81,7 @@ interface Harness {
 
 function makeHarness(): Harness {
   const root = document.createElement("div");
-  root.id = "UnicDB-root";
+  root.id = "VSKit-root";
   document.body.appendChild(root);
   const sent: unknown[] = [];
   const api: VsCodeApiLike = { postMessage: (message) => sent.push(message) };
@@ -146,7 +146,7 @@ function seedIdleUserTurn(h: Harness): HTMLElement {
   h.send({ kind: "turn_finished", sessionId: "s1", sequence: 3, turnId: "t1", outcome: "completed" });
   h.controller.flushRender();
   const item = h.root.querySelector<HTMLElement>(
-    '.UnicDB-ai-chat-v2-transcript [data-chat-key="user-req-1"]',
+    '.VSKit-ai-chat-v2-transcript [data-chat-key="user-req-1"]',
   );
   expect(item, "expected the user bubble user-req-1 to be rendered").not.toBeNull();
   return item!;
@@ -387,10 +387,10 @@ describe("message actions — TASK-CHATUX-003 action row visible at rest", () =>
       resolve(process.cwd(), "webview", "aiChat", "styles.css"),
       "utf8",
     );
-    const rule = /\.UnicDB-ai-chat-v2-action\s*\{([^}]*)\}/.exec(css);
+    const rule = /\.VSKit-ai-chat-v2-action\s*\{([^}]*)\}/.exec(css);
     expect(rule, "expected the -action rule").not.toBeNull();
     expect(rule![1]!).not.toContain("opacity: 0");
-    expect(css).not.toMatch(/\.UnicDB-ai-chat-v2-item:hover\s+\.UnicDB-ai-chat-v2-action/);
-    expect(css).not.toMatch(/\.UnicDB-ai-chat-v2-item:focus-within\s+\.UnicDB-ai-chat-v2-action/);
+    expect(css).not.toMatch(/\.VSKit-ai-chat-v2-item:hover\s+\.VSKit-ai-chat-v2-action/);
+    expect(css).not.toMatch(/\.VSKit-ai-chat-v2-item:focus-within\s+\.VSKit-ai-chat-v2-action/);
   });
 });

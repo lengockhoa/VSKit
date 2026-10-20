@@ -81,7 +81,7 @@ function make(
   } = {},
 ): { container: HTMLElement; controller: AttachmentController } {
   const container = document.createElement("div");
-  container.className = "UnicDB-ai-chat-v2";
+  container.className = "VSKit-ai-chat-v2";
   document.body.appendChild(container);
   const controller = createAttachmentController({
     container,
@@ -191,8 +191,8 @@ describe("attachments — thumbnails", () => {
     ingestPng(controller);
     const strip = container.querySelector<HTMLElement>(`[${ATTACHMENT_STRIP_MARKER}]`)!;
     expect(strip.hidden).toBe(false);
-    expect(strip.style.getPropertyValue("--UnicDB-thumb-size")).toBe(`${THUMB_SIZE_PX}px`);
-    expect(strip.style.getPropertyValue("--UnicDB-thumb-strip-max")).toBe(`${THUMB_STRIP_MAX_PX}px`);
+    expect(strip.style.getPropertyValue("--VSKit-thumb-size")).toBe(`${THUMB_SIZE_PX}px`);
+    expect(strip.style.getPropertyValue("--VSKit-thumb-strip-max")).toBe(`${THUMB_STRIP_MAX_PX}px`);
     expect(THUMB_SIZE_PX).toBe(44);
     expect(THUMB_STRIP_MAX_PX).toBe(72);
     expect(THUMB_REMOVE_SIZE_PX).toBe(24);
@@ -317,7 +317,7 @@ describe("attach menu — rows/states/availability", () => {
     onAction: (a: string) => void = () => {},
   ): { container: HTMLElement; trigger: HTMLButtonElement; menu: AttachMenu } {
     const container = document.createElement("div");
-    container.className = "UnicDB-ai-chat-v2";
+    container.className = "VSKit-ai-chat-v2";
     document.body.appendChild(container);
     const trigger = document.createElement("button");
     trigger.type = "button";
@@ -377,9 +377,9 @@ describe("attach menu — rows/states/availability", () => {
     });
     menu.open();
     const list = container.querySelector<HTMLElement>("[data-chat-overlay-menu]")!;
-    expect(list.style.getPropertyValue("--UnicDB-row-h")).toBe(`${ATTACH_MENU_ROW_HEIGHT_PX}px`);
-    expect(list.style.getPropertyValue("--UnicDB-list-min")).toBe(`${ATTACH_MENU_WIDTH_MIN}px`);
-    expect(list.style.getPropertyValue("--UnicDB-list-max")).toBe(`${ATTACH_MENU_WIDTH_MAX}px`);
+    expect(list.style.getPropertyValue("--VSKit-row-h")).toBe(`${ATTACH_MENU_ROW_HEIGHT_PX}px`);
+    expect(list.style.getPropertyValue("--VSKit-list-min")).toBe(`${ATTACH_MENU_WIDTH_MIN}px`);
+    expect(list.style.getPropertyValue("--VSKit-list-max")).toBe(`${ATTACH_MENU_WIDTH_MAX}px`);
     expect(ATTACH_MENU_ROW_HEIGHT_PX).toBe(40);
     expect(ATTACH_MENU_WIDTH_MIN).toBe(300);
     expect(ATTACH_MENU_WIDTH_MAX).toBe(420);
@@ -453,7 +453,7 @@ describe("schema control — active schema chip", () => {
     chip: SchemaControl;
   } {
     const container = document.createElement("div");
-    container.className = "UnicDB-ai-chat-v2";
+    container.className = "VSKit-ai-chat-v2";
     document.body.appendChild(container);
     const chip = createSchemaControl({ container, onPickSchema });
     chips.push(chip);
@@ -463,7 +463,7 @@ describe("schema control — active schema chip", () => {
   it("follows the active-schema frame and stays >=36px", () => {
     const { container, chip } = mountChip();
     const el = container.querySelector<HTMLElement>(`[${SCHEMA_CHIP_MARKER}]`)!;
-    expect(el.style.getPropertyValue("--UnicDB-schema-chip-h")).toBe(`${SCHEMA_CHIP_MIN_HEIGHT_PX}px`);
+    expect(el.style.getPropertyValue("--VSKit-schema-chip-h")).toBe(`${SCHEMA_CHIP_MIN_HEIGHT_PX}px`);
     expect(SCHEMA_CHIP_MIN_HEIGHT_PX).toBe(36);
     chip.setState({ schema: "public", connectionId: "c1" });
     expect(chip.label()).toBe("Schema: public");

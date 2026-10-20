@@ -1,254 +1,70 @@
-# RELEASE — UnicDB version-bump + publish recipe
+# VSKit Release and Local Package Status
 
-Single source of truth for cutting a release. The full pipeline is encoded in
-`scripts/bump-version.mjs` so the human operator only has to remember **one
-command**. Future function edits that ship user-visible behavior should follow
-the same recipe.
+## Current distribution status
 
-## Policy — every code change ships as a version bump
+The existing GitHub `v1.55.6` release still carries `UnicDB-1.55.6.vsix`; that historical asset remains untouched. This conversion uses `v1.55.7` for a separate VSKit release. Marketplace listing availability is unverified; publication is paused.
 
-Every user-visible code change (feature, fix, refactor with user impact, AI
-cycle close-out) lands as a new version. After the verification gate passes,
-the next required step is the `npm run bump` recipe below — never push a raw
-unversioned commit to a release branch. This policy is also pinned in
-`CLAUDE.md` §"Versioning Policy" so future sessions follow it by default.
+The local package command itself does not commit, push, tag, create a GitHub release, publish to Marketplace, install VSIX, or reload VS Code. The separate versioned Git release step will create `v1.55.7` and attach the local VSIX; Marketplace publishing remains paused.
+The release workflow is `.github/workflows/ci.yml`; it runs verification only and does not publish a package.
 
-| Change type | Action |
-|---|---|
-| User-visible feature / fix / refactor | `npm run bump -- --changelog-summary "..."` (atomic: ships to GitHub + Marketplace) |
-| Internal-only edit (typo, comment, docs) | Optional bump; bump if the day also tags/releases |
-| Big new feature area | `npm run bump:minor -- --changelog-summary "..."` |
-| Breaking change to existing extension API | `npm run bump:major -- --changelog-summary "..."` |
+## Build and install a local VSIX
 
-## TL;DR
+From the repository root, the build script runs the checks in dependency order
+(typecheck, compile, tests, package) and prints the generated artifact path:
 
 ```bash
-npm run bump -- --changelog-summary "what this ships" --changelog-files "file1, file2"
-# one command does it all: bump → lock-sync → CHANGELOG → test → compile → .vsix
-#   → commit → tag → push → GitHub release (+.vsix) → VS Code Marketplace publish
+bash scripts/build.sh
 ```
 
-To target a specific version:
+With the current manifest version `1.55.7`, the expected artifact is
+`dist/vskit-1.55.7.vsix`. Install it only when you choose to test it:
 
 ```bash
-npm run bump:minor
-npm run bump:major
-npm run bump -- 1.52.0
+code --install-extension "$(pwd)/dist/vskit-1.55.7.vsix"
 ```
 
-The script now ships to BOTH GitHub Releases AND VS Code Marketplace in one
-atomic step. The two channels stay in lockstep at the same version — no
-manual `git tag` / `gh release create` / `vsce publish` needed afterwards.
+The package identity is `lengockhoa.vskit`; the package name is lowercase
+`vskit`. This local VSIX is a test artifact, not a claim that a Marketplace
+listing or GitHub release exists.
 
-## What `npm run bump` actually does (in order, ATOMIC)
+## Version policy during this conversion
 
-1. Bump `package.json` `version` (default `patch`).
-2. Sync `package-lock.json` via `npm install --package-lock-only`
-   (the step `releaseHygiene.test.ts` pins).
-3. Prepend a `[<version>] — <YYYY-MM-DD>` block to `CHANGELOG.md` with
-   placeholder Summary/Files lines. Fill them inline via
-   `--changelog-summary "..."` / `--changelog-files "..."`, or edit the file
-   before running. The publish step refuses to proceed if the Summary
-   placeholder is still unfilled.
-4. `npm run typecheck` + `npm test`.
-5. `npm run compile` + `npx vsce package` → `UnicDB-<version>.vsix` at root.
-6. **Atomic publish** (only if `--skip-publish` is NOT passed):
-   - `git add -A && git commit -m "release: <version>"`
-   - `git tag -a v<version>` + `git push origin HEAD v<version>`
-   - `gh release create v<version> UnicDB-<version>.vsix --notes "<CHANGELOG entry>"`
-   - `npx vsce publish` (publishes current `package.json` version; PAT is in
-     macOS Keychain from the first `vsce login lengockhoa`)
+The package is version `1.55.7` because immutable tag `v1.55.6` already exists on `origin`; the historical tag is not reused.
+No automated version-preparation script was run. The package-lock root name/version match `package.json`.
 
-If any step fails, the script aborts with a clear message. Steps that
-already succeeded are NOT rolled back — re-run `npm run bump` after
-fixing the failure, or pick up manually from the failed step.
+The `.github/workflows/ci.yml` workflow runs CI checks only. No Marketplace
+publish workflow or publish npm script remains while publication is paused.
 
-## All flags
+## Local install and persistence
 
-| Flag | Effect |
-|---|---|
-| `patch` (default) / `minor` / `major` / `X.Y.Z` | Bump target |
-| `--skip-test` | Skip typecheck + test (steps 4) |
-| `--skip-package` | Skip compile + .vsix (step 5) |
-| `--skip-publish` | Skip commit/tag/push/GitHub/Marketplace (step 6) |
-| `--changelog-summary "..."` | Fill Summary placeholder inline |
-| `--changelog-files "file1, file2"` | Fill Files placeholder inline |
+The installer accepts a local VSIX with `bash scripts/install-vskit.sh --local <file.vsix>`. Its no-argument mode queries the latest GitHub release asset; that route has not been verified for VSKit.
 
-## Fast lane (hotfix — minimal commands, minimal time)
+VSKit uses the separate extension identity `lengockhoa.vskit`. VS Code scopes extension `globalState`, `workspaceState`, and `SecretStorage` to that identity, and this package contains no cross-identity importer or copier:
 
-When you need to ship RIGHT NOW and want to skip the verification gates
-because you already ran them manually:
+- Connection profiles and active-connection selection, AI settings, console history and drafts, chat-session state, and schema filters/pins are not read from the prior extension's stores.
+- Database passwords and AI API keys in `SecretStorage` are not accessible to VSKit. Recreate connections and AI settings, then enter credentials through the VSKit forms. Do not copy secrets into plain settings or generated files.
+- Existing user/workspace settings are left unchanged, but values under the prior configuration namespace are not read. Reapply non-secret values using the current `VSKit.*` settings.
+- AI chat sessions support individual Markdown/JSON export, but there is no import path. An export is an archive, not a resumable session; export from the prior installation before removing it if you need a copy.
+- Saved SQL files and other ordinary workspace files are not moved or deleted. Generated AI workspace files from a prior installation are not renamed or imported; run the relevant **VSKit: Use AI with …** command to create current files.
 
-| State | Fastest command | Skips |
-|---|---|---|
-| Already bumped + .vsix built, just need to ship | `npx vsce publish` | nothing |
-| Code edited, want full gate (recommended) | `npm run bump` | nothing (full typecheck + test + package) |
-| Code edited, tests already passed | `npm run bump -- --skip-test` | typecheck + test |
-| Code edited, .vsix already built | `npm run bump -- --skip-test --skip-package` | typecheck + test + compile + .vsix |
-| Pure version-bump only, no code change | `npm run bump -- --skip-test --skip-package && npx vsce publish` | everything except the writes |
+The prior extension and its VS Code storage are not removed by this package. Keep the prior installation until you have recreated the data you still need.
 
-Default is to run the full gate. Skip flags exist for emergencies — they
-keep the gate logic but defer the verification cost to the operator.
+The development Compose stack now has distinct VSKit container/database/volume identifiers. It will use fresh volumes instead of attaching the previous stack's stores; existing Docker volumes are neither renamed nor deleted. Ports `5433`, `3307`, and `1434` are unchanged, so a previous test container still bound to one of them prevents the new stack from starting concurrently. Back up and migrate database contents manually with database tools if needed. This task did not start, stop, or modify any Docker service or volume.
 
-## Install locally without waiting for Marketplace
+The previous integration fixture names and sample credentials were changed only in Compose and test configuration; they do not migrate or alter any existing database store.
 
-Marketplace propagation can take minutes (sometimes longer). To test the
-just-built version RIGHT NOW on the same machine, install the local `.vsix`
-directly — VS Code replaces the installed extension immediately:
+## Maintainer verification order
+
+The supported local checks are:
 
 ```bash
-# From the repo root, after `npm run bump` produced UnicDB-<version>.vsix:
-code --install-extension UnicDB-<version>.vsix
-# Or with the full path if you're not in the repo root:
-code --install-extension /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/UnicDB-<version>.vsix
+npm run typecheck
+npm run compile
+npm test
+npx @vscode/vsce package --no-dependencies -o dist/
 ```
 
-Or via the VS Code UI:
-1. Extensions panel (`Cmd+Shift+X`)
-2. Click the `⋯` menu at the top of the panel
-3. **Install from VSIX...** → pick `UnicDB-<version>.vsix`
-4. **Reload** when prompted
-
-This works even if you already ran `vsce publish` — the local install
-shadows the Marketplace version until you uninstall it. To switch back to
-the Marketplace-tracked version, uninstall first, then reinstall from
-Extensions panel.
-
-## Test on ANOTHER machine (no shared volume)
-
-`code --install-extension /Volumes/...` only works on the machine that
-owns the path. To ship to a different machine:
-
-### Option A — push a GitHub Release + use the one-liner installer
-
-This is the canonical user-facing path documented in `docs/MEMORY.md`
-(Ship Constraint).
-
-```bash
-# On the build machine, after `npm run bump` produced UnicDB-<version>.vsix:
-git tag v<version>
-git push origin v<version>
-
-# Then on github.com/lengockhoa/UnicDB/releases → edit the new tag →
-# attach UnicDB-<version>.vsix as a release asset → Publish.
-
-# On the OTHER machine (Mac/Linux, no dev tools needed):
-curl -fsSL https://raw.githubusercontent.com/lengockhoa/UnicDB/main/scripts/install-UnicDB.sh | bash
-```
-
-### Option B — copy the `.vsix` ad-hoc (scp, AirDrop, USB, cloud drive)
-
-```bash
-# From the build machine, to a machine you can SSH into:
-scp UnicDB-<version>.vsix user@other-machine:~/Downloads/
-
-# On the OTHER machine:
-code --install-extension ~/Downloads/UnicDB-<version>.vsix
-```
-
-macOS AirDrop works too — send the `.vsix` file, then on the other Mac:
-
-```bash
-code --install-extension ~/Downloads/UnicDB-<version>.vsix
-```
-
-### Option C — host the `.vsix` and install by URL
-
-Newer VS Code accepts an HTTPS URL directly:
-
-```bash
-code --install-extension https://example.com/path/to/UnicDB-<version>.vsix
-```
-
-Useful when neither SSH nor a shared filesystem is available — host the
-file on any static server (GitHub release asset, S3, GCS bucket,
-`python -m http.server` on the build machine, etc.).
-
-## What `npm run bump` actually does (in order)
-
-1. Bumps `package.json` `version` field (`patch` is the default).
-2. Runs `npm install --package-lock-only` so `package-lock.json` stays in sync.
-   *Why it matters:* `src/__tests__/releaseHygiene.test.ts` asserts that the
-   lock file root version equals the manifest version. Skipping step 2 fails
-   the test gate.
-3. Prepends a `[<version>] — <YYYY-MM-DD>` block to `CHANGELOG.md` with three
-   placeholder lines (Summary / Files / Verification) that you fill in before
-   committing.
-4. Runs `npm run typecheck` and `npm test`. Both must pass.
-5. Runs `npm run compile` then `npx vsce package` to produce
-   `UnicDB-<version>.vsix` at the repo root.
-
-Pass `--skip-test` or `--skip-package` for fast iteration when you already
-ran those stages.
-
-## Publish to VS Code Marketplace
-
-`npm run bump` does this automatically — see §"What `npm run bump` actually
-does (in order, ATOMIC)" above. This section is for when you need to
-re-publish manually (e.g., publish failed mid-script).
-
-The Personal Access Token is stored in the macOS Keychain the first time you
-run `npx vsce login lengockhoa`. Future `npx vsce publish …` invocations
-re-use it; you do **not** re-enter the PAT.
-
-```bash
-# Manual re-publish of the current package.json version (no level = no bump):
-npx vsce publish
-
-# Or bump + publish in one step (only if package.json is at the OLD version):
-npx vsce publish patch
-```
-
-If `vsce publish` complains "Git working directory not clean", commit the
-working tree first. If you see `ENOTFOUND marketplace.visualstudio.com`,
-check your network / VPN.
-
-## Push to GitHub Releases (does NOT publish to Marketplace)
-
-```bash
-git tag v<version>
-git push origin v<version>
-# then attach UnicDB-<version>.vsix via the GitHub web UI
-```
-
-GitHub releases and the VS Code Marketplace are **separate channels**. A
-GitHub release only distributes the `.vsix` as a downloadable artifact; it
-does not appear in VS Code's Extensions panel.
-
-## Edit-flow for function changes (same recipe, with a twist)
-
-When you change source code that is *not* a version bump — say you fix a bug,
-add a feature, refactor a function — do all of these before merging:
-
-1. **Read the source first.** No anchor-only edits on stale context.
-2. **Edit** with a unique surrounding-anchor `old_string` (not a line number).
-3. **Update tests if mocks need new APIs.** When the source adds a new
-   `vscode.workspace.*` / `vscode.window.*` call, every `vi.mock("vscode")`
-   block in the touched test file must expose that export. Pattern:
-   ```ts
-   workspace: { onDidChangeConfiguration: () => ({ dispose: () => undefined }) },
-   ```
-4. **Run `npm run verify:fast`** (typecheck + compile). Cheap to re-run on
-   every iteration.
-5. **Run `npm test`** for the affected files: `npx vitest run path/to/file`.
-6. **Run `npm run verify:release`** once before commit (full typecheck + test
-   + compile).
-7. **Add a CHANGELOG entry** under an `[Unreleased]` section so the next
-   `npm run bump` picks it up cleanly.
-8. **Update `docs/STATUS.md`** with a one-line change note if it's user-facing.
-
-## Why this script exists
-
-Before the script, every release required:
-
-- `Edit` on `package.json` to bump version
-- `npm install --package-lock-only` (easy to forget; releaseHygiene then fails)
-- `Edit` on `CHANGELOG.md` (easy to skip; loses release notes)
-- `npm run typecheck && npm test && npm run compile` (each could fail
-  silently if a developer skips one)
-- `npx vsce package` (different command than `vsce package` if `vsce` isn't
-  installed globally)
-
-The 1.51.5 → 1.51.6 cycle (TASK-AI-001-fix) hit every one of those traps at
-least once. `scripts/bump-version.mjs` makes the sequence atomic and
-idempotent.
+Compile precedes tests because some regression tests read generated `dist`
+bundles during module initialization. Inspect the resulting archive and its
+identity/resources before distributing it. Do not run version bump, Git
+release, or Marketplace actions as part of local package verification.

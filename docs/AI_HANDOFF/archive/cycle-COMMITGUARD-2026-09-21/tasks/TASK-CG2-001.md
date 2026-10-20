@@ -106,7 +106,7 @@ EXECUTOR_SUBAGENT: -
 RED_OUTPUT: (vitest run before `src/ai/commitMessageGuard.ts` existed)
 ```
  FAIL  src/ai/__tests__/commitMessageGuard.test.ts [ src/ai/__tests__/commitMessageGuard.test.ts ]
-Error: Failed to load url ../commitMessageGuard (resolved id: ../commitMessageGuard) in /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-cg2-001/src/ai/__tests__/commitMessageGuard.test.ts. Does the file exist?
+Error: Failed to load url ../commitMessageGuard (resolved id: ../commitMessageGuard) in the task worktree. Does the file exist?
  ❯ loadAndTransform ../../node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
 
  Test Files  1 failed (1)
@@ -118,12 +118,12 @@ $ grep -c vscode src/ai/commitMessageGuard.ts
 0
 
 $ npm run typecheck
-> UnicDB@1.54.1 typecheck
+> project-name@1.54.1 typecheck
 > tsc --noEmit
 (exit 0, 0 errors)
 
 $ npx vitest run src/ai/__tests__/commitMessageGuard.test.ts
- RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-cg2-001
+ RUN  v1.6.1 in the task worktree
  ✓ src/ai/__tests__/commitMessageGuard.test.ts  (18 tests) 4ms
  Test Files  1 passed (1)
       Tests  18 passed (18)

@@ -1,6 +1,6 @@
 // src/ai/claudeCode/__tests__/claudeCodeLiveSmoke.test.ts
 // TASK-014 — env-gated live smoke for the real Claude Code CLI.
-// Activated ONLY when `UnicDB_CLAUDE_CODE_SMOKE=1`. Probes a minimal
+// Activated ONLY when `VSKIT_CLAUDE_CODE_SMOKE=1`. Probes a minimal
 // stream-json handshake. `--print ping` is a trivial non-mutating
 // prompt that DOES reach the model (a single round-trip); the point
 // is to exercise argv parsing + stream-json emission, not to do DB
@@ -23,7 +23,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { ChildProcessWithoutNullStreams } from "child_process";
 
-const GATE_ENV = "UnicDB_CLAUDE_CODE_SMOKE";
+const GATE_ENV = "VSKIT_CLAUDE_CODE_SMOKE";
 
 interface ClaudeProbe {
   child: ChildProcessWithoutNullStreams;
@@ -137,7 +137,7 @@ describe.skipIf(!process.env[GATE_ENV])(
     it(
       "binary exists and produces a parseable stream-json event inside 30s",
       async () => {
-        workspace = mkdtempSync(join(tmpdir(), "unicdb-claude-smoke-"));
+        workspace = mkdtempSync(join(tmpdir(), "vskit-claude-smoke-"));
         cleanup = true;
 
         const { child, events, getSpawnError } = await startClaude(workspace);
@@ -177,19 +177,19 @@ describe.skipIf(!process.env[GATE_ENV])(
 );
 
 describe("claude code CLI live smoke — pins the gate env-var name", () => {
-  it("GATE_ENV === 'UnicDB_CLAUDE_CODE_SMOKE'", () => {
-    expect(GATE_ENV).toBe("UnicDB_CLAUDE_CODE_SMOKE");
+  it("GATE_ENV === 'VSKIT_CLAUDE_CODE_SMOKE'", () => {
+    expect(GATE_ENV).toBe("VSKIT_CLAUDE_CODE_SMOKE");
   });
 
   it(
     "spawn error surfaces fast (missing binary)",
     async () => {
       const workspace = mkdtempSync(
-        join(tmpdir(), "unicdb-claude-smoke-missing-"),
+        join(tmpdir(), "vskit-claude-smoke-missing-"),
       );
       try {
         const probe = await startProbe(
-          "unicdb-smoke-missing-binary",
+          "vskit-smoke-missing-binary",
           ["--print", "ping"],
           workspace,
         );

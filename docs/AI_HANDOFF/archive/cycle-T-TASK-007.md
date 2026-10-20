@@ -266,7 +266,7 @@ VERIFICATION:
   command: npm run typecheck
   result: clean, exit 0
   output_excerpt: |
-    > UnicDB@1.6.3 typecheck
+    > extension@1.6.3 typecheck
     > tsc --noEmit
 
   command: npx vitest run src/ui/__tests__/aiChatPanelAcp.test.ts
@@ -476,7 +476,7 @@ TESTS_ADDED:
     "R(Finding5) regression: dispose() forcibly closes a socket with an in-flight (hung)
     request instead of waiting for it to finish"
   - src/extension.test.ts:
-    "R(Finding7) regression: closing the webview tab (onDispose) lets the NEXT UnicDB.aiChat
+    "R(Finding7) regression: closing the webview tab (onDispose) lets the next chat command
     re-detect the engine and open a fresh panel"
 
 VERIFICATION:

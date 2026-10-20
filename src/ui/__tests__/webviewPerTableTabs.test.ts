@@ -42,7 +42,7 @@ interface MediaQueryListLike {
   dispatchEvent(): boolean;
 }
 
-interface UnicDBApi {
+interface VSKitApi {
   postMessage: (msg: unknown) => void;
 }
 
@@ -84,16 +84,16 @@ function loadBundle(): { received: Array<Record<string, unknown>>; root: HTMLDiv
     throw new Error("dist/webview.js missing — run `npm run compile` before this test");
   }
 
-  document.body.innerHTML = '<div id="UnicDB-root" class="UnicDB-webview"></div>';
-  const root = document.getElementById("UnicDB-root") as HTMLDivElement;
+  document.body.innerHTML = '<div id="VSKit-root" class="VSKit-webview"></div>';
+  const root = document.getElementById("VSKit-root") as HTMLDivElement;
 
   const received: Array<Record<string, unknown>> = [];
-  const api: UnicDBApi = {
+  const api: VSKitApi = {
     postMessage: (msg) => {
       received.push(msg as Record<string, unknown>);
     },
   };
-  (globalThis as unknown as { acquireVsCodeApi: () => UnicDBApi }).acquireVsCodeApi =
+  (globalThis as unknown as { acquireVsCodeApi: () => VSKitApi }).acquireVsCodeApi =
     () => api;
 
   (0, eval)(bundleSrc);
@@ -135,7 +135,7 @@ function state(results: Array<Record<string, unknown>>): Record<string, unknown>
 
 /** Statement tab #i (index 0-based; the leading Messages tab is NOT one). */
 function statementTab(i: number): HTMLButtonElement {
-  const tabs = document.querySelectorAll<HTMLButtonElement>(".UnicDB-tabs .UnicDB-tab");
+  const tabs = document.querySelectorAll<HTMLButtonElement>(".VSKit-tabs .VSKit-tab");
   // Messages tab is rendered FIRST; statement tabs follow in reverse-chrono.
   const stmtTabs = Array.from(tabs).slice(1);
   return stmtTabs[i];
@@ -211,7 +211,7 @@ describeIfBundle("webview/main.ts bundle — TASK-007 per-table tab labels", () 
     );
     await flush();
 
-    const tabs = document.querySelectorAll<HTMLButtonElement>(".UnicDB-tabs .UnicDB-tab");
+    const tabs = document.querySelectorAll<HTMLButtonElement>(".VSKit-tabs .VSKit-tab");
     // Two statement tabs + Messages tab.
     expect(tabs.length).toBe(3);
 
@@ -228,14 +228,14 @@ describeIfBundle("webview/main.ts bundle — TASK-007 per-table tab labels", () 
     // NOTE: rebuildTabs() recreates the buttons on every render, so re-query
     // AFTER the click — the pre-click t0/t1 references are detached nodes.
     // Active is the FIRST newly appended = canonical 0 = public.users (t1).
-    expect(t1.classList.contains("UnicDB-tab-active")).toBe(true);
-    expect(t0.classList.contains("UnicDB-tab-active")).toBe(false);
+    expect(t1.classList.contains("VSKit-tab-active")).toBe(true);
+    expect(t0.classList.contains("VSKit-tab-active")).toBe(false);
     t0.click();
     await flush();
     const t0After = statementTab(0);
     const t1After = statementTab(1);
-    expect(t0After.classList.contains("UnicDB-tab-active")).toBe(true);
-    expect(t1After.classList.contains("UnicDB-tab-active")).toBe(false);
+    expect(t0After.classList.contains("VSKit-tab-active")).toBe(true);
+    expect(t1After.classList.contains("VSKit-tab-active")).toBe(false);
     // Labeled text survived the switch re-render.
     expect(t0After.textContent!.startsWith("Run 2 · sales.orders")).toBe(true);
     expect(t1After.textContent!.startsWith("Run 1 · public.users")).toBe(true);

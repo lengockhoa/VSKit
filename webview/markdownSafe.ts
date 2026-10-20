@@ -72,7 +72,7 @@ export function renderMarkdown(text: string): string {
     (_m, idxStr: string) => {
       const idx = Number(idxStr);
       const f = fences[idx]!;
-      return `<pre class="UnicDB-md-code" data-raw="${escapeHtml(f.code)}"><code class="UnicDB-md-code-lang-${escapeHtml(f.lang)}">${f.code}</code><button type="button" class="UnicDB-md-copy">Copy</button></pre>`;
+      return `<pre class="VSKit-md-code" data-raw="${escapeHtml(f.code)}"><code class="VSKit-md-code-lang-${escapeHtml(f.lang)}">${f.code}</code><button type="button" class="VSKit-md-copy">Copy</button></pre>`;
     },
   );
 }

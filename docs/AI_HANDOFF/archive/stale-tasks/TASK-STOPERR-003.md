@@ -21,13 +21,13 @@ visible feedback.
     do NOT re-split them. Keep `lineBoundaries` per piece. Preserve the empty/no-statement
     info messages.
   - Silent early return at ~3139 (`!editor || languageId !== "sql"`) → `showInformationMessage`
-    ("UnicDB: no SQL editor is focused — nothing to run." or equivalent).
+    ("Extension: no SQL editor is focused — nothing to run." or equivalent).
   - Busy refusal at ~3420 → upgrade `showInformationMessage` → `showWarningMessage` so a
     dropped run is not mistaken for success.
   - `runStatements` (~3391-3575): accept optional `opts.editor?: vscode.TextEditor`
     (new field on the existing opts param). Clear marker at run start (before
     `runner.run`). After `runner.run` settles: if `runSlice` contains `status === "error"`,
-    `showErrorMessage("UnicDB: stopped at statement N of M — <error>. Remaining statements were not run.")`
+    `showErrorMessage("Extension: stopped at statement N of M — <error>. Remaining statements were not run.")`
     (N = position within this run, M = runSlice.length), and when `opts.editor` is set,
     `marker.mark(editor, statements, failedStmtIndexInStatements, error)`.
   - Instantiate the marker once (module scope, disposed in `deactivate`).

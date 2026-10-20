@@ -32,7 +32,7 @@ engine routing). This is the file a future refactor must keep green.
 
 | # | Type | Test name | Expected | Pre-state / Fixture |
 |---|------|-----------|----------|---------------------|
-| 1 | happy | manifest ↔ command id agreement | `menus["scm/title"][n].command === "UnicDB.generateCommitMessage"` AND that id exists in `contributes.commands` | parsed package.json |
+| 1 | happy | manifest ↔ command id agreement | `menus["scm/title"][n].command === "extension.generateCommitMessage"` AND that id exists in `contributes.commands` | parsed package.json |
 | 2 | happy | end-to-end builtin | full deps fake → `setInputBox` receives conventional message derived from the fake diff + fake reply | lite `{modelId:"m", engine:"builtin"}` |
 | 3 | edge (missing config) | disabled-Lite UX contract | toast string + "Open Settings" action exactly as frozen; `openSettings` spy called when action resolved | settings without lite modelId |
 | 4 | edge (empty) | empty diff cuts the chain | `collectDiff` null → info toast; neither engine port invoked; inputBox untouched | empty-repo fake |

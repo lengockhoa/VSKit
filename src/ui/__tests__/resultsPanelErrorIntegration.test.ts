@@ -51,7 +51,7 @@ class FakeWebviewView {
   webview = new FakeWebview();
   description: string | undefined;
   title: string | undefined;
-  viewType = "UnicDB.results";
+  viewType = "VSKit.results";
   visible = true;
   private didDisposeHandlers: Array<() => void> = [];
   onDidDispose(h: () => void) {
@@ -120,7 +120,7 @@ vi.mock("vscode", () => {
 
     commands: {
       executeCommand: vi.fn(async (cmd: string, ..._rest: unknown[]) => {
-        if (cmd === "UnicDB.results.focus" && providerStore.length > 0) {
+        if (cmd === "VSKit.results.focus" && providerStore.length > 0) {
           if (lastView.current && !(lastView.current as unknown as { isDisposed?: boolean }).isDisposed) {
             return undefined;
           }
@@ -136,14 +136,14 @@ vi.mock("vscode", () => {
 
     workspace: {
       // confirmDangerousStatements reads two getConfiguration keys:
-      //   UnicDB.confirmDestructive  (default true)
-      //   UnicDB.admin.confirmGrant  (default true)
+      //   VSKit.confirmDestructive  (default true)
+      //   VSKit.admin.confirmGrant  (default true)
       // For SELECT 1 (a safe statement) neither prompt is shown, so the
       // get() function only needs to return undefined for these keys.
       getConfiguration: vi.fn(() => ({
         get: (_key: string, def?: unknown) => def,
       })),
-      // TASK-RP-001 — UnicDB.resultsPlacement was removed in this wave; the
+      // TASK-RP-001 — VSKit.resultsPlacement was removed in this wave; the
       // old auto-recreate config listener no longer exists. The mock keeps
       // onDidChangeConfiguration around so unrelated tests that incidentally
       // touch it don't crash.

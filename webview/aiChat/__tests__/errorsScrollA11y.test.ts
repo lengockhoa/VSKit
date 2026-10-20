@@ -69,9 +69,9 @@ describe("error card — geometry + copy contract", () => {
     const card = createErrorCard({ frame, request: request() });
     document.body.appendChild(card.root);
 
-    expect(card.root.querySelector(".UnicDB-ai-chat-v2-error-card-title")!.textContent).toBe(ERROR_CARD_TITLE);
-    expect(card.root.querySelector(".UnicDB-ai-chat-v2-error-card-message")!.textContent).toBe(frame.safeMessage);
-    expect(card.root.querySelector(".UnicDB-ai-chat-v2-error-card-id")!.textContent).toContain(frame.diagnosticId);
+    expect(card.root.querySelector(".VSKit-ai-chat-v2-error-card-title")!.textContent).toBe(ERROR_CARD_TITLE);
+    expect(card.root.querySelector(".VSKit-ai-chat-v2-error-card-message")!.textContent).toBe(frame.safeMessage);
+    expect(card.root.querySelector(".VSKit-ai-chat-v2-error-card-id")!.textContent).toContain(frame.diagnosticId);
     expect(card.root.getAttribute(ERROR_CARD_MARKER)).toBe("provider_crash");
   });
 
@@ -245,7 +245,7 @@ describe("stop failure advisory", () => {
 function makeViewport(): { viewport: HTMLElement; host: HTMLElement; set(top: number, height: number, client: number): void } {
   const host = document.createElement("div");
   const viewport = document.createElement("div");
-  viewport.className = "UnicDB-ai-chat-v2-transcript";
+  viewport.className = "VSKit-ai-chat-v2-transcript";
   host.appendChild(viewport);
   document.body.appendChild(host);
   let scrollTop = 0;
@@ -395,7 +395,7 @@ describe("scroll controller — proximity discipline", () => {
 describe("a11y — live regions", () => {
   function mountShellRegions(): { polite: HTMLElement; assertive: HTMLElement; root: HTMLElement } {
     const root = document.createElement("div");
-    root.className = "UnicDB-ai-chat-v2";
+    root.className = "VSKit-ai-chat-v2";
     document.body.appendChild(root);
     mountChatShell(root);
     return {
@@ -565,10 +565,10 @@ describe("responsive/HC/reduced-motion CSS contract", () => {
   it("stylesheet exists and every new selector is scoped to the V2 root", () => {
     expect(css).not.toBe("");
     for (const selector of [
-      ".UnicDB-ai-chat-v2-error-card",
-      ".UnicDB-ai-chat-v2-scroll-pill",
-      ".UnicDB-ai-chat-v2-stop-failure",
-      ".UnicDB-ai-chat-v2-tooltip",
+      ".VSKit-ai-chat-v2-error-card",
+      ".VSKit-ai-chat-v2-scroll-pill",
+      ".VSKit-ai-chat-v2-stop-failure",
+      ".VSKit-ai-chat-v2-tooltip",
     ]) {
       expect(css).toContain(selector);
     }
@@ -577,25 +577,25 @@ describe("responsive/HC/reduced-motion CSS contract", () => {
   });
 
   it("error card: assistant width, 10x12 padding, 3px danger border", () => {
-    const body = ruleBody(".UnicDB-ai-chat-v2-error-card");
+    const body = ruleBody(".VSKit-ai-chat-v2-error-card");
     expect(body).toContain("width: 880px");
     expect(body).toContain("max-width: 92%");
     expect(body).toContain("padding: 10px 12px");
-    expect(body).toContain("border-left: 3px solid var(--UnicDB-ai-chat-v2-danger)");
+    expect(body).toContain("border-left: 3px solid var(--VSKit-ai-chat-v2-danger)");
     expect(body).toContain("background: color-mix");
   });
 
   it("error card actions are real >=32px controls with a 2px/2px ring", () => {
-    const body = ruleBody(".UnicDB-ai-chat-v2-error-card-action");
+    const body = ruleBody(".VSKit-ai-chat-v2-error-card-action");
     expect(body).toContain("min-height: 32px");
     expect(body).toContain("min-width: 32px");
-    const focus = ruleBody(".UnicDB-ai-chat-v2-error-card-action:focus-visible");
+    const focus = ruleBody(".VSKit-ai-chat-v2-error-card-action:focus-visible");
     expect(focus).toContain("outline: 2px solid");
     expect(focus).toContain("outline-offset: 2px");
   });
 
   it("scroll pill is bottom-right and at least 28px", () => {
-    const body = ruleBody(".UnicDB-ai-chat-v2-scroll-pill");
+    const body = ruleBody(".VSKit-ai-chat-v2-scroll-pill");
     expect(body).toContain("position: absolute");
     expect(body).toContain("right: 12px");
     expect(body).toContain("bottom: 12px");
@@ -604,27 +604,27 @@ describe("responsive/HC/reduced-motion CSS contract", () => {
   });
 
   it("send/stop stay 32x32 and generic controls stay >=32px", () => {
-    const send = ruleBody(".UnicDB-ai-chat-v2-send");
+    const send = ruleBody(".VSKit-ai-chat-v2-send");
     expect(send).toContain("width: 32px");
     expect(send).toContain("height: 32px");
-    const control = ruleBody(".UnicDB-ai-chat-v2-control");
+    const control = ruleBody(".VSKit-ai-chat-v2-control");
     if (control) {
       expect(control).toContain("min-height: 32px");
     }
-    const stop = ruleBody(".UnicDB-ai-chat-v2-stop");
-    expect(css).toContain(".UnicDB-ai-chat-v2-stop");
+    const stop = ruleBody(".VSKit-ai-chat-v2-stop");
+    expect(css).toContain(".VSKit-ai-chat-v2-stop");
   });
 
   it("under 420px hidden labels keep their aria-label (not display:none on the control)", () => {
     const narrow = css.slice(css.indexOf("@media (max-width: 419px)"));
-    expect(narrow).toContain(".UnicDB-ai-chat-v2-label-optional");
+    expect(narrow).toContain(".VSKit-ai-chat-v2-label-optional");
     // The hidden thing is the optional LABEL span, never the button itself.
-    expect(narrow).not.toMatch(/\.UnicDB-ai-chat-v2-send\s*\{\s*display: none/);
+    expect(narrow).not.toMatch(/\.VSKit-ai-chat-v2-send\s*\{\s*display: none/);
   });
 
   it("under 320px composer/card actions wrap into two rows", () => {
     const narrow = css.slice(css.indexOf("@media (max-width: 319px)"));
-    expect(narrow).toContain(".UnicDB-ai-chat-v2-error-card-actions");
+    expect(narrow).toContain(".VSKit-ai-chat-v2-error-card-actions");
     expect(narrow).toContain("grid-template-columns");
   });
 
@@ -632,8 +632,8 @@ describe("responsive/HC/reduced-motion CSS contract", () => {
     const blocks = css.split("@media (prefers-reduced-motion: reduce)");
     expect(blocks.length).toBeGreaterThan(2);
     const tail = blocks[blocks.length - 1]!;
-    expect(tail).toContain(".UnicDB-ai-chat-v2-error-card");
-    expect(tail).toContain(".UnicDB-ai-chat-v2-scroll-pill");
+    expect(tail).toContain(".VSKit-ai-chat-v2-error-card");
+    expect(tail).toContain(".VSKit-ai-chat-v2-scroll-pill");
     expect(tail).toContain("animation: none");
     expect(tail).toContain("transition: none");
     expect(tail).toContain("scroll-behavior: auto");
@@ -646,7 +646,7 @@ describe("responsive/HC/reduced-motion CSS contract", () => {
   });
 
   it("no horizontal page overflow: min-width:0 + overflow-wrap on the card", () => {
-    const body = ruleBody(".UnicDB-ai-chat-v2-error-card");
+    const body = ruleBody(".VSKit-ai-chat-v2-error-card");
     expect(css).toContain("overflow-wrap: anywhere");
     expect(css).toContain("min-width: 0");
     expect(body).not.toContain("width: 100vw");
@@ -747,46 +747,46 @@ describe("W5 a11y audit — reduced-motion coverage + focus ring", () => {
 
   it("`outline: none` appears exactly once, on the composer input (ring via :focus-within)", () => {
     const offenders = rules.filter((r) => /\boutline\s*:\s*none\b/.test(r.body));
-    expect(offenders.map((r) => r.selector)).toEqual([".UnicDB-ai-chat-v2-input"]);
+    expect(offenders.map((r) => r.selector)).toEqual([".VSKit-ai-chat-v2-input"]);
   });
 
   it("focus-visible: every pinned interactive selector has an outline + offset ring", () => {
     // SPEC FR-007 pinned list plus the focusable classes the audit found
     // without a rule (buttons/tabindex targets in the V2 surface).
     const pinned = [
-      ".UnicDB-ai-chat-v2-control:focus-visible",
-      ".UnicDB-ai-chat-v2-send:focus-visible",
-      ".UnicDB-ai-chat-v2-action:focus-visible",
-      ".UnicDB-ai-chat-v2-chip:focus-visible",
-      ".UnicDB-ai-chat-v2-context-chip-body:focus-visible",
-      ".UnicDB-ai-chat-v2-context-chip-remove:focus-visible",
-      ".UnicDB-ai-chat-v2-primary:focus-visible",
-      ".UnicDB-ai-chat-v2-menu-row:focus-visible",
-      ".UnicDB-ai-chat-v2-dialog-action:focus-visible",
-      ".UnicDB-ai-chat-v2-title-input:focus-visible",
-      ".UnicDB-ai-chat-v2-resume-row:focus-visible",
-      ".UnicDB-ai-chat-v2-permission-action:focus-visible",
-      ".UnicDB-ai-chat-v2-permission-details-toggle:focus-visible",
-      ".UnicDB-ai-chat-v2-permission-detail-copy:focus-visible",
-      ".UnicDB-ai-chat-v2-overlay-modal-action:focus-visible",
-      ".UnicDB-ai-chat-v2-change-plan-action:focus-visible",
-      ".UnicDB-ai-chat-v2-error-card-action:focus-visible",
-      ".UnicDB-ai-chat-v2-scroll-pill:focus-visible",
-      ".UnicDB-ai-chat-v2-codeblock-copy:focus-visible",
-      ".UnicDB-ai-chat-v2-load-earlier:focus-visible",
-      ".UnicDB-ai-chat-v2-reasoning-toggle:focus-visible",
-      ".UnicDB-ai-chat-v2-tool-head:focus-visible",
+      ".VSKit-ai-chat-v2-control:focus-visible",
+      ".VSKit-ai-chat-v2-send:focus-visible",
+      ".VSKit-ai-chat-v2-action:focus-visible",
+      ".VSKit-ai-chat-v2-chip:focus-visible",
+      ".VSKit-ai-chat-v2-context-chip-body:focus-visible",
+      ".VSKit-ai-chat-v2-context-chip-remove:focus-visible",
+      ".VSKit-ai-chat-v2-primary:focus-visible",
+      ".VSKit-ai-chat-v2-menu-row:focus-visible",
+      ".VSKit-ai-chat-v2-dialog-action:focus-visible",
+      ".VSKit-ai-chat-v2-title-input:focus-visible",
+      ".VSKit-ai-chat-v2-resume-row:focus-visible",
+      ".VSKit-ai-chat-v2-permission-action:focus-visible",
+      ".VSKit-ai-chat-v2-permission-details-toggle:focus-visible",
+      ".VSKit-ai-chat-v2-permission-detail-copy:focus-visible",
+      ".VSKit-ai-chat-v2-overlay-modal-action:focus-visible",
+      ".VSKit-ai-chat-v2-change-plan-action:focus-visible",
+      ".VSKit-ai-chat-v2-error-card-action:focus-visible",
+      ".VSKit-ai-chat-v2-scroll-pill:focus-visible",
+      ".VSKit-ai-chat-v2-codeblock-copy:focus-visible",
+      ".VSKit-ai-chat-v2-load-earlier:focus-visible",
+      ".VSKit-ai-chat-v2-reasoning-toggle:focus-visible",
+      ".VSKit-ai-chat-v2-tool-head:focus-visible",
       // Audit additions: focusable elements missing a ring entirely.
-      ".UnicDB-ai-chat-v2-mark:focus-visible",
-      ".UnicDB-ai-chat-v2-title:focus-visible",
-      ".UnicDB-ai-chat-v2-engine:focus-visible",
-      ".UnicDB-ai-chat-v2-overflow:focus-visible",
-      ".UnicDB-ai-chat-v2-composer-menu-row:focus-visible",
-      ".UnicDB-ai-chat-v2-tool-toggle:focus-visible",
-      ".UnicDB-ai-chat-v2-autocomplete-retry:focus-visible",
-      ".UnicDB-ai-chat-v2-context-chip-preview:focus-visible",
-      ".UnicDB-ai-chat-v2-title-editor:focus-visible",
-      ".UnicDB-ai-chat-v2-attachment-thumb-remove:focus-visible",
+      ".VSKit-ai-chat-v2-mark:focus-visible",
+      ".VSKit-ai-chat-v2-title:focus-visible",
+      ".VSKit-ai-chat-v2-engine:focus-visible",
+      ".VSKit-ai-chat-v2-overflow:focus-visible",
+      ".VSKit-ai-chat-v2-composer-menu-row:focus-visible",
+      ".VSKit-ai-chat-v2-tool-toggle:focus-visible",
+      ".VSKit-ai-chat-v2-autocomplete-retry:focus-visible",
+      ".VSKit-ai-chat-v2-context-chip-preview:focus-visible",
+      ".VSKit-ai-chat-v2-title-editor:focus-visible",
+      ".VSKit-ai-chat-v2-attachment-thumb-remove:focus-visible",
     ];
     const missing: string[] = [];
     for (const sel of pinned) {
@@ -797,7 +797,7 @@ describe("W5 a11y audit — reduced-motion coverage + focus ring", () => {
       }
       // No hard-coded ring colors: the ring must come from a theme variable.
       const outline = rule.body.match(/\boutline\s*:\s*([^;]+)/)?.[1] ?? "";
-      expect(outline).toMatch(/var\(--(?:UnicDB-ai-chat-v2-focus|vscode-focusBorder)/);
+      expect(outline).toMatch(/var\(--(?:VSKit-ai-chat-v2-focus|vscode-focusBorder)/);
     }
     expect(missing).toEqual([]);
   });

@@ -12,7 +12,7 @@ Rebuild the message visual system: every fenced code block gets a header bar (la
 
 ## Target Files
 
-- `webview/aiChat/markdown.ts` — `createCodeBlock` (~155-169) returns a `-codeblock` wrapper div with `-codeblock-header` (lang span + `-codeblock-copy` button) around the existing `pre.UnicDB-ai-chat-v2-code`; copy handler per SPEC FR-005 (frozen labels `Copy`/`Copied`/`Failed`, 1500ms restore, clipboard-missing safe).
+- `webview/aiChat/markdown.ts` — `createCodeBlock` (~155-169) returns a `-codeblock` wrapper div with `-codeblock-header` (lang span + `-codeblock-copy` button) around the existing `pre.VSKit-ai-chat-v2-code`; copy handler per SPEC FR-005 (frozen labels `Copy`/`Copied`/`Failed`, 1500ms restore, clipboard-missing safe).
 - `webview/aiChat/transcript.ts` — tool items created with `data-collapsed="1"` + `aria-expanded="false"` (~347-358); reasoning items gain a `-reasoning-toggle` disclosure button, default collapsed (same pattern as tool toggle).
 - `webview/aiChat/styles.css` — new `-codeblock`/`-codeblock-header`/`-codeblock-lang`/`-codeblock-copy`/`-reasoning-toggle` rules; inner `-code` override (`margin:0; border:0; padding:10px 12px; line-height:1.5`); `-item-user` → `max-width:70%; padding:6px 10px`; `-tool-head` `min-height:28px`; remove `opacity: 0` from `-action` (~847) and delete the hover/focus reveal rule (~851-855).
 
@@ -20,8 +20,8 @@ Rebuild the message visual system: every fenced code block gets a header bar (la
 
 | # | Type | Test name | Expected | Pre-state / Fixture |
 |---|------|-----------|----------|---------------------|
-| 1 | happy | `sql fence renders codeblock wrapper with header, lang label and Copy` | `renderMarkdownInto` output contains `.UnicDB-ai-chat-v2-codeblock` > `-codeblock-header` > `-codeblock-lang` ("sql") + `-codeblock-copy` button; inner `pre.UnicDB-ai-chat-v2-code` preserved | `createCodeBlock({lang:"sql",code:"select 1"})` |
-| 2 | edge (empty) | `fence without language renders "text" label and -plain code class` | header label `text`; `code.UnicDB-ai-chat-v2-code-plain`; no `data-lang` on wrapper | `createCodeBlock({lang:"",code:"ls"})` |
+| 1 | happy | `sql fence renders codeblock wrapper with header, lang label and Copy` | `renderMarkdownInto` output contains `.VSKit-ai-chat-v2-codeblock` > `-codeblock-header` > `-codeblock-lang` ("sql") + `-codeblock-copy` button; inner `pre.VSKit-ai-chat-v2-code` preserved | `createCodeBlock({lang:"sql",code:"select 1"})` |
+| 2 | edge (empty) | `fence without language renders "text" label and -plain code class` | header label `text`; `code.VSKit-ai-chat-v2-code-plain`; no `data-lang` on wrapper | `createCodeBlock({lang:"",code:"ls"})` |
 | 3 | edge (error) | `clipboard rejection shows Failed then restores Copy` | click → `writeText` rejects → button text `Failed`; after 1500ms (fake timers) → `Copy`; no throw | stub `navigator.clipboard.writeText` rejecting |
 | 4 | edge (state) | `tool and reasoning items start collapsed` | tool root `data-collapsed="1"`, toggle `aria-expanded="false"`; reasoning item has `-reasoning-toggle` + `data-collapsed="1"` | seeded tool + reasoning transcript items |
 | 5 | edge (CSS contract) | `action row is visible at rest` | styles.css `-action` rule has no `opacity: 0`; no `:hover … -action`/`focus-within` reveal rule remains | readFileSync styles.css |
@@ -62,7 +62,7 @@ npm run compile
 ## Discussion
 
 ### 2026-09-21 · planner · unic-smart
-The "no copy button" report is a CSS defect, not missing wiring: `buildActions` (transcript.ts:281-285) already appends a copy button per assistant message — `opacity: 0` (styles.css:847) hides it until hover. Fix = always-visible muted actions. Code-block copy mirrors the proven V1 `UnicDB-md-copy` pattern (markdownSafe.ts:75) but in pure-DOM style with label feedback instead of a toast.
+The "no copy button" report is a CSS defect, not missing wiring: `buildActions` (transcript.ts:281-285) already appends a copy button per assistant message — `opacity: 0` (styles.css:847) hides it until hover. Fix = always-visible muted actions. Code-block copy mirrors the proven V1 `VSKit-md-copy` pattern (markdownSafe.ts:75) but in pure-DOM style with label feedback instead of a toast.
 
 ---
 
@@ -82,7 +82,7 @@ Phase 4 reviewer appends `## Reviewer Verdict` BELOW the Executor Report.
 ```
 ❯ webview/aiChat/__tests__/codeBlock.test.ts  (7 tests | 6 failed)
   → #1 expected the -codeblock wrapper: expected null not to be null
-  → #2 expected 'UnicDB-ai-chat-v2-code' to be 'UnicDB-ai-chat-v2-codeblock'
+  → #2 expected 'VSKit-ai-chat-v2-code' to be 'VSKit-ai-chat-v2-codeblock'
   → #3/success/missing/rapid: expected a codeblock Copy button: expected null not to be null
 ❯ webview/aiChat/__tests__/transcript.test.ts  (28 tests | 4 failed)
   → tool items start collapsed: expected null to be '1'

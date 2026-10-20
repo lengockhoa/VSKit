@@ -43,7 +43,7 @@ interface Harness {
 
 function makeHarness(opts: { engineEntries?: readonly EngineMenuEntry[] } = {}): Harness {
   const root = document.createElement("div");
-  root.id = "UnicDB-root";
+  root.id = "VSKit-root";
   document.body.appendChild(root);
   const sent: unknown[] = [];
   const api: VsCodeApiLike = { postMessage: (message) => sent.push(message) };
@@ -146,8 +146,8 @@ describe("controller V2 surfaces — TASK-CHATV2-017", () => {
     // the composer hint's own aria-live is a separate, non-region surface.
     expect(h.root.querySelectorAll(`#${CHAT_V2_STATUS_LIVE_ID}`).length).toBe(1);
     expect(h.root.querySelectorAll(`#${CHAT_V2_ALERT_LIVE_ID}`).length).toBe(1);
-    expect(h.root.querySelectorAll(".UnicDB-ai-chat-v2-live-region[aria-live='polite']").length).toBe(1);
-    expect(h.root.querySelectorAll(".UnicDB-ai-chat-v2-live-region[aria-live='assertive']").length).toBe(1);
+    expect(h.root.querySelectorAll(".VSKit-ai-chat-v2-live-region[aria-live='polite']").length).toBe(1);
+    expect(h.root.querySelectorAll(".VSKit-ai-chat-v2-live-region[aria-live='assertive']").length).toBe(1);
   });
 
   it("#2 paints the keyed transcript from reducer state (one node per item)", () => {
@@ -162,7 +162,7 @@ describe("controller V2 surfaces — TASK-CHATV2-017", () => {
     h.send({ kind: "text_delta", sessionId: "s1", sequence: 3, turnId: "t1", messageId: "m1", text: "hi" });
     h.controller.flushRender();
 
-    const transcript = h.root.querySelector(".UnicDB-ai-chat-v2-transcript") as HTMLElement;
+    const transcript = h.root.querySelector(".VSKit-ai-chat-v2-transcript") as HTMLElement;
     expect(transcript).not.toBeNull();
     const keyed = transcript.querySelectorAll("[data-chat-key]");
     // The user bubble + the assistant text node — keyed, not appended blindly.
@@ -245,7 +245,7 @@ describe("controller V2 surfaces — TASK-CHATV2-017", () => {
     expect(card).not.toBeNull();
     expect(card!.textContent).toContain("diag-safe");
     card!.querySelector<HTMLButtonElement>('[data-action="change-engine"]')!.click();
-    expect(document.activeElement).toBe(h.root.querySelector("#UnicDB-ai-chat-v2-engine"));
+    expect(document.activeElement).toBe(h.root.querySelector("#VSKit-ai-chat-v2-engine"));
     card!.querySelector<HTMLButtonElement>('[data-action="retry"]')!.click();
     expect(h.sent).toContainEqual({
       kind: "submit_turn",
@@ -271,9 +271,9 @@ describe("controller V2 surfaces — TASK-CHATV2-017", () => {
     h.controller.flushRender();
 
     (h.controller as ChatController & { openResumePicker(): void }).openResumePicker();
-    expect(h.root.querySelector(".UnicDB-ai-chat-v2-dialog-resume")?.textContent).toContain("Resume saved UnicDB chat");
+    expect(h.root.querySelector(".VSKit-ai-chat-v2-dialog-resume")?.textContent).toContain("Resume saved VSKit chat");
     expect(h.sent).toContainEqual({ kind: "list_sessions", protocolVersion: AI_CHAT_PROTOCOL_VERSION_V2 });
-    h.root.querySelector<HTMLButtonElement>(".UnicDB-ai-chat-v2-resume-row")!.click();
+    h.root.querySelector<HTMLButtonElement>(".VSKit-ai-chat-v2-resume-row")!.click();
     expect(h.sent).toContainEqual(expect.objectContaining({ kind: "resume_saved_session", sessionId: "saved-1" }));
 
     const overflow = h.root.querySelector<HTMLButtonElement>(`#${SESSIONS_IDS.overflowButton}`)!;
@@ -294,7 +294,7 @@ describe("controller V2 surfaces — TASK-CHATV2-017", () => {
 
     h.controller.dispose();
     controllers = controllers.filter((c) => c !== h.controller);
-    expect(h.root.querySelector(".UnicDB-ai-chat-v2-dialog-layer")).toBeNull();
+    expect(h.root.querySelector(".VSKit-ai-chat-v2-dialog-layer")).toBeNull();
   });
 
   it("#7 mounts the V2 attach menu from the composer trigger, gates Image… on host capability, and disposes it", () => {
@@ -477,28 +477,28 @@ describe("controller V2 surfaces — TASK-CHATV2-017", () => {
     h.send({ kind: "title_updated", sessionId: "s1", sequence: 2, title: "Ops run" });
     h.controller.flushRender();
 
-    const header = h.root.querySelector<HTMLElement>(".UnicDB-ai-chat-v2-header");
+    const header = h.root.querySelector<HTMLElement>(".VSKit-ai-chat-v2-header");
     expect(header).not.toBeNull();
     // Geometry lives in CSS, not JS: the header row is exactly 40px tall.
     const css = readFileSync(resolve(process.cwd(), "webview", "aiChat", "styles.css"), "utf8");
-    expect(css).toMatch(/\.UnicDB-ai-chat-v2-header\s*{[^}]*height:\s*40px/);
+    expect(css).toMatch(/\.VSKit-ai-chat-v2-header\s*{[^}]*height:\s*40px/);
     // The host-acked title routes to the sessions-owned node — the shell's
     // placeholder title and the header's own editor are gone (single writer).
-    expect(h.root.querySelectorAll(".UnicDB-ai-chat-v2-title").length).toBe(0);
-    const titles = h.root.querySelectorAll(".UnicDB-ai-chat-v2-title-inline");
+    expect(h.root.querySelectorAll(".VSKit-ai-chat-v2-title").length).toBe(0);
+    const titles = h.root.querySelectorAll(".VSKit-ai-chat-v2-title-inline");
     expect(titles.length).toBe(1);
     expect(titles[0].textContent).toContain("Ops run");
-    expect(h.root.querySelector(".UnicDB-ai-chat-v2-title-editor")).toBeNull();
+    expect(h.root.querySelector(".VSKit-ai-chat-v2-title-editor")).toBeNull();
     // The header is the single pill writer: it applies the min-height contract.
-    const pill = h.root.querySelector<HTMLButtonElement>("#UnicDB-ai-chat-v2-engine")!;
-    expect(pill.style.getPropertyValue("--UnicDB-pill-min")).toBe("32px");
+    const pill = h.root.querySelector<HTMLButtonElement>("#VSKit-ai-chat-v2-engine")!;
+    expect(pill.style.getPropertyValue("--VSKit-pill-min")).toBe("32px");
     // No raw codicon text ever becomes visible.
     expect(h.root.textContent).not.toMatch(/\$\(/);
 
     h.controller.dispose();
     controllers = controllers.filter((c) => c !== h.controller);
     expect(() => h.controller.dispose()).not.toThrow();
-    expect(h.root.querySelector(".UnicDB-ai-chat-v2-title-editor")).toBeNull();
+    expect(h.root.querySelector(".VSKit-ai-chat-v2-title-editor")).toBeNull();
     expect(h.root.querySelectorAll(`[${OVERLAY_MENU_MARKER}]`).length).toBe(0);
   });
 
@@ -523,7 +523,7 @@ describe("controller V2 surfaces — TASK-CHATV2-017", () => {
     h.controller.flushRender();
 
     // Engine menu opens from the header pill with the injected catalog rows.
-    const pill = h.root.querySelector<HTMLButtonElement>("#UnicDB-ai-chat-v2-engine")!;
+    const pill = h.root.querySelector<HTMLButtonElement>("#VSKit-ai-chat-v2-engine")!;
     pill.click();
     const engineMenu = h.root.querySelector<HTMLElement>(`[${OVERLAY_MENU_MARKER}]`);
     expect(engineMenu).not.toBeNull();
@@ -608,7 +608,7 @@ describe("controller V2 surfaces — TASK-CHATV2-017", () => {
 
     // Busy: selecting an engine opens the stop-and-switch confirmation instead
     // of posting immediately.
-    const pill = h.root.querySelector<HTMLButtonElement>("#UnicDB-ai-chat-v2-engine")!;
+    const pill = h.root.querySelector<HTMLButtonElement>("#VSKit-ai-chat-v2-engine")!;
     pill.click();
     findRowByText(h.root, "Codex").click();
     expect(sentCount(h, "set_engine")).toBe(0);
@@ -640,7 +640,7 @@ describe("controller V2 surfaces — TASK-CHATV2-017", () => {
       items: [{ sessionId: "saved-1", label: "Saved chat", detail: "2 messages" }],
     });
     h.controller.flushRender();
-    h.root.querySelector<HTMLButtonElement>("#UnicDB-ai-chat-v2-overflow")!.click();
+    h.root.querySelector<HTMLButtonElement>("#VSKit-ai-chat-v2-overflow")!.click();
     expect(h.root.querySelectorAll(`#${SESSIONS_IDS.menu}`).length).toBe(1);
     expect(h.root.querySelectorAll(`[${OVERLAY_MENU_MARKER}]`).length).toBe(0);
 
@@ -694,7 +694,7 @@ describe("controller V2 surfaces — TASK-CHATV2-017", () => {
     });
     h.controller.flushRender();
 
-    const transcript = h.root.querySelector(".UnicDB-ai-chat-v2-transcript") as HTMLElement;
+    const transcript = h.root.querySelector(".VSKit-ai-chat-v2-transcript") as HTMLElement;
     expect(transcript).not.toBeNull();
     // The duplicate activity timeline is gone: no header/body/row nodes at all.
     expect(transcript.querySelectorAll('[class*="-activity-header"]').length).toBe(0);

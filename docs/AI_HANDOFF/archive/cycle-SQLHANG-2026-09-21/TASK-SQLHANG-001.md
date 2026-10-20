@@ -11,7 +11,7 @@ Give `QueryRunner` a settlement guarantee: every statement-execution await is bo
 by `statementTimeoutMs`; on expiry the runner fires the adapter's `abortActiveQuery`
 (fallback `cancelActiveQuery`) and throws `QueryTimeoutError`, which flows through the
 existing error path (statement `error` → rest `cancelled` → STOPERR reporting).
-`cancel()` is bounded and escalates to abort. Wire the `UnicDB.queryTimeoutSeconds`
+`cancel()` is bounded and escalates to abort. Wire the `queryTimeoutSeconds`
 setting (default 300, 0 = disabled) and declare the `abortActiveQuery` seam on
 `DbAdapter`.
 
@@ -41,8 +41,8 @@ setting (default 300, 0 = disabled) and declare the `abortActiveQuery` seam on
 - `src/adapters/types.ts` — add optional `abortActiveQuery?(): Promise<void>` to
   `DbAdapter` with the SPEC §8.1 doc contract (placed next to `cancelActiveQuery?`).
 - `src/extension.ts` — `new QueryRunner(...)` (~line 663): add
-  `statementTimeoutMs: (vscode.workspace.getConfiguration("UnicDB").get<number>("queryTimeoutSeconds") ?? 300) * 1000`.
-- `package.json` — `contributes.configuration.properties` += `UnicDB.queryTimeoutSeconds`
+  `statementTimeoutMs: (vscode.workspace.getConfiguration().get<number>("queryTimeoutSeconds") ?? 300) * 1000`.
+- `package.json` — `contributes.configuration.properties` += `queryTimeoutSeconds`
   (SPEC §8.3 frozen shape).
 
 ## Test Cases (REQUIRED — TDD)
@@ -79,7 +79,7 @@ npm test
 - [ ] `QueryTimeoutError`, `DEFAULT_STATEMENT_TIMEOUT_MS`, `ABORT_GRACE_MS`,
       `CANCEL_GRACE_MS`, `CLEANUP_GRACE_MS` exported from `src/core/queryRunner.ts`.
 - [ ] `abortActiveQuery?` present on `DbAdapter` with SPEC §8.1 doc contract.
-- [ ] `UnicDB.queryTimeoutSeconds` in package.json + read at runner construction.
+- [ ] `queryTimeoutSeconds` in package.json + read at runner construction.
 - [ ] `npm run typecheck` 0 errors; existing `queryRunner.test.ts` still PASS.
 - [ ] Reviewer verdict APPROVED or APPROVED-WITH-MINOR.
 
@@ -158,7 +158,7 @@ $ npx vitest run src/core/__tests__/queryRunner.test.ts
  Test Files 1 passed (1) — Tests 83 passed (83)
 
 $ npm run typecheck
-> UnicDB@1.54.1 typecheck
+> project-name@1.54.1 typecheck
 > tsc --noEmit
 (exit 0)
 

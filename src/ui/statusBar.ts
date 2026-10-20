@@ -2,7 +2,7 @@
 // StatusBar item hiển thị connection đang active.
 //
 // Text: "$(database) <name> [<driver>]" — khi không có active: ẩn hoặc text rỗng.
-// Command: "UnicDB.selectConnection" — click → mở quick-pick đổi active.
+// Command: "VSKit.selectConnection" — click → mở quick-pick đổi active.
 // Update: subscribe `onDidChangeActive` của ConnectionManager.
 //
 // RLX-03 TASK-RLX03-002: additionally subscribes `onDidChangeRecoveryStatus`
@@ -20,7 +20,7 @@
 // migration is in the Acceptance Criteria on TASK-UX2-003.
 //
 // `setErrorBadge(reason)` flips the active connection chip to a red
-// `$(error) <name> [driver]` with tooltip `UnicDB: error: <reason>`. Calling
+// `$(error) <name> [driver]` with tooltip `VSKit: error: <reason>`. Calling
 // it with `null` restores the normal render via the shared `render()`.
 //
 // Hàm export: `createStatusBar(mgr: ConnectionManager): StatusBarWrapper`.
@@ -63,7 +63,7 @@ export interface StatusBarWrapper {
 /**
  * Tạo StatusBarItem gắn với ConnectionManager.
  * - Text = "$(database) <name> [<driver>]" nếu có active; "" nếu không.
- * - Command = "UnicDB.selectConnection" — click để đổi active.
+ * - Command = "VSKit.selectConnection" — click để đổi active.
  * - Auto-update qua mgr.onDidChangeActive + mgr.onDidChangeRecoveryStatus.
  *
  * Trả về `StatusBarWrapper`. Caller dispose wrapper khi extension unload.
@@ -73,7 +73,7 @@ export function createStatusBar(mgr: ConnectionManager): StatusBarWrapper {
     vscode.StatusBarAlignment.Left,
     100,
   );
-  item.command = "UnicDB.selectConnection";
+  item.command = "VSKit.selectConnection";
 
   // Render ban đầu.
   const render = (): void => {
@@ -127,12 +127,12 @@ export function createStatusBar(mgr: ConnectionManager): StatusBarWrapper {
       // not call `setErrorBadge` when no connection is active; this is
       // a defensive branch.
       item.text = "";
-      item.tooltip = `UnicDB: error: ${reason}`;
+      item.tooltip = `VSKit: error: ${reason}`;
       item.hide();
       return;
     }
     item.text = `$(error) ${active.name} [${active.driver}]`;
-    item.tooltip = `UnicDB: error: ${reason}`;
+    item.tooltip = `VSKit: error: ${reason}`;
     item.show();
   };
 

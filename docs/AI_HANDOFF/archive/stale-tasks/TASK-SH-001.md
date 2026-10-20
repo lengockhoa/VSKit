@@ -1,4 +1,4 @@
-# TASK-SH-001 — Manifest: `UnicDB.runShellSelection` command + Cmd/Ctrl+Enter shellscript keybindings
+# TASK-SH-001 — Manifest: `VSKit.runShellSelection` command + Cmd/Ctrl+Enter shellscript keybindings
 
 - Status: `ready`
 - Owner: `-`
@@ -7,22 +7,22 @@
 
 ## Goal
 
-Contribute the new command `UnicDB.runShellSelection` in `package.json` (command entry,
+Contribute the new command `VSKit.runShellSelection` in `package.json` (command entry,
 activation event, keybindings) and lock the manifest shape with tests in
-`src/scaffold.test.ts`. Mirrors the existing `UnicDB.runQuery` Cmd+Enter rows
+`src/scaffold.test.ts`. Mirrors the existing `VSKit.runQuery` Cmd+Enter rows
 (`when: editorTextFocus && resourceLangId == sql`) but scoped to `shellscript`.
 
 ## Target Files
 
-- `package.json` — add to `contributes.commands`: `{ "command": "UnicDB.runShellSelection", "title": "UnicDB: Run Selection in Script Terminal", "category": "UnicDB", "icon": "$(play)" }` (same shape as the `UnicDB.runScript` entry); add `"onCommand:UnicDB.runShellSelection"` to `activationEvents` (repo convention: every command lists one — see existing list); add 2 rows to `contributes.keybindings` (below).
+- `package.json` — add to `contributes.commands`: `{ "command": "VSKit.runShellSelection", "title": "VSKit: Run Selection in Script Terminal", "category": "VSKit", "icon": "$(play)" }` (same shape as the `VSKit.runScript` entry); add `"onCommand:VSKit.runShellSelection"` to `activationEvents` (repo convention: every command lists one — see existing list); add 2 rows to `contributes.keybindings` (below).
 - `src/scaffold.test.ts` — extend the existing manifest test (or add a sibling describe, style of lines 102-110 / 178-205): assert the new keybindings + command + activation event.
 
 Keybinding rows (exact):
 
 ```json
-{ "command": "UnicDB.runShellSelection", "key": "cmd+enter", "mac": "cmd+enter",
+{ "command": "VSKit.runShellSelection", "key": "cmd+enter", "mac": "cmd+enter",
   "when": "editorTextFocus && resourceLangId == shellscript" }
-{ "command": "UnicDB.runShellSelection", "key": "ctrl+enter", "win": "ctrl+enter",
+{ "command": "VSKit.runShellSelection", "key": "ctrl+enter", "win": "ctrl+enter",
   "linux": "ctrl+enter", "when": "editorTextFocus && resourceLangId == shellscript" }
 ```
 
@@ -30,10 +30,10 @@ Keybinding rows (exact):
 
 | # | Type | Test name | Expected | Pre-state / Fixture |
 |---|------|----------|----------|---------------------|
-| 1 | unit | keybindings contain `UnicDB.runShellSelection` with mac `cmd+enter` | a row exists where `command==="UnicDB.runShellSelection"`, `mac==="cmd+enter"`, `when==="editorTextFocus && resourceLangId == shellscript"` | read `package.json` as `src/scaffold.test.ts:73` already does |
-| 2 | unit | command + activation event contributed | `contributes.commands` has the command with `title` starting `"UnicDB: Run Selection"` and `activationEvents` contains `"onCommand:UnicDB.runShellSelection"` and `"onLanguage:shellscript"` | same manifest fixture |
+| 1 | unit | keybindings contain `VSKit.runShellSelection` with mac `cmd+enter` | a row exists where `command==="VSKit.runShellSelection"`, `mac==="cmd+enter"`, `when==="editorTextFocus && resourceLangId == shellscript"` | read `package.json` as `src/scaffold.test.ts:73` already does |
+| 2 | unit | command + activation event contributed | `contributes.commands` has the command with `title` starting `"VSKit: Run Selection"` and `activationEvents` contains `"onCommand:VSKit.runShellSelection"` and `"onLanguage:shellscript"` | same manifest fixture |
 | 3 | edge (platform variant) | win/linux `ctrl+enter` variant exists | a row with `win==="ctrl+enter"` and `linux==="ctrl+enter"`, same `when` | same manifest fixture |
-| 4 | edge (negative) | new shellscript binding does not clobber SQL rows | every `UnicDB.runQuery` keybinding row still has `when` matching `/resourceLangId == sql/`; every `UnicDB.runShellSelection` row matches `/shellscript/` | same manifest fixture |
+| 4 | edge (negative) | new shellscript binding does not clobber SQL rows | every `VSKit.runQuery` keybinding row still has `when` matching `/resourceLangId == sql/`; every `VSKit.runShellSelection` row matches `/shellscript/` | same manifest fixture |
 | 5 | regression | existing TASK-605 + runQuery manifest assertions still pass | all pre-existing tests in `src/scaffold.test.ts` green unchanged | current file at base 86b034e |
 
 ## Test Files
@@ -67,7 +67,7 @@ npm test
 ## Interfaces
 
 - Consumes: (none)
-- Produces: command id literal `UnicDB.runShellSelection` in `contributes.commands` +
+- Produces: command id literal `VSKit.runShellSelection` in `contributes.commands` +
   `activationEvents` + 2 keybinding rows with `when: editorTextFocus && resourceLangId == shellscript`.
   TASK-SH-002 registers a handler for this exact id in `src/extension.ts`.
 
@@ -77,7 +77,7 @@ npm test
 
 ### 2026-09-07 · planner · unic-smart
 - Command palette entry is a deliberate byproduct of `contributes.commands` (matches
-  `UnicDB.runQuery`/`UnicDB.runScript`); no editor/title menu this cycle per PLAN §2.
+  `VSKit.runQuery`/`VSKit.runScript`); no editor/title menu this cycle per PLAN §2.
 - No `selection`/code changes allowed here — TASK-SH-002 owns `src/extension.ts`.
 
 ## Executor Report
@@ -88,34 +88,34 @@ EXECUTOR_SUBAGENT: feature-implementer
 
 ### Choice on activation event (per "smaller change" hint in task brief)
 
-Repo convention: every command contributes its own `onCommand:UnicDB.<id>` row in
-`activationEvents` (the existing `UnicDB.runScript` is paired with both
-`onCommand:UnicDB.runScript` AND `onLanguage:shellscript`). To follow that
+Repo convention: every command contributes its own `onCommand:VSKit.<id>` row in
+`activationEvents` (the existing `VSKit.runScript` is paired with both
+`onCommand:VSKit.runScript` AND `onLanguage:shellscript`). To follow that
 convention AND keep both layers active, the manifest now has **three** shellscript
 related activation events:
 
 - `onLanguage:shellscript` (already existed)
-- `onCommand:UnicDB.runScript` (already existed)
-- `onCommand:UnicDB.runShellSelection` (added this task)
+- `onCommand:VSKit.runScript` (already existed)
+- `onCommand:VSKit.runShellSelection` (added this task)
 
 This is the smallest change consistent with the existing pattern — TASK-SH-002
-later needs `onCommand:UnicDB.runShellSelection` to register its handler before
+later needs `onCommand:VSKit.runShellSelection` to register its handler before
 the keybinding fires, and the per-command activation row is the cheapest way to
 guarantee that.
 
 ### RED output (4 failing tests, baseline 7 passing)
 
 ```
- FAIL  src/scaffold.test.ts > scaffold > Test #1 (TASK-SH-001) — keybindings chứa UnicDB.runShellSelection với mac cmd+enter (shellscript)
+ FAIL  src/scaffold.test.ts > scaffold > Test #1 (TASK-SH-001) — keybindings chứa VSKit.runShellSelection với mac cmd+enter (shellscript)
 AssertionError: expected 0 to be greater than or equal to 1
   ❯ src/scaffold.test.ts:222:37
 
- FAIL  src/scaffold.test.ts > scaffold > Test #2 (TASK-SH-001) — command UnicDB.runShellSelection + activation event được contribute
-AssertionError: contributes.commands phải có UnicDB.runShellSelection: expected undefined to be truthy
+ FAIL  src/scaffold.test.ts > scaffold > Test #2 (TASK-SH-001) — command VSKit.runShellSelection + activation event được contribute
+AssertionError: contributes.commands phải có VSKit.runShellSelection: expected undefined to be truthy
   ❯ src/scaffold.test.ts:236:91
 
- FAIL  src/scaffold.test.ts > scaffold > Test #3 (TASK-SH-001) — win/linux ctrl+enter variant tồn tại cho UnicDB.runShellSelection
-AssertionError: phải có row win=ctrl+enter cho UnicDB.runShellSelection: expected undefined to be truthy
+ FAIL  src/scaffold.test.ts > scaffold > Test #3 (TASK-SH-001) — win/linux ctrl+enter variant tồn tại cho VSKit.runShellSelection
+AssertionError: phải có row win=ctrl+enter cho VSKit.runShellSelection: expected undefined to be truthy
   ❯ src/scaffold.test.ts:258:76
 
  FAIL  src/scaffold.test.ts > scaffold > Test #4 (TASK-SH-001) — keybinding mới không clobber runQuery (SQL), đúng ngôn ngữ tách biệt
@@ -133,7 +133,7 @@ All 4 fail for the expected reasons (no keybinding row, no command entry, no win
 #### `npx vitest run src/scaffold.test.ts`
 
 ```
- RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-sh-001
+ RUN  v1.6.1 /Volumes/KHOA_EXTENAL/DOCKER_CREATE/VSKit/.worktrees/task-sh-001
 
  ✓ src/scaffold.test.ts  (11 tests) 499ms
 
@@ -146,7 +146,7 @@ All 4 fail for the expected reasons (no keybinding row, no command entry, no win
 #### `npm run typecheck`
 
 ```
-> UnicDB@1.53.18 typecheck
+> VSKit@1.53.18 typecheck
 > tsc --noEmit
 ```
 
@@ -157,34 +157,34 @@ Exit 0, no errors.
 `activationEvents` shellscript-related rows:
 
 ```
-"onCommand:UnicDB.runScript",
+"onCommand:VSKit.runScript",
 "onLanguage:shellscript",
-"onCommand:UnicDB.runShellSelection",
+"onCommand:VSKit.runShellSelection",
 ```
 
 `contributes.commands` new entry:
 
 ```json
 {
-  "command": "UnicDB.runShellSelection",
-  "title": "UnicDB: Run Selection in Script Terminal",
-  "category": "UnicDB",
+  "command": "VSKit.runShellSelection",
+  "title": "VSKit: Run Selection in Script Terminal",
+  "category": "VSKit",
   "icon": "$(play)"
 }
 ```
 
 `contributes.keybindings` new rows (added directly below the existing two
-`UnicDB.runQuery` rows):
+`VSKit.runQuery` rows):
 
 ```json
 {
-  "command": "UnicDB.runShellSelection",
+  "command": "VSKit.runShellSelection",
   "key": "cmd+enter",
   "mac": "cmd+enter",
   "when": "editorTextFocus && resourceLangId == shellscript"
 },
 {
-  "command": "UnicDB.runShellSelection",
+  "command": "VSKit.runShellSelection",
   "key": "ctrl+enter",
   "win": "ctrl+enter",
   "linux": "ctrl+enter",
@@ -193,13 +193,13 @@ Exit 0, no errors.
 ```
 
 No other manifest keys touched: no menu additions, no views, no version bump.
-`UnicDB.runScript` whole-file behavior, its existing keybinding, and its
+`VSKit.runScript` whole-file behavior, its existing keybinding, and its
 `editor/title` entry are all preserved unchanged.
 
 ### Files changed
 
-- `/Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-sh-001/package.json` (+20 lines)
-- `/Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-sh-001/src/scaffold.test.ts` (+78 lines)
+- `/Volumes/KHOA_EXTENAL/DOCKER_CREATE/VSKit/.worktrees/task-sh-001/package.json` (+20 lines)
+- `/Volumes/KHOA_EXTENAL/DOCKER_CREATE/VSKit/.worktrees/task-sh-001/src/scaffold.test.ts` (+78 lines)
 
 `src/extension.ts` and `src/extension.test.ts` NOT touched (per task scope —
 TASK-SH-002 owns those).

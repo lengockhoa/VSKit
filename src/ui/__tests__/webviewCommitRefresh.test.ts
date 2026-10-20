@@ -11,7 +11,7 @@
 //
 // Loads dist/webview.js into jsdom (built via `npm run compile`), stubs
 // acquireVsCodeApi + ResizeObserver + matchMedia, dispatches state messages,
-// and interacts through the `window.__UnicDB` debug object.
+// and interacts through the `window.__VSKit` debug object.
 //
 // If dist/webview.js is missing, all tests are skipped.
 // @vitest-environment jsdom
@@ -91,11 +91,11 @@ interface EditStateHandle {
   isRowNew: (rowId: number) => boolean;
 }
 
-interface UnicDBApi {
+interface VSKitApi {
   postMessage: (msg: unknown) => void;
 }
 
-interface UnicDBDebug {
+interface VSKitDebug {
   gridApi?: GridApi;
   editState?: EditStateHandle;
   currentSpecs?: readonly ColumnSpec[];
@@ -112,14 +112,14 @@ interface UnicDBDebug {
   ) => void;
 }
 
-function UnicDBApi(): UnicDBDebug | null {
+function VSKitApi(): VSKitDebug | null {
   if (typeof window === "undefined") return null;
-  const maybe = (window as unknown as { __UnicDB?: UnicDBDebug }).__UnicDB;
+  const maybe = (window as unknown as { __VSKit?: VSKitDebug }).__VSKit;
   return maybe ?? null;
 }
 
 function getEditState(): EditStateHandle | null {
-  return UnicDBApi()?.editState ?? null;
+  return VSKitApi()?.editState ?? null;
 }
 
 function loadBundle(): {
@@ -132,16 +132,16 @@ function loadBundle(): {
     );
   }
 
-  document.body.innerHTML = '<div id="UnicDB-root" class="UnicDB-webview"></div>';
-  const root = document.getElementById("UnicDB-root") as HTMLDivElement;
+  document.body.innerHTML = '<div id="VSKit-root" class="VSKit-webview"></div>';
+  const root = document.getElementById("VSKit-root") as HTMLDivElement;
 
   const received: Array<Record<string, unknown>> = [];
-  const api: UnicDBApi = {
+  const api: VSKitApi = {
     postMessage: (msg) => {
       received.push(msg as Record<string, unknown>);
     },
   };
-  (globalThis as unknown as { acquireVsCodeApi: () => UnicDBApi }).acquireVsCodeApi =
+  (globalThis as unknown as { acquireVsCodeApi: () => VSKitApi }).acquireVsCodeApi =
     () => api;
 
   (0, eval)(bundleSrc);
@@ -217,7 +217,7 @@ describeIfBundle("webview/main.ts bundle (TASK-002)", () => {
       dispatchMsg(threeRowsState());
       await flushGridEvents();
 
-      const grid = UnicDBApi()!.gridApi!;
+      const grid = VSKitApi()!.gridApi!;
       expect(grid.getDisplayedRowAtIndex(0)!.data.name).toBe("alpha");
 
       // Host echoes back the same statement with row 0's value changed —
@@ -247,7 +247,7 @@ describeIfBundle("webview/main.ts bundle (TASK-002)", () => {
       dispatchMsg(threeRowsState());
       await flushGridEvents();
 
-      const api = UnicDBApi()!;
+      const api = VSKitApi()!;
       const grid = api.gridApi!;
       api.simulateCellEdit!(0, "name", "new-alpha", "alpha");
       await flushGridEvents();
@@ -289,7 +289,7 @@ describeIfBundle("webview/main.ts bundle (TASK-002)", () => {
       dispatchMsg(threeRowsState());
       await flushGridEvents();
 
-      const api = UnicDBApi()!;
+      const api = VSKitApi()!;
       api.addRow!();
       await flushGridEvents();
 
@@ -306,7 +306,7 @@ describeIfBundle("webview/main.ts bundle (TASK-002)", () => {
         (e) =>
           typeof e.value === "object" &&
           e.value !== null &&
-          (e.value as Record<string, unknown>).__UnicDB_new_row__ === true,
+          (e.value as Record<string, unknown>).__VSKit_new_row__ === true,
       );
       expect(markerEntry).toBeTruthy();
       const values = (markerEntry!.value as { values: unknown }).values;
@@ -316,7 +316,7 @@ describeIfBundle("webview/main.ts bundle (TASK-002)", () => {
       expect(arr).toHaveLength(2);
       for (const cell of arr) {
         expect(cell).not.toBe("");
-        expect(cell).toEqual({ __UnicDB_default__: true });
+        expect(cell).toEqual({ __VSKit_default__: true });
       }
       // Marker lives at MARKER_COL_INSERT (-1), never colIndex 0.
       expect(markerEntry!.colIndex).toBe(-1);
@@ -332,7 +332,7 @@ describeIfBundle("webview/main.ts bundle (TASK-002)", () => {
       dispatchMsg(threeRowsState());
       await flushGridEvents();
 
-      const api = UnicDBApi()!;
+      const api = VSKitApi()!;
       const grid = api.gridApi!;
       const before = grid.getDisplayedRowCount();
       api.addRow!();
@@ -356,7 +356,7 @@ describeIfBundle("webview/main.ts bundle (TASK-002)", () => {
       expect(colIndices).toEqual([-1, 0]);
       const marker = forRow.find((s) => s.colIndex === -1);
       expect(
-        (marker!.value as Record<string, unknown>).__UnicDB_new_row__,
+        (marker!.value as Record<string, unknown>).__VSKit_new_row__,
       ).toBe(true);
       const cellEdit = forRow.find((s) => s.colIndex === 0);
       expect(cellEdit!.value).toBe(999);
@@ -371,7 +371,7 @@ describeIfBundle("webview/main.ts bundle (TASK-002)", () => {
       dispatchMsg(threeRowsState());
       await flushGridEvents();
 
-      const api = UnicDBApi()!;
+      const api = VSKitApi()!;
       api.simulateCellEdit!(0, "name", "edited", "alpha");
       await flushGridEvents();
       expect(getEditState()!.dirtyCount).toBe(1);
@@ -384,10 +384,10 @@ describeIfBundle("webview/main.ts bundle (TASK-002)", () => {
 
       expect(getEditState()!.dirtyCount).toBe(1);
       expect(received).toHaveLength(0);
-      const banner = root.querySelector(".UnicDB-save-banner")!;
-      expect(banner.classList.contains("UnicDB-hidden")).toBe(false);
-      const cancel = banner.querySelector("[data-UnicDB-refresh-cancel]") as HTMLButtonElement;
-      const discard = banner.querySelector("[data-UnicDB-refresh-discard]") as HTMLButtonElement;
+      const banner = root.querySelector(".VSKit-save-banner")!;
+      expect(banner.classList.contains("VSKit-hidden")).toBe(false);
+      const cancel = banner.querySelector("[data-VSKit-refresh-cancel]") as HTMLButtonElement;
+      const discard = banner.querySelector("[data-VSKit-refresh-discard]") as HTMLButtonElement;
       expect(cancel).toBeTruthy();
       expect(discard).toBeTruthy();
 
@@ -414,12 +414,12 @@ describeIfBundle("webview/main.ts bundle (TASK-002)", () => {
       await flushGridEvents();
 
       received.length = 0;
-      UnicDBApi()!.refresh!();
+      VSKitApi()!.refresh!();
       await flushGridEvents();
 
       expect(received.filter((m) => m.type === "requery")).toHaveLength(1);
-      expect(root.querySelector("[data-UnicDB-refresh-cancel]")).toBeNull();
-      expect(root.querySelector("[data-UnicDB-refresh-discard]")).toBeNull();
+      expect(root.querySelector("[data-VSKit-refresh-cancel]")).toBeNull();
+      expect(root.querySelector("[data-VSKit-refresh-discard]")).toBeNull();
     },
   );
 
@@ -431,7 +431,7 @@ describeIfBundle("webview/main.ts bundle (TASK-002)", () => {
       dispatchMsg(threeRowsState());
       await flushGridEvents();
 
-      const grid = UnicDBApi()!.gridApi!;
+      const grid = VSKitApi()!.gridApi!;
       let idx = 0;
       grid.forEachNode((node) => {
         if (idx < 2 && node.data) node.setSelected(true, false, "api");
@@ -466,7 +466,7 @@ describeIfBundle("webview/main.ts bundle (TASK-002)", () => {
       dispatchMsg(stateWith(["id", "secret"], [[1, "s3cr3t"]]));
       await flushGridEvents();
 
-      const api = UnicDBApi()!;
+      const api = VSKitApi()!;
       const grid = api.gridApi!;
       const specs = api.currentSpecs!;
       expect(specs.map((s) => s.field)).toEqual(["id", "secret"]);
@@ -481,7 +481,7 @@ describeIfBundle("webview/main.ts bundle (TASK-002)", () => {
       });
       void idx;
 
-      const gridWrap = root.querySelector(".UnicDB-grid-host") as HTMLElement;
+      const gridWrap = root.querySelector(".VSKit-grid-host") as HTMLElement;
       received.length = 0;
       ctrlC(gridWrap);
       await flushGridEvents();
@@ -506,7 +506,7 @@ describeIfBundle("webview/main.ts bundle (TASK-002)", () => {
       dispatchMsg(stateWith(["id", "id"], [[1, 2]]));
       await flushGridEvents();
 
-      const api = UnicDBApi()!;
+      const api = VSKitApi()!;
       const specs = api.currentSpecs!;
       // Simulate TASK-003's dedup output: unique `field`, duplicated
       // `headerName`, 2nd column hidden.
@@ -516,7 +516,7 @@ describeIfBundle("webview/main.ts bundle (TASK-002)", () => {
       ]);
 
       const copyBtn = root.querySelector(
-        ".UnicDB-export-copy",
+        ".VSKit-export-copy",
       ) as HTMLButtonElement | null;
       expect(copyBtn).toBeTruthy();
       received.length = 0;
@@ -541,7 +541,7 @@ describeIfBundle("webview/main.ts bundle (TASK-002)", () => {
       dispatchMsg(stateWith(["id", "id"], [[1, 2]]));
       await flushGridEvents();
 
-      const api = UnicDBApi()!;
+      const api = VSKitApi()!;
       const grid = api.gridApi!;
       const specs = api.currentSpecs!;
       // Same TASK-003-shaped injection as above, but BOTH columns visible
@@ -572,7 +572,7 @@ describeIfBundle("webview/main.ts bundle (TASK-002)", () => {
         idx++;
       });
 
-      const gridWrap = root.querySelector(".UnicDB-grid-host") as HTMLElement;
+      const gridWrap = root.querySelector(".VSKit-grid-host") as HTMLElement;
       received.length = 0;
       ctrlC(gridWrap);
       await flushGridEvents();
@@ -595,12 +595,12 @@ describeIfBundle("webview/main.ts bundle (TASK-002)", () => {
       dispatchMsg(threeRowsState());
       await flushGridEvents();
 
-      const grid = UnicDBApi()!.gridApi!;
+      const grid = VSKitApi()!.gridApi!;
       expect(grid.getSelectedRows()).toHaveLength(0);
       grid.setFocusedCell(1, "name");
       await flushGridEvents();
 
-      const gridWrap = root.querySelector(".UnicDB-grid-host") as HTMLElement;
+      const gridWrap = root.querySelector(".VSKit-grid-host") as HTMLElement;
       received.length = 0;
       ctrlC(gridWrap);
       await flushGridEvents();
@@ -621,7 +621,7 @@ describeIfBundle("webview/main.ts bundle (TASK-002)", () => {
       dispatchMsg(threeRowsState());
       await flushGridEvents();
 
-      const api = UnicDBApi()!;
+      const api = VSKitApi()!;
       api.simulateCellEdit!(1, "name", "new-beta", "beta");
       await flushGridEvents();
 
@@ -652,7 +652,7 @@ describeIfBundle("webview/main.ts bundle (TASK-002)", () => {
       dispatchMsg(threeRowsState());
       await flushGridEvents();
 
-      const api = UnicDBApi()!;
+      const api = VSKitApi()!;
       const grid = api.gridApi!;
       expect(grid.getDisplayedRowCount()).toBe(3);
 
@@ -713,7 +713,7 @@ describeIfBundle("webview/main.ts bundle (TASK-002)", () => {
       dispatchMsg(threeRowsState());
       await flushGridEvents();
 
-      const api = UnicDBApi()!;
+      const api = VSKitApi()!;
       const grid = api.gridApi!;
       expect(grid.getDisplayedRowCount()).toBe(3);
 
@@ -792,7 +792,7 @@ describeIfBundle("webview/main.ts bundle (TASK-002)", () => {
       ]);
 
       // The still-pending errored row must still be recognized as a
-      // dirty new-row (retry banner / UnicDB-row-new styling depend on
+      // dirty new-row (retry banner / VSKit-row-new styling depend on
       // this) with its typed value intact.
       expect(editState.isRowNew(4)).toBe(true);
       const snap = editState.snapshot();

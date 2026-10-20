@@ -166,7 +166,7 @@ C9-OK
 $ test -z "$(git status --porcelain -- src webview package.json)" && echo DOCS-ONLY-OK
 DOCS-ONLY-OK
 $ npm run typecheck
-> UnicDB@1.53.46 typecheck
+> VSKit@1.53.46 typecheck
 > tsc --noEmit
 C11-OK
 ```

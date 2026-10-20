@@ -31,7 +31,7 @@ unit-testable.
 
 | # | Type | Test name | Expected | Pre-state / Fixture |
 |---|------|-----------|----------|---------------------|
-| 1 | happy | prompt carries repo, files, diff | messages[0].role = "system" contains "Conventional Commits"; messages[1].content contains "UnicDB", "src/a.ts", and the diff text | input `{repoName:"UnicDB", files:["src/a.ts"], diffText:"diff --git …"}` |
+| 1 | happy | prompt carries repo, files, diff | messages[0].role = "system" contains "Conventional Commits"; messages[1].content contains "repository", "src/a.ts", and the diff text | input `{repoName:"repository", files:["src/a.ts"], diffText:"diff --git …"}` |
 | 2 | happy | sanitize strips fences + quotes | returns `feat(db): add index` from inputs `"```\nfeat(db): add index\n```"`, `"\"feat(db): add index\""`, and `" 'feat(db): add index' "` | fenced / double-quoted / single-quoted variants |
 | 3 | edge (boundary) | subject clamped at 72 | a 90-char first line comes back with `length === 72`; second line preserved | long subject + body |
 | 4 | edge (boundary) | whole message capped at 600 | 1000-char message returns ≤ 600 chars | oversized body |
@@ -87,7 +87,7 @@ EXECUTOR_MODEL: unic-code (claude-sonnet)
 EXECUTOR_SUBAGENT: -
 RED_OUTPUT: |
   FAIL  src/ai/__tests__/commitMessage.test.ts [ src/ai/__tests__/commitMessage.test.ts ]
-  Error: Failed to load url ../commitMessage (resolved id: ../commitMessage) in /Volumes/KHOA_EXTENAL/DOCKER_CREATE/UnicDB/.worktrees/task-gc-003/src/ai/__tests__/commitMessage.test.ts. Does the file exist?
+  Error: Failed to load url ../commitMessage (resolved id: ../commitMessage) in /workspace/.worktrees/task-gc-003/src/ai/__tests__/commitMessage.test.ts. Does the file exist?
    ❯ loadAndTransform ../../node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
 
    Test Files  1 failed (1)
@@ -96,7 +96,7 @@ RED_OUTPUT: |
      Duration  145ms
 Verification Output: |
   ## npm run typecheck
-  > UnicDB@1.51.7 typecheck
+  > extension@1.51.7 typecheck
   > tsc --noEmit
   (clean — no errors, no output)
 

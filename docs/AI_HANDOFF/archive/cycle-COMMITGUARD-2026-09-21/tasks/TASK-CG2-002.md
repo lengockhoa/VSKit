@@ -121,7 +121,7 @@ counted among the 6.)
 Verification Output: |
 ```
 ===== npm run typecheck =====
-> UnicDB@1.54.1 typecheck
+> project-name@1.54.1 typecheck
 > tsc --noEmit
 (exit 0, 0 errors)
 

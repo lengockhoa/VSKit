@@ -311,7 +311,7 @@ export function slashExecution(
         format: args.length === 0 || args[0]!.toLowerCase() === "markdown" ? "markdown" : "json",
       };
     case "resume-picker":
-      // Saved UnicDB transcripts only. Never a provider-native resume.
+      // Saved VSKit transcripts only. Never a provider-native resume.
       return { kind: "list-sessions" };
     case "provider-handler":
       return { kind: "provider-handler", id: descriptor.id };

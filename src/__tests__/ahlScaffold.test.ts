@@ -1,10 +1,10 @@
 // src/__tests__/ahlScaffold.test.ts
 // TASK-AHL-004 — smoke tests for the admin cycle manifest.
 //   - 5 new command ids declared (refreshAdmin, openSessionsPanel, killSession,
-//     terminateSession, runGrantSql) with category "UnicDB" + icon.
-//   - 2 new activation events (`onCommand:UnicDB.refreshAdmin` + openSessionsPanel).
-//   - New view `UnicDB.adminTree` declared.
-//   - Setting `UnicDB.admin.confirmGrant` defaults to true.
+//     terminateSession, runGrantSql) with category "VSKit" + icon.
+//   - 2 new activation events (`onCommand:VSKit.refreshAdmin` + openSessionsPanel).
+//   - New view `VSKit.adminTree` declared.
+//   - Setting `VSKit.admin.confirmGrant` defaults to true.
 //   - Dangerous-statement kind/tier unions widened to admin DCL.
 import { describe, it, expect } from "vitest";
 import * as fs from "node:fs";
@@ -42,11 +42,11 @@ describe("TASK-AHL-004 — admin scaffold (package.json)", () => {
 
   it("5 new admin command ids exist in contributes.commands", () => {
     const expected = [
-      "UnicDB.refreshAdmin",
-      "UnicDB.openSessionsPanel",
-      "UnicDB.killSession",
-      "UnicDB.terminateSession",
-      "UnicDB.runGrantSql",
+      "VSKit.refreshAdmin",
+      "VSKit.openSessionsPanel",
+      "VSKit.killSession",
+      "VSKit.terminateSession",
+      "VSKit.runGrantSql",
     ];
     const ids = pkg.contributes.commands.map((c) => c.command);
     for (const want of expected) {
@@ -54,18 +54,18 @@ describe("TASK-AHL-004 — admin scaffold (package.json)", () => {
     }
   });
 
-  it("each new admin command has category='UnicDB' + an icon", () => {
+  it("each new admin command has category='VSKit' + an icon", () => {
     const expected = [
-      "UnicDB.refreshAdmin",
-      "UnicDB.openSessionsPanel",
-      "UnicDB.killSession",
-      "UnicDB.terminateSession",
-      "UnicDB.runGrantSql",
+      "VSKit.refreshAdmin",
+      "VSKit.openSessionsPanel",
+      "VSKit.killSession",
+      "VSKit.terminateSession",
+      "VSKit.runGrantSql",
     ];
     for (const id of expected) {
       const cmd = pkg.contributes.commands.find((c) => c.command === id);
       expect(cmd, `command ${id} not found`).toBeDefined();
-      expect(cmd?.category, `${id} category`).toBe("UnicDB");
+      expect(cmd?.category, `${id} category`).toBe("VSKit");
       expect(cmd?.icon, `${id} icon`).toBeTruthy();
     }
   });
@@ -77,20 +77,20 @@ describe("TASK-AHL-004 — admin scaffold (package.json)", () => {
     expect(pkg.contributes.commands.length).toBeGreaterThanOrEqual(35);
   });
 
-  it("activation events include onCommand:UnicDB.refreshAdmin + openSessionsPanel", () => {
-    expect(pkg.activationEvents).toContain("onCommand:UnicDB.refreshAdmin");
-    expect(pkg.activationEvents).toContain("onCommand:UnicDB.openSessionsPanel");
+  it("activation events include onCommand:VSKit.refreshAdmin + openSessionsPanel", () => {
+    expect(pkg.activationEvents).toContain("onCommand:VSKit.refreshAdmin");
+    expect(pkg.activationEvents).toContain("onCommand:VSKit.openSessionsPanel");
   });
 
-  it("view UnicDB.adminTree is registered", () => {
-    const views = pkg.contributes.views.UnicDB ?? [];
+  it("view VSKit.adminTree is registered", () => {
+    const views = pkg.contributes.views.VSKit ?? [];
     const ids = views.map((v) => v.id);
-    expect(ids).toContain("UnicDB.adminTree");
+    expect(ids).toContain("VSKit.adminTree");
   });
 
-  it("setting UnicDB.admin.confirmGrant defaults to true", () => {
-    const setting = pkg.contributes.configuration.properties["UnicDB.admin.confirmGrant"];
-    expect(setting, "UnicDB.admin.confirmGrant setting not declared").toBeDefined();
+  it("setting VSKit.admin.confirmGrant defaults to true", () => {
+    const setting = pkg.contributes.configuration.properties["VSKit.admin.confirmGrant"];
+    expect(setting, "VSKit.admin.confirmGrant setting not declared").toBeDefined();
     expect(setting?.type).toBe("boolean");
     expect(setting?.default).toBe(true);
   });

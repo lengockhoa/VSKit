@@ -57,7 +57,7 @@ vi.mock("vscode", () => {
     Location,
     CancellationToken,
   };
-  (globalThis as unknown as { __UnicDBVscodeMock: typeof vscodeMock }).__UnicDBVscodeMock = vscodeMock;
+  (globalThis as unknown as { __VSKitVscodeMock: typeof vscodeMock }).__VSKitVscodeMock = vscodeMock;
   return vscodeMock;
 });
 
@@ -68,7 +68,7 @@ import { SqlReferenceProvider } from "../sqlReferenceProvider";
 // Local alias bound to the registered mock — avoids a value import of
 // "vscode" in the test body (the transform cannot resolve it).
 const vscode = (globalThis as unknown as {
-  __UnicDBVscodeMock: {
+  __VSKitVscodeMock: {
     Uri: new (s: string) => { scheme: string; path: string; toString(): string };
     Position: new (line: number, character: number) => { line: number; character: number };
     Range: new (
@@ -78,7 +78,7 @@ const vscode = (globalThis as unknown as {
     Location: new (uri: unknown, range: unknown) => { uri: { toString(): string } };
     CancellationToken: new () => { isCancellationRequested: boolean };
   };
-}).__UnicDBVscodeMock;
+}).__VSKitVscodeMock;
 
 function makeDoc(text: string): {
   uri: { toString(): string };
