@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.55.8] — 2026-10-20
+
+- Maintenance: remove the unreferenced icon generator that targeted a missing source; keep the existing validated VSKit PNG asset unchanged.
+- Regression-test stability: await the actual server-filter requery event and keep the quick-search no-requery assertion beyond the debounce window. The installer help example is version-neutral, and README/user-guide artifact paths are guarded against version drift.
+- No runtime behavior, dependencies, extension storage, or Docker volumes changed.
+
 ## [1.55.7] — 2026-10-20
 
 - The latest query-execution update adds a configurable `VSKit.queryTimeoutSeconds` setting (default 300 seconds), statement-timeout cancellation, and driver-specific cleanup; multi-statement execution stops after the first failure.

@@ -61,11 +61,16 @@ describe("release hygiene (TASK-703)", () => {
     expect(lock.packages?.[""]?.name).toBe(pkg.name);
   });
 
-  it("README documents lowercase VSKit VSIX placeholder and current package artifact", () => {
+  it("README and user guide document the current package artifact", () => {
     const pkg = readJson<PackageJson>("package.json");
     const readme = fs.readFileSync(path.join(repoRoot, "README.md"), "utf-8");
+    const userGuide = fs.readFileSync(
+      path.join(repoRoot, "docs/vskit-user-guide.md"),
+      "utf-8",
+    );
     expect(readme).toContain("dist/vskit-<version>.vsix");
     expect(readme).toContain(`dist/vskit-${pkg.version}.vsix`);
+    expect(userGuide).toContain(`dist/vskit-${pkg.version}.vsix`);
   });
   it("the paused CI workflow and package scripts do not publish to Marketplace", () => {
     const workflow = fs.readFileSync(path.join(repoRoot, ".github/workflows/ci.yml"), "utf-8");

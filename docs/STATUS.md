@@ -2,22 +2,22 @@
 
 ## Freshness
 
-- Last meaningful update: 2026-10-20 20:42
+- Last meaningful update: 2026-10-20 21:29
 - Updated by: omp
 - Status confidence: high
 - Stale after: 72h
 
 ## Snapshot
 
-- Focus: VSKit identity conversion complete; GitHub release `v1.55.7` carries `vskit-1.55.7.vsix` (23 files, 2.17 MB).
-- Persistence: `lengockhoa.vskit` does not import prior global/workspace state or SecretStorage; old extension data and Docker volumes remain untouched. No VS Code install/reload or database integration smoke test was run.
-- Verification: typecheck and compile passed; full suite (319 files passed, 2 skipped; 4,812 tests passed, 5 skipped); focused final suite (64 passed); Compose config and shell checks passed.
-- Git: conversion commit `bbab82b` is pushed to `origin/main`; tag `v1.55.7` and its GitHub release are created. Historical `v1.55.6` and its artifact remain untouched; no Marketplace publish.
-- Local installation: `code --install-extension "$(pwd)/dist/vskit-1.55.7.vsix"`. It was not installed into the current VS Code.
+- Focus: VSKit patch package `1.55.8` is built locally; project-owner commit/push/tag/release steps remain after final review. Marketplace publication remains paused.
+- Persistence: `lengockhoa.vskit` does not import prior global/workspace state or SecretStorage; existing extension data and Docker volumes remain untouched. No VS Code install/reload or database integration smoke test was run.
+- Verification: typecheck, compile, and full suite passed (319 files passed, 2 skipped; 4,812 tests passed, 5 skipped). Focused release hygiene and manifest-asset guards passed (23 tests). VSIX packaging passed (23 files, 2.17 MB) with manifest, entrypoint, README, guide, icon, and grammar.
+- Git: branch `main`, official remote `lengockhoa/VSKit`; previous conversion commit/tag/release `v1.55.7` remain. Current patch changes are uncommitted; the user-owned `PROJECT_IMPORTANT.md` edit remains unstaged.
+- Local installation: `code --install-extension "$(pwd)/dist/vskit-1.55.8.vsix"`. It was not installed into the current VS Code.
 
 ## Active Work
 
-- None; the local VSIX is ready for user testing. No release or install work remains.
+- Final review and `v1.55.8` commit/push/tag/GitHub release remain; Marketplace publication, VS Code installation/reload, and database service changes are not part of this run.
 
 ## Recent AI Chat maintenance
 

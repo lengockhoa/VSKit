@@ -45,7 +45,7 @@ Environment overrides:
 
 Examples:
   curl -fsSL https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/scripts/install-vskit.sh | bash
-  bash scripts/install-vskit.sh --local dist/vskit-1.55.7.vsix
+  bash scripts/install-vskit.sh --local dist/vskit-<version>.vsix
 EOF
 }
 

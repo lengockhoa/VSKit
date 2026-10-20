@@ -15,9 +15,12 @@ WebviewPanels per surface (Results grid, Connection form, Table Designer, AI Cha
 Console). Webview side (`webview/`) ships as separate esbuild bundles under `dist/`
 (`webview.js`, `consolePanel.js`, …) loaded through strict-CSP HTML built by each panel.
 Pure logic (SQL parsing, DDL diff/generation, paging, grid filter model) lives dependency-free
-under `src/core/` + selected `src/ui/*Model|Messages` modules so vitest can cover it without
-`vscode`. The conversion artifact is a local `.vsix`; no VSKit GitHub release asset or
-Marketplace listing is asserted. See `docs/RELEASE.md` before choosing a distribution path.
+under `src/core/` + selected `src/ui/*Model|Messages` modules, keeping tests runnable without
+booting the VS Code extension host or connecting to a database.
+
+The identity-conversion artifact was version `1.55.7`; patch package `1.55.8` passed local
+verification, and the project-owner GitHub ship steps are pending. No Marketplace listing is
+asserted. See `docs/RELEASE.md` before choosing a distribution path.
 
 ## Key Modules
 
@@ -43,8 +46,7 @@ adapter on pooled clients.
 - AI-chat `run_sql` tool is SELECT/SHOW/EXPLAIN/clean-CTE only — never receives DML/DDL.
 - AI-chat V2 (TASK-CHATV2-017): the webview boots the `.VSKit-ai-chat-v2` shell + single `createChatController` (webview/aiChat/) and posts `ready_v2`; the host emits V2-native `text_delta`/`reasoning_delta`/`tool_started`/`tool_finished`/`turn_finished` frames on the ordered V2 seam. V1 is deleted (Lane 3): `aiChatPanelHeader.ts`/`aiChatPanelComposer.ts` and their tests are gone, the dead `.VSKit-chat` CSS was retired from `webview/styles.css`, and the V2 E2E asserts V1-id absence in the production bundle.
 - Keyset paging may replace OFFSET ONLY when the structural browse gate passes AND no term carries NULLS ordering; every other shape keeps legacy composition byte-identical.
-- This conversion is not remotely released: a local VSIX is a test artifact until an explicit
-  GitHub release or Marketplace listing is verified.
+- This conversion has a separate GitHub release `v1.55.7` with asset `vskit-1.55.7.vsix`; Marketplace listing availability remains unverified.
 
 ## Known Dangerous Areas
 

@@ -13,10 +13,10 @@ bash scripts/build.sh
 For the current package version, install with:
 
 ```bash
-code --install-extension "$(pwd)/dist/vskit-1.55.7.vsix"
+code --install-extension "$(pwd)/dist/vskit-1.55.8.vsix"
 ```
 
-The VSKit 1.55.7 GitHub release includes this VSIX; Marketplace listing availability has not been verified.
+The latest VSKit VSIX is distributed from GitHub Releases; Marketplace listing availability has not been verified.
 
 ### Dữ liệu từ cài đặt trước
 

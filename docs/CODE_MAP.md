@@ -23,7 +23,7 @@
   - **V1 deleted (TASK-CHATV2-017 Lane 3)** — `webview/aiChatPanelHeader.ts`, `webview/aiChatPanelComposer.ts`, their tests and the V1 boot/`archiveV1Composer` are gone; the legacy `.VSKit-chat` CSS blocks they owned were removed from `webview/styles.css` (live legacy bubble/card rules kept — the host still emits non-V2 frames and the legacy bridge in `aiChatPanelMain.ts` renders them). Non-V2 frames are forwarded through the controller's ONE `window.message` listener via `onLegacyMessage`.
   - Production-bundle E2E: `src/ui/__tests__/aiChatPanelV2E2e.test.ts` (10 cases) boots `dist/aiChatPanel.js`.
 - `webview/` — webview UI: `main.ts` (AG Grid Community v36 custom IFilter + edit/requery/export), `styles.css` (incl. `.VSKit-setfilter*`, `.VSKit-console*` — cycle Z), `connectionFormMain.ts`, `consolePanelMain.ts` (Console scratchpad: textarea, Run/Save, Cmd/Ctrl+Enter, context menu; message shapes mirror `consolePanelMessages.ts` — rootDir forbids cross-import).
-- `scripts/build.sh` — compile + package vsix; `install-VSKit.sh` — install from vsix.
+- `scripts/build.sh` — compile + package VSIX; `scripts/install-vskit.sh` — install from VSIX.
 ## DDL Stack (PostgreSQL Table Designer — cycles I/II)
 
 - `src/core/ddl/createTable.ts` — pure CREATE TABLE generator: `TableSpec`, `ColumnSpec`, `KeySpec`, `generateCreateTable`, `defaultColumnSpecs`, `specErrors`, `UUID_DEFAULT_EXPR`, `CREATED_AT_DEFAULT_EXPR`.

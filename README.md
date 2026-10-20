@@ -13,12 +13,12 @@ macOS or **Ctrl+Enter** on Windows/Linux to execute the current statement.
 
 ## Installation
 
-The VSKit 1.55.7 GitHub release includes this VSIX; Marketplace listing availability has not been verified.
+The latest VSKit VSIX is distributed from GitHub Releases; Marketplace listing availability has not been verified.
 Build and install the local VSKit package for testing:
 
 ```bash
 bash scripts/build.sh
-code --install-extension "$(pwd)/dist/vskit-1.55.7.vsix"
+code --install-extension "$(pwd)/dist/vskit-1.55.8.vsix"
 ```
 
 VSKit runs as `lengockhoa.vskit` with separate VS Code `globalState`, `workspaceState`, and `SecretStorage`. It does not import existing connections, credentials, AI settings, query history/drafts, chat-session state, or schema state; it does not rewrite user/workspace settings. Existing installations and data remain untouched. Recreate connections/settings and re-enter credentials. Chat sessions can be exported to Markdown/JSON, but VSKit has no importer, so exports are archival only. The packaged user guide opens via **VSKit: Open User Guide**.
@@ -189,10 +189,11 @@ Build and package:
 bash scripts/build.sh
 # → produces dist/vskit-<version>.vsix
 ```
-VSIX packaging is available for local testing; no remote release asset or Marketplace listing has been verified. This conversion does not publish, create tags/releases, or push. Historical download references have been omitted rather than represented as VSKit links.
+VSIX packaging is available for local testing and GitHub release distribution. Marketplace
+listing availability remains unverified and publication is paused. Historical release assets
+and download URLs retain their original names.
 
-See `docs/RELEASE.md` for local package verification and the current release
-limitations.
+See `docs/RELEASE.md` for package verification, release steps, and current limitations.
 ---
 
 ## Development

@@ -91,10 +91,11 @@ platformDescribe("install-vskit.sh — CLI detection", () => {
     expect(out).toMatch(/not found|missing|local/);
   });
 
-  it("Test #3 (smoke): --help prints usage", () => {
+  it("Test #3: --help prints usage and a version-neutral local VSIX example", () => {
     const result = runScript(["--help"]);
     expect(result.status).toBe(0);
     expect(result.stdout.toLowerCase()).toContain("usage");
+    expect(result.stdout).toContain("dist/vskit-<version>.vsix");
   });
 
   it("Test #3b: local install reports the current VSKit version", () => {
@@ -142,8 +143,8 @@ describe("install-vskit.sh — find_vsix_asset_url (python3 branch)", () => {
     assets: [
       {
         // Foreign-product asset exercises the installer rejection path.
-        name: "another-product-1.55.6.vsix",
-        browser_download_url: "https://example.invalid/another-product-1.55.6.vsix",
+        name: "foreign-extension-0.1.0.vsix",
+        browser_download_url: "https://example.invalid/foreign-extension-0.1.0.vsix",
       },
       {
         name: "Source code (zip)",
@@ -197,8 +198,8 @@ describe("install-vskit.sh — find_vsix_asset_url (python3 branch)", () => {
   it("Test #4a: rejects a release containing only a foreign-product VSIX", () => {
     const foreignOnly = JSON.stringify({
       assets: [{
-        name: "another-product-1.55.6.vsix",
-        browser_download_url: "https://example.invalid/another-product-1.55.6.vsix",
+        name: "foreign-extension-0.1.0.vsix",
+        browser_download_url: "https://example.invalid/foreign-extension-0.1.0.vsix",
       }],
     });
     const result = spawnSync(

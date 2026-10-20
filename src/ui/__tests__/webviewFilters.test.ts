@@ -80,6 +80,7 @@ interface VSKitApi {
 function loadBundle(): {
   received: Array<Record<string, unknown>>;
   root: HTMLDivElement;
+  waitForMessage: (type: string) => Promise<void>;
 } {
   if (!bundleSrc) {
     throw new Error(
@@ -91,9 +92,22 @@ function loadBundle(): {
   const root = document.getElementById("VSKit-root") as HTMLDivElement;
 
   const received: Array<Record<string, unknown>> = [];
+  const listeners = new Set<(message: Record<string, unknown>) => void>();
+  const waitForMessage = (type: string): Promise<void> => {
+    const { promise, resolve } = Promise.withResolvers<void>();
+    const listener = (message: Record<string, unknown>) => {
+      if (message.type !== type) return;
+      listeners.delete(listener);
+      resolve();
+    };
+    listeners.add(listener);
+    return promise;
+  };
   const api: VSKitApi = {
     postMessage: (msg) => {
-      received.push(msg as Record<string, unknown>);
+      const message = msg as Record<string, unknown>;
+      received.push(message);
+      for (const listener of [...listeners]) listener(message);
     },
   };
   (globalThis as unknown as { acquireVsCodeApi: () => VSKitApi }).acquireVsCodeApi =
@@ -101,7 +115,7 @@ function loadBundle(): {
 
   (0, eval)(bundleSrc);
 
-  return { received, root };
+  return { received, root, waitForMessage };
 }
 
 function dispatchState(msg: Record<string, unknown>): void {
@@ -176,12 +190,15 @@ function batchedState(opts: {
   });
 }
 
-/** AG Grid's `filterChanged` event fires asynchronously (microtask/setTimeout
- *  inside the grid). Awaiting one tick lets the event handler run so our
- *  `colFilterActive` flag is up-to-date before the test asserts. */
-async function flushGridEvents(): Promise<void> {
-  await new Promise<void>((resolve) => setTimeout(resolve, 0));
+/** Yield one real zero-delay macrotask for AG Grid's browser-timer `filterChanged`
+ *  dispatch in jsdom; the grid exposes no completion promise. The debounce test
+ *  waits for its observable postMessage instead of guessing a duration. */
+function flushGridEvents(): Promise<void> {
+  const { promise, resolve } = Promise.withResolvers<void>();
+  setTimeout(resolve, 0);
+  return promise;
 }
+
 
 // ---- tests ----------------------------------------------------------------
 
@@ -351,7 +368,7 @@ describeIfBundle("webview/main.ts bundle (TASK-402)", () => {
   itIfBundle(
     "TASK-007. quick-search typing applies client filter without server requery",
     async () => {
-      const { received, root } = loadBundle();
+      const { received, root, waitForMessage } = loadBundle();
       dispatchState(threeRowsState());
       await flushGridEvents();
       const input = root.querySelector(".VSKit-search-input") as HTMLInputElement;
@@ -361,13 +378,21 @@ describeIfBundle("webview/main.ts bundle (TASK-402)", () => {
         input.value = text;
         input.dispatchEvent(new Event("input", { bubbles: true }));
       }
-      await new Promise<void>((resolve) => setTimeout(resolve, 250));
+      await flushGridEvents();
+      // Outlast the 150 ms server-filter debounce so a quick-search regression
+      // cannot hide a wrongly scheduled requery behind its timer.
+      const noRequeryWindow = Promise.withResolvers<void>();
+      setTimeout(noRequeryWindow.resolve, 250);
+      await noRequeryWindow.promise;
 
       expect(received.filter((m) => m.type === "requery")).toHaveLength(0);
       expect(getGridApi()!.getDisplayedRowCount()).toBe(1);
 
-      getGridApi()!.setFilterModel({ name: { values: ["beta"] } });
-      await new Promise<void>((resolve) => setTimeout(resolve, 250));
+      const api = getGridApi()!;
+      const requeryPosted = waitForMessage("requery");
+      api.setFilterModel({ name: { values: ["beta"] } });
+      await requeryPosted;
+      await flushGridEvents();
       expect(received.filter((m) => m.type === "requery")).toHaveLength(1);
     },
   );

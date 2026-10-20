@@ -26,11 +26,11 @@
 ## Active Constraints
 
 <!-- Rules AI must respect during implementation. Non-obvious limits not visible in the code. -->
-- **Distribution status:** Marketplace publishing is paused. The package identity is `lengockhoa.vskit`, with repository `lengockhoa/VSKit`; no remote release asset is verified.
-- **Installer behavior:** `scripts/install-vskit.sh --local <file.vsix>` installs a caller-supplied artifact. Its no-argument path queries the latest GitHub release; do not claim that it retrieves a VSKit VSIX until a matching release asset is verified.
+- **Distribution status:** Marketplace publishing remains paused. Package identity is `lengockhoa.vskit`, repository `lengockhoa/VSKit`; patch package `1.55.8` passed local verification, and its GitHub ship steps are pending. The latest released version is `v1.55.7`; no Marketplace listing is verified.
+- **Installer behavior:** `scripts/install-vskit.sh --local <file.vsix>` installs a supplied artifact. The no-argument path queries the latest GitHub release; the currently released `v1.55.7` has a matching asset. Verify the new release asset before relying on that path.
 - **Persistence boundary:** VSKit does not import extension-scoped state or secrets from other installations. Configure connections and credentials in VSKit as needed; never read VS Code storage directories or create credential export files.
 - **Build verification order:** typecheck → compile → tests → VSIX package. Compile first because some tests read generated `dist` bundles during module initialization. Inspect VSIX contents before distribution; do not install it or reload VS Code unless explicitly requested.
-- **Release automation:** The GitHub workflow is `.github/workflows/ci.yml` and is verification-only. Marketplace publish workflows and bump commands are absent while publication is paused. Do not run publish, tag, release, or push actions for this conversion.
+- **Release automation:** `.github/workflows/ci.yml` is verification-only. Follow the project-owner Git commit/push and versioned tag/release steps after local verification; Marketplace publishing remains paused. Do not treat package verification as a publish action.
 - **AI engine setting:** Current configuration lives under `VSKit.ai.*`. Provider/model identifiers such as `omp`, `codex`, and `claude-code` are not product branding and remain unchanged.
 
 ## Known Bugs & Root Causes
@@ -57,13 +57,13 @@
   postgres.ts connect()) — runQuery still holds ONE client per multi-statement script and
   beginTransaction() pins its own, so metadata lands on independent sessions. Regression test:
 ## Session Handoff
-- Previous session completed implementation and test work on commit-message generation and provider routing. Current repository state and release availability should be checked before acting; do not rely on historical release URLs or install instructions.
+- Previous session completed the VSKit identity conversion; GitHub release `v1.55.7` and its VSIX asset are verified. Current follow-up prepares patch `1.55.8`; after local verification, commit/push and create its versioned tag/release per project-owner instructions. Keep Marketplace paused; do not install the VSIX or reload VS Code.
 
 
 - [2026-09-09] Decision: Keep the SQL Console editor dependency-free by layering `webview/sqlHighlight.ts` spans under a transparent native textarea. Reason: preserves native selection, clipboard, autocomplete, draft persistence, and keyboard behavior while adding file-like syntax coloring without introducing a heavyweight editor runtime.
 - [2026-09-09] Constraint: The active namespace picker is shared across status bar, Console toolbar, and SQL file editor title menu. `ConnectionManager` reads the per-connection `ActiveSchemaStore` dynamically at execution time and prepends PostgreSQL `SET search_path`; do not duplicate namespace state in webviews or rewrite user SQL.
 
-- [2026-09-17] Standing rule (user directive): every completed cycle/handoff MUST end with a VS Marketplace publish via `npm run bump`. Client machines only sync the Marketplace latest; the Marketplace version is always the source of truth for "latest" — code merged without publishing is NOT finished. Also stored in `.ukit/storage/memory/user.json` (rules.
+- [2026-09-17] Historical policy required Marketplace publication each cycle. Superseded on 2026-10-20; Marketplace publishing is paused. See Active Constraints.
 
 ## Completed Milestones
 

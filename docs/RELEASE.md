@@ -2,7 +2,7 @@
 
 ## Current distribution status
 
-The existing GitHub `v1.55.6` release still carries `UnicDB-1.55.6.vsix`; that historical asset remains untouched. The separate VSKit `v1.55.7` GitHub release now carries `vskit-1.55.7.vsix`. Marketplace listing availability is unverified; publication is paused.
+The existing GitHub `v1.55.6` release still carries `UnicDB-1.55.6.vsix`; that historical asset remains untouched. The current VSKit release `v1.55.7` carries `vskit-1.55.7.vsix`; patch package `1.55.8` is built and locally verified. Its Git ship steps are pending. Marketplace listing availability is unverified; publication is paused.
 
 The package command created only the local VSIX. The separate ship sequence pushed commit `bbab82b` to `main`, pushed tag `v1.55.7`, and created the GitHub release with the VSIX asset. Marketplace publishing, VS Code installation, and reload were not performed.
 The release workflow is `.github/workflows/ci.yml`; it runs verification only and does not publish a package.
@@ -16,21 +16,24 @@ From the repository root, the build script runs the checks in dependency order
 bash scripts/build.sh
 ```
 
-With the current manifest version `1.55.7`, the expected artifact is
-`dist/vskit-1.55.7.vsix`. Install it only when you choose to test it:
+With the current manifest version `1.55.8`, the expected artifact is
+`dist/vskit-1.55.8.vsix`. Install it only when you choose to test it:
 
 ```bash
-code --install-extension "$(pwd)/dist/vskit-1.55.7.vsix"
+code --install-extension "$(pwd)/dist/vskit-1.55.8.vsix"
 ```
 
 The package identity is `lengockhoa.vskit`; the package name is lowercase
-`vskit`. This local VSIX is a test artifact, not a claim that a Marketplace
-listing or GitHub release exists.
+`vskit`. A local VSIX is a test artifact, not a claim that a Marketplace
+listing exists. The GitHub ship steps for `1.55.8` are pending.
 
 ## Version policy during this conversion
 
-The package is version `1.55.7` because immutable tag `v1.55.6` already exists on `origin`; the historical tag is not reused.
-No automated version-preparation script was run. The package-lock root name/version match `package.json`.
+The patch package is version `1.55.8` because immutable tags `v1.55.6` and
+`v1.55.7` already exist; neither tag is reused. No project-specific version or
+release script was run. `npm version patch --no-git-tag-version --ignore-scripts`
+updated the package version and lockfile root only; the root identity/version
+remain synchronized.
 
 The `.github/workflows/ci.yml` workflow runs CI checks only. No Marketplace
 publish workflow or publish npm script remains while publication is paused.

@@ -2,12 +2,21 @@
 
 Track session-level execution details.
 
+## 2026-10-20 — VSKit v1.55.8 package preparation
+
+- Removed the unreferenced broken icon generator; the generic 48×48 RGBA icon remains unchanged. Stabilized the webview filter test with both event-driven success and debounce-window negative checks; made the installer help artifact example version-neutral and guarded README/user-guide package paths. No runtime behavior, dependencies, extension storage, or Docker volumes changed.
+- Verification: typecheck, compile, and full suite passed (319 files; 4,812 tests passed, 5 skipped); focused release-hygiene/asset guards passed (23/23), and reviewer-fix filter/installer tests passed (17/17). The VSIX contains 23 files (2.17 MB), including the manifest, entrypoint, README, user guide, icon, and SQL grammar; no source maps, dependencies, secrets, or agent files were packaged.
+- One full-suite attempt exceeded the parser's 50 ms timing guard (88 ms); the isolated parser suite passed 14/14, and a subsequent full-suite run passed. This patch does not modify the parser source or its test.
+- Distribution: local artifact `dist/vskit-1.55.8.vsix`; final review and GitHub ship steps are pending. Marketplace publication, VS Code installation/reload, and database-service changes were not performed.
+
+
 ## 2026-10-20 — VSKit standalone conversion
 
 - Converted package/runtime identifiers, grammar and media paths, installer/user documentation, and Docker development fixture names. Publisher `lengockhoa` is unchanged; version `1.55.7` avoids reusing the existing `v1.55.6` release. The manifest declares the existing default-off `VSKit.ai.grounding` option.
 - No cross-identity importer was added. The guide documents inaccessible prior VS Code state/secrets and manual recreation; previous extension stores, workspace files, and Docker volumes remain untouched.
 - Verification: typecheck and compile passed; full unit/regression suite reported 319 files passed, 2 skipped (4,812 tests passed, 5 skipped). Final focused manifest/resource/grammar/guide/release/installer tests passed (64). `docker compose config --quiet`, shell syntax checks, and installer `--help` passed.
 - Packaging passed: `dist/vskit-1.55.7.vsix` contains 23 files (2.17 MB): VSKit manifest, entrypoint, README, user guide, icons, and grammar. Commit `bbab82b` and tag `v1.55.7` were pushed; the GitHub release carries the VSIX. Marketplace publication, VS Code install/reload, and database integration/service were not performed. The user-owned `PROJECT_IMPORTANT.md` change remains uncommitted.
+- Follow-up local cleanup: foreign VSIX fixtures are version-neutral; no legacy snapshot normalizer exists in managed tests, while dependency and runner negative controls remain. Focused cleanup suite passed (51); the filter test now awaits its outgoing requery event, and the full suite passed again (319 files, 4,812 tests; 2 files / 5 tests skipped). The unreferenced icon generator was removed: it targeted a missing SVG, claimed 128×128 for the existing 48×48 icon, and retained a stale monogram fallback. The current icon was visually verified as generic geometry and left unchanged. This follow-up made no remote, release, Marketplace, VS Code, or database-service changes.
 - Dated release/worklog records below preserve historical identifiers and exact artifact names/URLs for audit; they do not describe the current identity. Pre-existing legacy VSIX and SMB tombstone artifacts were left untouched and are excluded from the package.
 
 ## 2026-09-22 — Cycle MENU (schema-tree table-node context menu order)
