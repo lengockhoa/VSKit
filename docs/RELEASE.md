@@ -2,9 +2,9 @@
 
 ## Current distribution status
 
-The existing GitHub `v1.55.6` release still carries `UnicDB-1.55.6.vsix`; that historical asset remains untouched. This conversion uses `v1.55.7` for a separate VSKit release. Marketplace listing availability is unverified; publication is paused.
+The existing GitHub `v1.55.6` release still carries `UnicDB-1.55.6.vsix`; that historical asset remains untouched. The separate VSKit `v1.55.7` GitHub release now carries `vskit-1.55.7.vsix`. Marketplace listing availability is unverified; publication is paused.
 
-The local package command itself does not commit, push, tag, create a GitHub release, publish to Marketplace, install VSIX, or reload VS Code. The separate versioned Git release step will create `v1.55.7` and attach the local VSIX; Marketplace publishing remains paused.
+The package command created only the local VSIX. The separate ship sequence pushed commit `bbab82b` to `main`, pushed tag `v1.55.7`, and created the GitHub release with the VSIX asset. Marketplace publishing, VS Code installation, and reload were not performed.
 The release workflow is `.github/workflows/ci.yml`; it runs verification only and does not publish a package.
 
 ## Build and install a local VSIX
