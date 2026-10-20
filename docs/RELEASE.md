@@ -2,7 +2,7 @@
 
 ## Current distribution status
 
-The existing GitHub `v1.55.6` release still carries `UnicDB-1.55.6.vsix`; that historical asset remains untouched. The VSKit `v1.55.7` release carries `vskit-1.55.7.vsix`; the current `v1.55.8` release carries `vskit-1.55.8.vsix`. Marketplace listing availability is unverified; publication is paused.
+The existing GitHub `v1.55.6` release retains its published VSIX asset; that release artifact remains unchanged. The VSKit `v1.55.7` release carries `vskit-1.55.7.vsix`; the current `v1.55.8` release carries `vskit-1.55.8.vsix`. Marketplace listing availability is unverified; publication is paused.
 
 The package command created only the local VSIX. The separate ship sequence pushed commit `bbab82b` to `main`, pushed tag `v1.55.7`, and created the GitHub release with the VSIX asset. Marketplace publishing, VS Code installation, and reload were not performed.
 The v1.55.8 ship sequence pushed commit `528b279` to `main`, pushed tag `v1.55.8`, and created the GitHub release with the VSIX asset. Marketplace publishing, VS Code installation/reload, and database integration were not performed.
@@ -17,11 +17,11 @@ From the repository root, the build script runs the checks in dependency order
 bash scripts/build.sh
 ```
 
-With the current manifest version `1.55.8`, the expected artifact is
-`dist/vskit-1.55.8.vsix`. Install it only when you choose to test it:
+With the current manifest version `1.55.9`, the expected artifact is
+`dist/vskit-1.55.9.vsix`. Install it only when you choose to test it:
 
 ```bash
-code --install-extension "$(pwd)/dist/vskit-1.55.8.vsix"
+code --install-extension "$(pwd)/dist/vskit-1.55.9.vsix"
 ```
 
 The package identity is `lengockhoa.vskit`; the package name is lowercase
@@ -31,11 +31,11 @@ is paused.
 
 ## Version policy during this conversion
 
-The patch package is version `1.55.8` because immutable tags `v1.55.6` and
-`v1.55.7` already exist; neither tag is reused. No project-specific version or
-release script was run. `npm version patch --no-git-tag-version --ignore-scripts`
-updated the package version and lockfile root only; the root identity/version
-remain synchronized.
+For the previous conversion release, the package was version `1.55.8` because
+immutable tags `v1.55.6` and `v1.55.7` already existed; neither tag was reused.
+No project-specific version or release script was run for that conversion.
+`npm version patch --no-git-tag-version --ignore-scripts` updated the package
+version and lockfile root only; the root identity/version remain synchronized.
 
 The `.github/workflows/ci.yml` workflow runs CI checks only. No Marketplace
 publish workflow or publish npm script remains while publication is paused.

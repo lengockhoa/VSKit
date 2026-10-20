@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.55.9] — 2026-10-21
+
+- Documentation hygiene: remove obsolete historical product references from current project files and paths.
+- No application behavior or dependencies changed.
+
 ## [1.55.8] — 2026-10-20
 
 - Maintenance: remove the unreferenced icon generator that targeted a missing source; keep the existing validated VSKit PNG asset unchanged.
@@ -12,8 +17,9 @@
 - Converted package identity, manifest/runtime identifiers, resources, installer guidance, and development Compose fixtures to VSKit. Publisher `lengockhoa` is unchanged; version `1.55.7` avoids reusing the existing `v1.55.6` tag.
 - The existing opt-in `VSKit.ai.grounding` setting is now declared in the manifest with its existing `false` default; runtime logic is unchanged.
 - The new extension identity does not import prior global/workspace state or SecretStorage. Recreate connections/settings and re-enter credentials; the prior extension and data remain untouched. AI chat Markdown/JSON exports are archival only; there is no importer.
-- The existing Docker volumes remain untouched. The GitHub `v1.55.7` release includes the local VSIX; Marketplace publication remains paused. Historical release artifact names and URLs below remain unchanged.
-- Dated release entries below are retained as historical records. Their original artifact names and download URLs are intentionally not retargeted to the current package.
+- The existing Docker volumes remain untouched. The GitHub `v1.55.7` release includes the local VSIX; Marketplace publication remains paused.
+
+- Dated release entries below retain technical change summaries.
 
 ## [1.55.1] — 2026-09-23
 
@@ -23,7 +29,7 @@
 
 ## [1.55.0] — 2026-09-23
 
-- Fix: schema-tree table-node context menu ordering — `New Table…` now renders as item #1 and `Modify Table…` as item #2. The previous `"order"` keys were inert (not a real VS Code menu key); replaced with `group` suffix ordering `"UnicDB@1"` / `"UnicDB@2"` (same visual group, no separator).
+- Fix: schema-tree table-node context menu ordering — `New Table…` now renders as item #1 and `Modify Table…` as item #2. The previous `"order"` keys were inert (not a real VS Code menu key); replaced with `group` suffix ordering `"VSKit@1"` / `"VSKit@2"` (same visual group, no separator).
 - Files: package.json, src/extension.test.ts (MENU tests rewritten for the group@N mechanism)
 - Verification: MENU 3/3 ✅ · bq04SurfaceGuard 8/8 ✅ · typecheck clean ✅
 
@@ -37,7 +43,7 @@
 
 - Summary: AI Chat V2 UX fixes: compact composer always pinned at the bottom (explicit grid placement fixes giant-on-open and crushed-after-turns), transcript scrollbar with auto-follow to newest message and unread pill, Claude Code-style tool activity timeline (status dots, Bash IN/OUT cards, live working indicator), and fully wired message actions (copy/edit/retry/3-dot menu).
 - Files: webview/aiChat/{styles.css,shell.ts,controller.ts,transcript.ts,store.ts,scroll.ts}, src/ui/aiChatPanel.ts, src/ui/aiChatPanelMessages.ts, colocated tests in webview/aiChat/__tests__/, docs/AI_HANDOFF CHATFIX cycle
-- Verification: npm run typecheck ✅ · npm test ✅ · UnicDB-1.54.1.vsix packaged
+- Verification: npm run typecheck ✅ · npm test ✅ · VSIX v1.54.1 packaged
 
 ---
 
@@ -45,7 +51,7 @@
 
 - Summary: Ship the full AI Chat V2 webview replacement: two-tier composer (40x40 send arrow, Enter/Shift+Enter/IME rules), slash and mention menus, streaming/reasoning/tool timeline, permission sheet, session persistence/resume/export, and engine capability matrix. V2 is now the sole production chat UI; the V1 adapter, composer, header, and thread modules are deleted.
 - Files: webview/aiChat/*, webview/aiChatPanelMain.ts, src/ui/aiChatPanel.ts
-- Verification: npm run typecheck ✅ · npm test ✅ · UnicDB-1.54.0.vsix packaged
+- Verification: npm run typecheck ✅ · npm test ✅ · VSIX v1.54.0 packaged
 
 ---
 
@@ -53,7 +59,7 @@
 
 - Summary: Redo the AIChat composer button row so controls no longer overlap: 28px icon tiles scoped to icon-only buttons, text chips truncate with ellipsis, Bypass becomes a readable labeled pill, schema chip uses plain "schema: <name>" text (raw $(...) codicon never rendered in the webview), and mic/slash placeholders styled as ghost tiles.
 - Files: webview/aiChatPanelComposer.ts, webview/styles.css
-- Verification: npm run typecheck ✅ · npm test ✅ · UnicDB-1.53.49.vsix packaged
+- Verification: npm run typecheck ✅ · npm test ✅ · VSIX v1.53.49 packaged
 
 ---
 
@@ -61,15 +67,15 @@
 
 - Summary: Ship the one-command release flow: npm run bump / bump:minor / bump:major resolve to scripts/bump-version.mjs and atomically ship every bump to both GitHub Releases and the VS Code Marketplace. Fixes the flag-parser bug that treated the --changelog-summary value as the bump mode, adds a .secrets/.pat PAT fallback, tolerates the CI publish race after a tag push, and unblocks the frozen-surface guards for release-plumbing scripts.
 - Files: package.json, scripts/bump-version.mjs, docs/MEMORY.md, src/adapters/__tests__/bq04SurfaceGuard.test.ts, src/adapters/__tests__/bqFollowupSurfaceGuard.test.ts
-- Verification: npm run typecheck ✅ · npm test ✅ · UnicDB-1.53.48.vsix packaged
+- Verification: npm run typecheck ✅ · npm test ✅ · VSIX v1.53.48 packaged
 
 ---
 
 ## [1.53.47] — 2026-09-15
 
-- Summary: Research-complete rewrite of the AI Chat redesign spec. `docs/AI_CHAT_REDESIGN.md` grows from a 70-line draft to a 702-line implementation-ready spec — 17 sections, 10 acceptance-test families (88 unique IDs), an evidence-labeled external-research pass (27 verified URLs), and Appendix A implementation sequencing. **No runtime change** — a docs-only milestone; it was still published to the Marketplace as v1.53.47 to keep every git release in lockstep with a Marketplace release (`Published lengockhoa.UnicDB v1.53.47` via the tag-triggered publish workflow).
+- Summary: Research-complete rewrite of the AI Chat redesign spec. `docs/AI_CHAT_REDESIGN.md` grows from a 70-line draft to a 702-line implementation-ready spec — 17 sections, 10 acceptance-test families (88 unique IDs), an evidence-labeled external-research pass (27 verified URLs), and Appendix A implementation sequencing. **No runtime change** — a docs-only milestone; it was still published to the Marketplace as v1.53.47 to keep every git release in lockstep with a Marketplace release (`Published lengockhoa.VSKit v1.53.47` via the tag-triggered publish workflow).
 - Files: `docs/AI_CHAT_REDESIGN.md`, `docs/AI_HANDOFF/**`, `CHANGELOG.md`, `package.json`, `package-lock.json`.
-- Also closes the stale `[Unreleased]` block: the **AI-engine unification** was stranded under that open heading even though its code shipped in the 1.53.46 build. Per-model `AiModelConfig.engine?` was removed so the global `UnicDB.ai.engine` selector (default `"omp"`) is the only engine control — `src/ai/settings.ts`, `src/ai/config.ts` (legacy-config migration + stale-key strip), `webview/aiSettingsFormMain.ts` (Lite Engine dropdown removed), and `src/ai/commitGenCommand.ts` (engine read from global `settings.engine`). Recorded here only to clear the changelog, not as new work.
+- Also closes the stale `[Unreleased]` block: the **AI-engine unification** was stranded under that open heading even though its code shipped in the 1.53.46 build. Per-model `AiModelConfig.engine?` was removed so the global `VSKit.ai.engine` selector (default `"omp"`) is the only engine control — `src/ai/settings.ts`, `src/ai/config.ts` (legacy-config migration + stale-key strip), `webview/aiSettingsFormMain.ts` (Lite Engine dropdown removed), and `src/ai/commitGenCommand.ts` (engine read from global `settings.engine`). Recorded here only to clear the changelog, not as new work.
 - Verification: `npm run typecheck` ✅ · `npm run compile` ✅ · docs-only (no `src/` or `webview/` diff vs 1.53.46).
 
 ---
@@ -78,26 +84,26 @@
 
 - Summary: Ship the Generate Commit Message spinner-hang fix and the results-grid bug family. Marketplace 1.53.45 predates these fixes (published 2026-09-10); this bump republishes the corrected build.
 - Files: src/ai/commitGenOmpOneShot.ts, src/ai/commitGenCommand.ts, src/ai/commitMessage.ts, src/extension.ts, src/core/queryRunner.ts, src/adapters/postgres.ts, src/ui/resultsPanel.ts, src/ui/browseCommands.ts, webview/main.ts
-- Verification: npm run typecheck ✅ · npm test ✅ · UnicDB-1.53.46.vsix packaged
+- Verification: npm run typecheck ✅ · npm test ✅ · VSIX v1.53.46 packaged
 
 ---
 
 ## [1.53.45] — 2026-09-10
 
-- Summary: Fix the Generate Commit Message spinner hanging forever, and honour `UnicDB.ai.engine` for that command. The SCM sparkle no longer hangs when the omp engine asks for tool permission, no longer silently rewrites non-string payloads to `[object Object]`, and now reports exactly why a non-builtin engine selection was rejected.
+- Summary: Fix the Generate Commit Message spinner hanging forever, and honour `VSKit.ai.engine` for that command. The SCM sparkle no longer hangs when the omp engine asks for tool permission, no longer silently rewrites non-string payloads to `[object Object]`, and now reports exactly why a non-builtin engine selection was rejected.
 - Files: `src/ai/commitGenCommand.ts`, `src/ai/commitGenOmpOneShot.ts`, `src/ai/commitMessage.ts`, `src/extension.ts`, `src/ai/__tests__/commitGenCommand.test.ts`, `src/ai/__tests__/commitGenOmpOneShot.test.ts`, `src/ai/__tests__/commitGenOmpOneShot.e2e.test.ts`, `src/ai/__tests__/commitGenOmpOneShot.live.test.ts`, `src/ai/__tests__/commitMessage.test.ts`, `CHANGELOG.md`, `package.json`.
 - Behaviour:
   - **Hang fix.** The omp one-shot never registered an ACP server-request handler, so a `session/request_permission` from omp went unanswered; `session/prompt` is deliberately unbounded, so the turn never settled and the progress spinner hung. The one-shot now auto-answers every server request (deny — the commit prompt embeds the full repo context, so no tool is needed) and bounds the whole turn (120s) so it always settles with a real error instead of hanging.
   - `runGenerateCommitMessage` now routes via `resolveEngine({ engine: settings.engine, … })` so `claude-code` / `codex` selections surface an engine-specific toast (install / update hint) instead of being silently swallowed.
   - `serializeCommitPrompt` throws a structured `Error` if a `ChatContentPart.text`/`imageUrl` is not a string; `buildCommitGenOmpOneShot` ignores non-string deltas; `runGenerateCommitMessage` validates `typeof result.text === "string"` after both `builtinComplete` and `OmpOneShot.generate` so a misbehaving port can no longer leak `[object Object]` into the input box.
-  - New tests: `commitGenOmpOneShot` unit (10), deterministic end-to-end permission-hang regression (2), gated live smoke (`UnicDB_OMP_SMOKE=1`), `commitMessage` (serializeCommitPrompt happy-path + throws), and `commitGenCommand` Test #8 (builtin non-string), Test #9 (omp one-shot non-string), Test #10 (claude-code / codex fallback + hint).
-- Verification: `npx vitest run src/ai/__tests__/commitGenOmpOneShot.test.ts src/ai/__tests__/commitGenOmpOneShot.e2e.test.ts src/ai/__tests__/commitMessage.test.ts src/ai/__tests__/commitGenCommand.test.ts src/ui/__tests__/commitGenIntegration.test.ts` ✅ (121 tests across the related suites); live smoke `UnicDB_OMP_SMOKE=1` ✅.
+  - New tests: `commitGenOmpOneShot` unit (10), deterministic end-to-end permission-hang regression (2), gated live smoke (`VSKit_OMP_SMOKE=1`), `commitMessage` (serializeCommitPrompt happy-path + throws), and `commitGenCommand` Test #8 (builtin non-string), Test #9 (omp one-shot non-string), Test #10 (claude-code / codex fallback + hint).
+- Verification: `npx vitest run src/ai/__tests__/commitGenOmpOneShot.test.ts src/ai/__tests__/commitGenOmpOneShot.e2e.test.ts src/ai/__tests__/commitMessage.test.ts src/ai/__tests__/commitGenCommand.test.ts src/ui/__tests__/commitGenIntegration.test.ts` ✅ (121 tests across the related suites); live smoke `VSKit_OMP_SMOKE=1` ✅.
 
 ## [1.53.44] — 2026-09-10
 
 - Summary: Keep generated Git messages aligned with the selected staged or unstaged diff
 - Files: src/adapters/gitDiff.ts, src/adapters/__tests__/gitDiff.test.ts, docs/MEMORY.md, docs/WORKLOG.md
-- Verification: npm run typecheck ✅ · npm test ✅ · UnicDB-1.53.44.vsix packaged
+- Verification: npm run typecheck ✅ · npm test ✅ · VSIX v1.53.44 packaged
 
 ---
 
@@ -105,7 +111,7 @@
 
 - Summary: Generate Git Message now honors the selected `omp` engine, passes the configured Lite model, and sends meaningful Conventional Commits context; AI Settings now has one authoritative global engine selector.
 - Files: src/ai/commitGenCommand.ts, src/ai/commitMessage.ts, src/ai/omp/acpProcess.ts, src/extension.ts, webview/aiSettingsFormMain.ts, focused tests
-- Verification: npm run typecheck ✅ · npm test ✅ (4134 passed, 4 skipped) · npm run compile ✅ · UnicDB-1.53.43.vsix packaged
+- Verification: npm run typecheck ✅ · npm test ✅ (4134 passed, 4 skipped) · npm run compile ✅ · VSIX v1.53.43 packaged
 
 ---
 
@@ -113,15 +119,15 @@
 
 - Summary: Full-height SQL Console editor with realtime syntax highlighting and namespace selection from SQL files
 - Files: webview/consolePanelMain.ts, webview/styles.css, src/ui/consolePanel.ts, src/extension.ts, src/core/connectionManager.ts, package.json, docs/MEMORY.md, docs/WORKLOG.md
-- Verification: npm run typecheck ✅ · npm test ✅ · UnicDB-1.53.42.vsix packaged
+- Verification: npm run typecheck ✅ · npm test ✅ · VSIX v1.53.42 packaged
 
 ---
 
 ## [1.53.41] — 2026-09-09
 
 - Summary: Add Schema Explorer SQL Console shortcuts for connections, schemas, categories, tables, and views.
-- Files: package.json, src/extension.ts, src/extension.test.ts, docs/UNICDB_USER_GUIDE.md
-- Verification: npm run typecheck ✅ · npm test ✅ · UnicDB-1.53.41.vsix packaged
+- Files: package.json, src/extension.ts, src/extension.test.ts, docs/VSKit_USER_GUIDE.md
+- Verification: npm run typecheck ✅ · npm test ✅ · VSIX v1.53.41 packaged
 
 ---
 
@@ -129,7 +135,7 @@
 
 - Summary: Honor the AI Settings engine selection in AI Chat: persisted omp now routes chat through omp instead of the stale builtin fallback; fresh installs consistently default to omp.
 - Files: src/extension.ts, src/extension.test.ts, src/ai/config.ts, src/ai/settings.ts, package.json, CHANGELOG.md
-- Verification: npm run typecheck ✅ · npm test ✅ · UnicDB-1.53.40.vsix packaged
+- Verification: npm run typecheck ✅ · npm test ✅ · VSIX v1.53.40 packaged
 
 ---
 
@@ -138,31 +144,31 @@
 - Split the results toolbar into exactly two rows at the WHERE input: row 1 keeps the
   icon controls and `tsv` format selector; row 2 contains WHERE/ORDER BY, re-run,
   clear, export controls, active schema, and Search.
-- Added fixed `.UnicDB-toolbar-row` wrappers with nowrap/overflow clipping and kept
+- Added fixed `.VSKit-toolbar-row` wrappers with nowrap/overflow clipping and kept
   transaction controls in row 1 without changing existing handlers.
 - Verification: `npm run typecheck` ✅ · `npm run compile` ✅ · targeted toolbar and
   requery tests ✅ · full `npm test` ⚠️ (pre-existing carried AI/settings failures;
   4,088 passed, 12 failed, 4 skipped).
-- Package: `UnicDB-1.53.39.vsix` packaged successfully.
+- Package: `VSIX v1.53.39` packaged successfully.
 
 ---
 
 ## [1.53.38] — 2026-09-09
-    - `.UnicDB-toolbar` switched from `flex-wrap: wrap` to
+    - `.VSKit-toolbar` switched from `flex-wrap: wrap` to
       `flex-wrap: nowrap` and now has `overflow: hidden` so any
       horizontal overflow from the inputs is clipped instead of
       spawning a horizontal scrollbar (the scrollbar is what users
       were reading as "jerky").
-    - `.UnicDB-requery-input.UnicDB-requery-where` /
-      `.UnicDB-requery-order` switched from `flex: 1 1 100%;
+    - `.VSKit-requery-input.VSKit-requery-where` /
+      `.VSKit-requery-order` switched from `flex: 1 1 100%;
       min-width: 0` to `flex: 1 1 140px; min-width: 80px`. They now
       SHARE the icon row instead of claiming full rows; the 140px
       basis gives them comfortable typing width, and the 80px floor
       prevents them from disappearing entirely on a tiny viewport.
-    - `.UnicDB-schema-chip` flex-shrink comment refreshed (it still
+    - `.VSKit-schema-chip` flex-shrink comment refreshed (it still
       pins `flex-shrink: 0` so the chip cannot be squashed by the
       inputs on narrow widths — also what users read as "jerky").
-  - Icon buttons (.UnicDB-btn) + export select + requery run/clear
+  - Icon buttons (.VSKit-btn) + export select + requery run/clear
     buttons + export header checkbox all keep `flex-shrink: 0` so
     they stay visible at every width. The Search input keeps
     `flex: 0 1 180px; min-width: 120px` from the prior cycle.
@@ -175,12 +181,12 @@
     flipped to assert `flex-wrap: nowrap`, plus two new sub-checks
     that the requery inputs use a px-based flex basis (not `100%`).
   - `tests/webviewRequeryAlignment.test.ts` — both
-    `UnicDB-requery-where` / `-order` assertions flipped to
+    `VSKit-requery-where` / `-order` assertions flipped to
     `flex: 1 1 140px; min-width: 80px`, with explicit
     `not.toMatch(/flex\s*:\s*1\s+1\s+100\s*%/)` guards so any future
     regression to the old "stacks vertically" contract fails loudly.
 - **Files:** `webview/styles.css` (~25 lines net: header comments +
-  rule updates for `.UnicDB-toolbar`, requery inputs, schema-chip
+  rule updates for `.VSKit-toolbar`, requery inputs, schema-chip
   comment); `src/ui/__tests__/aiChatPanelCloneCss.test.ts` (1 line
   flipped); `src/ui/__tests__/webviewToolbar.test.ts` (3 regions
   updated, +15 net lines for new sub-checks);
@@ -213,13 +219,13 @@
     invocation throws `Error("QueryRunner is already running")`. The
     host's outer catch (extension.ts:3491) caught that string and
     surfaced it verbatim via `vscode.window.showErrorMessage`. Users
-    reading "UnicDB: QueryRunner is already running" interpreted it as
+    reading "VSKit: QueryRunner is already running" interpreted it as
     a hang / crash, pressed Run again, and got the same toast — a
     cascade of identical error popups until the first run settled.
   - Fix: `runStatements` now checks `runner.isRunning()` as its FIRST
     statement (before confirm-dangerous / keyword-qualify / setBusy /
     runner.run). If the shared runner is busy, it shows
-    `vscode.window.showInformationMessage("UnicDB: a query is already
+    `vscode.window.showInformationMessage("VSKit: a query is already
     running. Please wait for it to finish, then press Run again.")`
     and returns. The friendly UX matches what users expect from a
     single-rail SQL client.
@@ -250,7 +256,7 @@
   same as v1.53.36 baseline).
 - **Behavior contract for users:** pressing Run / Cmd+Enter while a
   query is in flight now shows a single non-modal info toast:
-  "UnicDB: a query is already running. Please wait for it to finish,
+  "VSKit: a query is already running. Please wait for it to finish,
   then press Run again." — and the run that was already in flight
   continues normally. No more error popups, no more busy-state flicker.
 
@@ -288,7 +294,7 @@
     - Shift+Arrow / Shift+Home / Shift+End / Shift+PageUp / Shift+PageDown
       extends the rectangle from the anchor (pure-keyboard spreadsheet
       selection, parity with Excel/Sheets).
-    - `cellClassRules` paints `UnicDB-cell-range` on every cell inside
+    - `cellClassRules` paints `VSKit-cell-range` on every cell inside
       the live rectangle — distinct from the orange dirty-edit
       highlight so a user can tell "selected" vs "unsaved edits" at
       a glance.
@@ -303,8 +309,8 @@
       focused-anchor paste path).
     - Range auto-clears on tab switch / new query so a stale highlight
       doesn't follow the user to a different schema.
-  - CSS in `webview/styles.css` for `.UnicDB-cell-range` (blue tint +
-  outline). Combined rule `.UnicDB-cell-range.UnicDB-cell-dirty` wins
+  - CSS in `webview/styles.css` for `.VSKit-cell-range` (blue tint +
+  outline). Combined rule `.VSKit-cell-range.VSKit-cell-dirty` wins
   on specificity so a cell that's both selected AND dirty still shows
   the dirty orange tint while keeping the rectangle outline.
 - **Scroll snap-back fix (TASK-SCROLL-001):**
@@ -324,7 +330,7 @@
   rangeToText/applyRangePasteToDirty); `webview/main.ts` (range state +
   mousedown/mousemove/mouseup/Shift+arrow handlers + cellClassRules +
   copyCellRangeToHost + pasteIntoRange + preserveScrollAround, ~270
-  lines); `webview/styles.css` (+20 lines for `.UnicDB-cell-range` and
+  lines); `webview/styles.css` (+20 lines for `.VSKit-cell-range` and
   combined rule); `src/ui/__tests__/aiChatPanelCloneCss.test.ts`
   (ALLOWED_OFF_CHAT expanded with the two new non-chat selectors, per
   the existing cycle contract); `package.json` + `package-lock.json`
@@ -366,8 +372,8 @@
     `Marketplace (Manage)` scope) BEFORE re-publishing. The old PAT is
     invalidated even if anyone extracted it from the leaked v1.53.32 .vsix.
 - **Activity-bar auto-move (re-shipped from v1.53.32):**
-  - New setting `UnicDB.preferPrimarySidebar` (boolean, default `true`).
-  - New command `UnicDB: Move to Primary Sidebar` (`UnicDB.moveToPrimarySidebar`)
+  - New setting `VSKit.preferPrimarySidebar` (boolean, default `true`).
+  - New command `VSKit: Move to Primary Sidebar` (`VSKit.moveToPrimarySidebar`)
     for manual re-trigger if the auto-move didn't fire.
   - `activate()` calls `ensurePrimarySidebar(context)` fire-and-forget on every
     activation; it tries `workbench.action.moveViewsToPrimarySidebar` (and three
@@ -381,7 +387,7 @@
   list — same as v1.53.32); `src/extension.ts` (same as v1.53.32, no new code
   beyond what's already in `38e8f40`); `docs/MEMORY.md` (incident recorded).
 - **Verification:** `npm run typecheck` ✅ · `npm test` 4091 passed | 4 skipped
-  | 0 failed (+2 new tests in `vsixSecretsExclusion.test.ts`) · `UnicDB-1.53.33.vsix`
+  | 0 failed (+2 new tests in `vsixSecretsExclusion.test.ts`) · `VSIX v1.53.33`
   verified clean (26 entries, no `.secrets/`, no `.pat`) via `zipfile` ·
   GitHub Release v1.53.33 ✅ · VS Code Marketplace v1.53.33 ✅
 - **Install note:** if you already installed v1.53.32, your PAT is compromised.
@@ -392,42 +398,42 @@
 
 ## [1.53.32] — 2026-09-08
 
-- Summary: Activity bar icon: convert PNG to RGBA + auto-move container to Primary Sidebar on first activation. Adds UnicDB.preferPrimarySidebar setting (default true) and UnicDB.moveToPrimarySidebar manual command.
+- Summary: Activity bar icon: convert PNG to RGBA + auto-move container to Primary Sidebar on first activation. Adds VSKit.preferPrimarySidebar setting (default true) and VSKit.moveToPrimarySidebar manual command.
 - Files: package.json,src/extension.ts,src/__tests__/manifestAssetRefs.test.ts,src/adapters/__tests__/bqFollowupSurfaceGuard.test.ts,src/extension.test.ts,media/icon.png
-- Verification: npm run typecheck ✅ · npm test ✅ · UnicDB-1.53.32.vsix packaged
+- Verification: npm run typecheck ✅ · npm test ✅ · VSIX v1.53.32 packaged
 
 ---
 
 ## [1.53.30] — 2026-09-08
 
-- Summary: **Activity-bar icon defensive patch** — `viewsContainers.activitybar[].icon` and `viewsContainers.panel[].icon` switched from `media/UnicDB.svg` to `media/icon.png` because VS Code's activity-bar icon masker silently refused to render the monochrome `currentColor` SVG for some installed users (the Workbench visibility menu had no "UnicDB" entry, so the container never registered on the activity bar — even after Reload / Disable+Re-enable / full uninstall+reinstall). The PNG (128×128) is the same icon already used by the top-level `icon` field; it's visible everywhere the SVG was visible (Extensions panel, extension detail page) AND additionally visible on the activity bar for every installed user. **Install v1.53.30 to restore the activity-bar icon.**
-- Files: `package.json` (2 `viewsContainers.icon` paths switched); `src/__tests__/manifestAssetRefs.test.ts` (+2 guards: `.png`/`.svg` format pin + PNG magic-byte validation, + updated SVG guard to allow zero SVGs); `src/scaffold.test.ts` (icon path assertion updated to PNG); `package.json` + `package-lock.json` (version bump 1.53.29 → 1.53.30); `CHANGELOG.md` (this entry). `media/UnicDB.svg` stays on disk as a future fallback.
-- Verification: `npm run typecheck` ✅ · `npm run compile` ✅ · `npm test` 4088 passed | 4 skipped | 0 failed (276 files; +7 vs pre-patch 4081 baseline) · targeted vitest manifestAssetRefs 5/5 (3 prior + 2 new) · UnicDB-1.53.30.vsix packaged.
+- Summary: **Activity-bar icon defensive patch** — `viewsContainers.activitybar[].icon` and `viewsContainers.panel[].icon` switched from `media/VSKit.svg` to `media/icon.png` because VS Code's activity-bar icon masker silently refused to render the monochrome `currentColor` SVG for some installed users (the Workbench visibility menu had no "VSKit" entry, so the container never registered on the activity bar — even after Reload / Disable+Re-enable / full uninstall+reinstall). The PNG (128×128) is the same icon already used by the top-level `icon` field; it's visible everywhere the SVG was visible (Extensions panel, extension detail page) AND additionally visible on the activity bar for every installed user. **Install v1.53.30 to restore the activity-bar icon.**
+- Files: `package.json` (2 `viewsContainers.icon` paths switched); `src/__tests__/manifestAssetRefs.test.ts` (+2 guards: `.png`/`.svg` format pin + PNG magic-byte validation, + updated SVG guard to allow zero SVGs); `src/scaffold.test.ts` (icon path assertion updated to PNG); `package.json` + `package-lock.json` (version bump 1.53.29 → 1.53.30); `CHANGELOG.md` (this entry). `media/VSKit.svg` stays on disk as a future fallback.
+- Verification: `npm run typecheck` ✅ · `npm run compile` ✅ · `npm test` 4088 passed | 4 skipped | 0 failed (276 files; +7 vs pre-patch 4081 baseline) · targeted vitest manifestAssetRefs 5/5 (3 prior + 2 new) · VSIX v1.53.30 packaged.
 
 ## [1.53.29] — 2026-09-08
 
 - Summary: **Packaging cleanup patch** — v1.53.28.vsix was shipping polluted working-tree content that should never reach installed users: `node_modules_backup/.vite/vitest/results.json` (20.97 KB vitest cache dump) plus the tracked `.tmp-debug/refs.test.ts` scratch file. v1.53.29 cuts both, and adds 5 regression guards in `src/__tests__/releaseHygiene.test.ts` so a future chore commit can't accidentally unblock the same leak. **Install v1.53.29** — same WHERE / ORDER BY toolbar inputs + hover polish + icon-fix from v1.53.26; the .vsix is now ~21 KB lighter, 25 files (was 27). The two older releases (v1.53.27, v1.53.28) on GitHub Releases remain downloadable but should be considered superseded by v1.53.29.
 - Files: `.gitignore` (`.tmp-debug/` safety net), `.vscodeignore` (`node_modules_backup/**` + `.tmp-debug/**` excludes — vsce does NOT read .gitignore, so this was the actual leak), `src/__tests__/releaseHygiene.test.ts` (+5 polling-leak tests); `package.json` + `package-lock.json` (version bump 1.53.28 → 1.53.29); `CHANGELOG.md` (this entry).
-- Verification: `npm run typecheck` ✅ · `npm run compile` ✅ · `npm test` 4081 passed | 4 skipped · targeted vitest 69/69 · releaseHygiene.test.ts 15/15 (5 new + 10 prior) · `npx vsce ls --tree` confirms zero `node_modules_backup/` and zero `.tmp-debug/` in packaged `.vsix` · `UnicDB-1.53.29.vsix` 2.06 MB (25 files; was 27 in v1.53.28 with the 2 leaked entries).
+- Verification: `npm run typecheck` ✅ · `npm run compile` ✅ · `npm test` 4081 passed | 4 skipped · targeted vitest 69/69 · releaseHygiene.test.ts 15/15 (5 new + 10 prior) · `npx vsce ls --tree` confirms zero `node_modules_backup/` and zero `.tmp-debug/` in packaged `.vsix` · `VSIX v1.53.29` 2.06 MB (25 files; was 27 in v1.53.28 with the 2 leaked entries).
 
 ## [1.53.28] — 2026-09-08
 
 - Summary: Patch consolidating v1.53.27 (cycle RES-BAR — WHERE / ORDER BY inputs in the Results toolbar with Enter = server-side requery, plus toolbar hover polish: drop native `title` to kill the late-arriving tooltip flicker; smooth 80ms ease for hover background) with the 3 cosmetic test-hygiene minors R4 reviewers (unic-smart) flagged: test-1 description in `src/ui/__tests__/webviewToolbar.test.ts:218` renamed to drop the now-removed "non-empty title" pin (test body already rewrote the assertion in 5a01f18); RED_OUTPUT block in `TASK-RES-001.md` clarified to explicitly show the two TDD micro-cycles (pre-handler → naive-oninput → onkeydown + IME-guard); MANUAL_HOVER_SMOKE block added to `TASK-RES-003.md` Executor Report to document the visual contract mechanically (no live test can observe the 1-3s native-browser tooltip delay inside the VS Code webview harness). No user-visible behavior change from the cosmetic-cleanup part — same 4081/4 green test count, same deliverable as v1.53.27.
 - Files: src/ui/__tests__/webviewToolbar.test.ts (test-1 rename only), docs/AI_HANDOFF/tasks/TASK-RES-001.md (RED_OUTPUT micro-cycle annotation), docs/AI_HANDOFF/tasks/TASK-RES-003.md (MANUAL_HOVER_SMOKE block); package.json + package-lock.json (version bump 1.53.27 → 1.53.28); CHANGELOG.md (this entry)
-- Verification: npm run typecheck ✅ · npm run compile ✅ · npm test 4081 passed | 4 skipped | 0 failed · targeted vitest (webview side) 69/69 PASS · UnicDB-1.53.28.vsix packaged
+- Verification: npm run typecheck ✅ · npm run compile ✅ · npm test 4081 passed | 4 skipped | 0 failed · targeted vitest (webview side) 69/69 PASS · VSIX v1.53.28 packaged
 
 ## [1.53.27] — 2026-09-08
 
-- Summary: Adds WHERE / ORDER BY input boxes to the Results toolbar — typing a fragment and pressing Enter re-runs the original SQL on the database with the fragment applied (server-side requery via the existing message discriminator). Fold-in: toolbar hover polish — drops the redundant native `title` attribute on every `makeIconButton` so the instant custom `data-tooltip` CSS pseudo-element is the sole tooltip source (kills the 1–3 s late-arriving native tooltip that read as "giật giật"), and adds `transition: background-color 80ms ease-out, box-shadow 80ms ease-out` on `.UnicDB-btn` so the hover background change fades instead of flashing. New helper `stripLeadingClauseKeyword(fragment, keyword)` (with 26 unit tests) lives in `src/ui/queryComposer.ts` and is applied at BOTH the `composeRequerySql` boundary AND the `handleRequery` message boundary so a redundant "WHERE " / "ORDER BY " prefix typed by the user is safely normalized once.
+- Summary: Adds WHERE / ORDER BY input boxes to the Results toolbar — typing a fragment and pressing Enter re-runs the original SQL on the database with the fragment applied (server-side requery via the existing message discriminator). Fold-in: toolbar hover polish — drops the redundant native `title` attribute on every `makeIconButton` so the instant custom `data-tooltip` CSS pseudo-element is the sole tooltip source (kills the 1–3 s late-arriving native tooltip that read as "giật giật"), and adds `transition: background-color 80ms ease-out, box-shadow 80ms ease-out` on `.VSKit-btn` so the hover background change fades instead of flashing. New helper `stripLeadingClauseKeyword(fragment, keyword)` (with 26 unit tests) lives in `src/ui/queryComposer.ts` and is applied at BOTH the `composeRequerySql` boundary AND the `handleRequery` message boundary so a redundant "WHERE " / "ORDER BY " prefix typed by the user is safely normalized once.
 - Files: webview/main.ts, webview/styles.css, src/ui/queryComposer.ts, src/ui/resultsPanel.ts, src/ui/__tests__/webviewRequery.test.ts, src/ui/__tests__/webviewToolbar.test.ts, src/ui/__tests__/requeryClauseNormalize.test.ts (new), src/ui/__tests__/resultsPanelRequery.test.ts, tests/webviewRequeryAlignment.test.ts
-- Verification: npm run typecheck ✅ · npm test 4081 passed | 4 skipped | 0 failed (275 files) · npm run compile clean · UnicDB-1.53.27.vsix packaged · R4 reviews: RES-001 approved_minor · RES-002 approved · RES-003 approved_minor (unic-smart, isolated from unic-code executors). No regressions vs pre-cycle baseline 4039 tests (+42 new). Privacy invariant held: no `--dangerously-skip-permissions`, apiKey / DB credentials / HostMcp descriptor never cross any wire frame.
+- Verification: npm run typecheck ✅ · npm test 4081 passed | 4 skipped | 0 failed (275 files) · npm run compile clean · VSIX v1.53.27 packaged · R4 reviews: RES-001 approved_minor · RES-002 approved · RES-003 approved_minor (unic-smart, isolated from unic-code executors). No regressions vs pre-cycle baseline 4039 tests (+42 new). Privacy invariant held: no `--dangerously-skip-permissions`, apiKey / DB credentials / HostMcp descriptor never cross any wire frame.
 
 ---
 
 ## [1.53.26] — 2026-09-08
 
-- Summary: Cycle AGT-CLEANUP-2 (12 minor cleanups: 6 stale comments, 2 dead exports, 3 smoke-helper improvements, 1 renderMarkdown dedup) + activity-bar icon defensive fix. No user-visible behavior changes from the cleanups; the icon fix restores the UnicDB "U" badge in VS Code's left activity bar after install.
-- Files: src/ai/policy.ts, src/ai/engineChoice.ts, src/ai/claudeCode/claudeCodeChatEngine.ts, src/ai/claudeCode/__tests__/claudeCodeLiveSmoke.test.ts, src/ai/codex/__tests__/codexLiveSmoke.test.ts, src/ui/__tests__/commitGenManifest.test.ts, webview/markdownSafe.ts (new), webview/aiChatPanelMain.ts, webview/aiChatPanelThread.ts, webview/__tests__/markdownSafe.test.ts (new), media/UnicDB.svg, media/commit-spark.svg, src/__tests__/manifestAssetRefs.test.ts (new), docs/AI_HANDOFF/tasks/TASK-004.md, docs/AI_HANDOFF/INDEX_AGTUI.md (archived), docs/AI_HANDOFF/PLAN_AGTUI.md (archived)
+- Summary: Cycle AGT-CLEANUP-2 (12 minor cleanups: 6 stale comments, 2 dead exports, 3 smoke-helper improvements, 1 renderMarkdown dedup) + activity-bar icon defensive fix. No user-visible behavior changes from the cleanups; the icon fix restores the VSKit "U" badge in VS Code's left activity bar after install.
+- Files: src/ai/policy.ts, src/ai/engineChoice.ts, src/ai/claudeCode/claudeCodeChatEngine.ts, src/ai/claudeCode/__tests__/claudeCodeLiveSmoke.test.ts, src/ai/codex/__tests__/codexLiveSmoke.test.ts, src/ui/__tests__/commitGenManifest.test.ts, webview/markdownSafe.ts (new), webview/aiChatPanelMain.ts, webview/aiChatPanelThread.ts, webview/__tests__/markdownSafe.test.ts (new), media/VSKit.svg, media/commit-spark.svg, src/__tests__/manifestAssetRefs.test.ts (new), docs/AI_HANDOFF/tasks/TASK-004.md, docs/AI_HANDOFF/INDEX_AGTUI.md (archived), docs/AI_HANDOFF/PLAN_AGTUI.md (archived)
 - Verification: npm run typecheck exit 0 · npm test 4042 passed | 4 skipped | 0 failed (275 files) · npm run compile clean (re-run during bump)
 
 ---
@@ -436,15 +442,15 @@
 
 - Summary: AI Chat panel = Claude Code VS Code extension clone — BLUE accent (#3b82f6) replacing orange, big 'U' character brand mark, red-square stop button, composer row (model chip / bypass-permissions toggle / mic / slash hint), dark theme + animation polish. Engine dispatch from cycle AGT (TASK-011/012) preserved unchanged.
 - Files: webview/styles.css, webview/aiChatPanelHeader.ts (new), webview/aiChatPanelComposer.ts (new), webview/aiChatPanelThread.ts (new), webview/aiChatPanelMain.ts, src/ui/aiChatPanelMessages.ts, src/ui/aiChatPanel.ts, src/ui/__tests__/aiChatPanelCloneCss.test.ts (new), src/ui/__tests__/aiChatPanelMessagesClone.test.ts (new), src/ui/__tests__/aiChatPanelCloneHost.test.ts (new), src/ui/__tests__/aiChatPanelCloneWebview.test.ts (new), src/ui/__tests__/aiChatPanelClonePolish.test.ts (new), webview/__tests__/aiChatPanelHeader.test.ts (new), webview/__tests__/aiChatPanelComposer.test.ts (new), webview/__tests__/aiChatPanelThread.test.ts (new)
-- Verification: npm run typecheck ✅ · npm test ✅ · UnicDB-1.53.25.vsix packaged
+- Verification: npm run typecheck ✅ · npm test ✅ · VSIX v1.53.25 packaged
 
 ---
 
 ## [1.53.24] — 2026-09-08
 
-- Summary: Cycle AGT — Claude Code + Codex as first-class agents; AIChat panel becomes the universal interface for all 4 engines (builtin/omp/claude-code/codex); image+text attachments enabled for Claude/Codex while omp keeps its deliberate text-only gate and builtin keeps its work.vision gate. Adds 4-engine AiEngine union, resolveEngine() policy (settings-driven, detection-first, default-deny), stream-json subprocess adapter for Claude Code (with HostMcp MCP HTTP bridge) and JSON-protocol subprocess adapter for Codex (same MCP seam), 4-option engine dropdown in AI Settings, env-gated live smokes (UnicDB_CLAUDE_CODE_SMOKE=1 / UnicDB_CODEX_SMOKE=1), and Stop now reaches each engine's subprocess cancellation path (not just the panel surface). omp code path unchanged (TASK-004 zero-diff audit). No new commands use --dangerously-skip-permissions; apiKey / DB credentials / HostMcp descriptor never cross the wire.
-- Files: src/ai/settings.ts, src/ai/config.ts, src/ai/policy.ts, src/ai/engineChoice.ts (TASK-001/007), src/ai/claudeCode/detect.ts (TASK-002), src/ai/claudeCode/claudeCodeProcess.ts (TASK-005), src/ai/claudeCode/claudeCodeChatEngine.ts (TASK-009), src/ai/codex/detect.ts (TASK-003), src/ai/codex/codexProcess.ts (TASK-006), src/ai/codex/codexChatEngine.ts (TASK-010), src/ai/omp/** (TASK-004 read-only audit, zero diff), src/ui/aiChatPanel.ts (TASK-011 widened dispatch + image pipeline + Stop wiring), src/ui/__tests__/aiChatPanelAgentEngines.test.ts (R4.5 cancel assertions), src/extension.ts (TASK-012 wiring + 4-engine webview switcher), webview/aiSettingsFormMain.ts (TASK-008 settings form), package.json (TASK-013: UnicDB.ai.useWithClaudeCode / UnicDB.ai.useWithCodex commands, activationEvents, 4-value engine enum), docs/AI_HANDOFF/** (PLAN + 14 task files + R4/R4.5 review verdicts)
-- Verification: npm run typecheck ✅ · npm test ✅ · UnicDB-1.53.24.vsix packaged
+- Summary: Cycle AGT — Claude Code + Codex as first-class agents; AIChat panel becomes the universal interface for all 4 engines (builtin/omp/claude-code/codex); image+text attachments enabled for Claude/Codex while omp keeps its deliberate text-only gate and builtin keeps its work.vision gate. Adds 4-engine AiEngine union, resolveEngine() policy (settings-driven, detection-first, default-deny), stream-json subprocess adapter for Claude Code (with HostMcp MCP HTTP bridge) and JSON-protocol subprocess adapter for Codex (same MCP seam), 4-option engine dropdown in AI Settings, env-gated live smokes (VSKit_CLAUDE_CODE_SMOKE=1 / VSKit_CODEX_SMOKE=1), and Stop now reaches each engine's subprocess cancellation path (not just the panel surface). omp code path unchanged (TASK-004 zero-diff audit). No new commands use --dangerously-skip-permissions; apiKey / DB credentials / HostMcp descriptor never cross the wire.
+- Files: src/ai/settings.ts, src/ai/config.ts, src/ai/policy.ts, src/ai/engineChoice.ts (TASK-001/007), src/ai/claudeCode/detect.ts (TASK-002), src/ai/claudeCode/claudeCodeProcess.ts (TASK-005), src/ai/claudeCode/claudeCodeChatEngine.ts (TASK-009), src/ai/codex/detect.ts (TASK-003), src/ai/codex/codexProcess.ts (TASK-006), src/ai/codex/codexChatEngine.ts (TASK-010), src/ai/omp/** (TASK-004 read-only audit, zero diff), src/ui/aiChatPanel.ts (TASK-011 widened dispatch + image pipeline + Stop wiring), src/ui/__tests__/aiChatPanelAgentEngines.test.ts (R4.5 cancel assertions), src/extension.ts (TASK-012 wiring + 4-engine webview switcher), webview/aiSettingsFormMain.ts (TASK-008 settings form), package.json (TASK-013: VSKit.ai.useWithClaudeCode / VSKit.ai.useWithCodex commands, activationEvents, 4-value engine enum), docs/AI_HANDOFF/** (PLAN + 14 task files + R4/R4.5 review verdicts)
+- Verification: npm run typecheck ✅ · npm test ✅ · VSIX v1.53.24 packaged
 
 ---
 
@@ -452,37 +458,37 @@
 
 - Summary: Feature — auto-clear result-tab strip on each new Run (image #31). Pressing the editor Run button now wipes the accumulated Run tabs (Messages + each per-statement Run tab) so the result panel always starts empty — the new run's tabs build up fresh. Console panel and CodeLens runs keep the old "accumulate across runs" behavior because users explicitly asked that those historical contexts persist. Added `QueryRunner.clear()` (defensive throw if a run is in flight, so streaming append is never reset mid-flight), a `clearOnStart?: boolean` opt threaded from `runStatements` → `runner.run`, and an explicit `ResultsPanel.closeAllTabs()` call right before each editor Run. Per the user's note "Cần thì chạy lại query để có lại result" — close-to-clear is intentional; rerunning reproduces the prior results.
 - Files: src/core/queryRunner.ts (`clear()` method + `clearOnStart` opt honored in `run`), src/extension.ts (`runStatements` accepts `clearOnStart`, Run-path call site sets `true`, Console/CodeLens paths default `false`), src/ui/resultsPanel.ts (existing `closeAllTabs()` reused), src/core/__tests__/queryRunner.test.ts (+5 unit tests for `clear()`), src/extension.test.ts (+3 integration tests for TASK-TABCLEAR-001, TASK-606 assertion updated to include `clearOnStart: true`)
-- Verification: npm run typecheck ✅ · npm test ✅ (3787 passed / 2 skipped, 0 regressions) · UnicDB-1.53.23.vsix packaged
+- Verification: npm run typecheck ✅ · npm test ✅ (3787 passed / 2 skipped, 0 regressions) · VSIX v1.53.23 packaged
 
 ## [1.53.22] — 2026-09-07
 
 - Summary: Fix — lineBoundaries split CREATE ... AS <body> DDL: when running a multi-line CREATE OR REPLACE VIEW / CREATE TABLE AS / CREATE MATERIALIZED VIEW whose body starts with SELECT/WITH/VALUES on a new line (no terminator between AS and the body), the splitter was flushing the statement at the newline after AS — sending 'CREATE OR REPLACE VIEW v AS' (no body) to Postgres and producing 'syntax error at end of input' (image #30). Added an AS_BODY construct-stack frame, pushed only when CREATE ... AS <select-starter> is detected, that suppresses lineBoundaries inside the body while letting the terminating ; still pop and end the statement normally. CREATE FUNCTION ... AS $ ... $ and CREATE TYPE ... AS ENUM are unaffected (AS followed by $ / ENUM is not a select-starter, so no AS_BODY frame is pushed).
 - Files: src/core/statementParser.ts (AS_BODY ConstructKind + pendingCreateAs flag + peekNextKeyword + isCreateAsBodyStarter + countAsBodies + EOF cleanup), src/core/__tests__/statementParser.test.ts (+10 regression tests)
-- Verification: npm run typecheck ✅ · npm test ✅ · UnicDB-1.53.22.vsix packaged
+- Verification: npm run typecheck ✅ · npm test ✅ · VSIX v1.53.22 packaged
 
 ---
 
 ## [1.53.21] — 2026-09-07
 
-- Summary: DataGrip-parity active-schema selection for PostgreSQL — pin a schema per connection and every SQL run is wrapped with `SET search_path TO "<schema>", public;` so `CREATE FUNCTION`, unqualified `SELECT`, etc. land in the chosen schema instead of defaulting to `public`. Adds the `UnicDB.selectActiveSchema` command (single-select QuickPick over `listSchemas(true)`, current pin sticky, "no pinned schema" reset option), a dedicated `$(symbol-namespace)` status bar chip next to the connection chip, per-workspace persistence in `workspaceState` (key `unicDb.activeSchema.<connectionId>`), and a dynamic wrap (re-reads the pin on every `runQuery` so a picker switch takes effect on the very next run — no reconnect). `mysql`/`mssql`/`bigquery` drivers are untouched; probe adapters used by add/edit validation are skipped.
-- Files: src/core/activeSchemaStore.ts (new, 11 unit tests), src/core/schemaEnforce.ts (new, 10 unit tests), src/core/connectionManager.ts (5th constructor param + dynamic `wrapWithSchemaSearchPath` on every Postgres adapter), src/extension.ts (`UnicDB.selectActiveSchema` command + secondary status bar item subscribed to `onDidChangeActive` + `ActiveSchemaStore.onDidChange`), src/core/__tests__/connectionManagerActiveSchema.test.ts (new, 6 integration tests), package.json (`UnicDB.selectActiveSchema` contributes entry)
-- Verification: npm run typecheck ✅ · npm test ✅ (3769 passed / 2 skipped, 0 regressions) · UnicDB-1.53.21.vsix packaged
+- Summary: DataGrip-parity active-schema selection for PostgreSQL — pin a schema per connection and every SQL run is wrapped with `SET search_path TO "<schema>", public;` so `CREATE FUNCTION`, unqualified `SELECT`, etc. land in the chosen schema instead of defaulting to `public`. Adds the `VSKit.selectActiveSchema` command (single-select QuickPick over `listSchemas(true)`, current pin sticky, "no pinned schema" reset option), a dedicated `$(symbol-namespace)` status bar chip next to the connection chip, per-workspace persistence in `workspaceState` (key `VSKit.activeSchema.<connectionId>`), and a dynamic wrap (re-reads the pin on every `runQuery` so a picker switch takes effect on the very next run — no reconnect). `mysql`/`mssql`/`bigquery` drivers are untouched; probe adapters used by add/edit validation are skipped.
+- Files: src/core/activeSchemaStore.ts (new, 11 unit tests), src/core/schemaEnforce.ts (new, 10 unit tests), src/core/connectionManager.ts (5th constructor param + dynamic `wrapWithSchemaSearchPath` on every Postgres adapter), src/extension.ts (`VSKit.selectActiveSchema` command + secondary status bar item subscribed to `onDidChangeActive` + `ActiveSchemaStore.onDidChange`), src/core/__tests__/connectionManagerActiveSchema.test.ts (new, 6 integration tests), package.json (`VSKit.selectActiveSchema` contributes entry)
+- Verification: npm run typecheck ✅ · npm test ✅ (3769 passed / 2 skipped, 0 regressions) · VSIX v1.53.21 packaged
 
 ---
 
 ## [1.53.20] — 2026-09-07
 
-- Summary: Extend multi-selection Cmd+Enter to shellscript files — add `UnicDB.runShellSelection` command + Cmd/Ctrl+Enter keybindings for `resourceLangId == shellscript`, plus `commandRunShellSelection()` in src/extension.ts that iterates `editor.selections`, takes range text for non-empty selections, takes the cursor's current line for empty selections, and sends each piece to the reused "UnicDB Script" terminal. Mirrors the SQL multi-selection pattern shipped in 1.53.17 (commit 3e33f0a). Also fix the bq04 + bqFollowup frozen-surface guards to filter the `key` and `keybindings` keys as legitimate contributes changes (the previous regex missed them and would trip on any new keybinding).
+- Summary: Extend multi-selection Cmd+Enter to shellscript files — add `VSKit.runShellSelection` command + Cmd/Ctrl+Enter keybindings for `resourceLangId == shellscript`, plus `commandRunShellSelection()` in src/extension.ts that iterates `editor.selections`, takes range text for non-empty selections, takes the cursor's current line for empty selections, and sends each piece to the reused "VSKit Script" terminal. Mirrors the SQL multi-selection pattern shipped in 1.53.17 (commit 3e33f0a). Also fix the bq04 + bqFollowup frozen-surface guards to filter the `key` and `keybindings` keys as legitimate contributes changes (the previous regex missed them and would trip on any new keybinding).
 - Files: package.json (new command + keybindings + activation event), src/scaffold.test.ts (+4 TASK-SH-001 tests), src/extension.ts (new `commandRunShellSelection()` function + registration), src/extension.test.ts (9 new tests covering 3 happy / 3 edge / 2 regression), src/adapters/__tests__/bq04SurfaceGuard.test.ts, src/adapters/__tests__/bqFollowupSurfaceGuard.test.ts (regex fix)
-- Verification: npm run typecheck ✅ · npm test ✅ (250 files / 3743 tests / 0 failed · 2 skipped) · UnicDB-1.53.20.vsix packaged (2.04 MB)
+- Verification: npm run typecheck ✅ · npm test ✅ (250 files / 3743 tests / 0 failed · 2 skipped) · VSIX v1.53.20 packaged (2.04 MB)
 
 ---
 
 ## [1.53.19] — 2026-09-07
 
-- Summary: Extend multi-selection Cmd+Enter to shellscript files — add `UnicDB.runShellSelection` command + Cmd/Ctrl+Enter keybindings for `resourceLangId == shellscript`, plus `commandRunShellSelection()` in src/extension.ts that iterates `editor.selections`, takes range text for non-empty selections, takes the cursor's current line for empty selections, and sends each piece to the reused "UnicDB Script" terminal. Mirrors the SQL multi-selection pattern shipped in 1.53.17 (commit 3e33f0a). Also fix the bq04 + bqFollowup frozen-surface guards to filter the `key` and `keybindings` keys as legitimate contributes changes (the previous regex missed them and would trip on any new keybinding).
+- Summary: Extend multi-selection Cmd+Enter to shellscript files — add `VSKit.runShellSelection` command + Cmd/Ctrl+Enter keybindings for `resourceLangId == shellscript`, plus `commandRunShellSelection()` in src/extension.ts that iterates `editor.selections`, takes range text for non-empty selections, takes the cursor's current line for empty selections, and sends each piece to the reused "VSKit Script" terminal. Mirrors the SQL multi-selection pattern shipped in 1.53.17 (commit 3e33f0a). Also fix the bq04 + bqFollowup frozen-surface guards to filter the `key` and `keybindings` keys as legitimate contributes changes (the previous regex missed them and would trip on any new keybinding).
 - Files: package.json (new command + keybindings + activation event), src/scaffold.test.ts (+4 TASK-SH-001 tests), src/extension.ts (new `commandRunShellSelection()` function + registration), src/extension.test.ts (9 new tests covering 3 happy / 3 edge / 2 regression), src/adapters/__tests__/bq04SurfaceGuard.test.ts, src/adapters/__tests__/bqFollowupSurfaceGuard.test.ts (regex fix)
-- Verification: npm run typecheck ✅ · npm test ✅ (250 files / 3743 tests / 0 failed · 2 skipped) · UnicDB-1.53.19.vsix packaged (2.04 MB)
+- Verification: npm run typecheck ✅ · npm test ✅ (250 files / 3743 tests / 0 failed · 2 skipped) · VSIX v1.53.19 packaged (2.04 MB)
 
 ---
 
@@ -490,7 +496,7 @@
 
 - Summary: Test-only hotfix patch — align the 4 webview tab-order test files (webviewBundle, webviewPerTableTabs, webviewResultLimit, webviewMultiRunTabs) with the Messages-first + reverse-chronological tab order shipped in 1.53.17. No production code changes; CI was failing the published 1.53.17 .vsix's test suite.
 - Files: src/ui/__tests__/webviewBundle.test.ts, src/ui/__tests__/webviewPerTableTabs.test.ts, src/ui/__tests__/webviewResultLimit.test.ts, tests/webviewMultiRunTabs.test.ts
-- Verification: npm run typecheck ✅ · npm test ✅ (250 files / 3730 tests / 0 failed) · UnicDB-1.53.18.vsix packaged
+- Verification: npm run typecheck ✅ · npm test ✅ (250 files / 3730 tests / 0 failed) · VSIX v1.53.18 packaged
 
 ---
 
@@ -498,7 +504,7 @@
 
 - Summary: Fix two Cmd+Enter / tab UX bugs — (1) Run ALL highlighted queries on Cmd+Enter: `runQueryFromEditor` now iterates `editor.selections` (multi-cursor support) AND `splitStatements` gains an opt-in `lineBoundaries` flag that recognizes top-level newlines before statement-starter keywords as soft boundaries, so 3 newline-separated SELECT queries without `;` all run instead of collapsing to one. (2) Cap result-tab strip to 10 entries with Messages tab FIRST and result tabs in reverse-chronological order (most recent first), so the 2nd visual tab after Messages always shows the newest query's result.
 - Files: src/extension.ts (multi-selection + lineBoundaries wiring), src/core/statementParser.ts (lineBoundaries flag + LINE_START_STATEMENT_KEYWORDS set + isIdentChar helper), src/extension.test.ts (+7 TASK-MSEL tests), src/core/__tests__/statementParser.test.ts (+7 lineBoundaries tests), webview/main.ts (MAX_TABS=10 + reverse-chronological rebuildTabs)
-- Verification: npm run typecheck ✅ · npm test ✅ · UnicDB-1.53.17.vsix packaged
+- Verification: npm run typecheck ✅ · npm test ✅ · VSIX v1.53.17 packaged
 
 ---
 
@@ -506,7 +512,7 @@
 
 - Summary: Fix — Generate Commit Message sparkle regression: remove non-existent `scmProviderHasChanges` when-clause introduced in 1.52.0 so the sparkle button actually renders in the Source Control title bar.
 - Files: package.json (when clause), src/ui/__tests__/commitGenManifest.test.ts (frozen assertion), src/ui/__tests__/commitGenIntegration.test.ts (frozen constant)
-- Verification: npm run typecheck ✅ · npm test ✅ · UnicDB-1.53.3.vsix packaged
+- Verification: npm run typecheck ✅ · npm test ✅ · VSIX v1.53.3 packaged
 
 ---
 
@@ -514,7 +520,7 @@
 
 - Summary: Fix — Generate Commit Message sparkle regression: remove non-existent `scmProviderHasChanges` when-clause introduced in 1.52.0 so the sparkle button actually renders in the Source Control title bar.
 - Files: package.json (when clause), src/ui/__tests__/commitGenManifest.test.ts (frozen assertion), src/ui/__tests__/commitGenIntegration.test.ts (frozen constant)
-- Verification: npm run typecheck ✅ · npm test ✅ · UnicDB-1.53.2.vsix packaged
+- Verification: npm run typecheck ✅ · npm test ✅ · VSIX v1.53.2 packaged
 
 ---
 
@@ -522,7 +528,7 @@
 
 - Summary: Fix — remove non-existent `scmProviderHasChanges` from the Generate Commit Message menu `when` clause so the sparkle button actually renders in the Source Control title bar (regression introduced in 1.52.0).
 - Files: package.json (when clause), src/ui/__tests__/commitGenManifest.test.ts (frozen assertion), src/ui/__tests__/commitGenIntegration.test.ts (frozen constant)
-- Verification: npm run typecheck ✅ · npm test ✅ · UnicDB-1.53.1.vsix packaged
+- Verification: npm run typecheck ✅ · npm test ✅ · VSIX v1.53.1 packaged
 
 ---
 
@@ -530,32 +536,32 @@
 
 - Summary: Per-connection schema filter (DataGrip-like) — right-click a connection in Schema Explorer → "Select Schemas…" opens a multi-select QuickPick with all schemas pre-checked; uncheck to hide, persists per workspace (workspaceState) per connection. "Show All Schemas" menu item resets the filter for that connection only.
 - Files: src/core/schemaFilterStore.ts (new), src/core/__tests__/schemaFilterStore.test.ts (new, 11 tests), src/ui/schemaTree.ts (filter pipeline + change subscription), src/extension.ts (selectSchemas/resetSchemaFilter commands + store wiring), package.json (2 commands + 2 menu entries on viewItem == connection), src/ui/__tests__/schemaTree.test.ts (+6 tests)
-- Verification: npm run typecheck ✅ · npm test ✅ (250 files / 3706 tests / 0 failed) · UnicDB-1.53.0.vsix packaged
+- Verification: npm run typecheck ✅ · npm test ✅ (250 files / 3706 tests / 0 failed) · VSIX v1.53.0 packaged
 
 ---
 
 ## [1.52.0] — 2026-09-06
 
 - Summary: Generate Commit Message sparkle in Source Control title bar + Lite Model section in AI Settings (Engine dropdown defaults to omp). Replaces Kilo Code's equivalent feature. Fixes a live "Engine must be builtin or omp" save bug where the global Engine dropdown was in the data model but never rendered.
-- Files: src/ai/{settings,config,commitMessage,commitGenCommand}.ts, src/adapters/gitDiff.ts, src/extension.ts, webview/aiSettingsFormMain.ts, package.json (sparkle command + scm/title menu), docs/UNICDB_USER_GUIDE.md, plus 8 test files; mid-cycle src/ui/schemaTree.ts icon fix
-- Verification: npm run typecheck ✅ · npm test ✅ (249 files / 3689 tests / 0 failed) · UnicDB-1.52.0.vsix packaged
+- Files: src/ai/{settings,config,commitMessage,commitGenCommand}.ts, src/adapters/gitDiff.ts, src/extension.ts, webview/aiSettingsFormMain.ts, package.json (sparkle command + scm/title menu), docs/VSKit_USER_GUIDE.md, plus 8 test files; mid-cycle src/ui/schemaTree.ts icon fix
+- Verification: npm run typecheck ✅ · npm test ✅ (249 files / 3689 tests / 0 failed) · VSIX v1.52.0 packaged
 
 ---
 
 ## [1.51.7] — 2026-09-06
 
-- Summary: Move SQL Results to a bottom-panel tab (next to Terminal). Drop the UnicDB.resultsPlacement setting entirely — placement is now forced and not configurable.
-- Files: src/ui/resultsPanel.ts,package.json,docs/UNICDB_USER_GUIDE.md
-- Verification: npm run typecheck ✅ · npm test ✅ · UnicDB-1.51.7.vsix packaged
+- Summary: Move SQL Results to a bottom-panel tab (next to Terminal). Drop the VSKit.resultsPlacement setting entirely — placement is now forced and not configurable.
+- Files: src/ui/resultsPanel.ts,package.json,docs/VSKit_USER_GUIDE.md
+- Verification: npm run typecheck ✅ · npm test ✅ · VSIX v1.51.7 packaged
 
 ---
 
 ## [1.51.6] — 2026-09-06
 
-TASK-AI-001-fix — hot-apply for `UnicDB.resultsPlacement`. Previously the placement setting (`beside` / `active` / `left`) was read at `ResultsPanel.create()` only, so changing the setting while the panel was already open had no visible effect — the user had to close and re-trigger the run. This cycle wires `vscode.workspace.onDidChangeConfiguration("UnicDB.resultsPlacement")` so the live panel is auto-disposed on change and the next render picks up the new column. Plus: durable version-bump recipe (`scripts/bump-version.mjs` + `docs/RELEASE.md`) so future releases run the same lock-sync / CHANGELOG / typecheck / test / `.vsix` sequence atomically.
+TASK-AI-001-fix — hot-apply for `VSKit.resultsPlacement`. Previously the placement setting (`beside` / `active` / `left`) was read at `ResultsPanel.create()` only, so changing the setting while the panel was already open had no visible effect — the user had to close and re-trigger the run. This cycle wires `vscode.workspace.onDidChangeConfiguration("VSKit.resultsPlacement")` so the live panel is auto-disposed on change and the next render picks up the new column. Plus: durable version-bump recipe (`scripts/bump-version.mjs` + `docs/RELEASE.md`) so future releases run the same lock-sync / CHANGELOG / typecheck / test / `.vsix` sequence atomically.
 
 ### Added
-- **Auto-recreate on `UnicDB.resultsPlacement` change** (`src/ui/resultsPanel.ts:36-46`): `ResultsPanel` constructor now subscribes to `vscode.workspace.onDidChangeConfiguration`; when the event reports `affectsConfiguration("UnicDB.resultsPlacement")` and `this.panel` is alive, it disposes the panel. The next `render()` recreates with the new `viewColumn`. Subscription lives on `this.disposables` so it tears down with the panel. Setting description in `package.json` was rewritten to clarify that all 3 values open in the editor area (VS Code's `WebviewPanel` API has no bottom-panel placement — true bottom placement would require migrating to `WebviewView` + `viewsContainers.panel`, deferred to a future cycle).
+- **Auto-recreate on `VSKit.resultsPlacement` change** (`src/ui/resultsPanel.ts:36-46`): `ResultsPanel` constructor now subscribes to `vscode.workspace.onDidChangeConfiguration`; when the event reports `affectsConfiguration("VSKit.resultsPlacement")` and `this.panel` is alive, it disposes the panel. The next `render()` recreates with the new `viewColumn`. Subscription lives on `this.disposables` so it tears down with the panel. Setting description in `package.json` was rewritten to clarify that all 3 values open in the editor area (VS Code's `WebviewPanel` API has no bottom-panel placement — true bottom placement would require migrating to `WebviewView` + `viewsContainers.panel`, deferred to a future cycle).
 
 - **`scripts/bump-version.mjs` atomic version-bump** (`scripts/bump-version.mjs`, `package.json` scripts `bump`/`bump:patch`/`bump:minor`/`bump:major`, `docs/RELEASE.md`): one command runs the full release prep — bump `package.json` + sync `package-lock.json` via `npm install --package-lock-only` (the lock sync step is what the `releaseHygiene.test.ts` guard pins) + prepend a `CHANGELOG.md` entry + `npm run typecheck` + `npm test` + `npm run compile` + `npx vsce package` → prints exact `git commit` + `vsce publish patch` commands. Dirty-tree guard refuses to run only if `package.json` / `package-lock.json` / `CHANGELOG.md` are already dirty (would be overwritten); other dirty files are independent and pass through. Documented end-to-end in `docs/RELEASE.md` including the GitHub-release vs Marketplace distinction (separate channels — pushing a tag does NOT publish to Marketplace).
 
@@ -568,7 +574,7 @@ TASK-AI-001-fix — hot-apply for `UnicDB.resultsPlacement`. Previously the plac
 - `npm run typecheck` ✅ silent
 - `npm test` ✅ **3615 passed / 2 skipped** (+2 vs v1.51.5's 3613; floor preserved at 2 skipped)
 - `releaseHygiene.test.ts` ✅ (lock-version sync)
-- `UnicDB-1.51.6.vsix` ✅ packaged at repo root
+- `VSIX v1.51.6` ✅ packaged at repo root
 
 ---
 
@@ -595,7 +601,7 @@ Cycle BQ-FOLLOWUP: 3 small BigQuery backlog items shipped together — pageSize 
 - **BQ-04 frozen-surface guard base ref** (`src/adapters/__tests__/bq04SurfaceGuard.test.ts:33-39`): advanced `75cdb08` (v1.50.0) → `8f7e8b4` (v1.51.4). The guard now catches ADAPTER drift introduced between v1.51.4 and HEAD, not drift from v1.50.0. The runQuery-signature-widening hunk (BQ-FOLLOWUP ADDITIVE change to `src/adapters/types.ts`) is filtered before the byte-identical assertion — the filter identifies the hunk by its OLD-side `- runQuery(sql: string): Promise<RunResult>;` removal line and drops the entire hunk (header + context + add + remove) plus the pre-hunk file headers (`diff --git` / `index` / `---` / `+++`) so the no-real-drift case reduces to an empty assertion.
 
 ### Deferrals (explicit)
-- **Wire `useLegacySql` opt into a UI toggle** (checkbox / select in the Results panel header): the plumbing ships + tests pass, but the visual toggle is a separate UI concern. Future cycle can add a `UnicDB.useLegacySql` configuration property + panel-header checkbox.
+- **Wire `useLegacySql` opt into a UI toggle** (checkbox / select in the Results panel header): the plumbing ships + tests pass, but the visual toggle is a separate UI concern. Future cycle can add a `VSKit.useLegacySql` configuration property + panel-header checkbox.
 - **Wire `locale` opt into `StatementResult.schemaFields`**: `resultsGridModel.ts` already passes `field` to `formatBigQueryCell`; threading the active statement's `schemaFields` and a per-cell `locale` opt is a UI-level change. Future cycle.
 - **DRY the pageSize / useLegacySql filter logic into a shared helper**: the `packageJsonDepsDiff` filter exists in both `bq04SurfaceGuard.test.ts` and `bqFollowupSurfaceGuard.test.ts` (independent mirrors); refactor into `bqFollowupSurfaceGuard.ts` (non-test) is P2 cleanup.
 
@@ -612,19 +618,19 @@ Cycle BQ-FOLLOWUP: 3 small BigQuery backlog items shipped together — pageSize 
 
 ## [1.51.4] — 2026-09-05
 
-Cycle UX3: closeable tabs in the Results panel. Before this cycle the Results panel accumulated tabs forever — every `runStatements` appended a new `Run N · …` tab with no way to remove one without closing the panel or starting a new run that pushed old tabs down. After this cycle every tab gets a × close button (visible on hover / focus-within, keyboard-accessible) and a right-click context menu with three items: `Close Tab` (the hovered tab), `Close All Tabs`, and `Close Other Tabs` (everything except the hovered tab). The active tab IS closeable; closing it auto-activates the nearest tab (right if exists, else left, else the empty-state). The empty state (no tabs left) preserves the pinned `UnicDB-empty` placeholder. There is NO persistence — closed tabs are gone (no Ctrl+Shift+T history, no workspaceState restore), per user P0 decision 5. The cycle ships **+24 tests** over v1.51.3 (suite 3555 → 3579, floor preserved at 2 skipped).
+Cycle UX3: closeable tabs in the Results panel. Before this cycle the Results panel accumulated tabs forever — every `runStatements` appended a new `Run N · …` tab with no way to remove one without closing the panel or starting a new run that pushed old tabs down. After this cycle every tab gets a × close button (visible on hover / focus-within, keyboard-accessible) and a right-click context menu with three items: `Close Tab` (the hovered tab), `Close All Tabs`, and `Close Other Tabs` (everything except the hovered tab). The active tab IS closeable; closing it auto-activates the nearest tab (right if exists, else left, else the empty-state). The empty state (no tabs left) preserves the pinned `VSKit-empty` placeholder. There is NO persistence — closed tabs are gone (no Ctrl+Shift+T history, no workspaceState restore), per user P0 decision 5. The cycle ships **+24 tests** over v1.51.3 (suite 3555 → 3579, floor preserved at 2 skipped).
 
 ### Added
-- **× close button on each tab** (`webview/main.ts`, `webview/styles.css`, `webview/__tests__/mainCloseTab.test.ts`, +9 tests): `rebuildTabs()` appends a `<button class="UnicDB-tab-close" type="button" aria-label="Close tab">×</button>` to each tab. Hidden by default (CSS `display: none`); visible on `.UnicDB-tab:hover` / `.UnicDB-tab:focus-within` so the panel is uncluttered when the user is just reading. Click handler stops propagation and posts `{type: "closeTab", index}` to the host. The button is keyboard-accessible (Tab to focus, Enter to close) with a focus outline. 9 tests pin: one × button per tab, aria-label + type=button, click posts closeTab message + stops propagation, empty-state with no busy shows friendly copy, busy empty-state shows "Running…", context menu shows 3 items, all 3 menu actions post the correct message payload.
-- **Right-click context menu (webview-rendered)** (`webview/main.ts`, `webview/styles.css`): `contextmenu` event on each tab shows an inline `<ul class="UnicDB-tab-menu" role="menu">` with three `<li role="menuitem">` items (`Close Tab`, `Close All Tabs`, `Close Other Tabs`). The menu is positioned at the cursor with viewport clamping (`getBoundingClientRect` after append), dismisses on outside click (once-handler added on next tick so the opening right-click doesn't immediately close it), and posts the corresponding message on item click. Webview-rendered (not native VS Code menu) to avoid the 30-50ms latency and focus-shift to editor that a native menu would incur. 3 new tests pin the menu items + payload contracts.
+- **× close button on each tab** (`webview/main.ts`, `webview/styles.css`, `webview/__tests__/mainCloseTab.test.ts`, +9 tests): `rebuildTabs()` appends a `<button class="VSKit-tab-close" type="button" aria-label="Close tab">×</button>` to each tab. Hidden by default (CSS `display: none`); visible on `.VSKit-tab:hover` / `.VSKit-tab:focus-within` so the panel is uncluttered when the user is just reading. Click handler stops propagation and posts `{type: "closeTab", index}` to the host. The button is keyboard-accessible (Tab to focus, Enter to close) with a focus outline. 9 tests pin: one × button per tab, aria-label + type=button, click posts closeTab message + stops propagation, empty-state with no busy shows friendly copy, busy empty-state shows "Running…", context menu shows 3 items, all 3 menu actions post the correct message payload.
+- **Right-click context menu (webview-rendered)** (`webview/main.ts`, `webview/styles.css`): `contextmenu` event on each tab shows an inline `<ul class="VSKit-tab-menu" role="menu">` with three `<li role="menuitem">` items (`Close Tab`, `Close All Tabs`, `Close Other Tabs`). The menu is positioned at the cursor with viewport clamping (`getBoundingClientRect` after append), dismisses on outside click (once-handler added on next tick so the opening right-click doesn't immediately close it), and posts the corresponding message on item click. Webview-rendered (not native VS Code menu) to avoid the 30-50ms latency and focus-shift to editor that a native menu would incur. 3 new tests pin the menu items + payload contracts.
 - **Host-owned close methods with per-index cache rebase** (`src/ui/resultsPanel.ts`, `src/ui/__tests__/resultsPanelClose.test.ts`, +11 tests): new `public closeTab(index)` / `closeAllTabs()` / `closeOthersTabs(index)` methods on `ResultsPanel`. Each method mutates `lastResults` immutably (slice + splice; preserves reference equality for unrelated state), adjusts the host-owned `activeTab` per the rule in PLAN.md §3 (right-fallback then left), and posts a fresh `state` message. R4.5 added the `rebaseAfterClose()` helper that rebuilds `tableByStatement` from the surviving statements' browse label / `r.label` (preserving save-edits identity for the shifted indices) and clears `columnTypesByStatement`, `whereByStatement`, `distinctCache`, plus bumps `statementGeneration` — closing a data-loss vector where post-close save-edits could UPDATE the WRONG table (the save path keys off `tableByStatement.get(index)` and never re-parses the SQL). Out-of-range index is a silent no-op (no spurious state post). 11 tests pin: closeTab(0) with activeTab=1 → activeTab stays 0 (right of removed), closeTab(activeTab) → right-fallback, closeTab(last) → left-fallback, closeAllTabs empties + activeTab=-1, closeOthersTabs keeps only index + activeTab=0, out-of-range is no-op, immutability regression, +3 R4.5 cache-rebase tests.
 - **Message wiring for tab close** (`src/ui/messages.ts`, `src/ui/resultsPanel.ts`, `src/ui/__tests__/resultsPanelCloseWiring.test.ts`, +4 tests): three new message types — `CloseTabMessage {type:"closeTab", index}`, `CloseAllTabsMessage {type:"closeAllTabs"}`, `CloseOthersTabsMessage {type:"closeOthersTabs", index}` — added to the `WebviewMessage` union. Three new cases in `handleMessage` dispatch to the corresponding host method. The webview's `postMessage` posts the same JSON shape. The `default:` branch catches unknown types with a silent no-op so a stale webview bundle can never crash the host. 4 tests drive the REAL `ResultsPanel.handleMessage` (after R4.5 rewrite that replaced the hand-copied double): closeTab message → state mutates correctly, closeAllTabs message → empty + activeTab=-1, closeOthersTabs message → only index 0 kept, unknown message type is silently ignored.
 
 ### Changed
 - **`ResultsPanel.lastResults` lifecycle** (`src/ui/resultsPanel.ts`): the new close methods slice + splice `lastResults` (immutability preserved) so the array reference changes after a close. Every consumer that reads `lastResults` (loadMore, requery, saveEdits, distinct requests) is unaffected — the array shape contract is unchanged.
 - **`WebviewMessage` union** (`src/ui/messages.ts`): extended with `CloseTabMessage`, `CloseAllTabsMessage`, `CloseOthersTabsMessage`. Additive change — older webview bundles that don't know these types post messages the host ignores gracefully (default branch).
-- **Tab strip CSS** (`webview/styles.css`): added `.UnicDB-tab-close` rules (display:none by default, visible on `:hover`/`:focus-within`, hover background, focus outline), `.UnicDB-tab-menu` + `.UnicDB-tab-menu-item` rules (themed bg/border, hover selection bg, z-index 1000), `.UnicDB-empty-state` + `.UnicDB-empty-state-icon` rules (defined for a follow-up copy change). All additive — no existing class behavior is altered.
-- **`renderActivePanel` empty-state branch** (`webview/main.ts`): the not-busy branch now renders the `UnicDB-empty` placeholder with the original "No results yet." copy (the friendly "No runs yet — run a query to see results here." copy from PLAN.md §1 is deferred to a follow-up cycle that updates the pinned tests in `resultsGridModelNull.test.ts` + `webviewResultLimit.test.ts`). The busy branch keeps the existing "Running…" copy. The class change from `UnicDB-empty` → `UnicDB-empty-state` attempted in wave 1 was reverted in R4.5 to keep those pins green.
+- **Tab strip CSS** (`webview/styles.css`): added `.VSKit-tab-close` rules (display:none by default, visible on `:hover`/`:focus-within`, hover background, focus outline), `.VSKit-tab-menu` + `.VSKit-tab-menu-item` rules (themed bg/border, hover selection bg, z-index 1000), `.VSKit-empty-state` + `.VSKit-empty-state-icon` rules (defined for a follow-up copy change). All additive — no existing class behavior is altered.
+- **`renderActivePanel` empty-state branch** (`webview/main.ts`): the not-busy branch now renders the `VSKit-empty` placeholder with the original "No results yet." copy (the friendly "No runs yet — run a query to see results here." copy from PLAN.md §1 is deferred to a follow-up cycle that updates the pinned tests in `resultsGridModelNull.test.ts` + `webviewResultLimit.test.ts`). The busy branch keeps the existing "Running…" copy. The class change from `VSKit-empty` → `VSKit-empty-state` attempted in wave 1 was reverted in R4.5 to keep those pins green.
 
 ### Deferrals (explicit)
 - **Friendly empty-state copy** ("No runs yet — run a query to see results here."): the copy change from PLAN.md §1 was reverted in R4.5 to keep the pinned `webviewResultLimit.test.ts:225` + `resultsGridModelNull.test.ts:149` contracts green. A follow-up cycle can ship the copy change together with updates to those pins.
@@ -647,12 +653,12 @@ Cycle UX3: closeable tabs in the Results panel. Before this cycle the Results pa
 
 ## [1.51.3] — 2026-09-04
 
-Cycle UX2: surface connection + SQL errors in the Results panel and fix the broken `Run N · Stmt M` tab labels. Before this cycle a failed SELECT or a failed connection left the Results panel silently empty — the user saw `Run 1 · Stmt 1` and `Run 2 · Stmt 1` (every tab the same generic template, no statement hint) and a blank grid area, with no red icon, no error message, no statement pointer, and no status-bar signal beyond a plain `UnicDB:` chip. After this cycle every failure (post-connect SQL error AND first-connect ECONNREFUSED / timeout / auth) renders an inline red error card in a dedicated tab, the Messages tab auto-opens, the status bar shows a red `$(error)` badge for the duration of the error session, and every tab title is unique and informative (`Run N · <first 30 chars of SQL>` or `Run N · <table label>` instead of `Run N · Stmt M`). The cycle is purely additive on top of the v1.51.2 OC4O + MENU-001 base — the existing healthy-SELECT grid path and the existing DDL/DML success card path (UX1-010) are byte-identical. The seam is the existing `runner.runFailed(reason) → onUpdate → panel.render` chain — ONE producer, not two competing ones. The cycle ships **+25 tests** over v1.51.2 (suite 3530 → 3555, floor preserved at 2 skipped).
+Cycle UX2: surface connection + SQL errors in the Results panel and fix the broken `Run N · Stmt M` tab labels. Before this cycle a failed SELECT or a failed connection left the Results panel silently empty — the user saw `Run 1 · Stmt 1` and `Run 2 · Stmt 1` (every tab the same generic template, no statement hint) and a blank grid area, with no red icon, no error message, no statement pointer, and no status-bar signal beyond a plain `VSKit:` chip. After this cycle every failure (post-connect SQL error AND first-connect ECONNREFUSED / timeout / auth) renders an inline red error card in a dedicated tab, the Messages tab auto-opens, the status bar shows a red `$(error)` badge for the duration of the error session, and every tab title is unique and informative (`Run N · <first 30 chars of SQL>` or `Run N · <table label>` instead of `Run N · Stmt M`). The cycle is purely additive on top of the v1.51.2 OC4O + MENU-001 base — the existing healthy-SELECT grid path and the existing DDL/DML success card path (UX1-010) are byte-identical. The seam is the existing `runner.runFailed(reason) → onUpdate → panel.render` chain — ONE producer, not two competing ones. The cycle ships **+25 tests** over v1.51.2 (suite 3530 → 3555, floor preserved at 2 skipped).
 
 ### Added
 - **Inline error card for SELECT + connection failures** (`src/ui/ddlStatusCard.ts`, `src/ui/__tests__/ddlStatusCard.test.ts`, +7 tests): `classifyPanelKind` now returns `"card"` for any failure — including `kind === "select" && status === "error"` and `kind === undefined && status === "error"` (the synthetic connection-failure row). Previously a failed `SELECT * FROM nonexistent` rendered an empty grid with no error message; now it renders the same red error card the DDL/DML failure path already uses (verbatim `r.error` text, `LINE N`/`character N` pinpoints via the existing `extractHint` helper, commandTag-aware title when available). A new `kind: "connection-error"` value in `BuildCardOutput["kind"]` covers the synthetic row from `QueryRunner.runFailed`; `buildDdlCardText` produces `title: "Connection failed"` + `meta: "<durationMs>ms"` for the `sql === "(connection)"` sentinel. The healthy-SELECT grid path and the DDL/DML success card (UX1-010) are byte-identical — `classifyPanelKind({kind:"select", status:"done"})` still returns `"grid"`. The connection-error row flows through the SAME `onUpdate → panel.render` chain the panel already uses for normal runs, so the existing `rebuildTabs`, label extraction, and active-tab logic carry the synthetic row with no special path. 7 new tests pin: `SELECT+error → "card"`, `SELECT+error` with pg-syntax error text produces byte-identical `errorText` + `LINE N` hint, no-kind+ECONNREFUSED → "card", empty `error` string → `"error"` variant no hint, multi-marker pg error (`LINE 5: ... at character 12`) → `"near LINE 5, position 12"`, healthy SELECT regression still `"grid"`, connection-error card produces `kind:"connection-error"` + `title:"Connection failed"` + `meta:"<durationMs>ms"`.
 - **`QueryRunner.runFailed(reason)` synthetic-row producer** (`src/core/queryRunner.ts`, `src/core/__tests__/queryRunner.test.ts`, +5 tests): new public method appends ONE synthetic `StatementResult { index, sql: "(connection)", status: "error", error: reason, durationMs: 0 }` and reuses the existing `onUpdate` callback contract — no separate emit channel. Throws the new exported `RunnerBusy` error class if called while a real `run()` is in flight (no double-emit, no race with the in-flight executeAll). Idempotent on a second call before the panel renders the first — just appends another row (test case 4). The synthetic row does NOT leak into a subsequent healthy `run()`: `run([stmt])` after `runFailed` works unchanged (test case 5). The store-and-forward `lastOnUpdate` field captures the callback at `run()` entry and releases it at the run's `finally`, so `runFailed` fires through the same chain the panel already wires against. The `executeAll` / `loadMoreImpl` hot paths are NOT touched — no allocation in the hot loop. 5 new tests pin: fresh-runner appends one row + fires onUpdate, mid-run throws RunnerBusy, cancelled-then-failed appends cleanly, double-runFailed accumulates two rows, post-runFailed healthy `run()` regression.
-- **`createStatusBar` wrapper-object return type** (`src/ui/statusBar.ts`, `src/ui/__tests__/statusBar.test.ts`, `src/extension.ts:420`, `src/scaffold.test.ts:16`, `src/extension.test.ts:97`, +2 tests): `createStatusBar(mgr)` now returns `{ item: vscode.StatusBarItem; setErrorBadge(reason: string | null): void; dispose(): void }` instead of a bare `StatusBarItem`. `setErrorBadge("X")` flips the active connection chip to red `$(error) <name> [driver]` with `UnicDB: error: <reason>` tooltip; `setErrorBadge(null)` restores the normal `(database) <name> [driver]` rendering via the existing `render()` helper. The wrapper's `dispose()` unsubscribes both `onDidChangeActive` + `onDidChangeRecoveryStatus` AND disposes the underlying `item`. The breaking return-type change is migrated in the one production caller (`src/extension.ts:420`) and the two test mocks (`src/scaffold.test.ts:16`, `src/extension.test.ts:97`); all three call sites pass `npm run typecheck` and `npm test` green. The previous recovery-only `RLX-03` text (recovering/recovered/reconnect failed) keeps its own rendering path; `setErrorBadge` is the dedicated channel for host-side query/runtime failures. 2 new tests pin: `setErrorBadge("X") → $(error)` then `setErrorBadge(null) → plain`, wrapper `.item` returns the underlying item + `.dispose()` is the canonical cleanup.
+- **`createStatusBar` wrapper-object return type** (`src/ui/statusBar.ts`, `src/ui/__tests__/statusBar.test.ts`, `src/extension.ts:420`, `src/scaffold.test.ts:16`, `src/extension.test.ts:97`, +2 tests): `createStatusBar(mgr)` now returns `{ item: vscode.StatusBarItem; setErrorBadge(reason: string | null): void; dispose(): void }` instead of a bare `StatusBarItem`. `setErrorBadge("X")` flips the active connection chip to red `$(error) <name> [driver]` with `VSKit: error: <reason>` tooltip; `setErrorBadge(null)` restores the normal `(database) <name> [driver]` rendering via the existing `render()` helper. The wrapper's `dispose()` unsubscribes both `onDidChangeActive` + `onDidChangeRecoveryStatus` AND disposes the underlying `item`. The breaking return-type change is migrated in the one production caller (`src/extension.ts:420`) and the two test mocks (`src/scaffold.test.ts:16`, `src/extension.test.ts:97`); all three call sites pass `npm run typecheck` and `npm test` green. The previous recovery-only `RLX-03` text (recovering/recovered/reconnect failed) keeps its own rendering path; `setErrorBadge` is the dedicated channel for host-side query/runtime failures. 2 new tests pin: `setErrorBadge("X") → $(error)` then `setErrorBadge(null) → plain`, wrapper `.item` returns the underlying item + `.dispose()` is the canonical cleanup.
 - **Tab labels + Messages auto-open** (`webview/tabTitle.ts`, `webview/main.ts`, `webview/__tests__/mainTabTitle.test.ts`, `vitest.config.ts`, +7 tests): the `tabTitle(r, i)` helper now returns `Run ${runNo ?? i+1} · <hint>` where `<hint>` is `r.label` if set (e.g. `public.users` from the schema-tree browse flow), else the first 30 chars of `r.sql`, else `Stmt ${runStmtNo ?? i+1}` for the empty-SQL fallback (preserves the legacy `Statement N` template). Error rows (`r.status === "error"`) get a `⚠ ` prefix via `tabBadge(r)` so the user can spot the failing tab at a glance; non-error rows get `""` (no `✓`/`⌀` glyphs from the legacy surface). The helper is extracted into `webview/tabTitle.ts` as a pure module (no DOM, no allocations in the hot loop) so `webview/__tests__/mainTabTitle.test.ts` can unit-test it directly via the new vitest `webview/__tests__/*.test.ts` include pattern. When a new error row lands in `[prevLen, results.length)`, the `state` handler in `webview/main.ts` flips `activeTab = results.length` (the Messages tab slot) AFTER the `loadMoreInFlight` clamp, so the user lands on the error log automatically. The healthy-SELECT path is byte-identical for the read-only case; the long-label 40-char `"..."` truncation from the old spec was removed because the new spec truncates only SQL (labels render verbatim). `vitest.config.ts` adds `webview/__tests__/*.test.ts` to the include list so the test runner picks the new file up. 7 new tests pin: SQL-only truncated to 30 chars + `…`, label preferred over SQL, empty SQL + no label → `Stmt M` fallback, 200-char SQL truncated cleanly (no overflow), healthy SELECT still readable, error → `⚠ ` / done → `""`. The pre-existing webview test suites (`webviewBundle`, `webviewPerTableTabs`, `webviewResultLimit`, `webviewMultiRunTabs`) were updated to assert the new contract — the label format change is mandated by the spec.
 - **Host integration: outer catch → runFailed + statusBar.setErrorBadge lifecycle** (`src/extension.ts`, `src/extension.test.ts`, `src/ui/__tests__/resultsPanelErrorIntegration.test.ts`, +4 tests): the `runStatements` outer catch on first-connect failure (when `adapterProvider` rejects before any statement runs) now calls `runner.runFailed(reason)` and `statusBar.setErrorBadge(reason)` instead of dropping a `vscode.window.showErrorMessage` toast that disappears and never tells the user which statement failed. The full chain is exercised end-to-end: `adapterProvider` rejects → outer catch fires → `runner.runFailed(reason)` emits synthetic row → `onUpdate` fires → `panel.render` synthesizes the tab → status bar carries the red badge for the duration of the session. Post-connect `runQuery` failures need NO outer-catch change — they reach the panel through the existing `executeAll` path inside `QueryRunner`, and TASK-UX2-001's `classifyPanelKind` fix is what makes them render the error card instead of an empty grid. The next healthy `run()` clears the badge via `statusBar.setErrorBadge(null)`; per-statement error rows from the post-connect path also flip the badge on with `statusBar.setErrorBadge(row.error)`. The outer-catch block is fully gated by `if (!deactivating)` so a first-connect failure settling during teardown cannot write to a disposed panel or StatusBarItem. The TASK-BQ03-005 #5 edge test was updated to assert `runner.runFailed(reason)` is called with the sanitized BQ reason instead of the legacy toast (the test was broken by the task's mandated behavior change; the update preserves the sanitization assertion). 4 new integration tests pin: first-connect failure → outer catch calls `runFailed(reason)` → onUpdate fires → panel renders synthetic tab (full chain); post-connect runQuery error → per-statement error row reaches onUpdate → panel renders error card (NOT empty grid); status bar badge set on first error + cleared on next healthy run; healthy SELECT regression still renders the grid.
 
@@ -683,35 +689,35 @@ Cycle UX2: surface connection + SQL errors in the Results panel and fix the brok
 
 ## [1.51.2] — 2026-09-04
 
-Cycle OC4O + MENU-001: ship right-click "Open Console for Object" on schema-tree table/view nodes + a UnicDB Help Grid panel, and promote New Table / Modify Table to the top of the schema-tree table-node right-click menu. All three changes are purely additive on top of the v1.51.0 BQ-04 cycle — no frozen surface touched, no breaking API change, no new dependency. The BQ-00 frozen surface (`bigqueryTypes.ts`, `bigqueryAdc.ts`), the BQ-01 `BigQueryClientLike` + `BatchedQuery` interface, and `formatBigQueryCell` all stay byte-identical to v1.51.0. The `bq04SurfaceGuard` filter was tightened to anchor on the known contributes.menus sub-key prefixes so it can no longer silently drop a top-level `dependencies` / `devDependencies` key. The cycle ships **+15 tests** over v1.51.0 (suite 3402 → 3417, floor preserved at 2 skipped). UX1 cycle (11 tasks, 13 user requests) is queued separately for the next patch.
+Cycle OC4O + MENU-001: ship right-click "Open Console for Object" on schema-tree table/view nodes + a VSKit Help Grid panel, and promote New Table / Modify Table to the top of the schema-tree table-node right-click menu. All three changes are purely additive on top of the v1.51.0 BQ-04 cycle — no frozen surface touched, no breaking API change, no new dependency. The BQ-00 frozen surface (`bigqueryTypes.ts`, `bigqueryAdc.ts`), the BQ-01 `BigQueryClientLike` + `BatchedQuery` interface, and `formatBigQueryCell` all stay byte-identical to v1.51.0. The `bq04SurfaceGuard` filter was tightened to anchor on the known contributes.menus sub-key prefixes so it can no longer silently drop a top-level `dependencies` / `devDependencies` key. The cycle ships **+15 tests** over v1.51.0 (suite 3402 → 3417, floor preserved at 2 skipped). UX1 cycle (11 tasks, 13 user requests) is queued separately for the next patch.
 
 ### Added
-- **Right-click "Open Console for Object" on schema-tree table/view nodes** (`package.json` command `UnicDB.openConsoleForObject` with `icon: $(window)`, menu binding `view/item/context` under `group: inline` for `viewItem == table || viewItem == view`, `src/extension.ts` `commandOpenConsoleForObject` handler, `src/ui/consolePanel.ts` new `seedTab(name, buffer)` method, `src/extension.test.ts` 5 fresh tests): a new `seedTab(name, buffer): ConsoleTabSpec` method on `ConsolePanel` mirrors `createTab(name)` but seeds the buffer with a starter query (`SELECT * FROM <qualified> LIMIT 100;`) and posts `state` to the webview exactly once. `setBuffer` stays silent (ARP-08 #30 invariant: the editor uses silent setBuffer to avoid render loops, and that contract is preserved — the seed is the only path that POSTs). The right-click `when` clause is `view == UnicDB.schemaTree && (viewItem == table || viewItem == view)`, so the action only appears where the object is a table or a view, never for columns or routines. `commandOpenConsoleForObject` resolves the qualified name from either the click argument (a `TreeNode` from the schema tree) or the active editor's text selection, falling back to the schema tree's currently selected item if neither is present, so the action always has a target. 5 new tests pin: panel reveal, qualified name parsing from a tree node, fallback to active selection, empty-arg no-op, error on unknown arg shape.
-- **UnicDB Help Grid panel** (`package.json` command `UnicDB.openHelpGrid` with `icon: $(book)`, 3 menu bindings under `webview/UnicDB.console/context`, `webview/UnicDB.results/context`, `webview/UnicDB.aiChatPanel/context`, all with `group: UnicDBHelp`, `src/ui/helpGrid.ts` new pure registry, `src/ui/helpGridPanel.ts` new singleton webview host, `src/ui/__tests__/helpGrid.test.ts` 5 new tests, `webview/helpGridMain.ts` new webview script, `src/extension.ts` `commandOpenHelpGrid` handler + 5 fresh tests): a 3-button "..." menu in every webview opens a responsive grid of help cards. Each card has a `Try it` button that posts `{ type: "runCommand", commandId }` to the host, which then runs `vscode.commands.executeCommand(...)` — with a strict whitelist (`UnicDB.*` and `workbench.*` only, the command id is never echoed back to the webview). The card registry is a pure module-level `CARDS` array (9 cards: Open Console, Open Console for Object, Run Query, Refresh Schema, Browse Table Data, Generate SELECT, AI Chat, Manage Connections, Open Settings). `helpCardRegistry(registeredCommandIds)` filters cards whose `commandId` is not in the live `state.registeredCommands` set, then keeps the `workbench.*` cards regardless. The panel itself mirrors the `ConsolePanel` lifecycle: create on first `show()`, reveal on subsequent calls, drop the singleton on dispose. CSP is strict (`default-src 'none'; style-src 'unsafe-inline'; script-src <csp-source>`) and the webview renders cards with strict `textContent` (no innerHTML), so the data-cards JSON payload cannot XSS. 10 new tests pin: command id whitelist, no-op on unknown message, no-op on empty command id, panel reveal, registered-command filter, workbench-card passthrough, canonical inventory stability, 4-UnicDB-slice-returns-5-cards, empty-set-returns-only-workbench, no duplicate ids.
+- **Right-click "Open Console for Object" on schema-tree table/view nodes** (`package.json` command `VSKit.openConsoleForObject` with `icon: $(window)`, menu binding `view/item/context` under `group: inline` for `viewItem == table || viewItem == view`, `src/extension.ts` `commandOpenConsoleForObject` handler, `src/ui/consolePanel.ts` new `seedTab(name, buffer)` method, `src/extension.test.ts` 5 fresh tests): a new `seedTab(name, buffer): ConsoleTabSpec` method on `ConsolePanel` mirrors `createTab(name)` but seeds the buffer with a starter query (`SELECT * FROM <qualified> LIMIT 100;`) and posts `state` to the webview exactly once. `setBuffer` stays silent (ARP-08 #30 invariant: the editor uses silent setBuffer to avoid render loops, and that contract is preserved — the seed is the only path that POSTs). The right-click `when` clause is `view == VSKit.schemaTree && (viewItem == table || viewItem == view)`, so the action only appears where the object is a table or a view, never for columns or routines. `commandOpenConsoleForObject` resolves the qualified name from either the click argument (a `TreeNode` from the schema tree) or the active editor's text selection, falling back to the schema tree's currently selected item if neither is present, so the action always has a target. 5 new tests pin: panel reveal, qualified name parsing from a tree node, fallback to active selection, empty-arg no-op, error on unknown arg shape.
+- **VSKit Help Grid panel** (`package.json` command `VSKit.openHelpGrid` with `icon: $(book)`, 3 menu bindings under `webview/VSKit.console/context`, `webview/VSKit.results/context`, `webview/VSKit.aiChatPanel/context`, all with `group: VSKitHelp`, `src/ui/helpGrid.ts` new pure registry, `src/ui/helpGridPanel.ts` new singleton webview host, `src/ui/__tests__/helpGrid.test.ts` 5 new tests, `webview/helpGridMain.ts` new webview script, `src/extension.ts` `commandOpenHelpGrid` handler + 5 fresh tests): a 3-button "..." menu in every webview opens a responsive grid of help cards. Each card has a `Try it` button that posts `{ type: "runCommand", commandId }` to the host, which then runs `vscode.commands.executeCommand(...)` — with a strict whitelist (`VSKit.*` and `workbench.*` only, the command id is never echoed back to the webview). The card registry is a pure module-level `CARDS` array (9 cards: Open Console, Open Console for Object, Run Query, Refresh Schema, Browse Table Data, Generate SELECT, AI Chat, Manage Connections, Open Settings). `helpCardRegistry(registeredCommandIds)` filters cards whose `commandId` is not in the live `state.registeredCommands` set, then keeps the `workbench.*` cards regardless. The panel itself mirrors the `ConsolePanel` lifecycle: create on first `show()`, reveal on subsequent calls, drop the singleton on dispose. CSP is strict (`default-src 'none'; style-src 'unsafe-inline'; script-src <csp-source>`) and the webview renders cards with strict `textContent` (no innerHTML), so the data-cards JSON payload cannot XSS. 10 new tests pin: command id whitelist, no-op on unknown message, no-op on empty command id, panel reveal, registered-command filter, workbench-card passthrough, canonical inventory stability, 4-VSKit-slice-returns-5-cards, empty-set-returns-only-workbench, no duplicate ids.
 
 ### Changed
-- **Schema-tree table-node context menu now leads with New Table…, then Modify Table…** (`package.json` `contributes.menus["view/item/context"]`): `UnicDB.newTable` gains `"order": "1"` and `UnicDB.modifyTable` gains `"order": "2"`. VS Code renders same-group entries with `order` ascending lexicographically before falling back to alphabetical-by-title, so the two requested commands move to the top of the right-click menu on a table node while every other `UnicDB`-group entry keeps its current alphabetical relative order below. No runtime code changed (the menu is declarative). The `bq04SurfaceGuard` `contributesKeyPattern` whitelist was extended with `order` to keep the dependency-drift guard filtering contributes changes.
-- **bq04SurfaceGuard filter tightened to known contributes.menus sub-keys** (`src/adapters/__tests__/bq04SurfaceGuard.test.ts`): the `contributesMenuKeyPattern` was previously `^[+-]\s+"[a-zA-Z][a-zA-Z0-9/._-]+":\s*[?[{]?\s*$/` which matched ANY top-level `+/- "<word>":` line — including `+ "dependencies": {` and `+ "devDependencies": {`. A future PR that adds a real dep would have been silently dropped from the diff, defeating the guard. The new pattern anchors on the actual contributes.menus sub-key set (`webview/<id>`, `view/<id>`, `editor/<id>`, `scm/<id>`, `file/<id>`, `commandPalette`, `menus`) so it can only match real menu block headers. Synthetic test confirms `+ "dependencies": {` and `+ "newpkg": "^1.0.0"` survive the filter while `+ "webview/UnicDB.console/context": [` and `+ "view/title": [` are correctly dropped. The pre-existing contributes-key filter (`command`, `title`, `category`, `icon`, `when`, `group`, `keybinding`, `mac`, `win`, `linux`) and the version-bump filter are unchanged.
+- **Schema-tree table-node context menu now leads with New Table…, then Modify Table…** (`package.json` `contributes.menus["view/item/context"]`): `VSKit.newTable` gains `"order": "1"` and `VSKit.modifyTable` gains `"order": "2"`. VS Code renders same-group entries with `order` ascending lexicographically before falling back to alphabetical-by-title, so the two requested commands move to the top of the right-click menu on a table node while every other `VSKit`-group entry keeps its current alphabetical relative order below. No runtime code changed (the menu is declarative). The `bq04SurfaceGuard` `contributesKeyPattern` whitelist was extended with `order` to keep the dependency-drift guard filtering contributes changes.
+- **bq04SurfaceGuard filter tightened to known contributes.menus sub-keys** (`src/adapters/__tests__/bq04SurfaceGuard.test.ts`): the `contributesMenuKeyPattern` was previously `^[+-]\s+"[a-zA-Z][a-zA-Z0-9/._-]+":\s*[?[{]?\s*$/` which matched ANY top-level `+/- "<word>":` line — including `+ "dependencies": {` and `+ "devDependencies": {`. A future PR that adds a real dep would have been silently dropped from the diff, defeating the guard. The new pattern anchors on the actual contributes.menus sub-key set (`webview/<id>`, `view/<id>`, `editor/<id>`, `scm/<id>`, `file/<id>`, `commandPalette`, `menus`) so it can only match real menu block headers. Synthetic test confirms `+ "dependencies": {` and `+ "newpkg": "^1.0.0"` survive the filter while `+ "webview/VSKit.console/context": [` and `+ "view/title": [` are correctly dropped. The pre-existing contributes-key filter (`command`, `title`, `category`, `icon`, `when`, `group`, `keybinding`, `mac`, `win`, `linux`) and the version-bump filter are unchanged.
 
 ### Deferrals (explicit)
-- **AI chat card surfaces only `UnicDB.aiChat`** (the AI command palette entry), not the deeper `UnicDB.ai.useWithOmp` / `UnicDB.ai.refreshDbContext` / `UnicDB.ai.showPolicy` / `UnicDB.ai.exportTrace` / `UnicDB.ai.clearTrace` sub-commands. Users wanting those can still bind them to keybindings (activation events already exposed). A follow-up cycle can add 5 more cards to the grid.
-- **Help grid opens in the active editor column, not a side column**: same as the console panel, the grid is a regular webview panel. A follow-up cycle can add a `UnicDB.helpGrid.column` setting if users want to dock it.
+- **AI chat card surfaces only `VSKit.aiChat`** (the AI command palette entry), not the deeper `VSKit.ai.useWithOmp` / `VSKit.ai.refreshDbContext` / `VSKit.ai.showPolicy` / `VSKit.ai.exportTrace` / `VSKit.ai.clearTrace` sub-commands. Users wanting those can still bind them to keybindings (activation events already exposed). A follow-up cycle can add 5 more cards to the grid.
+- **Help grid opens in the active editor column, not a side column**: same as the console panel, the grid is a regular webview panel. A follow-up cycle can add a `VSKit.helpGrid.column` setting if users want to dock it.
 - **UX1 cycle (11 tasks, 13 user requests — schema-tree polish, console templates, SQL Generator on view/routine, results placement, settings hub, chat UX, DDL status card, auto-refresh, user guide) is queued for the next patch.** Tagged at `b41150e` on `main`; not part of this release.
 
 ## [1.51.0] — 2026-09-03
 
-Cycle OC4O: ship right-click "Open Console for Object" on schema-tree table/view nodes + a UnicDB Help Grid panel. Both are pure additive — no frozen surface touched, no breaking API change, the seam is the existing `ConsolePanel.createTab` / `seedTab` + a new dedicated `HelpGridPanel`. The BigQuery frozen surface (`bigqueryTypes.ts`, `bigqueryAdc.ts`), the `BigQueryClientLike` + `BatchedQuery` interface, and `formatBigQueryCell` all stay byte-identical to v1.51.0. The `bq04SurfaceGuard` filter was tightened to anchor on the known contributes.menus sub-key prefixes (`webview/`, `view/`, `editor/`, `scm/`, `file/`, `commandPalette`, `menus`) so it can no longer silently drop a top-level `dependencies` / `devDependencies` key — a latent bug surfaced and fixed in the same release. The cycle ships **+15 tests** over v1.51.0 (suite 3402 → 3417, floor preserved at 2 skipped).
+Cycle OC4O: ship right-click "Open Console for Object" on schema-tree table/view nodes + a VSKit Help Grid panel. Both are pure additive — no frozen surface touched, no breaking API change, the seam is the existing `ConsolePanel.createTab` / `seedTab` + a new dedicated `HelpGridPanel`. The BigQuery frozen surface (`bigqueryTypes.ts`, `bigqueryAdc.ts`), the `BigQueryClientLike` + `BatchedQuery` interface, and `formatBigQueryCell` all stay byte-identical to v1.51.0. The `bq04SurfaceGuard` filter was tightened to anchor on the known contributes.menus sub-key prefixes (`webview/`, `view/`, `editor/`, `scm/`, `file/`, `commandPalette`, `menus`) so it can no longer silently drop a top-level `dependencies` / `devDependencies` key — a latent bug surfaced and fixed in the same release. The cycle ships **+15 tests** over v1.51.0 (suite 3402 → 3417, floor preserved at 2 skipped).
 
 ### Added
-- **Right-click "Open Console for Object" on schema-tree table/view nodes** (`package.json` command `UnicDB.openConsoleForObject` with `icon: $(window)`, menu binding `view/item/context` under `group: inline` for `viewItem == table || viewItem == view`, `src/extension.ts` `commandOpenConsoleForObject` handler, `src/ui/consolePanel.ts` new `seedTab(name, buffer)` method, `src/extension.test.ts` 5 fresh tests, `src/adapters/__tests__/bq04SurfaceGuard.test.ts` filter widening to allow contributes changes): a new `seedTab(name, buffer): ConsoleTabSpec` method on `ConsolePanel` mirrors `createTab(name)` but seeds the buffer with a starter query (`SELECT * FROM <qualified> LIMIT 100;`) and posts `state` to the webview exactly once. `setBuffer` stays silent (ARP-08 #30 invariant: the editor uses silent setBuffer to avoid render loops, and that contract is preserved — the seed is the only path that POSTs). The right-click `when` clause is `view == UnicDB.schemaTree && (viewItem == table || viewItem == view)`, so the action only appears where the object is a table or a view, never for columns or routines. `commandOpenConsoleForObject` resolves the qualified name from either the click argument (a `TreeNode` from the schema tree) or the active editor's text selection, falling back to the schema tree's currently selected item if neither is present, so the action always has a target. 5 new tests pin: panel reveal, qualified name parsing from a tree node, fallback to active selection, empty-arg no-op, error on unknown arg shape.
-- **UnicDB Help Grid panel** (`package.json` command `UnicDB.openHelpGrid` with `icon: $(book)`, 3 menu bindings under `webview/UnicDB.console/context`, `webview/UnicDB.results/context`, `webview/UnicDB.aiChatPanel/context`, all with `group: UnicDBHelp`, `src/ui/helpGrid.ts` new pure registry, `src/ui/helpGridPanel.ts` new singleton webview host, `src/ui/__tests__/helpGrid.test.ts` 5 new tests, `webview/helpGridMain.ts` new webview script, `src/extension.ts` `commandOpenHelpGrid` handler + 5 fresh tests): a 3-button "..." menu in every webview opens a responsive grid of help cards. Each card has a `Try it` button that posts `{ type: "runCommand", commandId }` to the host, which then runs `vscode.commands.executeCommand(...)` — with a strict whitelist (`UnicDB.*` and `workbench.*` only, the command id is never echoed back to the webview). The card registry is a pure module-level `CARDS` array (9 cards: Open Console, Open Console for Object, Run Query, Refresh Schema, Browse Table Data, Generate SELECT, AI Chat, Manage Connections, Open Settings). `helpCardRegistry(registeredCommandIds)` filters cards whose `commandId` is not in the live `state.registeredCommands` set, then keeps the `workbench.*` cards regardless. The panel itself mirrors the `ConsolePanel` lifecycle: create on first `show()`, reveal on subsequent calls, drop the singleton on dispose. CSP is strict (`default-src 'none'; style-src 'unsafe-inline'; script-src <csp-source>`) and the webview renders cards with strict `textContent` (no innerHTML), so the data-cards JSON payload cannot XSS. 10 new tests pin: command id whitelist, no-op on unknown message, no-op on empty command id, panel reveal, registered-command filter, workbench-card passthrough, canonical inventory stability, 4-UnicDB-slice-returns-5-cards, empty-set-returns-only-workbench, no duplicate ids.
+- **Right-click "Open Console for Object" on schema-tree table/view nodes** (`package.json` command `VSKit.openConsoleForObject` with `icon: $(window)`, menu binding `view/item/context` under `group: inline` for `viewItem == table || viewItem == view`, `src/extension.ts` `commandOpenConsoleForObject` handler, `src/ui/consolePanel.ts` new `seedTab(name, buffer)` method, `src/extension.test.ts` 5 fresh tests, `src/adapters/__tests__/bq04SurfaceGuard.test.ts` filter widening to allow contributes changes): a new `seedTab(name, buffer): ConsoleTabSpec` method on `ConsolePanel` mirrors `createTab(name)` but seeds the buffer with a starter query (`SELECT * FROM <qualified> LIMIT 100;`) and posts `state` to the webview exactly once. `setBuffer` stays silent (ARP-08 #30 invariant: the editor uses silent setBuffer to avoid render loops, and that contract is preserved — the seed is the only path that POSTs). The right-click `when` clause is `view == VSKit.schemaTree && (viewItem == table || viewItem == view)`, so the action only appears where the object is a table or a view, never for columns or routines. `commandOpenConsoleForObject` resolves the qualified name from either the click argument (a `TreeNode` from the schema tree) or the active editor's text selection, falling back to the schema tree's currently selected item if neither is present, so the action always has a target. 5 new tests pin: panel reveal, qualified name parsing from a tree node, fallback to active selection, empty-arg no-op, error on unknown arg shape.
+- **VSKit Help Grid panel** (`package.json` command `VSKit.openHelpGrid` with `icon: $(book)`, 3 menu bindings under `webview/VSKit.console/context`, `webview/VSKit.results/context`, `webview/VSKit.aiChatPanel/context`, all with `group: VSKitHelp`, `src/ui/helpGrid.ts` new pure registry, `src/ui/helpGridPanel.ts` new singleton webview host, `src/ui/__tests__/helpGrid.test.ts` 5 new tests, `webview/helpGridMain.ts` new webview script, `src/extension.ts` `commandOpenHelpGrid` handler + 5 fresh tests): a 3-button "..." menu in every webview opens a responsive grid of help cards. Each card has a `Try it` button that posts `{ type: "runCommand", commandId }` to the host, which then runs `vscode.commands.executeCommand(...)` — with a strict whitelist (`VSKit.*` and `workbench.*` only, the command id is never echoed back to the webview). The card registry is a pure module-level `CARDS` array (9 cards: Open Console, Open Console for Object, Run Query, Refresh Schema, Browse Table Data, Generate SELECT, AI Chat, Manage Connections, Open Settings). `helpCardRegistry(registeredCommandIds)` filters cards whose `commandId` is not in the live `state.registeredCommands` set, then keeps the `workbench.*` cards regardless. The panel itself mirrors the `ConsolePanel` lifecycle: create on first `show()`, reveal on subsequent calls, drop the singleton on dispose. CSP is strict (`default-src 'none'; style-src 'unsafe-inline'; script-src <csp-source>`) and the webview renders cards with strict `textContent` (no innerHTML), so the data-cards JSON payload cannot XSS. 10 new tests pin: command id whitelist, no-op on unknown message, no-op on empty command id, panel reveal, registered-command filter, workbench-card passthrough, canonical inventory stability, 4-VSKit-slice-returns-5-cards, empty-set-returns-only-workbench, no duplicate ids.
 
 ### Changed
-- **bq04SurfaceGuard filter tightened to known contributes.menus sub-keys** (`src/adapters/__tests__/bq04SurfaceGuard.test.ts`): the `contributesMenuKeyPattern` was previously `^[+-]\s+"[a-zA-Z][a-zA-Z0-9/._-]+":\s*[?[{]?\s*$/` which matched ANY top-level `+/- "<word>":` line — including `+ "dependencies": {` and `+ "devDependencies": {`. A future PR that adds a real dep would have been silently dropped from the diff, defeating the guard. The new pattern anchors on the actual contributes.menus sub-key set (`webview/<id>`, `view/<id>`, `editor/<id>`, `scm/<id>`, `file/<id>`, `commandPalette`, `menus`) so it can only match real menu block headers. Synthetic test confirms `+ "dependencies": {` and `+ "newpkg": "^1.0.0"` survive the filter while `+ "webview/UnicDB.console/context": [` and `+ "view/title": [` are correctly dropped. The pre-existing contributes-key filter (`command`, `title`, `category`, `icon`, `when`, `group`, `keybinding`, `mac`, `win`, `linux`) and the version-bump filter are unchanged.
+- **bq04SurfaceGuard filter tightened to known contributes.menus sub-keys** (`src/adapters/__tests__/bq04SurfaceGuard.test.ts`): the `contributesMenuKeyPattern` was previously `^[+-]\s+"[a-zA-Z][a-zA-Z0-9/._-]+":\s*[?[{]?\s*$/` which matched ANY top-level `+/- "<word>":` line — including `+ "dependencies": {` and `+ "devDependencies": {`. A future PR that adds a real dep would have been silently dropped from the diff, defeating the guard. The new pattern anchors on the actual contributes.menus sub-key set (`webview/<id>`, `view/<id>`, `editor/<id>`, `scm/<id>`, `file/<id>`, `commandPalette`, `menus`) so it can only match real menu block headers. Synthetic test confirms `+ "dependencies": {` and `+ "newpkg": "^1.0.0"` survive the filter while `+ "webview/VSKit.console/context": [` and `+ "view/title": [` are correctly dropped. The pre-existing contributes-key filter (`command`, `title`, `category`, `icon`, `when`, `group`, `keybinding`, `mac`, `win`, `linux`) and the version-bump filter are unchanged.
 
 ### Deferrals (explicit)
-- **AI chat card surfaces only `UnicDB.aiChat`** (the AI command palette entry), not the deeper `UnicDB.ai.useWithOmp` / `UnicDB.ai.refreshDbContext` / `UnicDB.ai.showPolicy` / `UnicDB.ai.exportTrace` / `UnicDB.ai.clearTrace` sub-commands. Users wanting those can still bind them to keybindings (activation events already exposed). A follow-up cycle can add 5 more cards to the grid.
-- **Help grid opens in the active editor column, not a side column**: same as the console panel, the grid is a regular webview panel. A follow-up cycle can add a `UnicDB.helpGrid.column` setting if users want to dock it.
+- **AI chat card surfaces only `VSKit.aiChat`** (the AI command palette entry), not the deeper `VSKit.ai.useWithOmp` / `VSKit.ai.refreshDbContext` / `VSKit.ai.showPolicy` / `VSKit.ai.exportTrace` / `VSKit.ai.clearTrace` sub-commands. Users wanting those can still bind them to keybindings (activation events already exposed). A follow-up cycle can add 5 more cards to the grid.
+- **Help grid opens in the active editor column, not a side column**: same as the console panel, the grid is a regular webview panel. A follow-up cycle can add a `VSKit.helpGrid.column` setting if users want to dock it.
 
 ## [1.51.0] — 2026-09-03
 
@@ -756,7 +762,7 @@ Cycle BQ-03: GoogleSQL Query Jobs + Paged Results Grid — BigQuery statements n
 - **`formatBigQueryCell` rendering wiring** (deliverable-but-unwired this cycle): the pure formatter from 02 ships tested + exported but is not plugged into the results grid; today RECORD/REPEATED keep the existing `ResultsPanel` rendering. A follow-up cycle (BQ-04 or later) swaps it in without re-deriving the display rules.
 - **`getQueryResults` `maxResults` is fixed at one default** (BQ-03.1 wave-1 scope): a future cycle can surface a configurable `pageSize` per `BatchedQuery` open if real-world latency warrants it. The 20 MB `byteBudget` is the only mid-cycle tuning knob; the seam widening for `pageSize` is deferred to keep the `BatchedQuery` interface frozen.
 - **`useLegacySql: true` is honored at the seam but no UI sets it** — GoogleSQL is the only submitted dialect. Surfacing a "Use legacy SQL" toggle in the editor is a UX call deferred to a future cycle.
-- **No new command ids, no new contributes**: this cycle ships no new `commands` / `configuration` / `menus` entries; existing `UnicDB.runQuery` / `UnicDB.browseTableData` and the `decorateStateMessage` interception in `resultsPanel` are the only user-visible surfaces touched.
+- **No new command ids, no new contributes**: this cycle ships no new `commands` / `configuration` / `menus` entries; existing `VSKit.runQuery` / `VSKit.browseTableData` and the `decorateStateMessage` interception in `resultsPanel` are the only user-visible surfaces touched.
 - **No new dependencies**: `@google-cloud/bigquery@^9.0.3` is unchanged; this cycle is purely seam-widening + runner/panel/extension wiring on the BQ-00 + BQ-01 + BQ-02 base.
 
 ### Review
@@ -767,12 +773,12 @@ Cycle BQ-03: GoogleSQL Query Jobs + Paged Results Grid — BigQuery statements n
 
 ## [1.49.0] — 2026-09-03
 
-Cycle BQ-02: BigQuery Resource Explorer + Table Preview — BigQuery connections now expose their datasets, tables, views, columns and routines through the Schema Explorer, and a single click on a table node opens a cost-safe preview in the existing `UnicDB.browseTableData` panel. The seam built in BQ-01 (`BigQueryAdapter` + `@google-cloud/bigquery@9.0.3`) is widened to the real client shapes (`getDatasets` / `dataset.getTables` / `table.getMetadata`); the BQ-00 frozen surface (`bigqueryTypes.ts`, `bigqueryAdc.ts`) is byte-untouched, and no driver besides `bigquery` gains new behavior. The cycle ships **+33 tests** over v1.48.0 (suite 3283 → 3316, floor preserved at 2 skipped).
+Cycle BQ-02: BigQuery Resource Explorer + Table Preview — BigQuery connections now expose their datasets, tables, views, columns and routines through the Schema Explorer, and a single click on a table node opens a cost-safe preview in the existing `VSKit.browseTableData` panel. The seam built in BQ-01 (`BigQueryAdapter` + `@google-cloud/bigquery@9.0.3`) is widened to the real client shapes (`getDatasets` / `dataset.getTables` / `table.getMetadata`); the BQ-00 frozen surface (`bigqueryTypes.ts`, `bigqueryAdc.ts`) is byte-untouched, and no driver besides `bigquery` gains new behavior. The cycle ships **+33 tests** over v1.48.0 (suite 3283 → 3316, floor preserved at 2 skipped).
 
 ### Added
 - **Real BigQuery resource enumeration on `BigQueryAdapter`** (`src/adapters/bigquery.ts`, `src/adapters/__tests__/bigquery.test.ts`): `listSchemas` maps the underlying `getDatasets()` result so each BigQuery dataset surfaces as one schema entry (the Schema Explorer labels them "datasets", not "schemas" — naming follows the wire, not the cross-driver abstraction); `listTables`, `listViews`, `listColumns`, `listRoutines`, `listTableDetail` and `estimateTableRows`/`estimateTableRowsBatch` are real, all backed by client metadata calls (`dataset.getTables()` → `table.getMetadata()` for schema/column/type, `dataset.getRoutines()` for routine enumeration). The BQ-00 frozen surface (`bigqueryTypes.ts`, `bigqueryAdc.ts`) is byte-untouched. The seam widening in `bigquery.ts` adds `getDatasets` / `dataset(id)` / `dataset(id).{getTables, getRoutines, table(id)}` to the adapter-owned `BigQueryClient` interface to match the real `@google-cloud/bigquery@9.0.3` instance shapes; the BQ-00 frozen `BigQueryClientLike` keeps its one-way cast contract intact. `numRows` past `MAX_SAFE_INTEGER` returns `null` (non-lossy, no rounding) per the closed convention in the executor report. 14 new tests in `src/adapters/__tests__/bigquery.test.ts` pin the happy + edge cases enumerated in PLAN §4 (dataset-id mapping, TABLE/VIEW/MATERIALIZED_VIEW filter, column mode/type mapping with REPEATED/RECORD suffix, malformed field defaults, empty dataset, 403 propagation, numRows overflow, batch map shape, not-connected/closed guards, listTableDetail with partitioning/clustering + MAX_SAFE_INTEGER-overflow numRows, listRoutines name+kind).
 - **Bounded BigQuery preview SQL builder** (`src/ui/bigQueryPreview.ts`, new; `src/ui/__tests__/bigQueryPreview.test.ts`; `src/ui/__tests__/browseCommands.test.ts` for the browse arm + qualify-skip pins): pure `buildBigQueryPreviewSql({ dataset, table, project?, limit })` emits a backtick-quoted `SELECT * FROM …` with LIMIT clamped to `[1, 1000]` (default 100 when omitted). 3-part reference `` `project`.`dataset`.`table` `` is emitted only when `project` is non-empty (matches the connection's `datasetProject` ≠ `billingProject` case). Internal backtick doubling is applied to every identifier — untrusted identifiers cannot escape the reference. The wire SQL flows through the BQ-01 path: `buildBrowseSelect("bigquery", dataset, table)` delegates to this builder, then `runner.run` → `client.query({ query, skipParsing: true })` → `toBigQueryPage`, so `BigQueryInt64String` / `BigQueryNumericString` / `BigQueryBigNumericString` precision survives the preview round-trip. `qualifyKeywordTables` is skipped for bigquery (PG keyword rules don't apply; SQL is always fully quoted). 7 new tests in `bigQueryPreview.test.ts` pin happy 2-part + 3-part paths, the limit clamp (omitted → 100, 0 / -5 / 100000 → 1000 ceiling), backtick doubling, identifier coverage; 4 new tests in `browseCommands.test.ts` pin the bigquery arm delegation + qualifyKeywordTables skip + regression that the pg/mysql/mssql arms stay byte-identical.
-- **Schema Explorer wiring for BigQuery** (`src/ui/schemaTree.ts`, `src/ui/__tests__/schemaTree.test.ts`, `src/ui/__tests__/schemaTreeCatalog.test.ts`): the existing schema tree accepts BigQuery datasets as schema nodes (`DRIVER_ICONS.bigquery = "cloud"`) and BigQuery tables/views as table nodes. Tooltip on each table node carries the cost-safe shape: `bigquery@<billingProject>` plus `dataset.table` and the table type (BASE TABLE / VIEW / MATERIALIZED VIEW / EXTERNAL) — never an unredacted project id, never the SQL preview, never a row count. Row-count auto-refresh is suppressed for BigQuery tables in batch (BQ-02 cost rule: `estimateTableRowsBatch` is guarded by `driver !== "bigquery"` in the existing batch path; the explorer trusts `listTableDetail` and never issues its own row-count query). Listing rejection (e.g. 403) renders an error node, not a crash. `browseCommands.ts` is not modified in this task (002-owned); the bigquery table/view node click path is verified to dispatch through `UnicDB.browseTableData` → `buildBrowseSelect("bigquery", …)` → `buildBigQueryPreviewSql` end-to-end via the test wiring. 7 new tests in `schemaTree.test.ts` pin (1) bigquery icon, (2) `bigquery@<billingProject>` tooltip shape, (3) dataset-not-schema labeling, (4) zero row-count queries during explorer refresh (differential against postgres), (5) view vs table rendering, (6) routine node rendering for BigQuery routines, (7) the table+view browse dispatch chain + listing-rejection error-node path; 1 new test in `schemaTreeCatalog.test.ts` pins the catalog category absence.
+- **Schema Explorer wiring for BigQuery** (`src/ui/schemaTree.ts`, `src/ui/__tests__/schemaTree.test.ts`, `src/ui/__tests__/schemaTreeCatalog.test.ts`): the existing schema tree accepts BigQuery datasets as schema nodes (`DRIVER_ICONS.bigquery = "cloud"`) and BigQuery tables/views as table nodes. Tooltip on each table node carries the cost-safe shape: `bigquery@<billingProject>` plus `dataset.table` and the table type (BASE TABLE / VIEW / MATERIALIZED VIEW / EXTERNAL) — never an unredacted project id, never the SQL preview, never a row count. Row-count auto-refresh is suppressed for BigQuery tables in batch (BQ-02 cost rule: `estimateTableRowsBatch` is guarded by `driver !== "bigquery"` in the existing batch path; the explorer trusts `listTableDetail` and never issues its own row-count query). Listing rejection (e.g. 403) renders an error node, not a crash. `browseCommands.ts` is not modified in this task (002-owned); the bigquery table/view node click path is verified to dispatch through `VSKit.browseTableData` → `buildBrowseSelect("bigquery", …)` → `buildBigQueryPreviewSql` end-to-end via the test wiring. 7 new tests in `schemaTree.test.ts` pin (1) bigquery icon, (2) `bigquery@<billingProject>` tooltip shape, (3) dataset-not-schema labeling, (4) zero row-count queries during explorer refresh (differential against postgres), (5) view vs table rendering, (6) routine node rendering for BigQuery routines, (7) the table+view browse dispatch chain + listing-rejection error-node path; 1 new test in `schemaTreeCatalog.test.ts` pins the catalog category absence.
 
 ### Changed
 - **BQ-00 frozen surface byte-untouched; seam widened to real `@google-cloud/bigquery@9.0.3` instance shapes** (`src/adapters/bigquery.ts`): the BQ-00 modules (`bigqueryTypes.ts`, `bigqueryAdc.ts`) and the BQ-01 narrow `BigQueryClientLike` keep their byte-identical bodies; the new code paths (`listSchemas` / `listTables` / `listViews` / `listColumns` / `listRoutines` / `listTableDetail` / `estimateTableRows` / `estimateTableRowsBatch`) call real `@google-cloud/bigquery@9.0.3` instance methods (`getDatasets`, `dataset.getTables`, `dataset.getRoutines`, `table.getMetadata`). The adapter-owned `BigQueryClient` interface in `bigquery.ts` is widened to carry these real-client shapes (this is BQ-01 surface, not BQ-00 frozen surface). No behavior change for the pg / mysql / mssql adapters or any of the read-only guard / AI / console paths.
@@ -780,7 +786,7 @@ Cycle BQ-02: BigQuery Resource Explorer + Table Preview — BigQuery connections
 ### Deferrals (explicit)
 - **No paged grid / BQ-03**: the preview shows the bounded LIMIT result once; the BQ-03 paged GoogleSQL grid (continuation via `BigQueryJobRef` + opaque page token, cancel-via-`job.cancel()`) remains the natural next cycle, not this one.
 - **`listRoutineParams` still unimplemented**: routine enumeration lists names + `kind: "function"` only; per-parameter inspection is documented as a known gap (no MVP consumer — the only caller `tableCommands.ts:652` is guarded by `contextValue === "routine"` click flows the BQ tree does not enable). Routines still list per roadmap ("routines may be visible as non-actionable metadata nodes").
-- **No new command ids, no new contributes**: this cycle ships no new `commands` / `configuration` / `menus` entries; existing `UnicDB.browseTableData` and the Schema Explorer are the only user-visible surfaces touched.
+- **No new command ids, no new contributes**: this cycle ships no new `commands` / `configuration` / `menus` entries; existing `VSKit.browseTableData` and the Schema Explorer are the only user-visible surfaces touched.
 - **No new dependencies**: `@google-cloud/bigquery@^9.0.3` is unchanged; this cycle is purely seam-widening + UI wiring on the BQ-00 + BQ-01 base.
 
 ### Review
@@ -817,7 +823,7 @@ Cycle BQ-01: BigQuery Connection Foundation — the first end-user-visible BigQu
 ### Added
 - **Safe BigQuery connection config** (`src/config/types.ts`, `src/adapters/__tests__/bigqueryConfig.test.ts`): `DriverType` gains `"bigquery"`; `ConnectionConfig` gains an optional `bigquery: { billingProject: string; location?: string; maxBytesBilled?: string; datasetProject?: string }` sub-object. A pure exported `validateBigQueryConnection(cfg): { ok: true } | { ok: false; reason: string }` enforces non-empty `billingProject`; `location`, when present, is non-empty; `maxBytesBilled`, when present, is a positive digit string (zero, negative and non-numeric all rejected). For bigquery, `host === ""` and `port === 0` are enforced (host/port semantics rejected). Redaction proven by test: `JSON.stringify(cfg)` of a valid bigquery config contains no `credentials` / `keyFilename` / `token` / `password` substring. 13 focused tests pin all branches. The ripple through `factory.ts` / `extension.ts` / `browseCommands.ts` / `resultsPanel.ts` adds `case "bigquery"` exhaustion arms and a local `toSqlDialect` narrowing so existing pg/mysql/mssql paths stay green; no semantic change to those drivers.
 - **BigQuery adapter and client lifecycle** (`src/adapters/bigquery.ts`, `src/adapters/__tests__/bigquery.test.ts`): the new `BigQueryAdapter implements DbAdapter` accepts `(cfg, clientFactory?)` where `clientFactory` defaults to a wrapped `createBigQueryClient` (the BQ-00 seam) and forwards both `projectId` and `location` to the underlying `new BigQuery(opts)`. `connect()` runs `runAdcSmoke` and surfaces a typed `BigQueryConnectError` carrying the BQ-00 `AdcDiagnostic` (category + FIXED remediation copy, never raw err text). `close()` is idempotent (second call resolves, no client rebuild). `runQuery` unwraps the client TUPLE (`[RowMetadata, nextQuery?, apiResponse?]`) and routes `apiResponse` (the wire-format element carrying raw `f[].v` cells) into BQ-00's `toBigQueryPage`, so `BigQueryInt64String` / `BigQueryNumericString` / `BigQueryBigNumericString` precision survives end-to-end past `Number.MAX_SAFE_INTEGER`. The adapter-owned `BigQueryClientFactory` is a broader surface than BQ-00's narrow `BigQueryClientLike`; tests inject fakes. 10 focused tests pin the full contract. **The BQ-00 surface (`bigqueryTypes.ts`, `bigqueryAdc.ts`) is byte-untouched.**
-- **Factory + connection manager admission** (`src/adapters/factory.ts`, `src/core/connectionManager.ts`, `src/adapters/__tests__/factory.test.ts`, `src/core/__tests__/connectionManager.test.ts`): factory gains `case "bigquery": return new BigQueryAdapter(cfg)` (no password consumed; the `never` exhaustiveness arm is preserved). `ConnectionManager`: for `driver === "bigquery"` the password paths are skipped — `addConnection` must not `store`/`get` `UnicDB.pass.<id>` (spy-proven), `editConnection` and connect never demand a missing password. `dispose()` sets a closed flag and a `requireNotDisposed()` guard raises `ConnectionManagerDisposedError` on the four admission paths (`getAdapterFor`, `getAdapter`, `editConnection`, `addConnection`); double-dispose is a no-op. 5 new tests + 44 pre-existing pg/mysql/mssql tests stay green.
+- **Factory + connection manager admission** (`src/adapters/factory.ts`, `src/core/connectionManager.ts`, `src/adapters/__tests__/factory.test.ts`, `src/core/__tests__/connectionManager.test.ts`): factory gains `case "bigquery": return new BigQueryAdapter(cfg)` (no password consumed; the `never` exhaustiveness arm is preserved). `ConnectionManager`: for `driver === "bigquery"` the password paths are skipped — `addConnection` must not `store`/`get` `VSKit.pass.<id>` (spy-proven), `editConnection` and connect never demand a missing password. `dispose()` sets a closed flag and a `requireNotDisposed()` guard raises `ConnectionManagerDisposedError` on the four admission paths (`getAdapterFor`, `getAdapter`, `editConnection`, `addConnection`); double-dispose is a no-op. 5 new tests + 44 pre-existing pg/mysql/mssql tests stay green.
 - **Connection form: BigQuery field group + submit gate + copy-safe ADC remediation** (`src/ui/connectionFormMessages.ts`, `webview/connectionFormMain.ts`, `src/ui/__tests__/connectionForm.test.ts`, `src/ui/__tests__/connectionFormBigqueryBundle.test.ts`): the host form now carries a `bigquery` group with `billingProject`, `bqLocation`, `bqMaxBytesBilled` (strings on the wire; `""` = unset). For `driver === "bigquery"` the BQ group renders and host/port/user/password/SSL fields are hidden; the reverse holds for the three SQL drivers. ADC remediation text from a host `testResult` is assigned verbatim to `textContent` — never concatenated with user input. Submit gating: empty `billingProject` (or invalid `maxBytesBilled`) blocks save with an inline status, and no `postMessage({type:"submit"})` is posted in that case. The webview bundle builds clean (`npm run compile` exit 0) and the new `connectionFormBigqueryBundle.test.ts` exercises the actual built bundle end-to-end. 30 focused tests + 5 manualCommit regression tests stay green.
 
 ### Review
@@ -833,9 +839,9 @@ Cycle BQ-00: BigQuery Provider Feasibility + Adapter Contract Spike — the firs
 
 ### Added
 - **BigQuery package + bundle proof** (`package.json`, `package-lock.json`, `src/adapters/__tests__/bigqueryPackage.test.ts`): `@google-cloud/bigquery@^9.0.3` pinned exactly (engine floor `node>=22` satisfied by `v22.22.1`; `^8.3.1` fallback documented in the task if a later host forces it). 7 focused tests prove (1) the client module loads under Node without credentials, (2) an esbuild-API probe over a virtual stdin entry (`import {BigQuery} from "@google-cloud/bigquery"`) builds clean under the extension's exact options `{bundle:true, platform:"node", format:"cjs", target:"node18", external:["vscode"]}`, (3) the probe output contains no `application_default_credentials` / `BEGIN RSA PRIVATE KEY` PEM-block markers, (4) the client engine floor is satisfied, (5) `vscode` stays external in the probe, (6) the lockfile resolves exactly one version in the declared range, and (7) — the roadmap line-67 mandate — the four method names `getQueryResults` + `cancel` are anchored to `node_modules/@google-cloud/bigquery/build/src/job.d.ts` and `query` + `createQueryJob` to `build/src/bigquery.d.ts`, with the regex tightened to declaration-shape so JSDoc example text can no longer false-positively satisfy the pin. `docs/decisions/_bq00-evidence.md` is the on-disk scratch evidence (signature + return shape + file:line refs) the ADR cites by path; the leading `_` keeps it out of the ADR numbering.
-- **Pure BigQuery job/page contract types** (`src/adapters/bigqueryTypes.ts`, `src/adapters/__tests__/bigqueryTypes.test.ts`): `BigQueryJobRef {projectId, location, jobId}`, `BigQuerySchemaField` (recursive `fields` for RECORD), `BigQueryPage {jobRef, schema, rows, totalBytesProcessed?, totalBytesBilled?, pageToken: string | null}`, `BigQueryPageRequest`, branded `BigQueryInt64String` / `BigQueryNumericString` / `BigQueryBigNumericString` plus `BigQueryFloat64` (separate number branch) and `BigQueryValue` (the tagged union), `hasNextPage(page): boolean` (token — not row count — owns continuation), and the named pure mapper `toBigQueryPage(raw: BigQueryRawQueryResponse): BigQueryPage` whose identity-preservation is the test #1 subject. ZERO imports from `@google-cloud/bigquery` or `vscode` — the boundary is pure UnicDB code; the wire shape (`{f: BigQueryValue[]}` RECORD) is canonical and matches the mapper output. 7 focused tests pin (1) the mapper preserves `jobRef` identity, (2) empty final page → `hasNextPage` false, (3) empty non-terminal page → `hasNextPage` true, (4) opaque page token round-trips unmodified, (5) nested RECORD + REPEATED preserved, (6) NUMERIC / BIGNUMERIC survive as canonical strings (`"9007199254740993"` > `Number.MAX_SAFE_INTEGER`, exact digit equality), and (7) — the precision contract — `@ts-expect-error` directives on numeric literal assignments to the decimal/int branches are CONSUMED at compile time (vitest `--typecheck` reports zero errors), proving the brand discipline is real, not aspirational. The test source level pins that the mapper's `BigQueryPage` type is the brand and cannot be coerced to plain `number`.
+- **Pure BigQuery job/page contract types** (`src/adapters/bigqueryTypes.ts`, `src/adapters/__tests__/bigqueryTypes.test.ts`): `BigQueryJobRef {projectId, location, jobId}`, `BigQuerySchemaField` (recursive `fields` for RECORD), `BigQueryPage {jobRef, schema, rows, totalBytesProcessed?, totalBytesBilled?, pageToken: string | null}`, `BigQueryPageRequest`, branded `BigQueryInt64String` / `BigQueryNumericString` / `BigQueryBigNumericString` plus `BigQueryFloat64` (separate number branch) and `BigQueryValue` (the tagged union), `hasNextPage(page): boolean` (token — not row count — owns continuation), and the named pure mapper `toBigQueryPage(raw: BigQueryRawQueryResponse): BigQueryPage` whose identity-preservation is the test #1 subject. ZERO imports from `@google-cloud/bigquery` or `vscode` — the boundary is pure VSKit code; the wire shape (`{f: BigQueryValue[]}` RECORD) is canonical and matches the mapper output. 7 focused tests pin (1) the mapper preserves `jobRef` identity, (2) empty final page → `hasNextPage` false, (3) empty non-terminal page → `hasNextPage` true, (4) opaque page token round-trips unmodified, (5) nested RECORD + REPEATED preserved, (6) NUMERIC / BIGNUMERIC survive as canonical strings (`"9007199254740993"` > `Number.MAX_SAFE_INTEGER`, exact digit equality), and (7) — the precision contract — `@ts-expect-error` directives on numeric literal assignments to the decimal/int branches are CONSUMED at compile time (vitest `--typecheck` reports zero errors), proving the brand discipline is real, not aspirational. The test source level pins that the mapper's `BigQueryPage` type is the brand and cannot be coerced to plain `number`.
 - **ADC diagnostic classifier + client seam** (`src/adapters/bigqueryAdc.ts`, `src/adapters/__tests__/bigqueryAdc.test.ts`): the four roadmap-mandated ADC failure classes — `missing_adc`, `bad_billing_project`, `api_denied`, `location_mismatch` — plus `unknown` are distinguishable without secrets by `classifyAdcDiagnostic(err: unknown): AdcDiagnostic`; the `remediation` field is FIXED copy per category (e.g. `gcloud auth application-default login` only for `missing_adc`) and never interpolates the raw error message — redaction by construction. A thin `runAdcSmoke(opts, createBigQueryClient?)` seam lets CI exercise the full smoke path with an injected fake; the injectable `impl` parameter is wrapped in a `vi.fn()` and asserted `toHaveBeenCalledTimes(1)` (no extra mocking library). 6 focused tests pin (1) the happy seam + constructed-once, (2) `missing_adc` mentions the gcloud command, (3) 403 "Access Denied" vs 404 "Project not found" return TWO different categories (`api_denied` vs `bad_billing_project`), (4) `location_mismatch` plus an `unknown` fallback, (5) an error embedding `"Bearer abc123"` produces output containing NEITHER the token NOR any substring of the raw message, and (6) `null` / `42` / `{}` / empty-`Error` inputs never throw. No real GCP call anywhere in this cycle; no `*.integration.test.ts` file is added; the module does not construct a real client at import time.
-- **Architecture Decision Record 0004** (`docs/decisions/0004-bq-00-feasibility-contract.md`, `docs/decisions/README.md` row appended): the BQ-00 spike's decisions are captured as `docs/decisions/0004-bq-00-feasibility-contract.md` (the folder already had 0001-0003, so the genesis fallback in the roadmap is stale; the README table is updated to point at the new file). The ADR covers all 10 mandated sections: client method/version (9.0.3, citing `_bq00-evidence.md` by path), continuation ownership (UnicDB owns `BigQueryJobRef` + opaque page token; client stateless per page), cancellation mapping (owned active job ID only; cancel-after-terminal harmless; `job.cancel()` return shape recorded in the evidence file), safe scalar conversion table (INT64/NUMERIC/BIGNUMERIC → canonical string, FLOAT64 → `number` with explicit non-finite handling, BYTES → b64, JSON, RECORD/STRUCT, NULL distinct from empty), selected config fields (billing project, location, `maximumBytesBilled`), least-privilege IAM, Storage Read API deferral, manual ADC smoke recipe, **"Pagination + cancellation method names"** (enumerates the four signatures + return shapes), and **"Grid continuation mapping"** (3-5 sentence paper paragraph mapping `BigQueryPage.pageToken` onto `RunResult.batched` at `src/adapters/types.ts:78` and `resultsPanel.ts` `loadMore` → `runner.loadMore(index)`, prose only — no code edit to the read-only list).
+- **Architecture Decision Record 0004** (`docs/decisions/0004-bq-00-feasibility-contract.md`, `docs/decisions/README.md` row appended): the BQ-00 spike's decisions are captured as `docs/decisions/0004-bq-00-feasibility-contract.md` (the folder already had 0001-0003, so the genesis fallback in the roadmap is stale; the README table is updated to point at the new file). The ADR covers all 10 mandated sections: client method/version (9.0.3, citing `_bq00-evidence.md` by path), continuation ownership (VSKit owns `BigQueryJobRef` + opaque page token; client stateless per page), cancellation mapping (owned active job ID only; cancel-after-terminal harmless; `job.cancel()` return shape recorded in the evidence file), safe scalar conversion table (INT64/NUMERIC/BIGNUMERIC → canonical string, FLOAT64 → `number` with explicit non-finite handling, BYTES → b64, JSON, RECORD/STRUCT, NULL distinct from empty), selected config fields (billing project, location, `maximumBytesBilled`), least-privilege IAM, Storage Read API deferral, manual ADC smoke recipe, **"Pagination + cancellation method names"** (enumerates the four signatures + return shapes), and **"Grid continuation mapping"** (3-5 sentence paper paragraph mapping `BigQueryPage.pageToken` onto `RunResult.batched` at `src/adapters/types.ts:78` and `resultsPanel.ts` `loadMore` → `runner.loadMore(index)`, prose only — no code edit to the read-only list).
 
 ### Review
 - P2.5 plan review: Round 1 Issues Found (2 important — `toBigQueryPage` not named; roadmap line-67 mandate under-assigned re: cancellation return shape + pagination method names; 2 minor — constructed-once observation, grid continuation paragraph); all 4 applied in the single revision round; Round 2 Approved by unic-smart (0 findings).
@@ -845,17 +851,17 @@ Cycle BQ-00: BigQuery Provider Feasibility + Adapter Contract Spike — the firs
 
 ## [1.45.0] — 2026-09-02
 
-Cycle ARP-09: Redacted Support Diagnostics + Release-Confidence Profiles — a local redacted UnicDB Output Channel and named `profile:fast`/`profile:release` npm profiles for confident local + release verification, with no telemetry and no raw SQL/secrets in the channel.
+Cycle ARP-09: Redacted Support Diagnostics + Release-Confidence Profiles — a local redacted VSKit Output Channel and named `profile:fast`/`profile:release` npm profiles for confident local + release verification, with no telemetry and no raw SQL/secrets in the channel.
 
 ### Added
-- **Lazy UnicDB Output Channel** (`src/extension.ts`): `logDiagnostic(category, severity, message, correlationId?)` is a host-side helper that writes one redacted line per call. Strict routing: lifecycle/info lines at activate-end go to a bounded pending buffer (capped, drop-oldest); lifecycle/{warn,error} and every other category force channel creation exactly once on first real write, then flush the buffer and append directly. The channel is disposed exactly once in `deactivate` (idempotent, no resurrection after deactivate). Commands `UnicDB.diagnostics.show` and `UnicDB.diagnostics.clear` (with `$(output)` and `$(clear-all)` icons + activationEvents) reveal and clear the channel. ARP-02's deactivate sentinel is byte-untouched; strict lazy-create pinned (plain activate with zero diagnostics → zero `createOutputChannel` calls). Privacy byte-scan pins: driving a fixture containing `password=hunter2` or a SQL fragment through the seams produces captured-channel output that contains neither.
+- **Lazy VSKit Output Channel** (`src/extension.ts`): `logDiagnostic(category, severity, message, correlationId?)` is a host-side helper that writes one redacted line per call. Strict routing: lifecycle/info lines at activate-end go to a bounded pending buffer (capped, drop-oldest); lifecycle/{warn,error} and every other category force channel creation exactly once on first real write, then flush the buffer and append directly. The channel is disposed exactly once in `deactivate` (idempotent, no resurrection after deactivate). Commands `VSKit.diagnostics.show` and `VSKit.diagnostics.clear` (with `$(output)` and `$(clear-all)` icons + activationEvents) reveal and clear the channel. ARP-02's deactivate sentinel is byte-untouched; strict lazy-create pinned (plain activate with zero diagnostics → zero `createOutputChannel` calls). Privacy byte-scan pins: driving a fixture containing `password=hunter2` or a SQL fragment through the seams produces captured-channel output that contains neither.
 - **Pure redacted diagnostics formatter** (`src/core/diagnostics.ts`, new): `logLine(category, severity, message, correlationId?)` formats `[ISO time] [category] [severity] message` (+ correlation suffix when present) with the assembled final line bounded to 2000 characters as the last step, single-line invariant (newlines stripped from message), never throws on any input, and reuses `trace.ts` `redact()` directly — no copy, no local regex. 9 unit tests pin every shape (lone CR, exact-2000 vs 2001 cut, corr-id cut, invalid-Date fallback, throwing toString/getter, circular+throwing → `<diagnostics failure>` fallback).
 - **Reuse-redaction pin** (`src/ai/__tests__/trace.test.ts`): source-level evidence that `diagnostics.ts` imports `{ redact }` from `../ai/trace` (no local SECRET regex), `auditExport.ts` final-pass `redact()` is byte-intact, and every `appendLine` site in `extension.ts` is `logLine`-formatted (pin accepts both inline `appendLine(logLine(...))` and named-local `const line = logLine(...); appendLine(line)`; comments are stripped before scanning to keep the pin source-faithful).
 - **Release-confidence profiles** (`package.json`): `profile:fast = "npm run typecheck && npm run compile"` (the named fast profile — byte-equivalent in effect to `verify:fast` per the deliverable: a named profile key) and `profile:release = "npm run verify:release"` (Windows-portable; routes through `scripts/verify-release.sh` which already provides the staged runner with PASS/FAIL output, non-zero propagation, and no shell-injection surface). New pins in `releaseHygiene.test.ts` + `releaseVerify.test.ts` keep `verify:release` byte-identical and confirm the new profile values reference only pre-existing script keys. The 4 baseline scripts (`test`/`compile`/`typecheck`/`watch`) and `test:integration` are preserved.
 
 ### Review
 - P2.5 plan review: Round 1 Issues Found (2 important, 3 minor — logDiagnostic create-path, 2000-char bound semantics, §4 row collision, appendLine wording, profile:fast identity intent) — all applied in the single revision round; Round 2 Approved by unic-smart.
-- R2 per-task review by unic-smart: 002/005 approved; 001 approved after metadata self-report appended; 003/004 approved_minor. R4.5 fix round closed two real failures: (1) `UnicDB.diagnostics.show/clear` commands added without `icon` (scaffold requires icons on every command), (2) the `appendLine` source-level pin needed a more precise shape to match the named-local `const line = logLine(...)` pattern used in the real code. Both fixes verified green.
+- R2 per-task review by unic-smart: 002/005 approved; 001 approved after metadata self-report appended; 003/004 approved_minor. R4.5 fix round closed two real failures: (1) `VSKit.diagnostics.show/clear` commands added without `icon` (scaffold requires icons on every command), (2) the `appendLine` source-level pin needed a more precise shape to match the named-local `const line = logLine(...)` pattern used in the real code. Both fixes verified green.
 - Verification: full suite 3189 passed | 2 skipped (was 3160 | 2 at v1.44.0); `npm run typecheck` and `npm run compile` exit 0; `package-lock.json` both version fields synced to 1.45.0.
 
 ## [1.44.0] — 2026-09-02
@@ -926,7 +932,7 @@ Cycle ARP-05: Cross-driver Timeout, Pool, and Resilience Contract — the three 
 Cycle ARP-04: Tunnel and Endpoint Identity Hardening — SSH tunnels now fail closed on host identity. The spawned `ssh` argv pins `-o StrictHostKeyChecking=yes`, the user's default `known_hosts` trust store is the single source of host truth, and the full lifecycle (reuse, isolation, foreign-port refusal, late-exit ownership, idempotent stop) is proven by tests against a real `ssh`-shaped process — no behavioral change where the code was already right, a hard pin where it mattered.
 
 ### Added
-- **Host-identity policy ADR** (`docs/decisions/0001-ssh-host-key-identity-policy.md`): records the threat model (MITM between UnicDB and the bastion, port-forward abuse), the platform survey (macOS/Linux/Windows OpenSSH), the chosen policy (strict checking pinned in argv, default trust store, no TOFU store, no fingerprint pinning — an explicit upgrade path, not a gap), the `~/.ssh/config` override nuance (`-o` wins), and manual-only downgrade criteria (never triggered by automated fake-ssh tests). Indexed in `docs/decisions/README.md`.
+- **Host-identity policy ADR** (`docs/decisions/0001-ssh-host-key-identity-policy.md`): records the threat model (MITM between VSKit and the bastion, port-forward abuse), the platform survey (macOS/Linux/Windows OpenSSH), the chosen policy (strict checking pinned in argv, default trust store, no TOFU store, no fingerprint pinning — an explicit upgrade path, not a gap), the `~/.ssh/config` override nuance (`-o` wins), and manual-only downgrade criteria (never triggered by automated fake-ssh tests). Indexed in `docs/decisions/README.md`.
 - **Strict host-key pin** (`src/core/sshTunnel.ts`): `buildTunnelArgs` appends `-o StrictHostKeyChecking=yes` so the fail-closed posture no longer depends on the user's ambient `ssh_config` (a config with `StrictHostKeyChecking no` previously downgraded the tunnel silently). Paired with the existing `BatchMode=yes` (fail rather than prompt on unknown hosts). Input validation (`SAFE_HOST_RE`, absolute `identityFile`, charset checks that block `-o` injection through host/user/identity fields) is unchanged and pinned by regression tests asserting no relaxing token (`no|ask|accept-new`) and no `UserKnownHostsFile` can appear anywhere in the argv.
 - **Lifecycle/race proof suite** (`src/core/__tests__/sshTunnelManager.test.ts`, fixtures): 15 tests against a real `ssh`-shaped process (shim + node fixture printing the same verbose forward line OpenSSH does). Pins: same-key `start` reuse returns the same live tunnel; different-key isolation; late `exit` removes only its own handle (a slow peer's tunnel stays alive and is still stoppable); readiness proof keeps the listener-line + `listeningPids` PID-identity shape (foreign binder processes are detected via real `lsof` and refused with the child SIGKILLed — prove-ownership mismatch fails closed); `stop`/`stopAll` idempotent with no double-kill. New `fake-ssh-foreign.mjs` fixture spawns a detached foreign binder so the PID-mismatch case exercises the actual manager code path.
 - **Manager integration pins** (`src/core/__tests__/connectionManager.test.ts`): 6 tests proving connectionManager already wires the tunnel correctly — tunneled connect starts the tunnel once (same-key reconnect reuses), disconnect/stop tears down and a later reconnect starts fresh, and no host-key/strict-checking surface leaks through the connection config. Production `connectionManager.ts` is byte-identical to base (verified empty diff); tests only lock existing correct wiring.
@@ -960,7 +966,7 @@ Cycle ARP-02: Shutdown-safe Query Ownership and Connection Provenance — fault-
 - **QueryRunner cancel ownership** (`src/core/queryRunner.ts`): `cancel()` is now in-flight-scoped and idempotent — `cancelPending` latches only when work is actually live (`currentBatched !== null || activeAdapter !== null`), the cross-dialect seam and batched-cancel deliver at most once per run (`seamDelivered`/`currentBatchedCancelDelivered` guards), `cancelSeq` is monotonic, `run()` resets all ownership flags at entry and closes the cancel window in its `finally`. `loadMore` on a cancelled cursor throws immediately and a late batch landing after `cancelSeq` advanced is discarded — no late-loadMore resurrection and no stale cancel delivery across the MySQL/MSSQL/Postgres seams. 8 new fault-injection cases.
 - **Panel-close epoch guard** (`src/ui/resultsPanel.ts`): every deferred panel continuation (`loadMore`, `requery`, `save`, `commit`, `rollback`, `distinct values`, `refreshColumnTypes`, `export`) captures the webview session epoch and re-checks it after each await — a panel closed mid-flight can no longer have stale rows, acks, or busy transitions posted into its successor. Rollback/commit database work still always runs; only the UI write is suppressed. Save-flow hardened further in fix round 1: a single epoch snapshot now gates the refusal acks, the manual-mode `saveResult ok:true`, and the pre-try `setBusy(true)` (the earlier `isStaleSession(this.sessionEpoch)` self-comparison was a no-op). 10 new fault-injection cases.
 - **Connection provenance** (`src/core/connectionManager.ts`): `getAdapterFor` re-checks connection identity after every await — an adapter built for a connection that was edited or deleted while `resolveAdapter` was in flight is discarded and closed exactly once (fix round 1 also stops a tunnel already started for the discarded config, so a tunneled connection deleted mid-flight no longer orphans its SSH tunnel). Current-config re-resolution makes an in-flight edit transparently effective. ARP-01 read-only guard and RLX-03 recovery behavior preserved byte-identically. 6 new fault-injection cases.
-- **Host lifecycle ownership** (`src/extension.ts`): `runStatements`'s `finally` no longer lets a stale invocation clear the live run's busy state — an `ownsRun` snapshot taken before `runner.run()` gates the busy-clear (a second invocation overlapping an in-flight run used to switch the panel's busy indicator off while the query was still running). A `deactivating` sentinel, set synchronously at `deactivate()` entry and reset at `activate()`, makes late completions inert: no render into a disposed/recreated webview panel, no busy writes after teardown starts. The RLX-02 `UnicDB.cancelQuery` seam-first ordering (`await runner.cancel()` before `panel.setBusy(false)`) is pinned byte-identical. 3 new host-lifecycle tests with a deferred-adapter harness.
+- **Host lifecycle ownership** (`src/extension.ts`): `runStatements`'s `finally` no longer lets a stale invocation clear the live run's busy state — an `ownsRun` snapshot taken before `runner.run()` gates the busy-clear (a second invocation overlapping an in-flight run used to switch the panel's busy indicator off while the query was still running). A `deactivating` sentinel, set synchronously at `deactivate()` entry and reset at `activate()`, makes late completions inert: no render into a disposed/recreated webview panel, no busy writes after teardown starts. The RLX-02 `VSKit.cancelQuery` seam-first ordering (`await runner.cancel()` before `panel.setBusy(false)`) is pinned byte-identical. 3 new host-lifecycle tests with a deferred-adapter harness.
 
 ### Known follow-ups (out of scope this cycle)
 - `src/ui/browseCommands.ts:169-193` has the same unguarded `finally { panel.setBusy(false) }` shape (different owner module) — flagged by review for a follow-up wave.
@@ -1049,7 +1055,7 @@ Cycle DBX-06: Reviewed PostgreSQL Rename Workflow (catalog usage analysis, pure 
 ### Added
 - **Catalog usage analysis** (`src/core/ddl/renameAnalysis.ts`, `src/core/ddl/renameCatalog.ts`): pure SQL templates + row mappers detect dependent objects for a table/column rename. Always-three-value binding contract (`$1` schema, `$2` table, `$3` column-or-empty-string for table mode), pinned `int2vector` casts, `pg_get_expr` signatures, `$3=''` short-circuit, and `k.attnum > 0` ordinal filter. Inclusion rules pinned: direct references via `tgattr`/`indkey`, expression and predicate references via word-boundary match on `tgqual`/`indexprs`/`indpred`; function/trigger-function bodies are explicitly excluded. All identifiers flow through `quoteIdent`; collision detection emits a pinned literal before any side effect.
 - **Multi-step rename-plan builder** (same files): pure plan struct (`RenamePlan.steps: RenameStep[]`) where each step has a kind (`renameTable`/`renameColumn`), pinned executable label (`"Rename table"` / `"Rename column"`), and SQL; the host runs steps in order, stops at first failure, and reports a named `applied`/`failed`/`cancelled` record so partial-failure state is always reconstructable. Adapter additions are additive (`RenameUsageApi.triggers`/`indexes` on `PostgresAdapter`); MySQL/MSSQL gain nothing.
-- **Host preview/confirmation integration** (`src/core/ddl/renameRunner.ts`, `src/ui/renameForm.ts`, `src/ui/renameFormMessages.ts`, `webview/renameFormMain.ts`): the rename command resolves the active adapter and requires the DBX-08 `tableDdl` capability BEFORE any analysis, form, or webview work — unsupported adapters receive the pinned denial `UnicDB: Rename Table is not supported by this connection's database.` and exit cleanly. Successful capability check runs analysis, surfaces a step-by-step preview, requires explicit confirm, then executes via `runRenameSteps` (no accidental execution). Stale plans are cleared after a bad analysis; the webview protocol carries the structured `steps` + named-step completion record for the host; DOM rendering is text-only (no identifier injection). Legacy `runRenameStatements` consumer (`aiChatPanel`) is untouched.
+- **Host preview/confirmation integration** (`src/core/ddl/renameRunner.ts`, `src/ui/renameForm.ts`, `src/ui/renameFormMessages.ts`, `webview/renameFormMain.ts`): the rename command resolves the active adapter and requires the DBX-08 `tableDdl` capability BEFORE any analysis, form, or webview work — unsupported adapters receive the pinned denial `VSKit: Rename Table is not supported by this connection's database.` and exit cleanly. Successful capability check runs analysis, surfaces a step-by-step preview, requires explicit confirm, then executes via `runRenameSteps` (no accidental execution). Stale plans are cleared after a bad analysis; the webview protocol carries the structured `steps` + named-step completion record for the host; DOM rendering is text-only (no identifier injection). Legacy `runRenameStatements` consumer (`aiChatPanel`) is untouched.
 
 ### Review
 - Independent unic-smart review, 2 parallel reviewers: both APPROVED round 1. Plan review required 2 rounds (param-binding consistency, multi-step vs single-step partial-failure, column-inclusion rules — all resolved pre-implementation with 2 cosmetic plan notes applied without re-review). Focused net 65/65, full suite 2878 passed | 2 skipped, typecheck + compile clean.
@@ -1073,7 +1079,7 @@ Cycle RLX-02: Cross-dialect Query Lifecycle Completion (best-effort, resource-lo
 ### Added
 - **MySQL live-query cancel** (`src/adapters/mysql.ts`): new optional `DbAdapter.cancelActiveQuery` seam implementation for the two ownership windows MySQL actually holds — the non-streaming transaction connection (`PoolConnection.destroy()` from checkout until the terminal `finally` closes the window; destroy-or-release stays exclusive so a destroyed connection is never released twice) and the pre-handoff streaming interval (before a `BatchedQuery` reaches `QueryRunner`, cancellation settles the awaiting setup deterministically after destroying stream + connection; late `fields`/`end` cannot double-settle). Cancellation owns ONLY live records via a self-removing closure set — never `pool.end()`, never `KILL QUERY`, and once an ownership window closes (commit/rollback/rejection/stream EOF) any cancel is a silent no-op.
 - **SQL Server live-request cancel** (`src/adapters/mssql.ts`): `cancelActiveQuery` snapshots `[...activeRequests]` and calls `request.cancel()` best-effort per live Request — an empty or already-settled set is an early-return no-op, per-entry failures never throw, and connection close/`execSql`/operation queues are untouched.
-- **End-to-end cancel wiring** (`src/extension.ts`): the `UnicDB.cancelQuery` command now awaits `runner.cancel()` BEFORE clearing panel busy state — previously fire-and-forget, the panel could flip to idle while the adapter seam was still tearing down. The runner (RLX-01 active-adapter window) and ResultsPanel cancel handling were verified contract-correct and locked with regression tests: deferred webview cancel keeps busy true until `runner.cancel()` settles; a cancel arriving after settlement is a silent no-op with no late UI error.
+- **End-to-end cancel wiring** (`src/extension.ts`): the `VSKit.cancelQuery` command now awaits `runner.cancel()` BEFORE clearing panel busy state — previously fire-and-forget, the panel could flip to idle while the adapter seam was still tearing down. The runner (RLX-01 active-adapter window) and ResultsPanel cancel handling were verified contract-correct and locked with regression tests: deferred webview cancel keeps busy true until `runner.cancel()` settles; a cancel arriving after settlement is a silent no-op with no late UI error.
 
 ### Review
 - Independent unic-smart review, 3 parallel reviewers: 002 and 003 APPROVED round 1; 001 CHANGES-REQUESTED on test quality only (missing rejected-terminal cleanup fixture; non-observing stream-destroy constant) — both fixed in auto-fix round 1 (natural-rejection DML fixture with double-cancel invariants; real counting `fakeStream.destroy`). Focused 53/53, full suite 2838 passed | 2 skipped | 1 pre-existing flaky perf test (passes in isolation), typecheck + compile clean.
@@ -1097,7 +1103,7 @@ Cycle DBX-08: Dialect Parity Contract (explicit, fail-closed adapter capability 
 ### Added
 - **Adapter capability matrix** (`src/adapters/types.ts`): `AdapterCapability` (`catalog` / `objectDdl` / `tableDdl` / `admin`), optional `DbAdapter.capabilities?: AdapterCapabilities`, and the pure fail-closed `hasAdapterCapability(adapter, capability)` — true ONLY for an explicit `true` declaration; absent/malformed declarations are unsupported (no driver checks, no structural-presence inference). `PostgresAdapter` declares all four true; `MySqlAdapter` and `MsSqlAdapter` declare all four false — both as `Object.freeze`-ed literals (mutation cannot manufacture support). Contract tests instantiate the real unconnected adapters and prove declaration↔API agreement.
 - **Capability-gated catalog navigation** (`src/ui/schemaCache.ts`, `src/ui/schemaTree.ts`, `src/ui/sqlCatalog.ts`, `src/ui/ddlView.ts`): catalog categories, constraints/sequences/object-DDL loads, and SQL catalog results all require the declared `catalog`/`objectDdl` capability; MySQL/MSSQL keep their full baseline Tables/Views/Routines/Columns navigation with batched row-estimate fallback and make ZERO catalog/cache calls on undeclared adapters. `createCatalogResolver`'s option is now `declaresCatalog` (awaited predicate; a rejected predicate fails closed to `[]`/`undefined`), replacing the `driver === "postgres"` check. "Open DDL" on an undeclared adapter renders an accurate unsupported document (no "Postgres-only" claim) and never invokes `CatalogApi.objectDdl`; a true declaration without a callable API renders a defensive unavailable document.
-- **Capability-gated table-DDL and admin entry points** (`src/ui/tableCommands.ts`, `src/ui/adminTree.ts`, `src/ui/adminSessionsPanel.ts`, `src/extension.ts`): every PostgreSQL-only table utility command resolves its target adapter and requires declared `tableDdl`; `UnicDB.openSessionsPanel`/`UnicDB.runGrantSql` and the Admin tree/sessions panel require declared `admin` — unsupported adapters get one concise `UnicDB:` message (or the pinned Admin-tree explanation node `UnicDB: Admin tools are not supported by this connection's database.`) BEFORE any SQL, form, wizard, webview, clipboard, or `pg_backend_pid()` side effect. PostgreSQL flows (incl. `confirmDangerousStatements` before GRANT/REVOKE execution) unchanged.
+- **Capability-gated table-DDL and admin entry points** (`src/ui/tableCommands.ts`, `src/ui/adminTree.ts`, `src/ui/adminSessionsPanel.ts`, `src/extension.ts`): every PostgreSQL-only table utility command resolves its target adapter and requires declared `tableDdl`; `VSKit.openSessionsPanel`/`VSKit.runGrantSql` and the Admin tree/sessions panel require declared `admin` — unsupported adapters get one concise `VSKit:` message (or the pinned Admin-tree explanation node `VSKit: Admin tools are not supported by this connection's database.`) BEFORE any SQL, form, wizard, webview, clipboard, or `pg_backend_pid()` side effect. PostgreSQL flows (incl. `confirmDangerousStatements` before GRANT/REVOKE execution) unchanged.
 
 ### Review
 - Independent unic-smart review, 3 parallel reviewers: 001 and 003 APPROVED round 1; 002's single finding (rejected async `declaresCatalog` escaping the resolver instead of failing closed) fixed in auto-fix round 1 with a sentinel test — all three methods return `[]`/`undefined` with zero cache calls. Full suite 2811 passed | 2 skipped, typecheck + compile clean.
@@ -1108,8 +1114,8 @@ Cycle AIX-07: Trust, Privacy & Governance (central default-deny AI policy + reda
 
 ### Added
 - **Central effective AI policy** (`src/ai/policy.ts`): pure `resolvePolicy({workspaceTrusted, configuredEngine, resolvedEngine})` returning an `EffectivePolicy` (provider, context{schema,workspace,rows}, tools{database,workspace}, auditExportAllowed, notice). Default-deny for untrusted workspaces, unknown configured vocabulary (only `"builtin"`/`"omp"` admitted), or invalid resolved engine choices; a configured `"builtin"` with a resolver-selected OMP engine stays ADMITTED (locked decision #2). Decision objects are frozen so default-deny cannot be globally mutated; the credential-path exclusion rejects `.env` AND `.env.*` variants.
-- **Redacted all-turn audit export** (`src/ai/auditExport.ts`): `TraceRecorder.dumpAll()` snapshot + `buildAuditEnvelope`/`serializeAuditExport` (schema `UnicDB.ai.audit-export`, version 1). Payloads are converted through a hook-free `toPlainJson()` (callable `toJSON()` can never execute or inject content), then a final `redact()` pass runs BEFORE serialization — secret VALUES never reach the exported string; envelope own-keys exclude credential keys.
-- **Host commands** (`src/extension.ts`): `UnicDB.ai.showPolicy` (user-readable effective-policy notice), `UnicDB.ai.exportTrace` (policy check → panel check → save dialog → serialize → fs write; denied/no-panel paths have zero side effects), `UnicDB.ai.clearTrace` (no-op + notice without a panel). Registered commands + activation events in `package.json`.
+- **Redacted all-turn audit export** (`src/ai/auditExport.ts`): `TraceRecorder.dumpAll()` snapshot + `buildAuditEnvelope`/`serializeAuditExport` (schema `VSKit.ai.audit-export`, version 1). Payloads are converted through a hook-free `toPlainJson()` (callable `toJSON()` can never execute or inject content), then a final `redact()` pass runs BEFORE serialization — secret VALUES never reach the exported string; envelope own-keys exclude credential keys.
+- **Host commands** (`src/extension.ts`): `VSKit.ai.showPolicy` (user-readable effective-policy notice), `VSKit.ai.exportTrace` (policy check → panel check → save dialog → serialize → fs write; denied/no-panel paths have zero side effects), `VSKit.ai.clearTrace` (no-op + notice without a panel). Registered commands + activation events in `package.json`.
 - **Panel policy gating** (`src/ui/aiChatPanel.ts`): `resolveEffectivePolicy()` per turn; denied policy skips mention resolution and grounding reads (zero adapter/file calls), omits sensitive tool registrations (dbAware/analysis/changePlan/sql/export_structure/workspace tools) while generic chat still completes, and blocks schema/workspace enumeration from `mention_list`. Fail-safe defaults: trust probe defaults true, config reads are try/catch-guarded with `undefined`→`"builtin"`.
 - **Full wire redaction**: OMP-engine deltas/thoughts, raw-ACP deltas/thoughts/final buffer, AND resumed-session history all pass `redact()` before any webview post or history append — no engine path can stream credential-shaped text unredacted.
 - **`dumpTrace`/`clearTrace` parity**: panel exposes `dumpAll()` for the export command; `clearTrace` resets the recorder.
@@ -1122,7 +1128,7 @@ Cycle AIX-07: Trust, Privacy & Governance (central default-deny AI policy + reda
 Cycle RLX-01: Operational Reliability Foundation (targeted PG cancellation, single-flight schema refresh, fail-closed import validation).
 
 ### Added
-- **`cancelActiveQuery` adapter seam** (`src/adapters/types.ts` + `src/adapters/postgres.ts` + `src/core/queryRunner.ts`): `UnicDB.cancelQuery` now cancels the active non-cursor PostgreSQL backend owned by `QueryRunner` via `pg_cancel_backend` on a dedicated client — the shared pool/adapter is never closed. Backend PIDs are tracked in a per-adapter `Set` while a `runQuery` client is checked out, added per call and deleted by exact value in `finally`, so overlapping runs (grant wizard, metadata calls) can't clear each other's window or steal the cancel target. Batched cursors keep `BatchedQuery.cancel()` as the exclusive path; after a statement settles the runner's cancel is a no-op.
+- **`cancelActiveQuery` adapter seam** (`src/adapters/types.ts` + `src/adapters/postgres.ts` + `src/core/queryRunner.ts`): `VSKit.cancelQuery` now cancels the active non-cursor PostgreSQL backend owned by `QueryRunner` via `pg_cancel_backend` on a dedicated client — the shared pool/adapter is never closed. Backend PIDs are tracked in a per-adapter `Set` while a `runQuery` client is checked out, added per call and deleted by exact value in `finally`, so overlapping runs (grant wizard, metadata calls) can't clear each other's window or steal the cancel target. Batched cursors keep `BatchedQuery.cancel()` as the exclusive path; after a statement settles the runner's cancel is a no-op.
 - **SchemaCache single-flight coalescing** (`src/ui/schemaCache.ts`): concurrent identical loads share one provider call via a keyed in-flight registry with a generation guard against `invalidate()` races. Any settle path — including a SYNCHRONOUS provider throw — clears the registry entry, so the next caller always retries fresh (first-caller stale-on-error fallback preserved). Public API and 60s TTL unchanged.
 - **Import plan fail-closed validation** (`src/core/importer/importExecute.ts`): a malformed execution plan (invalid batch count, missing/unexpected statement, empty parameterSets) aborts BEFORE `beginTransaction` with the offending 0-based statement index and per-case reason — no partial writes, valid plans unaffected.
 
@@ -1177,7 +1183,7 @@ Cycle AIX-04: AI Change Plans (reviewed migration plans + consent).
 Cycle DBX-06: Safe Rename Refactor.
 
 ### Added
-- **`UnicDB.renameTable` / `UnicDB.renameColumn` commands** (PostgreSQL-only): open a Safe Rename dialog. Usage analysis runs first — dependent views, referencing foreign keys, and routines that mention the name are reported alongside the proposed `ALTER … RENAME …` statement. The user reviews the plan; approve then runs the rename, with per-statement progress.
+- **`VSKit.renameTable` / `VSKit.renameColumn` commands** (PostgreSQL-only): open a Safe Rename dialog. Usage analysis runs first — dependent views, referencing foreign keys, and routines that mention the name are reported alongside the proposed `ALTER … RENAME …` statement. The user reviews the plan; approve then runs the rename, with per-statement progress.
 - **Catalog usage analysis** (`src/core/ddl/renameCatalog.ts`): four parameterized pg_catalog queries — `DEPENDENT_VIEWS_SQL` (pg_depend → pg_rewrite), `TABLE_FKS_SQL` (constraints on other tables referencing the target), `ROUTINES_SQL` (advisory: routines whose `prosrc` mentions the name), `NAME_COLLISION_SQL` (union over `r/v/m/S/i` relkinds for candidate-name conflicts). All four take `$1`/`$2` bound parameters — no identifier is interpolated into the SQL text.
 - **Name validation + collision-safe plan builder** (`renameAnalysis.ts` + `buildRenamePlan`): the new name must match `^[A-Za-z_][A-Za-z0-9_$]*$` and not start with a SQL keyword (the same defense-in-depth contract as the agent tool identifier guard). A collision or an identical-name request returns `errors` and NO statements — nothing runs.
 - **Sequential statement runner with progress and cancel** (`renameRunner.ts`): executes the plan in order, posts per-statement progress, and supports cancel-before-next. Mid-run failure reports `applied` + `failedAt` + the failing statement + the error message. Cancellation reports `applied` + `cancelledAfter` + `remaining`.
@@ -1206,7 +1212,7 @@ Cycle AIX-03: Database Analysis Copilot.
 Cycle AIX-02: Safe File Operations.
 
 ### Added
-- **`workspace_write` agent tool** (opt-in, requires `UnicDB.ai.grounding`): the AI can propose an edit to ONE file from the host-curated workspace allowlist. Every execution is fronted by the existing explicit permission card (allow once / allow session / deny, default-deny).
+- **`workspace_write` agent tool** (opt-in, requires `VSKit.ai.grounding`): the AI can propose an edit to ONE file from the host-curated workspace allowlist. Every execution is fronted by the existing explicit permission card (allow once / allow session / deny, default-deny).
 - **Unified diff preview**: the tool returns a git-style diff (LCS line matching, ≤200 rendered lines, `\ No newline` sentinel) plus the diff counts on the approval card — path + line counts, never raw file content.
 - **Scope discipline**: exact-string allowlist membership only — path normalization or `..` traversal can never widen scope; anything outside returns `outside-workspace`.
 - **Atomic writes**: the host writes via temp-file + rename (`writeWorkspaceFileAtomic`); a failed rename removes the temp and leaves the original untouched. All failures come back as JSON envelopes (`not-found`, `write-failed`, `outside-workspace`, `permission-denied`) — the tool never throws and never writes on a rejected case.
@@ -1221,7 +1227,7 @@ Cycle DBX-05: Connection Workspace.
 ### Added
 - **Folder grouping** (`folder` field): connections are grouped into collapsible folder nodes in the schema tree; ungrouped connections stay at root. Folder color is derived deterministically (`assignColor`, FNV-1a hash over the 8-color palette).
 - **Read-only connections** (`readOnly`): every `runQuery` is guarded client-side before any network I/O — INSERT/UPDATE/DELETE/MERGE/TRUNCATE/DROP/ALTER/CREATE/GRANT/REVOKE/COMMENT/LOCK throw `ReadOnlyViolation` with the offending statement list.
-- **SSH tunnels** (`tunnel` host/port/user/identityFile): passive connections transparently connect through `127.0.0.1:<localPort>` via a spawned `ssh -N -T` process; validated argv (no shell), `SetEnv=UnicDB-tunnel:<key>` marker, readiness parsed from `Local forwarding listening on …`, 10s timeout, processes stopped on edit/delete/dispose.
+- **SSH tunnels** (`tunnel` host/port/user/identityFile): passive connections transparently connect through `127.0.0.1:<localPort>` via a spawned `ssh -N -T` process; validated argv (no shell), `SetEnv=VSKit-tunnel:<key>` marker, readiness parsed from `Local forwarding listening on …`, 10s timeout, processes stopped on edit/delete/dispose.
 - **Form fields**: the connection form webview now carries folder, color, read-only and tunnel inputs (round-tripped on edit).
 - **Headless core**: `connectionGroups`, `readOnlyIntent`, `sshTunnel`, `sshTunnelManager` are pure modules (no `vscode` import), unit-tested with a fake-ssh fixture.
 
@@ -1230,7 +1236,7 @@ Cycle DBX-05: Connection Workspace.
 
 ## [1.19.0] — 2026-08-30
 
-Cycle AIX-01: Grounded Workspace Context (opt-in via `UnicDB.ai.grounding`).
+Cycle AIX-01: Grounded Workspace Context (opt-in via `VSKit.ai.grounding`).
 
 ### Added
 - **Selection grounding**: the active editor selection is attached to the turn as a bounded, attributed context block — `path:startLine-endLine` references survive blank-edge trimming (document offsets preserved).
@@ -1247,7 +1253,7 @@ Cycle AIX-01: Grounded Workspace Context (opt-in via `UnicDB.ai.grounding`).
 Cycle DBX-04: Relationship Explorer (PostgreSQL-only, preview-only).
 
 ### Added
-- **`UnicDB.relationshipExplorer`**: explores foreign-key relationships of a schema as a pan/zoom ER diagram webview.
+- **`VSKit.relationshipExplorer`**: explores foreign-key relationships of a schema as a pan/zoom ER diagram webview.
 - **FK graph**: closed-world graph from catalog introspection (1-based conkey ordinals, self-references kept, out-of-schema edges dropped and counted, search_path-bare targets resolved, ambiguous bare names refused).
 - **Deterministic layout**: layered (parents above children), cycle-safe, byte-identical output; 200-node cap ranked by FK degree with a `truncated` flag.
 - **Static SVG export**: XML-escaped, cardinality labels, save-dialog hand-off; the panel never executes SQL.
@@ -1255,7 +1261,7 @@ Cycle DBX-04: Relationship Explorer (PostgreSQL-only, preview-only).
 ### Review
 - Independent unic-smart review issued CHANGES-REQUESTED (wire Map serialization, FK target normalization, cap ordering, zoom clamp/NaN, truncated semantics, driver-gate ordering) — three fix rounds, superseding APPROVED.
 
-All notable changes to UnicDB are documented in this file. The format follows
+All notable changes to VSKit are documented in this file. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 maintains [semantic versioning](https://semver.org/).
 
@@ -1276,7 +1282,7 @@ Cycle AH: DataGrip-style accumulating multi-statement results.
 Cycle DBX-03: Schema & Data Compare (PostgreSQL-only, same connection, preview-only).
 
 ### Added
-- **Schema diff** (`UnicDB.compareTables`): compares two schema-qualified tables on the active PostgreSQL connection — columns added/dropped, type/nullability/default changes, PK changes — with deterministic ordering and a compatibility flag gating the data phase.
+- **Schema diff** (`VSKit.compareTables`): compares two schema-qualified tables on the active PostgreSQL connection — columns added/dropped, type/nullability/default changes, PK changes — with deterministic ordering and a compatibility flag gating the data phase.
 - **Keyed data diff**: rows only-in-source / only-in-target / changed with per-cell diffs, ordered by key tuple. Works with the primary key or a single-column unique NOT NULL key; tables without a usable key skip the data phase safely (zero data queries issued).
 - **Directional sync plan**: grouped, ordered statements (DDL: ADD → ALTER → DROP; data: INSERT → UPDATE → DELETE) with one-line summaries, `dangerous` labeling on destructive statements, `$N` placeholders with parallel bound-values arrays (no literal row values in SQL), and a non-executable flag with human reasons when the plan cannot converge safely.
 - **Compare panel** (preview-only): CSP-clean webview rendering the three sections; the panel never executes — clipboard "Copy SQL" hands off to the SQL Console, where the existing dangerous-statement confirm applies.
@@ -1290,12 +1296,12 @@ Cycle DBX-03: Schema & Data Compare (PostgreSQL-only, same connection, preview-o
 Cycle DBX-01: Data Workbench Completion (PostgreSQL-only import path).
 
 ### Added
-- **CSV/JSON import wizard** (`UnicDB.importCsv` / `UnicDB.importJson`): pick a file → pure RFC-4180 CSV parse (quotes/escapes/embedded newlines/BOM/mixed line endings, ragged-row errors with 1-based lines) or JSON parse (array-of-objects or NDJSON; primitive roots, empty arrays, and too-deep object/array columns are rejected loudly) → case-insensitive auto-mapping with per-column type coercion (`text`/`int`/`numeric`/`bool`/`timestamp`/`json`) → batched dry-run INSERT preview → the existing dangerous-statement confirm → single-transaction execute. Values are always bound as `$N` parameters (zero literal cell values in SQL); oversized rows are skipped and reported, never truncated.
+- **CSV/JSON import wizard** (`VSKit.importCsv` / `VSKit.importJson`): pick a file → pure RFC-4180 CSV parse (quotes/escapes/embedded newlines/BOM/mixed line endings, ragged-row errors with 1-based lines) or JSON parse (array-of-objects or NDJSON; primitive roots, empty arrays, and too-deep object/array columns are rejected loudly) → case-insensitive auto-mapping with per-column type coercion (`text`/`int`/`numeric`/`bool`/`timestamp`/`json`) → batched dry-run INSERT preview → the existing dangerous-statement confirm → single-transaction execute. Values are always bound as `$N` parameters (zero literal cell values in SQL); oversized rows are skipped and reported, never truncated.
 - **Parameterized transactions**: `DbTransaction.runQuery(sql, values?)` now accepts optional bound values (postgres adapter binds via `client.query(text, values)`); additive and backward compatible.
-- **Form view** (`UnicDB.openFormView`): single-row labeled form rendering — SQL `NULL` shows `(NULL)`, long/JSON values get an Expand affordance instead of truncation.
-- **Large-value editor** (`UnicDB.editLargeValue` + `UnicDB-lv:` virtual documents): open any cell in a normal read-only editor; content is served verbatim at any size.
-- **`UnicDB.import.batchSize` setting** (number, default 1000, 1–10000).
-- **`UnicDB.importData` view container**: import commands exposed in the activity bar.
+- **Form view** (`VSKit.openFormView`): single-row labeled form rendering — SQL `NULL` shows `(NULL)`, long/JSON values get an Expand affordance instead of truncation.
+- **Large-value editor** (`VSKit.editLargeValue` + `VSKit-lv:` virtual documents): open any cell in a normal read-only editor; content is served verbatim at any size.
+- **`VSKit.import.batchSize` setting** (number, default 1000, 1–10000).
+- **`VSKit.importData` view container**: import commands exposed in the activity bar.
 
 ### Fixed
 - AHL scaffold command-count assertion relaxed to a floor so later cycles can add commands without breaking history tests.
@@ -1307,15 +1313,15 @@ Cycle DBX-02: SQL Intelligence Navigation (PostgreSQL-first; mysql/mssql degrade
 ### Added
 - **Catalog resolver** (`createCatalogResolver`): vscode-free resolver over `SchemaCache` new typed accessors (`getViews`/`getRoutines`/`getConstraints`/`getSequences`/`getObjectDdl`/`hasCatalog`). Non-PostgreSQL connections degrade to empty results, never throw.
 - **Catalog + FK completion**: `<table>.` trigger now also offers FK target tables; root prefix offers views/routines/sequences; schema-qualified insert text when the object's schema differs from the default.
-- **Hover + Definition** (`SqlNavigationProvider` + `SqlCatalogDocumentProvider`): Markdown hover for tables/columns/views/routines/sequences with FK-target decoration; definition jumps open lazy `UnicDB-sql-catalog:` virtual documents carrying identifier/kind/DDL metadata.
+- **Hover + Definition** (`SqlNavigationProvider` + `SqlCatalogDocumentProvider`): Markdown hover for tables/columns/views/routines/sequences with FK-target decoration; definition jumps open lazy `VSKit-sql-catalog:` virtual documents carrying identifier/kind/DDL metadata.
 - **Parsed find-usages** (`extractIdentifierReferences` + `SqlReferenceProvider`): direct/quoted identifier references with qualifier spans (strings, dollar-quotes, comments, and SQL keywords skipped); whole-word references across the active document, quoted identifiers exact-matched, cancellation honored.
-- **Activation wiring**: hover/definition/references + the `UnicDB-sql-catalog` content provider registered behind partial-mock guards, sharing the single `SchemaCache` — no second cache/debounce/controller.
+- **Activation wiring**: hover/definition/references + the `VSKit-sql-catalog` content provider registered behind partial-mock guards, sharing the single `SchemaCache` — no second cache/debounce/controller.
 
 
 Cycle AIC: SQL autocomplete (AI-powered, schema-only, debounced ghost text).
 
 ### Added
-- **Configurable autocomplete model role**: `UnicDB.ai` settings gain a third `autocomplete` model role (free-form model id) alongside `work` and `smart`. Every-load migration normalizes legacy 2-role configs. An empty autocomplete id is treated as disabled rather than invalid; the AI Settings form trims whitespace and exposes a Test button that still targets `work`.
+- **Configurable autocomplete model role**: `VSKit.ai` settings gain a third `autocomplete` model role (free-form model id) alongside `work` and `smart`. Every-load migration normalizes legacy 2-role configs. An empty autocomplete id is treated as disabled rather than invalid; the AI Settings form trims whitespace and exposes a Test button that still targets `work`.
 - **Schema-only autocomplete service** (`SqlAutocompleteService`): the sole debounce/cancellation/sequence/cache/cooldown owner. Bounds: `DEBOUNCE_MS=300`, `SQL_PREFIX_MAX_CHARS=2000`, `SQL_SUFFIX_MAX_CHARS=500`, `SCHEMA_CONTEXT_MAX_CHARS=12000`, `MAX_OUTPUT_TOKENS=64`, `CACHE_TTL_MS=30000`, `CACHE_MAX_ENTRIES=100`, `COOLDOWN_MS=500`. Service prompts carry schema-only context (no rows/history/apiKey/baseUrl) and never log the prompt or response.
 - **Editor ghost-text provider** (`AiSqlCompletionProvider`): VS Code `InlineCompletionItemProvider` for SQL, wired to the service. Service aborts in-flight requests on VS Code `CancellationToken`; distinct cursor inside `COOLDOWN_MS` returns `null` (no stale-cache fallback).
 - **Console ghost-text overlay**: the SQL Console webview shows a positioned escaped overlay (no textarea mutation) with Tab/right-arrow accept at end-of-buffer. Per-tab AbortController and requestId guard prevent stale responses from leaking into a tab the user switched away from.
@@ -1331,10 +1337,10 @@ Cycle AF: DataGrip parity wave 1 (PostgreSQL-first), plus cycle AE.5 fix.
 ### Added
 - **Catalog introspection** (`src/core/ddl/pgCatalog.ts` + `adapter.catalog`): indexes, constraints (PK/FK/unique/check), triggers, sequences, row counts, and REAL DDL for views/routines/triggers via `pg_get_*`. Postgres-only capability; mysql/mssql degrade gracefully.
 - **Schema tree catalog nodes**: per-table Indexes/Constraints/Triggers categories, schema-level Sequences, formatted row counts in table descriptions; filter-aware.
-- **DDL viewer**: read-only `UnicDB-ddl:` virtual documents ("Open DDL" context menu on table/view/routine/trigger nodes) + `UnicDB.refreshDdl`.
+- **DDL viewer**: read-only `VSKit-ddl:` virtual documents ("Open DDL" context menu on table/view/routine/trigger nodes) + `VSKit.refreshDdl`.
 - **SQL formatter** (`src/core/sqlFormat.ts`): pure `formatSql(sql, opts)` — keyword case, clause line breaks, JOIN/ON + subquery indentation, idempotent.
 - **SQL Console v2**: multi-tab (host-side buffers), per-statement + selection-only run, persisted query history (cap 200, ArrowUp/Down recall), EXPLAIN / EXPLAIN ANALYZE plan pane (ANALYZE behind destructive-confirm), Format button.
-- **`UnicDB.resultsPlacement` setting** (`below` | `beside`, default `below`): newly created Results panels open in a vertical split below the active editor; existing panels preserve the group the user dragged them to.
+- **`VSKit.resultsPlacement` setting** (`below` | `beside`, default `below`): newly created Results panels open in a vertical split below the active editor; existing panels preserve the group the user dragged them to.
 - **AI Chat composer icon-only toolbar**: six composer action buttons render as 28×28 icon tiles with 16×16 inline SVG glyphs; labels are synced hover tooltips and accessible names.
 
 ### Fixed
@@ -1343,17 +1349,17 @@ Cycle AF: DataGrip parity wave 1 (PostgreSQL-first), plus cycle AE.5 fix.
 
 ## [1.11.0] — 2026-08-28
 
-Cycle AE: OMP runtime session wiring. The AI Chat panel can now use a local `omp` install as its runtime when `UnicDB.ai.engine` is set to `omp` — UnicDB hosts the cycle-AD DB-aware tools as an in-process MCP HTTP server, `omp` connects to that endpoint, and the chat panel routes streaming responses and tool-call permission cards through the same engine.
+Cycle AE: OMP runtime session wiring. The AI Chat panel can now use a local `omp` install as its runtime when `VSKit.ai.engine` is set to `omp` — VSKit hosts the cycle-AD DB-aware tools as an in-process MCP HTTP server, `omp` connects to that endpoint, and the chat panel routes streaming responses and tool-call permission cards through the same engine.
 
 ### Added
-- **`UnicDB.ai.engine` setting** (`builtin` | `omp`, default `builtin`). When `omp` and a usable binary is detected, the chat panel delegates to `OmpChatEngine`.
+- **`VSKit.ai.engine` setting** (`builtin` | `omp`, default `builtin`). When `omp` and a usable binary is detected, the chat panel delegates to `OmpChatEngine`.
 - **`src/ai/omp/hostMcp.ts`** — in-process MCP Streamable-HTTP server bound to `127.0.0.1`. Exposes the 5 cycle-AD DB-aware tools with the existing `DbToolPermissionGate` wire shape. apiKey never on wire.
 - **`src/ai/omp/ompChatEngine.ts`** — chat-level glue mapping ACP `session/update` notifications to `OmpChatEvents` (delta / thought / toolStart / toolEnd / error / done).
 - **Legacy settings migration**: stored configurations without an `engine` field are normalized to `builtin` on load.
 - **Activation detection gate**: at extension activation, `omp --version` is probed; missing or outdated binaries flip the setting back to `builtin` with a one-time install/update notice.
 
 ### Changed
-- `src/extension.ts` reads `UnicDB.ai.engine` at activation; the chat-panel command routes engine selection through it.
+- `src/extension.ts` reads `VSKit.ai.engine` at activation; the chat-panel command routes engine selection through it.
 - `src/ai/settings.ts` now requires `engine: "builtin" | "omp"` on persisted settings.
 
 ## [1.10.0] — 2026-08-28
@@ -1364,8 +1370,8 @@ Cycle AD: DB-aware AI Chat tools and an OMP configuration bridge. The AI Chat pa
 - **Five read-only DB-aware tools**: `list_table_data_sample`, `count_rows`, `run_readonly_query`, `explain_query`, and `get_table_relationships`.
 - **Readonly SQL guard**: only single-statement `SELECT`/`WITH` queries pass; write keywords, `SELECT INTO`, multi-statements, unbalanced parentheses, and `EXPLAIN ANALYZE` are rejected before adapter execution.
 - **Explicit DB permission gate**: every DB tool request uses the existing permission-card wire shape with Allow once, Allow for this session, or Deny; unknown, late, timed-out, and abnormal paths default-deny.
-- **OMP configuration bridge**: `UnicDB: Use AI with OMP` writes `.vscode/UnicDB-ai-config.yml` and `.vscode/UnicDB-db-context.md`, and returns a copyable `omp --config ...` command. API keys remain environment-variable hints only.
-- **Refresh DB context command**: `UnicDB: Refresh AI DB Context` re-emits the context file.
+- **OMP configuration bridge**: `VSKit: Use AI with OMP` writes `.vscode/VSKit-ai-config.yml` and `.vscode/VSKit-db-context.md`, and returns a copyable `omp --config ...` command. API keys remain environment-variable hints only.
+- **Refresh DB context command**: `VSKit: Refresh AI DB Context` re-emits the context file.
 
 ### Changed
 - Extracted `formatSystemPrompt` as the shared DDL-only system-prompt builder used by the chat runtime and OMP exporter.
@@ -1379,10 +1385,10 @@ Cycle AB: AI chat image attach + clipboard paste. The composer can now carry scr
 - **Clipboard paste in the composer**: `Cmd/Ctrl+V` with an image on the clipboard adds the same thumbnail-pipeline entry — the user does not have to round-trip through the file picker. Paste-image is rejected with the same amber warning when the active model is non-vision.
 - **Wire-contract extension**: `AiChatPanelWebviewSend` gains `attachments?: ImageAttachment[]`. Image bytes reach the model as `ChatContentPart[]` siblings to the text part — never inside the system prompt, the auto-context, or resume replay.
 - **Engine gate (omp/ACP)**: even when the active model advertises vision, the omp/ACP branch drops image attachments with one `vision_unsupported` warning per attachment, then proceeds text-only — so an image can never silently disappear.
-- **5 rejection reasons with a single UX path**: `oversize` / `count_cap` / `unsupported_type` / `mime_mismatch` / `vision_unsupported` — each surfaces a `.UnicDB-chat-attach-warning` bubble named with the offending file.
+- **5 rejection reasons with a single UX path**: `oversize` / `count_cap` / `unsupported_type` / `mime_mismatch` / `vision_unsupported` — each surfaces a `.VSKit-chat-attach-warning` bubble named with the offending file.
 - **Logging hygiene**: a `summarizeAttachmentsForLog` helper is the only function allowed to receive attachments for logging. Base64 bytes never enter `console.log` / telemetry.
 - **CSP fix**: `buildHtml` now declares `img-src 'self' data:` so the data-URL thumbnails render under the panel's strict CSP (the prior `default-src 'none'` would have stripped them).
-- **CSS for the new strip + button + warning** (with `[data-theme="dark"]` variants and `:focus-visible` ring): `.UnicDB-chat-attach-btn`, `.UnicDB-chat-attachments`, `.UnicDB-chat-thumb`, `.UnicDB-chat-thumb-remove`, `.UnicDB-chat-attach-warning`.
+- **CSS for the new strip + button + warning** (with `[data-theme="dark"]` variants and `:focus-visible` ring): `.VSKit-chat-attach-btn`, `.VSKit-chat-attachments`, `.VSKit-chat-thumb`, `.VSKit-chat-thumb-remove`, `.VSKit-chat-attach-warning`.
 - **Pure helpers module** (`src/ui/aiChatAttachments.ts`) — single source of truth for caps, magic-byte sniff, data-URL builder. Webview mirrors the caps via `webview/attachLimits.ts` (equality-pinned by a test).
 
 ### Changed
@@ -1390,7 +1396,7 @@ Cycle AB: AI chat image attach + clipboard paste. The composer can now carry scr
 
 ## [1.8.0] — 2026-08-28
 
-Cycle AA: AI Chat panel overhaul to modern AI-chat standards — the chat is the core of UnicDB, and this cycle rebuilds its daily UX around the patterns users know from ChatGPT/Claude/Cursor.
+Cycle AA: AI Chat panel overhaul to modern AI-chat standards — the chat is the core of VSKit, and this cycle rebuilds its daily UX around the patterns users know from ChatGPT/Claude/Cursor.
 
 ### Added
 - **@-mentions in the chat composer**: type `@` to reference database objects (tables, views,
@@ -1424,7 +1430,7 @@ Cycle AA: AI Chat panel overhaul to modern AI-chat standards — the chat is the
 Cycle Z: DataGrip-style SQL Console — an ad-hoc scratchpad panel to type SQL, run it against the active connection, and save the buffer as a .sql file.
 
 ### Added
-- **SQL Console** (`UnicDB: Open Console` command, `$(window)` icon): a standalone scratchpad
+- **SQL Console** (`VSKit: Open Console` command, `$(window)` icon): a standalone scratchpad
   panel with a multi-line SQL editor. Run executes the whole buffer through the existing
   pipeline (danger-confirm modal → keyword qualify → Results panel), via the toolbar button,
   Cmd/Ctrl+Enter (mac/win-linux), or a custom right-click menu. Console itself renders no
@@ -1506,7 +1512,7 @@ Cycle W: server-side sort on header click, DISTINCT filter values, deterministic
   server (`SELECT DISTINCT … LIMIT n`) instead of only the loaded rows window, with a
   per-statement cache and refresh after statement replacement.
 - **Multi-term ORDER BY support**: the requery bar accepts comma-separated sort terms
-  with per-dialect identifier quoting (`SELECT * FROM (…) AS UnicDB_sub ORDER BY …`);
+  with per-dialect identifier quoting (`SELECT * FROM (…) AS VSKit_sub ORDER BY …`);
   true expressions are rejected with a visible error instead of passing through raw.
 
 ### Fixed
@@ -1531,7 +1537,7 @@ Cycle V: SQL coloring everywhere + server-side filter/paging + MSSQL sort.
 ### Added
 - **SQL syntax coloring in the editor** (TextMate injection grammar into
   `source.sql`): keywords, strings, numbers, comments, functions, schema/table/
-  column identifiers colorize with a UnicDB-scoped theme.
+  column identifiers colorize with a VSKit-scoped theme.
 - **Schema-aware semantic tokens**: the SQL editor also highlights identifiers
   using the loaded schema cache (tables, columns, views) and refreshes when the
   schema cache is invalidated.
@@ -1608,7 +1614,7 @@ Cycle S: lazy ctid — fix the view-open crash introduced in 1.6.2's no-PK save 
 Cycle R: AI reliability and full-database context, Export Structure AI tool, and Excel-like results-grid editing.
 
 ### Added
-- **AI context**: full schemas/tables/views context with `export_structure` tool and `UnicDB.exportAllStructures` command.
+- **AI context**: full schemas/tables/views context with `export_structure` tool and `VSKit.exportAllStructures` command.
 - **Results grid**: dirty-cell highlighting, add/delete row editing, Cmd/Ctrl+Enter commit, unified undo/redo, and aligned requery/filter controls.
 
 ### Fixed
@@ -1648,7 +1654,7 @@ Structure. All reviewed (3 approved, 6 fixed round 1 → approved).
 - `listRoutineParams` reads `COALESCE(proallargtypes, proargtypes::oid[])`
   with `WITH ORDINALITY` — all-IN-arg routines no longer degrade to
   `{schema, table}` payloads (validated on PG 16).
-- Command `UnicDB.browseTableData` icon regression; webview parallel-race in
+- Command `VSKit.browseTableData` icon regression; webview parallel-race in
   the schemaForm bundle test; stale window listeners on repeated dynamic
   import of the new-table form; `gridWrap` TS2339s under webview tsconfig.
 - AI sample data no longer claims implicit transaction: adapter errors
@@ -1719,35 +1725,35 @@ boundary.
 
 Cycle G: set-filter, toolbar icons, `run-sh` fix.
 
-[1.8.0]: https://github.com/lengockhoa/UnicDB/compare/v1.7.0...v1.8.0
+[1.8.0]: https://github.com/lengockhoa/VSKit/compare/v1.7.0...v1.8.0
 
-[1.6.1]: https://github.com/lengockhoa/UnicDB/compare/v1.6.0...v1.6.1
-[1.6.2]: https://github.com/lengockhoa/UnicDB/compare/v1.6.1...v1.6.2
-[1.6.0]: https://github.com/lengockhoa/UnicDB/compare/v1.5.1...v1.6.0
-[1.5.1]: https://github.com/lengockhoa/UnicDB/compare/v1.5.0...v1.5.1
-[1.5.0]: https://github.com/lengockhoa/UnicDB/compare/v1.4.1...v1.5.0
+[1.6.1]: https://github.com/lengockhoa/VSKit/compare/v1.6.0...v1.6.1
+[1.6.2]: https://github.com/lengockhoa/VSKit/compare/v1.6.1...v1.6.2
+[1.6.0]: https://github.com/lengockhoa/VSKit/compare/v1.5.1...v1.6.0
+[1.5.1]: https://github.com/lengockhoa/VSKit/compare/v1.5.0...v1.5.1
+[1.5.0]: https://github.com/lengockhoa/VSKit/compare/v1.4.1...v1.5.0
 
-[1.9.0]: https://github.com/lengockhoa/UnicDB/compare/v1.8.0...v1.9.0
-[1.14.0]: https://github.com/lengockhoa/UnicDB/compare/v1.13.0...v1.14.0
-[1.15.0]: https://github.com/lengockhoa/UnicDB/compare/v1.14.0...v1.15.0
-[1.16.0]: https://github.com/lengockhoa/UnicDB/compare/v1.15.0...v1.16.0
-[1.17.0]: https://github.com/lengockhoa/UnicDB/compare/v1.16.0...v1.17.0
-[1.18.0]: https://github.com/lengockhoa/UnicDB/compare/v1.17.0...v1.18.0
-[1.24.0]: https://github.com/lengockhoa/UnicDB/compare/v1.23.0...v1.24.0
-[1.25.0]: https://github.com/lengockhoa/UnicDB/compare/v1.24.0...v1.25.0
-[1.26.0]: https://github.com/lengockhoa/UnicDB/compare/v1.25.0...v1.26.0
-[1.23.0]: https://github.com/lengockhoa/UnicDB/compare/v1.22.0...v1.23.0
-[1.22.0]: https://github.com/lengockhoa/UnicDB/compare/v1.21.0...v1.22.0
-[1.21.0]: https://github.com/lengockhoa/UnicDB/compare/v1.20.0...v1.21.0
-[1.20.0]: https://github.com/lengockhoa/UnicDB/compare/v1.19.0...v1.20.0
-[1.19.0]: https://github.com/lengockhoa/UnicDB/compare/v1.18.0...v1.19.0
-[1.13.0]: https://github.com/lengockhoa/UnicDB/compare/v1.12.0...v1.13.0
-[1.12.0]: https://github.com/lengockhoa/UnicDB/compare/v1.11.0...v1.12.0
-[1.11.0]: https://github.com/lengockhoa/UnicDB/compare/v1.10.0...v1.11.0
-[1.10.0]: https://github.com/lengockhoa/UnicDB/compare/v1.9.0...v1.10.0
+[1.9.0]: https://github.com/lengockhoa/VSKit/compare/v1.8.0...v1.9.0
+[1.14.0]: https://github.com/lengockhoa/VSKit/compare/v1.13.0...v1.14.0
+[1.15.0]: https://github.com/lengockhoa/VSKit/compare/v1.14.0...v1.15.0
+[1.16.0]: https://github.com/lengockhoa/VSKit/compare/v1.15.0...v1.16.0
+[1.17.0]: https://github.com/lengockhoa/VSKit/compare/v1.16.0...v1.17.0
+[1.18.0]: https://github.com/lengockhoa/VSKit/compare/v1.17.0...v1.18.0
+[1.24.0]: https://github.com/lengockhoa/VSKit/compare/v1.23.0...v1.24.0
+[1.25.0]: https://github.com/lengockhoa/VSKit/compare/v1.24.0...v1.25.0
+[1.26.0]: https://github.com/lengockhoa/VSKit/compare/v1.25.0...v1.26.0
+[1.23.0]: https://github.com/lengockhoa/VSKit/compare/v1.22.0...v1.23.0
+[1.22.0]: https://github.com/lengockhoa/VSKit/compare/v1.21.0...v1.22.0
+[1.21.0]: https://github.com/lengockhoa/VSKit/compare/v1.20.0...v1.21.0
+[1.20.0]: https://github.com/lengockhoa/VSKit/compare/v1.19.0...v1.20.0
+[1.19.0]: https://github.com/lengockhoa/VSKit/compare/v1.18.0...v1.19.0
+[1.13.0]: https://github.com/lengockhoa/VSKit/compare/v1.12.0...v1.13.0
+[1.12.0]: https://github.com/lengockhoa/VSKit/compare/v1.11.0...v1.12.0
+[1.11.0]: https://github.com/lengockhoa/VSKit/compare/v1.10.0...v1.11.0
+[1.10.0]: https://github.com/lengockhoa/VSKit/compare/v1.9.0...v1.10.0
 ## [1.53.31] — 2026-09-08
 
-- Summary: **App icon swap** — `media/icon.png` replaced with the UnicDB brand favicon from `https://one.unicjsc.com/static/img/favicon.png` (48×48 PNG, valid PNG magic bytes, 1.5 KB). Top-level `icon` field AND `viewsContainers.activitybar[].icon` / `viewsContainers.panel[].icon` all point at `media/icon.png`, so the new favicon appears everywhere the extension shows an icon: Marketplace preview, Extensions panel, extension detail page, activity bar, and panel. Install v1.53.31 for the new brand mark.
+- Summary: **App icon swap** — `media/icon.png` replaced with the VSKit brand favicon from `https://one.unicjsc.com/static/img/favicon.png` (48×48 PNG, valid PNG magic bytes, 1.5 KB). Top-level `icon` field AND `viewsContainers.activitybar[].icon` / `viewsContainers.panel[].icon` all point at `media/icon.png`, so the new favicon appears everywhere the extension shows an icon: Marketplace preview, Extensions panel, extension detail page, activity bar, and panel. Install v1.53.31 for the new brand mark.
 - Files: `media/icon.png` (replaced; 956 B → 1,472 B); `package.json` + `package-lock.json` (version bump 1.53.30 → 1.53.31); `CHANGELOG.md` (this entry).
-- Verification: `npm run typecheck` ✅ · `npm run compile` ✅ · `npm test` 4088 passed | 4 skipped | 0 failed (276 files) · targeted `manifestAssetRefs` 5/5 PASS (PNG magic-byte guard validated the new 48×48 favicon) · `UnicDB-1.53.31.vsix` 2,164,514 bytes (26 files, SHA-256 `8320753fee66c32de7d5a24645840c79b1e17da11d0e720a759b47a02aed1042`).
+- Verification: `npm run typecheck` ✅ · `npm run compile` ✅ · `npm test` 4088 passed | 4 skipped | 0 failed (276 files) · targeted `manifestAssetRefs` 5/5 PASS (PNG magic-byte guard validated the new 48×48 favicon) · `VSIX v1.53.31` 2,164,514 bytes (26 files, SHA-256 `8320753fee66c32de7d5a24645840c79b1e17da11d0e720a759b47a02aed1042`).
 

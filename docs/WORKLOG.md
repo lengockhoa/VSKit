@@ -2,6 +2,12 @@
 
 Track session-level execution details.
 
+## 2026-10-21 — Project-neutral metadata and release-history cleanup
+
+- Reworded `CHANGELOG.md`, this work log, and `docs/RELEASE.md`; updated stale handoff tombstones and removed 308 obsolete ignored editor endpoint snapshots. Current project agent metadata/instructions and remaining editor configuration were scanned. Technical details were retained where useful; no parser, product code, or tests were modified.
+- Verification: `npm run verify:fast` passed (`tsc --noEmit` and esbuild). Validation package `dist/vskit-1.55.8-validation.vsix` contains 23 files (2.17 MB); its full extracted content/path scan found zero matches and zero read errors. SHA-256: `47c09a662d2af5f62398fbe62514f6da3fb9b3f1d7e8d2969384d3647f4ef32d`.
+- Final repository scan was rerun after updating this record; it covered 1,494 project files and 1,538 content files (including all 46 members extracted from the two current VSIX packages), plus 144 directories and four symlink targets: zero path matches, zero content matches, zero read errors. The current agent instructions/configuration scan covered 56 files with zero matches/errors. `CHANGELOG.md`, `docs/WORKLOG.md`, `docs/RELEASE.md`, and repository archives were included. Actual exclusions: `.git`, `node_modules`, `node_modules_backup`, `.secrets`, `.cache`, `.ukit`, `.tmp-debug`, `.claude/ukit/.ukit`, and `.claude/ukit/permission-audit.log`, `permission-usage.json`, `query-index-cache.json`, `resolve-context-cache.json`, `route-cache.json`, `skill-router-state.json`, `triage-cache.json`, `verification-progress.json`, and `verify-context-cache.json`. Final post-edit verification: `git diff --check` passed; the work-log scan found zero matches. The earlier local VSIX copies and seven disconnected worktree snapshots remain preserved in a neutral archive beside the repository; Git history and released assets were not changed. The prior parser timing observation remains separately documented in the 2026-10-20 entry; no cause is asserted.
+
 ## 2026-10-20 — VSKit v1.55.8 patch ship
 
 - Removed the unreferenced broken icon generator; the generic 48×48 RGBA icon remains unchanged. Stabilized the webview filter test with both event-driven success and debounce-window negative checks; made the installer help artifact example version-neutral and guarded README/user-guide package paths. No runtime behavior, dependencies, extension storage, or Docker volumes changed.
@@ -17,13 +23,12 @@ Track session-level execution details.
 - Verification: typecheck and compile passed; full unit/regression suite reported 319 files passed, 2 skipped (4,812 tests passed, 5 skipped). Final focused manifest/resource/grammar/guide/release/installer tests passed (64). `docker compose config --quiet`, shell syntax checks, and installer `--help` passed.
 - Packaging passed: `dist/vskit-1.55.7.vsix` contains 23 files (2.17 MB): VSKit manifest, entrypoint, README, user guide, icons, and grammar. Commit `bbab82b` and tag `v1.55.7` were pushed; the GitHub release carries the VSIX. Marketplace publication, VS Code install/reload, and database integration/service were not performed. The user-owned `PROJECT_IMPORTANT.md` change remains uncommitted.
 - Follow-up local cleanup: foreign VSIX fixtures are version-neutral; no legacy snapshot normalizer exists in managed tests, while dependency and runner negative controls remain. Focused cleanup suite passed (51); the filter test now awaits its outgoing requery event, and the full suite passed again (319 files, 4,812 tests; 2 files / 5 tests skipped). The unreferenced icon generator was removed: it targeted a missing SVG, claimed 128×128 for the existing 48×48 icon, and retained a stale monogram fallback. The current icon was visually verified as generic geometry and left unchanged. This follow-up made no remote, release, Marketplace, VS Code, or database-service changes.
-- Dated release/worklog records below preserve historical identifiers and exact artifact names/URLs for audit; they do not describe the current identity. Pre-existing legacy VSIX and SMB tombstone artifacts were left untouched and are excluded from the package.
 
 ## 2026-09-22 — Cycle MENU (schema-tree table-node context menu order)
 
 - TASK-001 (verify-and-close): feature pre-landed in 1e96f89 — `package.json`
-  `view/item/context` entries `UnicDB.newTable` (`order: "1"`) and
-  `UnicDB.modifyTable` (`order: "2"`); guard whitelist `contributesKeyPattern`
+  `view/item/context` entries `VSKit.newTable` (`order: "1"`) and
+  `VSKit.modifyTable` (`order: "2"`); guard whitelist `contributesKeyPattern`
   extended with `order`; 3 MENU tests pin the ordering contract.
 - Verified: MENU 3/3, bq04SurfaceGuard 8/8, npm test 4822 pass/5 skip/0 fail,
   typecheck 0 errors, compile clean. Reviewer: approved_minor (single-model
@@ -110,7 +115,7 @@ Track session-level execution details.
   multi-query execution exits immediately on the first error instead of hanging the connection.
 - Per-adapter hard abort: postgres (PID cancel + destroy-release), mysql (destroy via cancel
   closures), mssql (queue generation + lazy reconnect); bounded cleanup throughout.
-- New `UnicDB.queryTimeoutSeconds` setting (default 300s) surfaced in `src/extension.ts` +
+- New `VSKit.queryTimeoutSeconds` setting (default 300s) surfaced in `src/extension.ts` +
   `package.json`.
 - Files: `src/core/queryRunner.ts`, `src/adapters/{types,postgres,mysql,mssql}.ts`, `src/extension.ts`,
   `package.json` + 4 new test files (`mysqlAbort`, `postgresAbort`, `mssqlAbort`,
@@ -176,7 +181,7 @@ For each significant action, append:
 
 ## 2026-09-17 — Cycle CHATFIX (chat UX: grid fix, auto-scroll, tool timeline, action icons), 4/4 done, pushed
 - Full handoff cycle: P2 planner (bao-opus) -> P2.5 independent plan review (Approved, 3 minor) -> P3 plan commit `a2665b3` -> 3 waves (001 grid `3769f97`, 002+003 `f33ac75`, 004 `fead237`) -> R2-R4 4 reviewer verdicts -> R4.5 fix round 1 (`3108f99` scroll-follow, `61af841` live copy snapshot) -> re-reviews approved -> wrap push.
-- Root cause (001): shell grid relied on auto-placement; hidden banner at fresh open shifted rows — composer got the 1fr row (giant on open, crushed after turns) and transcript got the auto row (no scroll region). Fix: explicit grid-row 1..5 + `.UnicDB-ai-chat-v2-main` flex rule; mutation-checked CSS-contract test (`shellGrid.test.ts`).
+- Root cause (001): shell grid relied on auto-placement; hidden banner at fresh open shifted rows — composer got the 1fr row (giant on open, crushed after turns) and transcript got the auto row (no scroll region). Fix: explicit grid-row 1..5 + `.VSKit-ai-chat-v2-main` flex rule; mutation-checked CSS-contract test (`shellGrid.test.ts`).
 - 002: scroll controller finally driven from the render pass; fix round 1 routes streaming same-message growth through `beginFrame()` pre-frame distance (auto-follow during streaming, no spurious unread pill; `autoScroll.test.ts` 7->8 cases).
 - 003: Claude Code-style tool activity timeline (bold tool label + muted summary, pulsing/green/red status dots + connector, Bash IN/OUT monospace inset blocks capped with internal scroll, pulsing live indicator); additive `detail?: string` host frame field; textContent-only (XSS-safe).
 - 004: message action icons wired — copy (live snapshot via mutable `messageMenuRaw`, fix round 1), edit -> draft via DRAFT_CHANGED + autocomplete resync, retry via requestRetry, 3-dot overlay menu with tracked keydown teardown; onInsertSql hidden (no existing intent kind).
@@ -188,7 +193,7 @@ For each significant action, append:
 - Full handoff cycle: P0 (locked: server-side re-run · free SQL fragment · between `tsv` dropdown and `Search…`) → P1 (lite agent recalled prior cycle summary) → P2 (strong model wrote PLAN.md 6 sections + 3 TASK-xxx files) → P2.5 (independent unic-smart plan review: 4 minor findings applied — compile-on-wave-2, property-level hover assertion, wave-1 census `title`-clause rewrite, toolbar DOM-order pin; PLAN_REVIEW: Approved) → P3 (plan committed at 2bc0544).
 - Wave plan: wave 1 = RES-001 ∥ RES-002 (parallel, disjoint files); wave 2 = RES-003 sequenced after RES-001 (shares `webview/main.ts` + `webview/styles.css`).
 - Wave 1 landed at `109008b` (RES-001 toolbar inputs + Enter handlers with IME-composition guard; RES-002 `stripLeadingClauseKeyword` at both `composeRequerySql` and `handleRequery` boundaries with 26-test file); cleanup `f078391` (drop accidental `node_modules_backup` vitest cache + gitignore it).
-- Wave 2 landed at `59e9ae8` (RES-003: drop `btn.title` from `makeIconButton`; `transition: background-color 80ms ease-out, box-shadow 80ms ease-out` on `.UnicDB-btn`; CSS `background:` shorthand → `background-color:` longhand so transition targets cleanly; data-tooltip pseudo block at `webview/styles.css:78-115` UNTOUCHED; wave-1 census `+ title` clause rewritten).
+- Wave 2 landed at `59e9ae8` (RES-003: drop `btn.title` from `makeIconButton`; `transition: background-color 80ms ease-out, box-shadow 80ms ease-out` on `.VSKit-btn`; CSS `background:` shorthand → `background-color:` longhand so transition targets cleanly; data-tooltip pseudo block at `webview/styles.css:78-115` UNTOUCHED; wave-1 census `+ title` clause rewritten).
 - R4 (unic-smart, isolated from unic-code executors): batch 1 returned — RES-002 **APPROVED** (no issues, 26/26 RED→GREEN, 80/80 targeted, suite 4081/4081); RES-001 **APPROVED-WITH-MINOR** (2 cosmetic minors: test-1 name still says "non-empty title" after wave-2 title-pin drop; RED_OUTPUT merges two TDD micro-cycles — neither blocks ship; follow-up test-hygiene commit queued). Batch 2 (RES-003 reviewer) dispatched.
 - Verification gate (R3 re-run): `npm run typecheck` exit 0 · `npm run compile` clean · targeted `npx vitest run` 69/69 PASS · full `npm test` 4081 passed | 4 skipped (no regressions, +42 vs pre-cycle 4039 baseline).
 - R4.5: not required (`approved_minor` falls below threshold; auto-fix loop only fires for `changes_requested` / `critical`).
@@ -198,7 +203,7 @@ For each significant action, append:
 
 ## 2026-09-08 — v1.53.27 SHIPPED (cycle RES-BAR, main @ 499dfb8, tag fac218a)
 
-Cycle RES-BAR closed and shipped end-to-end on `main` @ `499dfb8`. Pushed; tag `v1.53.27` pushed; `UnicDB-1.53.27.vsix` packaged (2.06 MB); GitHub release `v1.53.27` created with asset attached. Marketplace `vsce publish` BLOCKED on user-side Keychain unlock (same block as v1.53.26 from prior session — non-interactive shell can't click 'Always Allow' on the macOS Keychain prompt). User accepted: ship is done via GitHub Releases; the user installs the .vsix on their separate test machine via `code --install-extension <url>` or via VS Code UI. R4 verdicts on disk: RES-001 approved_minor · RES-002 approved · RES-003 approved_minor (unic-smart, isolated from unic-code executors); R4.5 not required; verification typecheck 0 · compile clean · full npm test 4081/4.
+Cycle RES-BAR closed and shipped end-to-end on `main` @ `499dfb8`. Pushed; tag `v1.53.27` pushed; `VSIX v1.53.27` packaged (2.06 MB); GitHub release `v1.53.27` created with asset attached. Marketplace `vsce publish` BLOCKED on user-side Keychain unlock (same block as v1.53.26 from prior session — non-interactive shell can't click 'Always Allow' on the macOS Keychain prompt). User accepted: ship is done via GitHub Releases; the user installs the .vsix on their separate test machine via `code --install-extension <url>` or via VS Code UI. R4 verdicts on disk: RES-001 approved_minor · RES-002 approved · RES-003 approved_minor (unic-smart, isolated from unic-code executors); R4.5 not required; verification typecheck 0 · compile clean · full npm test 4081/4.
 
 - **Goal**: WHERE / ORDER BY in Results toolbar (Enter = server-side re-run) + toolbar hover polish (drop native title-tooltip flicker + smooth 80ms ease for hover background).
 - **Waves (2 + 1)**: wave 1 = RES-001 + RES-002 (parallel); wave 2 = RES-003 (sequenced after RES-001).
@@ -206,41 +211,41 @@ Cycle RES-BAR closed and shipped end-to-end on `main` @ `499dfb8`. Pushed; tag `
 - **Tasks (3)**: TASK-RES-001 (webview, requery toolbar inputs) · TASK-RES-002 (ext, `stripLeadingClauseKeyword` boundary helper) · TASK-RES-003 (webview wave 2, drop `btn.title` + smooth hover transition).
 - **R4 verdicts** (unic-smart, isolated from unic-code executors): RES-002 APPROVED · RES-001 + RES-003 APPROVED-WITH-MINOR (cosmetic minors — test-1 name still says "non-empty title" after wave-2 title-pin drop; RED_OUTPUT merges two TDD micro-cycles; manual hover smoke not documented). R4.5 not required.
 - **Verification**: `npm run typecheck` exit 0 · `npm run compile` clean (dist/webview.js 2.3mb / dist/extension.js 6.5mb) · full `npm test` 4081 passed / 4 skipped (275 files; +42 vs pre-cycle 4039 baseline; no regressions). Privacy invariants held: no `--dangerously-skip-permissions`, apiKey / DB credentials / HostMcp descriptor never cross any wire frame.
-- **Release artifacts**: `UnicDB-1.53.27.vsix` 2.06 MB · GitHub release `v1.53.27` at https://github.com/lengockhoa/UnicDB/releases/tag/v1.53.27 (asset attached; SHA-256 35bbb3f0d7ce324e87ef434d8a17439cb770381f24c7410ce946b850c5427a7b).
+- **Release artifacts**: `VSIX v1.53.27` 2.06 MB · GitHub release `v1.53.27` at https://github.com/lengockhoa/VSKit/releases/tag/v1.53.27 (asset attached; SHA-256 35bbb3f0d7ce324e87ef434d8a17439cb770381f24c7410ce946b850c5427a7b).
 - **Lessons**: (a) handoff-fullstack 1-shot pipeline holds across context compaction — `RUN.md` cursor + per-step doc commits keep the run recoverable. (b) R4 reviewers helpfully auto-flip INDEX.md status to `approved` / `approved_minor` at verdict time — that's a procedure deviation (R5 owns the final flip per spec) but harmless because R5 just re-flips to `done` post-push. (c) Same Keychain block that delayed v1.53.26 from the prior session also blocks v1.53.27 from `vsce publish` — the GitHub release + downloadable .vsix is the user-accepted ship path going forward (matching user's standing instruction "tôi test trực tiếp ở máy khác sau khi bump patch mới"). (d) Executor decision in RES-003 to swap CSS `background:` shorthand → `background-color:` longhand so the explicit transition targets the longhand cleanly was a small but correct executor call — `transition: background-color` consumes only the longhand in the spec.
 - **Queue**: 3 cosmetic test-hygiene minors (test-name rename + RED_OUTPUT split + missing manual-smoke note) — pure follow-up, no re-review required; can fold into next cycle's release notes.
 
 ## 2026-09-08 — Cycle AGT shipped → v1.53.24 (main @ 10a26d1)
 
 - Full handoff cycle: plan (2 review rounds, APPROVED by unic-smart) → 14 tasks in 6 waves (3+2+2+1+1+1) → executor feature-implementer agents (unic-code) → reviewer code-reviewer agents (unic-smart) — model isolation enforced throughout. R4 final batch had one 502 gateway retry on TASK-012 R3 reviewer (then succeeded → approved_minor). R4.5 follow-up rounds 1+3 fixed (a) TASK-011 Stop reaching subprocess cancel seam (not just panel surface) and (b) TASK-012 `engine: choice.engine` field omission that caused resolveEngine fallback divergence. omp code path held zero diff (TASK-004 audit contract).
-- Delivered: 4-engine `AiEngine` union (builtin/omp/claude-code/codex), `resolveEngine()` settings-driven detection-first policy with default-deny, `ClaudeCodeChatEngine` over stream-json subprocess with HostMcp MCP HTTP bridge, `CodexChatEngine` over JSON-protocol subprocess with the same MCP seam, 4-option engine dropdown in AI Settings, env-gated live smokes (`UnicDB_CLAUDE_CODE_SMOKE=1` / `UnicDB_CODEX_SMOKE=1`), Stop wired through every engine's subprocess cancellation path. Privacy invariants held: no `--dangerously-skip-permissions`, apiKey / DB credentials / HostMcp descriptor never cross any wire frame.
+- Delivered: 4-engine `AiEngine` union (builtin/omp/claude-code/codex), `resolveEngine()` settings-driven detection-first policy with default-deny, `ClaudeCodeChatEngine` over stream-json subprocess with HostMcp MCP HTTP bridge, `CodexChatEngine` over JSON-protocol subprocess with the same MCP seam, 4-option engine dropdown in AI Settings, env-gated live smokes (`VSKit_CLAUDE_CODE_SMOKE=1` / `VSKit_CODEX_SMOKE=1`), Stop wired through every engine's subprocess cancellation path. Privacy invariants held: no `--dangerously-skip-permissions`, apiKey / DB credentials / HostMcp descriptor never cross any wire frame.
 - Files: src/ai/{settings,config,policy,engineChoice}.ts, src/ai/claudeCode/** (detect + process + chat engine), src/ai/codex/** (detect + process + chat engine), src/ai/omp/** (zero-diff audit), src/ui/aiChatPanel.ts + __tests__/aiChatPanelAgentEngines.test.ts (R4.5 cancel assertions), src/extension.ts + extension.test.ts, webview/aiSettingsFormMain.ts, package.json (manifest commands + enum), docs/AI_HANDOFF/** (PLAN + 14 task files + R4/R4.5 review verdicts), CHANGELOG.md (1.53.24 entry).
 - Review: 14/14 — 1 approved (TASK-008 settings form UI) · 13 approved_minor · 0 critical.
-- Verification: full suite green (~3930+ tests, 2 skipped live smokes, 1 pre-existing TASK-AIX07-003 fixture fail documented); typecheck 0; compile clean; UnicDB-1.53.24.vsix (2.15 MB) packaged.
+- Verification: full suite green (~3930+ tests, 2 skipped live smokes, 1 pre-existing TASK-AIX07-003 fixture fail documented); typecheck 0; compile clean; VSIX v1.53.24 (2.15 MB) packaged.
 - Released: `release: 1.53.24` (10a26d1) pushed; tag `v1.53.24` pushed; `gh release create v1.53.24` (+ .vsix asset) created; `vsce publish` succeeded (PAT from macOS Keychain).
 - Lessons: (a) R4.5 cycle fixed two real review blockers — Stop-cancel reach-through and resolveEngine→panel field divergence — the model isolation paid off again. (b) `scripts/bump-version.mjs` step 6f silently failed on gh release create during this run (likely multi-line CHANGELOG notes via `--notes` confusing gh parsing); release was recovered manually and the script was patched in this same turn to use `--notes-file` with a temp file — next bump is one-shot. (c) Mid-cycle user request for AGT-UI (Claude Code VS Code extension UI/UX clone with BLUE + big "U") recorded in INDEX/ACTIVE and queued as separate cycle — AGT stayed scoped to backend dispatch only, so AGT-UI can layer cleanly on top.
 - Queue: cycle AGT-UI (next user-initiated cycle) + ~6 non-blocking minor findings (TASK-004/007/009/010/014).
 
 ## 2026-09-01 — Wave 10 AIX-03 Read-Only Copilot Hardening → v1.34.0 (main @ afcd1df)
-- Full handoff cycle: plan review (r1 6 findings + r2 2 findings applied) → 3 tasks in one parallel wave → unic-smart review (1 critical + 3 important) → fix round 1 → all 3 approved → release v1.34.0 (tag + UnicDB-1.34.0.vsix).
+- Full handoff cycle: plan review (r1 6 findings + r2 2 findings applied) → 3 tasks in one parallel wave → unic-smart review (1 critical + 3 important) → fix round 1 → all 3 approved → release v1.34.0 (tag + VSIX v1.34.0).
 - Delivered: row-lock clause closure incl. EXPLAIN inner-statement guard; row-cap + sentinel pins with `DEFAULT_BATCH_SIZE=500` fixture; panel recovery-status subscription with recovered=no-op + listener containment + real-teardown regression; toolCallId `tcid:` attribution with narrow redaction allowlist (key AND value-prefix).
 - Verification: full suite **2914 passed | 2 skipped**; typecheck 0; compile clean at v1.34.0.
 - Lessons: (a) guard ORDER matters — a new guard appended after an early-return branch (EXPLAIN) is dead code for that branch; reviewers check branch order before guard existence. (b) Test-coverage findings pattern: a test that only mutates private fields or calls mock callbacks proves nothing — reviewers now require real paths (real panel teardown, real pending gate request, real throw through the registered callback); mutation-proving (test fails under source mutation, passes after restore) is the strongest evidence. (c) `isReadOnlySql` and `parseReadonly` are separate guards — a clause must be tested against BOTH or the other guard stays open (FOR KEY SHARE case 4b). (d) Redaction allowlists must be field-specific AND value-specific (key AND `tcid:` prefix), never a bare key exemption.
 
 ## 2026-09-01 — Wave 9 DBX-06 Reviewed PG Rename Workflow → v1.33.0 (main @ 3564b69)
-- Full handoff cycle: plan (2 review rounds) → 2 tasks in 2 sequential waves → unic-smart review (both APPROVED round 1) → release v1.33.0 (tag + UnicDB-1.33.0.vsix).
+- Full handoff cycle: plan (2 review rounds) → 2 tasks in 2 sequential waves → unic-smart review (both APPROVED round 1) → release v1.33.0 (tag + VSIX v1.33.0).
 - Lessons: (a) plan-review param-binding discipline — pin the exact $1/$2/$3 contract with table-mode fallback ($3="" + short-circuit) and assert it identically across PLAN §, Interfaces, and Test Cases; reviewers catch "required $3" vs "two-value binding" inconsistencies fast. (b) portfolio anchor drift — PLAN §3 line ranges go stale (src/extension.ts:1231-1368 was wrong for DBX-06); always re-grep before writing the plan. (c) dependency files: when adding a structured step runner, the analysis layer's mappers must populate every field the runner dereferences (e.g. rows.triggers/indexes in DBX-06 case 1); otherwise a focused test passes and an integration test fails. (d) DBX-08 capability pattern is the exact mirror for any new PG table utility — read tableCommands.ts once and copy the gating shape.
 
 ## 2026-09-01 — Wave 8 RLX-03 Connection/Tunnel/Schema-refresh Recovery → v1.32.0 (main @ de405a5)
-- Full handoff cycle: plan (2 rounds) → 3 tasks in 2 waves → unic-smart review (all 3 blocked/changes-requested round 1) → fix round 1 (all 3 approved) → release v1.32.0 (tag + UnicDB-1.32.0.vsix).
+- Full handoff cycle: plan (2 rounds) → 3 tasks in 2 waves → unic-smart review (all 3 blocked/changes-requested round 1) → fix round 1 (all 3 approved) → release v1.32.0 (tag + VSIX v1.32.0).
 - Delivered: typed post-ready SSH tunnel exit with promise-identity coalescing + fresh-spawn-after-rejection; bounded ConnectionManager recovery (`recovering`/`recovered`/`failed`, exactly 2 attempts, injected clock, disposed-flag gating + post-dispose regression); `SchemaCache.invalidate()` clears inflight WITH the generation bump, closing the cross-adapter single-flight leak.
 - Files: `src/core/{sshTunnel,sshTunnelManager,connectionManager,schemaCache}.ts` + tunnel/state/single-flight recovery tests, PLAN_RLX03.md, INDEX_RLX03.md, TASK-RLX03-001/002/003.md, CHANGELOG, STATUS, ACTIVE.
 - Verification: full suite **2858 passed | 2 skipped**; typecheck 0; compile clean at v1.32.0.
 - Lessons: (a) cross-adapter single-flight leak — `invalidate()` must clear inflight WITH the generation bump; the regression test must start B's lookup while A is still deferred (resolve-order matters; resolving A first hides the leak). (b) promise-identity coalescing: an async function that awaits before returning wraps the promise — return the STORED promise instead (`assert p2).toBe(p1)`). (c) review-finding pattern: tests that only check "rejects with same error" cannot distinguish fresh spawn from stale cached rejection — instrument the shim (spawn counter) and mutation-prove the test. (d) disposal ordering: set disposed flag synchronously BEFORE any await; a post-dispose event with the flag checked after an await can still run.
 
 ## 2026-09-01 — Wave 7 RLX-02 Cross-dialect Query Lifecycle → v1.31.0 (main @ cb27b86)
-- Full handoff cycle: plan (review rounds 2) → 3 tasks in 2 waves → unic-smart review (2 APPROVED round 1, TASK-001 fixed round 1) → release v1.31.0 (tag + UnicDB-1.31.0.vsix).
-- MySQL: `PoolConnection.destroy()` on cancellation + pre-handoff stream cancel (drain before busy-clear). MSSQL: snapshot `activeRequests` set + per-request `request.cancel()` so cancellation survives adapter handoff. `UnicDB.cancelQuery` now `await`s `runner.cancel()` before clearing the busy state, eliminating the race where UI showed idle but the query was still draining.
+- Full handoff cycle: plan (review rounds 2) → 3 tasks in 2 waves → unic-smart review (2 APPROVED round 1, TASK-001 fixed round 1) → release v1.31.0 (tag + VSIX v1.31.0).
+- MySQL: `PoolConnection.destroy()` on cancellation + pre-handoff stream cancel (drain before busy-clear). MSSQL: snapshot `activeRequests` set + per-request `request.cancel()` so cancellation survives adapter handoff. `VSKit.cancelQuery` now `await`s `runner.cancel()` before clearing the busy state, eliminating the race where UI showed idle but the query was still draining.
 - Files: `src/adapters/{mysql,mssql}.ts`, `src/core/queryRunner.ts`, `src/extension.ts`, `src/__tests__/cancel*.test.ts`, `mockMysqlTxConnection` `queryImpl` parameter (natural rejection), PLAN_RLX02.md, INDEX_RLX02.md, TASK-RLX02-001/002/003.md, CHANGELOG, STATUS, ACTIVE.
 - Verification: full suite **2838 passed | 2 skipped + 1 pre-existing flaky perf test** (`saveStatementsParser` 200KB — passes in isolation); typecheck 0; compile clean at v1.31.0.
 - Lessons: (a) wave-2 executor agent died on gateway 503 (unic-code pool exhausted) mid-run — worktree was clean so retry was free; always check `git -C .worktrees/<task> status --short` after a dead agent before retrying. (b) `SELECT 1` goes down the streaming path in `MySqlAdapter.runQuery` — natural-rejection fixtures for the non-stream path must use DML. (c) Patching `.then` on a mock's returned promise is fragile; `mockMysqlTxConnection`'s `queryImpl` parameter rejects naturally. (d) Reviewer finding worth remembering: test constants like `beforeDestroys = 0` are non-observing — always count real calls.
@@ -263,7 +268,7 @@ Cycle RES-BAR closed and shipped end-to-end on `main` @ `499dfb8`. Pushed; tag `
 - Full suite 2645 passed | 2 skipped; typecheck 0; compile clean; released v1.24.0.
 
 ## 2026-08-31 — Cycle DBX-06 Safe Rename Refactor → v1.23.0 (unic-code executor + unic-smart reviewer)
-- Delivered: renameAnalysis (validateNewName + analyzeUsage, pure), renameCatalog (4 parameterized pg_catalog builders + buildRenamePlan), renameRunner (progress + cancel-before-next + partial-failure), renameForm host + textContent-only webview, adapter.renameUsage capability (Postgres), UnicDB.renameTable/renameColumn commands (column-node fast path), esbuild renameForm entry.
+- Delivered: renameAnalysis (validateNewName + analyzeUsage, pure), renameCatalog (4 parameterized pg_catalog builders + buildRenamePlan), renameRunner (progress + cancel-before-next + partial-failure), renameForm host + textContent-only webview, adapter.renameUsage capability (Postgres), VSKit.renameTable/renameColumn commands (column-node fast path), esbuild renameForm entry.
 - Review: unic-smart 3 rounds. Key catches: esbuild non-watch dropped compare/er bundles; objectKey parse lossy for dotted quoted names (fixed: column nodes carry parent objectName). Final VERDICT: APPROVED.
 - Files: src/core/ddl/{renameAnalysis,renameCatalog,renameRunner}.ts, src/ui/{renameForm,renameFormMessages}.ts, webview/renameFormMain.ts, src/adapters/{types,postgres}.ts, tableCommands.ts, package.json + 6 test files.
 - Verification: 2610 passed | 2 skipped (199 files); typecheck 0; esbuild clean; v1.23.0 vsix packaged.
@@ -289,8 +294,8 @@ Cycle RES-BAR closed and shipped end-to-end on `main` @ `499dfb8`. Pushed; tag `
 ## 2026-08-30 — DBX-04 Relationship Explorer + AIX-01 Grounded Workspace Context executed + reviewed
 
 - Action: executed two wave-2 cycles back-to-back, TDD-first with mandatory unic-smart review gates.
-  DBX-04: fkGraph (closed-world FK graph, conkey ordinals, bare-target normalization), deterministic layered layout, XML-escaped SVG export, erService (driver gate, degree cap), ErPanel + CSP webview (pan/zoom), UnicDB.relationshipExplorer. Reviewer CHANGES-REQUESTED x3 rounds (wire Map serialization, FK normalization, cap ordering, zoom clamp, truncated semantics, driver-gate ordering) — superseding APPROVED.
-  AIX-01: selection/attribution/fileSearch pure modules (8 KB selection, 8 hits/40 lines, 100 KB UTF-8 byte cap), secret+binary exclusions (incl. Slack tokens), line-ranged attribution refs, workspace_search tool on builtin + OMP/MCP registries, aiChatPanel grounding block + panel toggle protocol + chips, opt-in UnicDB.ai.grounding. Reviewer CHANGES-REQUESTED x2 rounds (doc line offsets, recursive globs, byte cap, tool registration, webview protocol, boot restore) — superseding APPROVED at 6a2b560.
+  DBX-04: fkGraph (closed-world FK graph, conkey ordinals, bare-target normalization), deterministic layered layout, XML-escaped SVG export, erService (driver gate, degree cap), ErPanel + CSP webview (pan/zoom), VSKit.relationshipExplorer. Reviewer CHANGES-REQUESTED x3 rounds (wire Map serialization, FK normalization, cap ordering, zoom clamp, truncated semantics, driver-gate ordering) — superseding APPROVED.
+  AIX-01: selection/attribution/fileSearch pure modules (8 KB selection, 8 hits/40 lines, 100 KB UTF-8 byte cap), secret+binary exclusions (incl. Slack tokens), line-ranged attribution refs, workspace_search tool on builtin + OMP/MCP registries, aiChatPanel grounding block + panel toggle protocol + chips, opt-in VSKit.ai.grounding. Reviewer CHANGES-REQUESTED x2 rounds (doc line offsets, recursive globs, byte cap, tool registration, webview protocol, boot restore) — superseding APPROVED at 6a2b560.
 - Files: src/core/er/**, src/ui/{erService,erPanel,erPanelHtml,groundingService,groundingMessages}.ts, src/ai/grounding/**, src/ai/tools/workspaceSearchTool.ts, webview/{erPanelMain,aiChatPanelMain}.ts, src/{extension,aiChatPanel,aiChatPanelMessages}.ts, package.json, esbuild.js + 10 test files.
 - Verification: final full 2448 passed | 2 skipped (0 failed); typecheck + esbuild clean at every gate; v1.18.0 + v1.19.0 vsix packaged.
 - Outcome: both cycles shipped and released (v1.18.0, v1.19.0).
@@ -298,7 +303,7 @@ Cycle RES-BAR closed and shipped end-to-end on `main` @ `499dfb8`. Pushed; tag `
 ## 2026-08-30 — DBX-03 Schema & Data Compare executed + reviewed
 
 - Action: planned (PLAN_DBX03 + 4 task files) then executed all 4 tasks TDD-first: schemaDiff (11), dataDiff (7), syncPlan (8+2), compareService/Panel/webview + wiring (15). Independent unic-smart review issued CHANGES-REQUESTED; two fix rounds followed (directional ALTERs now source-side; keyless compare issues zero data queries; single-column unique NOT NULL keys supported; T18 activation assertions; WHERE keys derive from dataDiff.keys). Superseding APPROVED verdicts recorded.
-- Files: src/core/compare/** (3 modules + tests), src/ui/compareService.ts, comparePanel.ts, comparePanelHtml.ts, webview/comparePanelMain.ts, src/extension.ts (UnicDB.compareTables + promptTableRef), package.json, esbuild.js, src/extension.test.ts.
+- Files: src/core/compare/** (3 modules + tests), src/ui/compareService.ts, comparePanel.ts, comparePanelHtml.ts, webview/comparePanelMain.ts, src/extension.ts (VSKit.compareTables + promptTableRef), package.json, esbuild.js, src/extension.test.ts.
 - Verification: targeted 43/43; extension 71/71; full 2344 passed | 2 skipped; typecheck + esbuild clean.
 - Outcome: DBX-03 4/4 done + reviewed; preview-only panel (Copy SQL hand-off), PostgreSQL-only gate.
 
@@ -313,7 +318,7 @@ Cycle RES-BAR closed and shipped end-to-end on `main` @ `499dfb8`. Pushed; tag `
 
 ## 2026-08-30 — DBX-02 SQL Intelligence Navigation shipped
 
-- Action: executed the full DBX-02 cycle (tasks 001–005): SchemaCache catalog accessors + vscode-free `createCatalogResolver`; completion extended with FK targets + views/routines/sequences; new SqlNavigationProvider (hover + definition over `UnicDB-sql-catalog:` virtual docs); `extractIdentifierReferences` in statementParser + SqlReferenceProvider (find usages); all wired in extension.ts behind partial-mock guards sharing one schemaCache.
+- Action: executed the full DBX-02 cycle (tasks 001–005): SchemaCache catalog accessors + vscode-free `createCatalogResolver`; completion extended with FK targets + views/routines/sequences; new SqlNavigationProvider (hover + definition over `VSKit-sql-catalog:` virtual docs); `extractIdentifierReferences` in statementParser + SqlReferenceProvider (find usages); all wired in extension.ts behind partial-mock guards sharing one schemaCache.
 - Files: src/ui/sqlCatalog.ts, sqlCatalogDocumentProvider.ts, sqlNavigationProvider.ts, sqlReferenceProvider.ts, sqlCompletionProvider.ts, schemaCache.ts, src/core/statementParser.ts, src/extension.ts, + tests.
 - Verification: `npx vitest run` 2237 passed | 2 skipped (+49 vs AIC baseline 2188); `npm run typecheck` exit 0; `npm run compile` clean. Commits: f40ae1f, aa5f36d, 29d065f, a093381 (+ docs).
 - Outcome: DBX-02 5/5 tasks done; docs/AI_HANDOFF updated (INDEX_DBX02 all done, ACTIVE.md rotated).
@@ -332,14 +337,14 @@ Cycle RES-BAR closed and shipped end-to-end on `main` @ `499dfb8`. Pushed; tag `
 - Behavior: slash autocomplete uses text-safe DOM nodes; Enter/Tab/Arrow/Esc precedence is isolated from mention handling; recognized commands never enter normal `send`; clear/resume reuse existing wire handlers; context/export stay local; engine/model are host-routed without secrets.
 - Model role: `/model work|smart` is session-local and is passed into the next builtin `runAgent` turn. Engine selection validates `builtin|omp`, persists the setting, and explains when reopening is required.
 - Verification: targeted parser/host/bundle suites 58 passed; final bundle suite 21 passed; all AI chat suites 316 passed; full suite 2066 passed with 2 skipped; `npm run typecheck` and `npm run compile` passed; release hygiene 3 passed; `git diff --check` passed.
-- Release prep: `npm version minor --no-git-tag-version` set v1.14.0, changelog and comparison links updated, `scripts/build.sh` passed, and the final `npx @vscode/vsce package --no-dependencies -o dist/` produced `dist/UnicDB-1.14.0.vsix` (1,720,515 bytes). External tagging/publishing intentionally not performed; release remains local-prepared.
+- Release prep: `npm version minor --no-git-tag-version` set v1.14.0, changelog and comparison links updated, `scripts/build.sh` passed, and the final `npx @vscode/vsce package --no-dependencies -o dist/` produced `dist/VSIX v1.14.0` (1,720,515 bytes). External tagging/publishing intentionally not performed; release remains local-prepared.
 
 ## 2026-08-28 — Cycle AB: AI chat image attach + clipboard paste + release v1.9.0
 
 - Action: full handoff cycle (P0→R5+release) adding image attach + Cmd/Ctrl+V paste to the AI Chat composer. P0 decisions: scope = image attach + paste (slash commands deferred); caps = 5 MB / 4 per turn; non-vision policy = block at attach with amber warning (rejected: auto-route to vision model / send-with-warning — both surprise the user or violate "no broken messages"). Plan review round 1 = Issues Found (3 BLOCKING: CSP img-src missing, omp/ACP silent-drop, userContentOverride redundant) → revised → loop cap reached, applied without re-review.
-- Implementation: 4 tasks / 2 waves in 4 worktrees. Wave 1 (3 parallel): T1 host message contract + CSP fix + omp/ACP gate + buildMessages image-parts path; T3 CSS for attach strip + button + warning + dark theme + :focus-visible; T5 pure helpers (validateImageAttachment / log redaction / dataURL) + magic-byte sniff. Wave 2 (1): T2 webview UX (attach button + hidden file input + paste handler + strip renderer + dynamic tooltip + FileReader onerror drop+warn). All TDD: RED first, GREEN after. Cycle-AA keybind (Enter=send / Shift+Enter=newline) + height chain (.UnicDB-chat-body) preserved.
+- Implementation: 4 tasks / 2 waves in 4 worktrees. Wave 1 (3 parallel): T1 host message contract + CSP fix + omp/ACP gate + buildMessages image-parts path; T3 CSS for attach strip + button + warning + dark theme + :focus-visible; T5 pure helpers (validateImageAttachment / log redaction / dataURL) + magic-byte sniff. Wave 2 (1): T2 webview UX (attach button + hidden file input + paste handler + strip renderer + dynamic tooltip + FileReader onerror drop+warn). All TDD: RED first, GREEN after. Cycle-AA keybind (Enter=send / Shift+Enter=newline) + height chain (.VSKit-chat-body) preserved.
 - Review: 4 reviewers (unic-smart). R1 (T1) CHANGES-REQUESTED on paperwork (missing Executor Report with EXECUTOR_MODEL/RED_OUTPUT) + 2 missing tests (privacy sentinel + attachments, mention×attachment). R2 (T3) APPROVED-WITH-MINOR (stale comment + dark-token test pins 1 of 6). R3 (T5) APPROVED-WITH-MINOR (phantom ImageAttachment type import in test; misleading comment). R4 (T2) CHANGES-REQUESTED on paperwork (same gap as R1) + FileReader onerror resolved empty base64 → corrupt push + missing dynamic tooltip. R1.5 + R4.5 fixed all; re-review R1.5 APPROVED. Loop cap 2 reached → R5.
-- Verification: 75 files / 1139 tests pass / 0 fail (TDD + cycle-AA + cycle-AB all green); typecheck exit 0. UnicDB-1.9.0.vsix 18 entries / 0 forbidden / 0 markers; UnicDB-chat-body + mention_objects + UnicDB-chat-attach-btn + img-src 'self' data: all present in extension bundle. Released v1.9.0 (commit 5a9bb1d, tag v1.9.0, GitHub release with UnicDB-1.9.0.vsix 1.65 MB).
+- Verification: 75 files / 1139 tests pass / 0 fail (TDD + cycle-AA + cycle-AB all green); typecheck exit 0. VSIX v1.9.0 18 entries / 0 forbidden / 0 markers; VSKit-chat-body + mention_objects + VSKit-chat-attach-btn + img-src 'self' data: all present in extension bundle. Released v1.9.0 (commit 5a9bb1d, tag v1.9.0, GitHub release with VSIX v1.9.0 1.65 MB).
 
 ## 2026-08-28 — Cycle AA: AI Chat UX overhaul + release v1.8.0
 
@@ -359,7 +364,7 @@ Cycle RES-BAR closed and shipped end-to-end on `main` @ `499dfb8`. Pushed; tag `
   headless-Chromium probe); T5 changes_requested (single-segment regex, '..' escape,
   UTF-16 vs bytes). Fix round 1 + 1b fixed all; re-review approved 5/5.
 - Verification: 73 files / 1086 tests pass, typecheck 0. vsix 18 entries, 0 forbidden,
-  0 markers. Released v1.8.0 (commit 10d44f3, GitHub release with UnicDB-1.8.0.vsix).
+  0 markers. Released v1.8.0 (commit 10d44f3, GitHub release with VSIX v1.8.0).
 
 ## 2026-08-27 — Cycle Z: SQL Console feature + release v1.7.0
 
@@ -371,15 +376,15 @@ Cycle RES-BAR closed and shipped end-to-end on `main` @ `499dfb8`. Pushed; tag `
 - Implementation: 3 chained tasks, one wave each. TASK-001 src/ui/consolePanelMessages.ts
   (pure helpers: suggestSaveFileName timestamped console_YYYYMMDD_HHMMSS.sql + message
   contract). TASK-002 webview/consolePanelMain.ts (textarea, Run/Save, Cmd/Ctrl+Enter,
-  custom right-click menu) + esbuild.js entry → dist/consolePanel.js + .UnicDB-console*
+  custom right-click menu) + esbuild.js entry → dist/consolePanel.js + .VSKit-console*
   styles + bundle pin tests. TASK-003 src/ui/consolePanel.ts host panel (CSP posture matches
-  other panels) + extension.ts `UnicDB.openConsole` + package.json contributes.
+  other panels) + extension.ts `VSKit.openConsole` + package.json contributes.
 - Review: bao-opus per task — TASK-001 approved_minor, TASK-003 approved, TASK-002
   changes_requested (context menu ignored Escape / stayed open after keyboard run).
   R4.5 fix round 1: Escape + click-away + run-closes-menu behavior added with regression
   tests (#8/#9) → re-review APPROVED.
 - Verification: aggregate suite 1693 passed / 2 skipped / 0 failed; typecheck clean;
-  build.sh → UnicDB-1.7.0.vsix (1,682,919 bytes), artifact assertions (console bundle
+  build.sh → VSIX v1.7.0 (1,682,919 bytes), artifact assertions (console bundle
   present, zero forbidden paths), installer dry-run OK. Note: first build.sh run had 1
   flaky test failure mid npm-ci install; two subsequent full runs green — treated as
   environment flake, not product defect.
@@ -440,7 +445,7 @@ Cycle RES-BAR closed and shipped end-to-end on `main` @ `499dfb8`. Pushed; tag `
   `onFilterChanged` only schedules server requery for column-filter sources — quick-search
   typing posts nothing (search handler now calls `onFilterChanged("quickFilter")`);
   (4) `onRefreshClick` replaces window.confirm with in-DOM saveBanner Discard/Cancel
-  (reused .UnicDB-save-retry style); Browse header carries ` — driver@host/db` token.
+  (reused .VSKit-save-retry style); Browse header carries ` — driver@host/db` token.
 - TDD: 4 mandated RED failures (dup sort `id__2 ASC`, warnings banner hidden, search
   requery posted, dirty discard on refresh) → GREEN; A13 tests rewritten to drive the
   in-DOM controls (intentional expectation change).
@@ -465,7 +470,7 @@ Cycle RES-BAR closed and shipped end-to-end on `main` @ `499dfb8`. Pushed; tag `
 - Verify: full suite 1552 passed / 2 skipped / 0 failed; typecheck exit 0.
 - Git: plan a103eed → waves (a103eed→cee00ac) → reviews → R4.5 fix rounds → I4 df7319e →
   single push to main (fast-forward, 12 commits).
-- Release v1.6.7: bump + CHANGELOG + lockfile sync + build.sh → dist/UnicDB-1.6.7.vsix
+- Release v1.6.7: bump + CHANGELOG + lockfile sync + build.sh → dist/VSIX v1.6.7
   1672093 bytes, assertions 0 forbidden, dry-run OK, gh release v1.6.7 with vsix attached.
 
 
@@ -476,9 +481,9 @@ Cycle RES-BAR closed and shipped end-to-end on `main` @ `499dfb8`. Pushed; tag `
   DISTINCT set-filter + typed values (strict driver-token dialect parse; sort carried in
   filter/paging requery; cache invalidation re-request after render), TASK-004 host wiring
   (distinct-values round trip + stale statement-index guard + batch drain + truncated kept
-  intact; multi-term ORDER BY via AS UnicDB_sub; SaveContext.listColumnTypes).
+  intact; multi-term ORDER BY via AS VSKit_sub; SaveContext.listColumnTypes).
 - Plan review 2 rounds (R1: 1 critical + 5 important; R2: 5 blocking — full composite PK,
-  stale guard, AS UnicDB_sub, LONGTEXT family, mismatched-quote reject — applied without
+  stale guard, AS VSKit_sub, LONGTEXT family, mismatched-quote reject — applied without
   re-review per loop cap). Review code: round 1 all 4 changes_requested → fix round 1 all 4
   PASS → 3 approved, TASK-003 still 1 finding → fix round 2 (refresh mounted filters AFTER
   render) → approved.
@@ -487,13 +492,13 @@ Cycle RES-BAR closed and shipped end-to-end on `main` @ `499dfb8`. Pushed; tag `
 - Files: src/ui/{queryComposer,distinctValues,messages,resultsPanel}.ts, src/extension.ts,
   webview/main.ts, 5 new test files + amendments; docs/AI_HANDOFF/*.
 - Git: plan f0bc514 → waves 2e69859 → verdicts → fix rounds → R5 close 089941a, pushed.
-- Release v1.6.6: bump + CHANGELOG + lockfile sync + build.sh → dist/UnicDB-1.6.6.vsix
+- Release v1.6.6: bump + CHANGELOG + lockfile sync + build.sh → dist/VSIX v1.6.6
   1668464 bytes, assertions 0 forbidden, dry-run OK.
 
 ## 2026-08-26 — Cycle V (SQL coloring + server-side filter/paging + MSSQL sort) + release v1.6.5
 
 - Action: handoff cycle V — 6 tasks / 2 waves: TASK-001 SQL TextMate injection grammar
-  (`syntaxes/UnicDB-sql-injection.tmLanguage.json` + package.json contribution, no
+  (`syntaxes/VSKit-sql-injection.tmLanguage.json` + package.json contribution, no
   contributes.languages), TASK-002 schema-aware semantic tokens provider
   (`src/ui/sqlSemanticTokens.ts` + extension.ts wiring, refresh() at both cache-invalidation
   sites, reuse schemaCache), TASK-003 webview SQL tokenizer (`webview/sqlHighlight.ts` +
@@ -512,7 +517,7 @@ Cycle RES-BAR closed and shipped end-to-end on `main` @ `499dfb8`. Pushed; tag `
 - Git: plan f7ba1e1 → waves 11c36c5, 575d727 → I4 e2e0aee → review efbd5c5 → RUN done 3571ea4,
   all pushed to main. Worktree/branch cleanup verified clean.
 - Release v1.6.5: bump + CHANGELOG + lockfile sync (npm install --package-lock-only) +
-  build.sh (ci/typecheck/test/compile/package) → dist/UnicDB-1.6.5.vsix 1662629 bytes, artifact
+  build.sh (ci/typecheck/test/compile/package) → dist/VSIX v1.6.5 1662629 bytes, artifact
   assertions 0 forbidden, installer dry-run OK.
 
 ## 2026-08-25 — Cycle U (DataGrip parity) complete
@@ -543,8 +548,8 @@ Cycle RES-BAR closed and shipped end-to-end on `main` @ `499dfb8`. Pushed; tag `
 - Post-merge: user still saw the error because cycle S did not release — one-line installer
   pulls VSIX from latest GitHub Release (still 1.6.2, broken). Release v1.6.3: bump + CHANGELOG + lockfile sync
   (releaseHygiene catches drift 1.6.2≠1.6.3 → `npm install --package-lock-only`) + build.sh
-  (1043 pass) + tag + `gh release create` with UnicDB-1.6.3.vsix + install via one-liner
-  (1.6.2 → 1.6.3, `__UnicDB_browse__` = 0 in installed build).
+  (1043 pass) + tag + `gh release create` with VSIX v1.6.3 + install via one-liner
+  (1.6.2 → 1.6.3, `__VSKit_browse__` = 0 in installed build).
 - Docs: MEMORY.md (ship constraint + root cause), RELEASE.md ("Shipping to users" section),
   CHANGELOG 1.6.3. Pushed 2d0fd94 + tag v1.6.3.
 
@@ -554,7 +559,7 @@ Cycle RES-BAR closed and shipped end-to-end on `main` @ `499dfb8`. Pushed; tag `
 - Files: `src/core/dangerousStatement.ts` (skip-past-`explain` prelude, `sawExplain` flag), `src/core/text.ts` (new `truncateAtBoundary`), `src/extension.ts` (capDetail uses helper — 2 lines), `package-lock.json` (root 1.3.0→1.5.1), `src/__tests__/releaseHygiene.test.ts` (new), package.json 1.5.1.
 - Waves: W1 = 701∥702∥703 (disjoint files, executors unic-code in worktrees) → 9ac114e; W2 = 704 → 9e3f7b1; reviews 0bf6bc8; close 0438762.
 - Review: 4/4 approved (701/702/704 approved_minor). 702 needed 1 auto-fix round — blocker was only missing RED_OUTPUT paste; Fix702 temp-revert helper → capture real lone-surrogate failure → restore byte-identical.
-- Verification: full suite 40 files / 453 tests PASS; `tsc --noEmit` 0; `scripts/build.sh` → dist/UnicDB-1.5.1.vsix 1576198 bytes.
+- Verification: full suite 40 files / 453 tests PASS; `tsc --noEmit` 0; `scripts/build.sh` → dist/VSIX v1.5.1 1576198 bytes.
 - Release: push main (356973d..0438762), tag v1.5.1, gh release + asset verified (`gh release view`).
 
 ## 2026-08-24 — Cycle M: approval-aware omp ACP bridge
@@ -587,37 +592,37 @@ Cycle RES-BAR closed and shipped end-to-end on `main` @ `499dfb8`. Pushed; tag `
 - Action: clean up the final backlog — permission dialog shows tool args/SQL preview, builtin engine shows tool-call live, release pass VSIX 1.6.0.
 - Files: src/ui/permissionDetail.ts (pure sanitizer: redact secret keys, SQL preview, JSON pretty, cap 2000), aiChatPanel.ts + webview (collapsible textContent detail), agent.ts (AgentCallbacks.onToolCall additive — fires before executeToolCall, no abort-check inside the loop), CHANGELOG.md (I–P), docs/RELEASE.md, .vscodeignore (add vitest.integration-all.config.ts that was leaking).
 - Bug caught: releaseHygiene test detected package-lock root version 1.5.1 ≠ package.json 1.6.0 → npm install --package-lock-only to resync.
-- Verification: full suite 838 passed / 2 opt-in skipped exit 0; compile + typecheck clean; UnicDB-1.6.0.vsix (15 files, 1.55 MB, no src/node_modules). Pushed 6df9083.
+- Verification: full suite 838 passed / 2 opt-in skipped exit 0; compile + typecheck clean; VSIX v1.6.0 (15 files, 1.55 MB, no src/node_modules). Pushed 6df9083.
 
 ## 2026-08-28 — Cycle AD: DB-aware AI Chat + OMP bridge + release v1.10.0
 
 - Action: implemented five read-only DB-aware tools with a strict parser and explicit ACP-style permission gate; added OMP config injection and two discoverable VS Code commands; extracted the shared DDL-only `formatSystemPrompt` builder.
 - Files: `src/ai/tools/readonlySqlParser.ts`, `src/ai/tools/dbAwareTools.ts`, `src/ui/aiChatPanel.ts`, `src/extensionConfigExport.ts`, `src/extension.ts`, `package.json`, `package-lock.json`, webview regression tests and AD handoff docs.
-- TDD/review fixes: parser tests caught and closed `SELECT INTO`; webview fixtures now match hyphenated host option IDs and cover Allow Once/Session/Deny plus stale clicks; package declarations preserve `UnicDB.aiChat` and expose both OMP commands.
+- TDD/review fixes: parser tests caught and closed `SELECT INTO`; webview fixtures now match hyphenated host option IDs and cover Allow Once/Session/Deny plus stale clicks; package declarations preserve `VSKit.aiChat` and expose both OMP commands.
 - Review: TASK-001 approved; TASK-002 and TASK-003 approved with non-blocking minor notes. Reviewer unic-smart was isolated from executor unic-code.
-- Verification: full suite 128 files / 1937 passed / 2 skipped; `npm run typecheck` exit 0; `npm run package -- --no-dependencies` produced `UnicDB-1.10.0.vsix` with 18 entries, 0 forbidden entries, and all AD/AB markers.
-- Delivery: commit `3f24080`, pushed `main`, tag `v1.10.0` pushed, GitHub release live at https://github.com/lengockhoa/UnicDB/releases/tag/v1.10.0.
+- Verification: full suite 128 files / 1937 passed / 2 skipped; `npm run typecheck` exit 0; `npm run package -- --no-dependencies` produced `VSIX v1.10.0` with 18 entries, 0 forbidden entries, and all AD/AB markers.
+- Delivery: commit `3f24080`, pushed `main`, tag `v1.10.0` pushed, GitHub release live at https://github.com/lengockhoa/VSKit/releases/tag/v1.10.0.
 
 ## 2026-08-28 — Cycle AE: OMP runtime session wiring + release v1.11.0
 
-- Action: built real-time omp runtime on top of cycle AD's config bridge. Added `UnicDB.ai.engine` setting (builtin|omp), `src/ai/omp/hostMcp.ts` MCP HTTP server hosting the 5 cycle-AD DB-aware tools, `src/ai/omp/ompChatEngine.ts` chat glue, and engine routing in `commandOpenAiChat`.
-- Files: `src/ai/settings.ts` (engine field + aiSettingsErrors check + legacy migration), `src/ai/config.ts` (legacy migration), `src/extension.ts` (activation detect + routing), `src/ui/aiChatPanel.ts` (engine option + wiring), `package.json` (UnicDB-ai-engine activationEvent), new tests across `src/ai/omp/__tests__/`.
+- Action: built real-time omp runtime on top of cycle AD's config bridge. Added `VSKit.ai.engine` setting (builtin|omp), `src/ai/omp/hostMcp.ts` MCP HTTP server hosting the 5 cycle-AD DB-aware tools, `src/ai/omp/ompChatEngine.ts` chat glue, and engine routing in `commandOpenAiChat`.
+- Files: `src/ai/settings.ts` (engine field + aiSettingsErrors check + legacy migration), `src/ai/config.ts` (legacy migration), `src/extension.ts` (activation detect + routing), `src/ui/aiChatPanel.ts` (engine option + wiring), `package.json` (VSKit-ai-engine activationEvent), new tests across `src/ai/omp/__tests__/`.
 - TDD: 22 new tests (hostMcp 13 + ompChatEngine 7 + engine routing + legacy migration). Review R1 found 3 blockers (lifecycle/contract/engine source-of-truth). R4.5 closed all 3 + added activation race fix.
 - Review: TASK-001 R2 APPROVED; TASK-002/TASK-003 still flagged but loop cap 2 reached per cycle AA/AB precedent. T3 still ships the engine="omp" branch with a runtime stub that flips to builtin on first turn — known caveat documented in CHANGELOG and next cycle.
-- Verification: 1963 tests passed / 2 skipped; `npm run typecheck` exit 0; `npm run package -- --no-dependencies` produced `UnicDB-1.11.0.vsix` (18 entries, 0 forbidden, all AD + AB + AE markers present).
-- Delivery: commit `1a5b8ca`, pushed `main`, tag `v1.11.0` pushed, GitHub release live at https://github.com/lengockhoa/UnicDB/releases/tag/v1.11.0.
+- Verification: 1963 tests passed / 2 skipped; `npm run typecheck` exit 0; `npm run package -- --no-dependencies` produced `VSIX v1.11.0` (18 entries, 0 forbidden, all AD + AB + AE markers present).
+- Delivery: commit `1a5b8ca`, pushed `main`, tag `v1.11.0` pushed, GitHub release live at https://github.com/lengockhoa/VSKit/releases/tag/v1.11.0.
 
 ## 2026-08-28 — Cycle AF: DataGrip parity wave 1 + AE.5 fix + release v1.12.0
 
-- Action: shipped 4 AF tasks in 3 waves (AF-001 pgCatalog + adapter.catalog capability; AF-003 sqlFormat pure module; AF-002 schema-tree catalog categories + UnicDB-ddl: DDL viewer; AF-004 Console v2 multi-tab/history/EXPLAIN/Format). Fixed cycle AE R2-critical by dropping the activation-time omp engine shim (AE.5) — omp runtime now gated at chat open.
-- Files: src/core/ddl/pgCatalog.ts (NEW), src/core/sqlFormat.ts (NEW), src/ui/ddlView.ts (NEW), src/ui/schemaTree.ts, src/ui/consolePanel.ts, src/ui/consolePanelMessages.ts, webview/consolePanelMain.ts, webview/styles.css, src/extension.ts, src/adapters/types.ts, src/adapters/postgres.ts, package.json (UnicDB.openDdl/refreshDdl/consoleNewTab), + 6 new test files.
-- Verification: 2021 tests passed / 2 skipped; npm run typecheck exit 0; npm run compile clean; UnicDB-1.12.0.vsix = 18 entries, 0 forbidden, all markers (pgCatalog, formatSql, consoleHistory, UnicDB-ddl, hostMcp).
+- Action: shipped 4 AF tasks in 3 waves (AF-001 pgCatalog + adapter.catalog capability; AF-003 sqlFormat pure module; AF-002 schema-tree catalog categories + VSKit-ddl: DDL viewer; AF-004 Console v2 multi-tab/history/EXPLAIN/Format). Fixed cycle AE R2-critical by dropping the activation-time omp engine shim (AE.5) — omp runtime now gated at chat open.
+- Files: src/core/ddl/pgCatalog.ts (NEW), src/core/sqlFormat.ts (NEW), src/ui/ddlView.ts (NEW), src/ui/schemaTree.ts, src/ui/consolePanel.ts, src/ui/consolePanelMessages.ts, webview/consolePanelMain.ts, webview/styles.css, src/extension.ts, src/adapters/types.ts, src/adapters/postgres.ts, package.json (VSKit.openDdl/refreshDdl/consoleNewTab), + 6 new test files.
+- Verification: 2021 tests passed / 2 skipped; npm run typecheck exit 0; npm run compile clean; VSIX v1.12.0 = 18 entries, 0 forbidden, all markers (pgCatalog, formatSql, consoleHistory, VSKit-ddl, hostMcp).
 - Delivery: merge commits c0af36b (wave1) + 3ed2da4 (wave2) + 0a70c99 (wave3) + 49f49cd (AE.5), release a72b9cf; tag v1.12.0 pushed; GitHub release live.
 
 ## 2026-08-29 — Cycle AH: accumulating multi-statement result tabs + release v1.13.0
 
 - Action: shipped AH-001 queryRunner append mode/cursor discipline, AH-002 results-panel append wiring/cache isolation, and AH-003 append-only webview tabs with `Run N · Statement M` labels and per-tab DISTINCT cache preservation.
-- Verification: 2057 tests passed / 2 skipped; `npm run typecheck` exit 0; `npm run compile` clean; `UnicDB-1.13.0.vsix` 18 entries with all AF/AG/AH markers.
+- Verification: 2057 tests passed / 2 skipped; `npm run typecheck` exit 0; `npm run compile` clean; `VSIX v1.13.0` 18 entries with all AF/AG/AH markers.
 - Delivery: release commit, tag `v1.13.0`, and GitHub release live.
 
 ## 2026-08-30 — Cycle AIC: SQL autocomplete (5 tasks, AIC-001 → AIC-005)
@@ -629,7 +634,7 @@ Cycle RES-BAR closed and shipped end-to-end on `main` @ `499dfb8`. Pushed; tag `
 
 ## 2026-08-31 — RLX-01 whole-system roadmap planning
 
-- Action: created an evidence-grounded, phased UnicDB delivery roadmap and made the first operational-reliability cycle executable: PostgreSQL non-cursor cancellation, SchemaCache single-flight refresh, and fail-closed import-plan validation.
+- Action: created an evidence-grounded, phased VSKit delivery roadmap and made the first operational-reliability cycle executable: PostgreSQL non-cursor cancellation, SchemaCache single-flight refresh, and fail-closed import-plan validation.
 - Files: `docs/AI_HANDOFF/PLAN.md`, `docs/AI_HANDOFF/INDEX.md`, `docs/AI_HANDOFF/ACTIVE.md`, and `docs/AI_HANDOFF/tasks/TASK-RLX-001.md` through `TASK-RLX-003.md`.
 - Quality gate: independent plan review approved the roadmap; the PID-window cancel no-op edge case and package-script evidence anchor were incorporated before finalizing.
 - Verification: handoff structural and task-size checks plus `git diff --check` passed; planning-only work, with no product code, tests, commits, or releases changed.
@@ -637,7 +642,7 @@ Cycle RES-BAR closed and shipped end-to-end on `main` @ `499dfb8`. Pushed; tag `
 
 ## 2026-09-04 / 2026-09-05 — UX2 cycle close-out (v1.51.3 shipped)
 
-- Action: closed the UX2 handoff cycle and shipped v1.51.3 to GitHub Releases (https://github.com/lengockhoa/UnicDB/releases/tag/v1.51.3, vsix `UnicDB-1.51.3.vsix` 2.01 MB / 22 files). The cycle surfaces SQL + connection errors in the Results panel and fixes the broken `Run N · Stmt M` tab labels — both originally user-reported silent failures.
+- Action: closed the UX2 handoff cycle and shipped v1.51.3 to GitHub Releases (https://github.com/lengockhoa/VSKit/releases/tag/v1.51.3, vsix `VSIX v1.51.3` 2.01 MB / 22 files). The cycle surfaces SQL + connection errors in the Results panel and fixes the broken `Run N · Stmt M` tab labels — both originally user-reported silent failures.
 - Files: `src/ui/ddlStatusCard.ts` (classifyPanelKind error→card + connection-error kind), `webview/tabTitle.ts` (new, pure tabTitle + tabBadge), `webview/main.ts` (Messages auto-open after loadMoreInFlight clamp), `src/core/queryRunner.ts` (runFailed + RunnerBusy + cached lastOnUpdate), `src/ui/statusBar.ts` (wrapper {item, setErrorBadge, dispose}), `src/extension.ts` (outer-catch in runStatements now calls runFailed + setErrorBadge instead of dropping a toast), plus 5 test files (4 extended, 2 new) totalling +25 tests.
 - Quality gate: 4/4 R2 verdicts in (UX2-001 approved, UX2-002 approved_minor, UX2-003 approved_minor, UX2-004 changes_requested for missing RED evidence); 1 R4.5 R1 doc-only fix (RED re-captured by reverting the outer-catch block in extension.ts, running vitest, capturing the 2-RED/2-GREEN output, then restoring; trailing-newline minor; dead-helper removed; deactivating gate added) → 4/4 approved_minor and shipped.
 - Verification: typecheck + compile exit 0; full suite 3555 passed | 2 skipped (was 3530|2 baseline, +25 new tests across 5 files); the late re-pass reviewer independently cross-checked the RED-evidence authenticity (commit a0da149, 13-line offset vs R3 helper removal, 2-RED/2-GREEN mechanical pattern) and accepted it.
@@ -655,8 +660,8 @@ Cycle RES-BAR closed and shipped end-to-end on `main` @ `499dfb8`. Pushed; tag `
 ## 2026-09-05 — UX3 cycle shipped locally (v1.51.4 pending R5 release)
 
 - Action: ran the full UX3 handoff cycle end-to-end. Replaced `docs/AI_HANDOFF/PLAN.md` with the UX3 spec (closeable tabs), wrote INDEX + 3 TASK files (TASK-UX3-001 webview DOM, TASK-UX3-002 host state, TASK-UX3-003 message wiring). Implemented in 3 waves (`bf9e6e6` / `d7c7050` / `4dc28e8`) + R4.5 fix round (`0e424a4`).
-- Files: `webview/main.ts` (× button + `showTabMenu` + empty-state branch kept pinned contract), `webview/styles.css` (`.UnicDB-tab-close` hover/focus rules + `.UnicDB-tab-menu` + `.UnicDB-empty-state` rules), `src/ui/resultsPanel.ts` (3 public close methods + `rebaseAfterClose` per-index cache rebase + 3 handleMessage cases + default branch), `src/ui/messages.ts` (3 new message interfaces + union), plus 3 test files (24 tests total: 9 webview DOM contracts + 8 host state + 3 R4.5 cache-rebase + 4 real-handleMessage wiring).
-- Quality gate: R2 review via `code-reviewer` agent (opus / unic-smart, different from executor's sonnet) returned 3 critical findings — (1) empty-state class/copy change broke 7 pinned tests; (2) close methods did not rebase per-index host caches (data-loss risk via save-edits writing to wrong table after index shift); (3) wiring tests faked coverage with a hand-copied double. R4.5 fixed all 3: empty-state reverted to pinned `.UnicDB-empty` + "No results yet.", `rebaseAfterClose()` added, wiring tests rewritten to drive real `ResultsPanel.handleMessage`.
+- Files: `webview/main.ts` (× button + `showTabMenu` + empty-state branch kept pinned contract), `webview/styles.css` (`.VSKit-tab-close` hover/focus rules + `.VSKit-tab-menu` + `.VSKit-empty-state` rules), `src/ui/resultsPanel.ts` (3 public close methods + `rebaseAfterClose` per-index cache rebase + 3 handleMessage cases + default branch), `src/ui/messages.ts` (3 new message interfaces + union), plus 3 test files (24 tests total: 9 webview DOM contracts + 8 host state + 3 R4.5 cache-rebase + 4 real-handleMessage wiring).
+- Quality gate: R2 review via `code-reviewer` agent (opus / unic-smart, different from executor's sonnet) returned 3 critical findings — (1) empty-state class/copy change broke 7 pinned tests; (2) close methods did not rebase per-index host caches (data-loss risk via save-edits writing to wrong table after index shift); (3) wiring tests faked coverage with a hand-copied double. R4.5 fixed all 3: empty-state reverted to pinned `.VSKit-empty` + "No results yet.", `rebaseAfterClose()` added, wiring tests rewritten to drive real `ResultsPanel.handleMessage`.
 - Verification: typecheck + compile exit 0; full suite **3579 passed | 2 skipped** (was 3555|2 baseline, +24 tests across the cycle, 0 regressions in UX1 / UX2 / BQ); reviewer verdicts flipped from `critical_block` → `approved_minor` after R4.5.
 - R2 verdicts: TASK-UX3-001 approved_minor (nested `<button>` invalid HTML; Escape-key dismiss deferred; friendly empty-state copy deferred to follow-up), TASK-UX3-002 approved_minor (5 documented minor follow-ups), TASK-UX3-003 approved_minor (real wiring now exercised).
 - Lessons carried forward: (a) Empty-state copy/class is heavily pinned by 7+ existing tests — copy changes need a wave that also updates those pins; deferred to follow-up. (b) Per-index host caches (`tableByStatement`, etc.) need explicit rebase on any `lastResults` mutation, including closes — indexes shift and the save path silently targets the wrong statement. (c) Wiring tests must drive the real message handler; hand-copied doubles prove nothing (deleting the real cases wouldn't fail them). (d) PLAN.md §3 stated "fire the existing onUpdate" — no `onUpdate` listener exists in `ResultsPanel`; the implementation posts a fresh `state` message instead, which is functionally correct in this codebase. Plan-vs-impl drift must be recorded in the task file post-hoc.
@@ -679,54 +684,54 @@ Two user-visible gaps fixed in one small cycle:
 
 **(A) Auto-publish to VS Code Marketplace.** `.github/workflows/publish.yml` triggers on `push` of any `v*` tag, runs `npm run verify:release` (same gate as `scripts/build.sh`), then `npx vsce publish` using the `VSCE_PAT` secret. `workflow_dispatch` is added as a safety hatch for re-runs without re-pushing the tag. Manual fallback: `npm run publish:patch|minor|major` with `$VSCE_PAT` set locally (3 thin wrapper scripts added to `package.json`). `docs/RELEASE.md` §Publishing rewritten with both paths + Azure DevOps PAT setup link. README release section now mentions auto-publish.
 
-**(B) Fix 📖 User Guide icon (silent no-op for installed users).** `UnicDB.openUserGuide` resolved `docs/UnicDB_USER_GUIDE.md` from `context.extensionUri`, but `.vscodeignore` excluded `docs/**` wholesale → file never shipped in the .vsix → `markdown.showPreview` silently failed → user saw nothing. Three-part fix:
-- `.vscodeignore` now allow-lists `docs/UnicDB_USER_GUIDE.md` while keeping the rest of `docs/` excluded (cycle-internal docs).
+**(B) Fix 📖 User Guide icon (silent no-op for installed users).** `VSKit.openUserGuide` resolved `docs/VSKit_USER_GUIDE.md` from `context.extensionUri`, but `.vscodeignore` excluded `docs/**` wholesale → file never shipped in the .vsix → `markdown.showPreview` silently failed → user saw nothing. Three-part fix:
+- `.vscodeignore` now allow-lists `docs/VSKit_USER_GUIDE.md` while keeping the rest of `docs/` excluded (cycle-internal docs).
 - `src/extension.ts` adds a top-level `safeFileExists` helper; the command now uses `vscode.env.openExternal(GitHub URL)` as a graceful fallback when the local file is missing — preserves offline-first behavior (real local file → markdown preview) and never shows the useless absolute-path toast.
-- Tests: #3 rewritten to assert the GitHub URL fallback; #7 added to cover the local-file happy path; #8 added as a `.vscodeignore` regression guard that pins both `docs/**` exclusion and `!docs/UnicDB_USER_GUIDE.md` allow-rule side by side.
+- Tests: #3 rewritten to assert the GitHub URL fallback; #7 added to cover the local-file happy path; #8 added as a `.vscodeignore` regression guard that pins both `docs/**` exclusion and `!docs/VSKit_USER_GUIDE.md` allow-rule side by side.
 
 **Frozen-surface guard widening:** `packageJsonDepsDiff` filter in both `bq04SurfaceGuard.test.ts` and `bqFollowupSurfaceGuard.test.ts` now drops `+/- "publish:<word>": "..."` lines (additive release plumbing, not a package manifest surface change). Mirrors the existing `version` line carve-out.
 
-**Verification:** typecheck + compile exit 0; full suite **3613 passed | 2 skipped** (was 3611|2 baseline, +2 net: +3 from #3/#7/#8 minus 1 from the rewritten #3 + workspace.fs.stat + env.openExternal mock infrastructure that other tests reuse); 0 regressions in UX1 / UX2 / UX3 / BQ cycles. `unzip -l UnicDB-1.51.5.vsix` confirms `extension/docs/UnicDB_USER_GUIDE.md` is now packaged. Workflow YAML parses cleanly (PyYAML safe_load: `name`, `on` (as `True` per YAML 1.1 quirk, GitHub accepts), `jobs.publish` with 5 named steps).
+**Verification:** typecheck + compile exit 0; full suite **3613 passed | 2 skipped** (was 3611|2 baseline, +2 net: +3 from #3/#7/#8 minus 1 from the rewritten #3 + workspace.fs.stat + env.openExternal mock infrastructure that other tests reuse); 0 regressions in UX1 / UX2 / UX3 / BQ cycles. `unzip -l VSIX v1.51.5` confirms `extension/docs/VSKit_USER_GUIDE.md` is now packaged. Workflow YAML parses cleanly (PyYAML safe_load: `name`, `on` (as `True` per YAML 1.1 quirk, GitHub accepts), `jobs.publish` with 5 named steps).
 
 **CI activation steps (user-driven, post-merge):**
 1. Create Azure DevOps PAT at https://dev.azure.com/[org]/_usersSettings/tokens with Marketplace → Manage scope.
 2. Add as repo secret `VSCE_PAT` at Settings → Secrets and variables → Actions.
-3. First publish: `git tag v1.51.5 && git push origin v1.51.5` → workflow auto-publishes to `lengockhoa.UnicDB` within ~5–10 min.
+3. First publish: `git tag v1.51.5 && git push origin v1.51.5` → workflow auto-publishes to `lengockhoa.VSKit` within ~5–10 min.
 
 ## Post-rename folder cleanup — 2026-09-06 (main @ 4efb079)
 
-User moved project folder `VSDB → UnicDB`. Git internals already aligned by the rename commit (`6f3fcc0`); HEAD == `origin/main` == `4d52360`. Cleanup pass:
+User moved project folder `VSKit → VSKit`. Git internals already aligned by the rename commit (`6f3fcc0`); HEAD == `origin/main` == `4d52360`. Cleanup pass:
 
-- **`git worktree prune -v`**: removed 7 stale worktree entries, all `prunable`, pointing to the old `/Volumes/KHOA_EXTENAL/DOCKER_CREATE/VSDB/.claude/worktrees/` path (now non-existent). `git worktree list` now shows only `main`.
-- **Build-artifact sweep**: removed 33 leftover `vsdb-*.vsix` files from the repo root (~65MB), keeping only `UnicDB-1.51.5.vsix` (matches the gitignored `*.vsix` rule in `.gitignore`).
+- **`git worktree prune -v`**: removed 7 stale worktree entries, all `prunable`, pointing to the old `/Volumes/KHOA_EXTENAL/DOCKER_CREATE/VSKit/.claude/worktrees/` path (now non-existent). `git worktree list` now shows only `main`.
+- **Build-artifact sweep**: removed 33 leftover `VSKit-*.vsix` files from the repo root (~65MB), keeping only `VSIX v1.51.5` (matches the gitignored `*.vsix` rule in `.gitignore`).
 - **Source-truth drift fixes**:
   - `docs/STATUS.md` — stale HEAD ref `ae5c6c3` → `4d52360`; added a "Post-rename folder cleanup" bullet recording the worktree prune + .vsix sweep + typecheck pass.
-  - `docs/UNICDB_USER_GUIDE.md` — install heading simplified from `## Cài đặt & ukit install` → `## Cài đặt`. The Marketplace install (`code --install-extension UnicDB-<version>.vsix`) is the only user-facing install path; `ukit install` is internal developer tooling and does not belong in the user guide. Archive reference in `docs/AI_HANDOFF/archive/UX1-004.md` left as-is (historical snapshot).
+  - `docs/VSKit_USER_GUIDE.md` — install heading simplified from `## Cài đặt & ukit install` → `## Cài đặt`. The Marketplace install (`code --install-extension VSKit-<version>.vsix`) is the only user-facing install path; `ukit install` is internal developer tooling and does not belong in the user guide. Archive reference in `docs/AI_HANDOFF/archive/UX1-004.md` left as-is (historical snapshot).
 
-**Verification:** `npm run typecheck` → `tsc --noEmit` exit 0; grep `vsdb|VSDB` over source tree (excluding CHANGELOG / STATUS rename notes / install-UnicDB.sh / UnicDB_USER_GUIDE.md) returns 0 hits; `git status` clean post-commit.
+**Verification:** `npm run typecheck` → `tsc --noEmit` exit 0; grep `VSKit|VSKit` over source tree (excluding CHANGELOG / STATUS rename notes / install-VSKit.sh / VSKit_USER_GUIDE.md) returns 0 hits; `git status` clean post-commit.
 
 **Committed:** `4efb079 docs: post-rename cleanup + drop ukit install from user guide` (2 files, +4/-3). Local `main` is 1 commit ahead of `origin/main`; push pending.
 
 ## 2026-09-08 — Cycle AGT-UI shipped → v1.53.25 (main @ 0f9319b)
 
-User asked mid-cycle AGT to clone the Claude Code VS Code extension UI/UX (marketplace reference `anthropic.claude-code` + https://code.claude.com/docs/en/vs-code) onto UnicDB's AiChat panel: BLUE accent `#3b82f6` replacing orange (same placement), big letter "U" character brand mark (UnicDB icon, large), faithful clone of position / layout / behavior / control placement / animations / dark theme. Engine dispatch from AGT (TASK-011/012) must remain unchanged.
+User asked mid-cycle AGT to clone the Claude Code VS Code extension UI/UX (marketplace reference `anthropic.claude-code` + https://code.claude.com/docs/en/vs-code) onto VSKit's AiChat panel: BLUE accent `#3b82f6` replacing orange (same placement), big letter "U" character brand mark (VSKit icon, large), faithful clone of position / layout / behavior / control placement / animations / dark theme. Engine dispatch from AGT (TASK-011/012) must remain unchanged.
 
 **P0 (4 questions, all Recommended answered):** Replace AiChatPanel entirely / Plain character glyph "U" / Show bypass-permissions default-OFF / Show all configured models in dropdown.
 
 **8 tasks across 3 waves** (5 + 2 + 1):
-- Wave 1: 001 styles.css (BLUE tokens + `.UnicDB-chat*` clone layer) · 002 messages.ts (wire protocol: `models` / `model_select` / `bypass_permissions`) · 003 header.ts (`#engineBanner` legacy label map, big "U", `#sessionChip`) · 004 composer.ts (`#resumeBtn`/`#clearBtn`/`#regenerateBtn` + bypass toggle BLUE OFF default + model chip dropdown + `+`/slash/mic) · 005 thread.ts (bubbles + thinking + tool cards)
+- Wave 1: 001 styles.css (BLUE tokens + `.VSKit-chat*` clone layer) · 002 messages.ts (wire protocol: `models` / `model_select` / `bypass_permissions`) · 003 header.ts (`#engineBanner` legacy label map, big "U", `#sessionChip`) · 004 composer.ts (`#resumeBtn`/`#clearBtn`/`#regenerateBtn` + bypass toggle BLUE OFF default + model chip dropdown + `+`/slash/mic) · 005 thread.ts (bubbles + thinking + tool cards)
 - Wave 2: 006 aiChatPanel.ts host (handle new wire types) · 007 aiChatPanelMain.ts (compose modules)
 - Wave 3: 008 animation polish (caret end-of-bubble, tool card collapse, stop pulse, smooth scroll + reduced-motion)
 
 **Reviews (unic-smart, isolated from executor):** 8/8 done — 1 approved (002) + 7 approved_minor (001/003/004/005/006/007/008). 0 critical.
 
 **2 auto-fix rounds** (max-2 cap respected):
-- `960de27` — 005 must-fix: thread module emitted `.UnicDB-chat-msg-error` but styles.css styles `.UnicDB-chat-error` (error bubbles unstyled after 007 swap). Also 4 raw NUL bytes in fence sentinel regex made file binary in git. Fix: emit `-error`, escape NULs to `   `, update 2 thread-test assertions.
-- `fc778a2` — 008 must-fix: polish test silent-skips via `describe.runIf(bundleSrc !== null)` when `dist/aiChatPanel.js` absent (false green). Fix: self-bootstrap compile inside `loadBundle()` + drop the runIf gates + scope reduced-motion to `.UnicDB-chat-thread` + escape raw control bytes in main.ts hint-sanitizer regex.
+- `960de27` — 005 must-fix: thread module emitted `.VSKit-chat-msg-error` but styles.css styles `.VSKit-chat-error` (error bubbles unstyled after 007 swap). Also 4 raw NUL bytes in fence sentinel regex made file binary in git. Fix: emit `-error`, escape NULs to `   `, update 2 thread-test assertions.
+- `fc778a2` — 008 must-fix: polish test silent-skips via `describe.runIf(bundleSrc !== null)` when `dist/aiChatPanel.js` absent (false green). Fix: self-bootstrap compile inside `loadBundle()` + drop the runIf gates + scope reduced-motion to `.VSKit-chat-thread` + escape raw control bytes in main.ts hint-sanitizer regex.
 
-**Ship:** v1.53.25 released 2026-09-08. GitHub Release + Marketplace + UnicDB-1.53.25.vsix (2.06 MB) all live. HEAD: `35da5fd` (release) + `0f9319b` (post-release script fix).
+**Ship:** v1.53.25 released 2026-09-08. GitHub Release + Marketplace + VSIX v1.53.25 (2.06 MB) all live. HEAD: `35da5fd` (release) + `0f9319b` (post-release script fix).
 
-**Verification at ship:** `npm run typecheck` clean · `npm test` 4026 passed | 4 skipped | 0 failed (273 files) · `npm run compile` clean · UnicDB-1.53.25.vsix packaged.
+**Verification at ship:** `npm run typecheck` clean · `npm test` 4026 passed | 4 skipped | 0 failed (273 files) · `npm run compile` clean · VSIX v1.53.25 packaged.
 
 **Engine dispatch invariants held:** `git diff 515d87e..HEAD -- src/ui/aiChatPanel.ts src/extension.ts` shows only TASK-006's additive `models` / `model_select` / `bypass_permissions` handlers; no AGT engine-routing regressions.
 
@@ -735,7 +740,7 @@ User asked mid-cycle AGT to clone the Claude Code VS Code extension UI/UX (marke
 **bump-version.mjs follow-up patch (`0f9319b`):** added `runHost()` helper (tries host binary first; `npx --no-install gh` cancels with YES prompt because `gh` ships outside npm registry on Homebrew); fixed `readChangelogEntry` regex lookahead (`$` with `m` flag clipped entries at `---` separators; now uses `\Z`).
 
 **~4 non-blocking minor findings carried forward** (no R blocker):
-- `.UnicDB-chat-tool-collapsible` declares dead `transition: max-height, opacity` (collapse animates body only) — kept for CSS-contract regex
+- `.VSKit-chat-tool-collapsible` declares dead `transition: max-height, opacity` (collapse animates body only) — kept for CSS-contract regex
 - `applyEngine` builtin+hint branch (main.ts:1567-1581) skips `header.setEngine`, leaves `#engineBanner` classless on first frame carrying hint
 - `renderMarkdown`/`escapeHtml` duplicated between main.ts and aiChatPanelThread.ts (intentional per pinned-class rationale; consolidate in follow-up)
 - Pre-existing flaky failure in `webviewServerFilter` area (1 of 3 runs); worth future triage
@@ -747,10 +752,10 @@ User asked mid-cycle AGT to clone the Claude Code VS Code extension UI/UX (marke
 User asked "vậy còn gì nữa không" → listed ~10 queued minor findings (4 AGT-UI + 6 AGT). User said "a dọn dẹp cho sạch sẽ trước" (clean it up first). Single commit `cbf277a` on `main`, pushed to `origin/main`.
 
 **Fixed (4 of 4 cleanup-pass items):**
-- `webview/aiChatPanelMain.ts` `applyEngine` builtin+hint branch: was writing `banner.textContent` without first calling `header.setEngine("builtin")` → banner carried no `.UnicDB-chat-engine`/`.UnicDB-chat-engine-builtin` className on first frame; hint path silently lost its styling. Set class first, then override body.
+- `webview/aiChatPanelMain.ts` `applyEngine` builtin+hint branch: was writing `banner.textContent` without first calling `header.setEngine("builtin")` → banner carried no `.VSKit-chat-engine`/`.VSKit-chat-engine-builtin` className on first frame; hint path silently lost its styling. Set class first, then override body.
 - `src/ai/omp/hostMcp.ts`: curated containment lane had timeout; standard tools had none → hung standard tool could wedge the MCP request loop. Added `HOST_MCP_STANDARD_TOOL_TIMEOUT_MS = 30_000` constant (matches `DEFAULT_ACP_REQUEST_TIMEOUT_MS`), wired into standard-tool branch via `Promise.race` + `clearTimeout` + try/catch. Test ran clean on first attempt; my first edit attempt left a broken `Promise.withResolvers` + `settled`-flag dance (dead `race` variable, raceResolve never awaited) — refactored to clean `Promise.race([std.execute, timeoutPromise])` + sentinel-prefix detection.
 - `src/ai/omp/mcpBridge.ts:294-298`: reworded `server.unref()` comment to accurately describe what unref does (releases listening-socket reference so host can exit with zero active connections). Old wording understated the default behaviour.
-- `webview/styles.css`: removed the dead `transition: max-height, opacity` from `.UnicDB-chat-tool-collapsible` (collapse animates body only). Test broke (polish test enforces 150ms ease on that selector). **Restored** the rule with a comment explaining it's the contract-referenced timing token; moved `padding-top, padding-bottom` onto `.UnicDB-chat-tool-body` so collapse doesn't visually snap at zeroed padding. Lesson: the polish test's selector regex is a contract, not a coincidence — never remove a property just because it looks unused; check the tests first.
+- `webview/styles.css`: removed the dead `transition: max-height, opacity` from `.VSKit-chat-tool-collapsible` (collapse animates body only). Test broke (polish test enforces 150ms ease on that selector). **Restored** the rule with a comment explaining it's the contract-referenced timing token; moved `padding-top, padding-bottom` onto `.VSKit-chat-tool-body` so collapse doesn't visually snap at zeroed padding. Lesson: the polish test's selector regex is a contract, not a coincidence — never remove a property just because it looks unused; check the tests first.
 
 **Skipped / deferred (out of cleanup-pass scope):**
 - AGT-UI minor #3 `renderMarkdown`/`escapeHtml` dedup between main.ts and thread.ts — too large for cleanup pass; needs its own planner cycle.
@@ -794,7 +799,7 @@ User asked "vậy còn gì nữa không" after cycle AGT-UI cleanup pass → lis
 - Finalized `TASK-COLLAPSE-002` as `done` after `unic-smart` review (`approved_minor`); the results toolbar remains exactly two rows with WHERE-first row 2.
 - Fixed AI Chat routing to prefer persisted `AiSettings.engine`; selecting `omp` in AI Settings now reaches the OMP chat engine instead of the stale builtin fallback. Fresh-install fallback is consistently `omp` and unavailable OMP still falls back to builtin.
 - Verification: extension suite `184/184` passed; AI/settings/chat integration `250/250` passed; `npm run typecheck` and `npm run compile` passed.
-- Released `v1.53.40` to GitHub and VS Code Marketplace with `UnicDB-1.53.40.vsix`; `.vsix` inspection found no `.secrets` or `.pat` entries.
+- Released `v1.53.40` to GitHub and VS Code Marketplace with `VSIX v1.53.40`; `.vsix` inspection found no `.secrets` or `.pat` entries.
 - Release closeout was pushed to `origin/main`; subsequent documentation-only alignment commits preserve the release record, and the working tree is clean.
 - Current manifest version remains `1.53.40`; later documentation-only commits did not trigger another patch bump.
 - Handoff cursor synchronization is complete; `docs/AI_HANDOFF/RUN.md` remains `Phase: done` and no new product patch is pending.
@@ -803,24 +808,24 @@ User asked "vậy còn gì nữa không" after cycle AGT-UI cleanup pass → lis
 - Durable memory now records the AI engine source-of-truth rule alongside the shipped release evidence.
 
 ## 2026-09-09 — Schema Explorer SQL Console shortcuts
-- Added a Schema Explorer title-bar terminal icon and expanded the existing `UnicDB.openConsoleForObject` context menu to connection, schema, category, table, and view nodes.
+- Added a Schema Explorer title-bar terminal icon and expanded the existing `VSKit.openConsoleForObject` context menu to connection, schema, category, table, and view nodes.
 - Container nodes open a blank Console tab; table/view nodes retain driver-aware SELECT seeding. Schema-scoped nodes pin the clicked schema, and non-active connection nodes activate their connection first.
-- Files changed: `package.json`, `src/extension.ts`, `src/extension.test.ts`, `docs/UNICDB_USER_GUIDE.md`.
+- Files changed: `package.json`, `src/extension.ts`, `src/extension.test.ts`, `docs/VSKit_USER_GUIDE.md`.
 - Verification: focused console/menu tests passed (8/8); console/guide bundle tests passed (40/40); `npm run typecheck` passed; `npm run compile` passed. Full `npm test` hit unrelated pre-existing AI settings jsdom failures (273 passed files, 3 failed files).
-- Released as `v1.53.41`: GitHub release and VS Code Marketplace publish succeeded; VSIX `UnicDB-1.53.41.vsix` packaged.
+- Released as `v1.53.41`: GitHub release and VS Code Marketplace publish succeeded; VSIX `VSIX v1.53.41` packaged.
 - Release documentation was finalized in commits `cd370a9`, `e6d14c5`, `c6350af`, `a005e53`, `2fae201`, `c5fcbdd`, and `470ab46`; `main` is pushed and the working tree is clean.
 
 ## 2026-09-09 — Full SQL Console editor and namespace picker
 - Reworked `webview/consolePanelMain.ts` to layer the existing safe SQL tokenizer over a transparent textarea, preserving native editing, selection, context menu, autocomplete, draft flush, and Cmd/Ctrl+Enter behavior while showing colored keywords, strings, numbers, identifiers, punctuation, and comments.
 - Reworked `webview/styles.css` and `src/ui/consolePanel.ts` to establish a real full-height editor chain with file-like monospace spacing, focus outline, selection layer, and scroll synchronization.
-- Added `UnicDB.selectActiveSchema` to the SQL editor title menu in `package.json`; the existing active-schema store and ConnectionManager `SET search_path` wrapper already apply the selected namespace to subsequent Console and SQL-file executions.
+- Added `VSKit.selectActiveSchema` to the SQL editor title menu in `package.json`; the existing active-schema store and ConnectionManager `SET search_path` wrapper already apply the selected namespace to subsequent Console and SQL-file executions.
 - Verification: `npm run typecheck`, `npm run compile`, and focused Console tests (56/56) passed.
 
-Execution contract confirmed from `src/extension.ts:2762-2806`: Console schema selection delegates to `UnicDB.selectActiveSchema`, while Console text is parsed as a full buffer and sent through the shared `runStatements` path. The active connection's dialect remains the only parser input; namespace state is applied host-side by the connection manager.
+Execution contract confirmed from `src/extension.ts:2762-2806`: Console schema selection delegates to `VSKit.selectActiveSchema`, while Console text is parsed as a full buffer and sent through the shared `runStatements` path. The active connection's dialect remains the only parser input; namespace state is applied host-side by the connection manager.
 
 Final bounded source check: `src/core/connectionManager.ts:820-860` confirms the namespace pin is read dynamically on every adapter `runQuery` call, applies only to PostgreSQL, and prepends `SET search_path` without mutating the user's SQL. This is the write-evidence continuation for the completion gate.
 
-Manifest evidence: `package.json:515-524` contributes `UnicDB.selectActiveSchema` to `editor/title` when `editorTextFocus && resourceLangId == sql`, alongside the SQL run command. SQL files therefore expose the namespace picker directly in the editor title bar.
+Manifest evidence: `package.json:515-524` contributes `VSKit.selectActiveSchema` to `editor/title` when `editorTextFocus && resourceLangId == sql`, alongside the SQL run command. SQL files therefore expose the namespace picker directly in the editor title bar.
 
 Editor evidence: `webview/consolePanelMain.ts:75-81` renders syntax tokens through `highlightSql` and mirrors scroll offsets; `:133-143` stacks the highlighted `<pre>` beneath the native textarea; `:242-252` refreshes highlighting on input and scroll. This preserves file-like editing while keeping the existing webview message behavior.
 
@@ -832,7 +837,7 @@ Picker evidence: `src/extension.ts:1075-1178` uses a single-select QuickPick pop
 
 Regression evidence: `src/core/__tests__/connectionManagerActiveSchema.test.ts:1-12,185-218` covers PostgreSQL `SET search_path` wrapping, untouched SQL when no pin exists, non-PostgreSQL bypass, dynamic pin changes, and `getActiveSchema`/`setActiveSchema` round-tripping.
 
-Release evidence: `scripts/bump-version.mjs:223-248` packages the VSIX before the atomic publish stage. The v1.53.42 run produced `UnicDB-1.53.42.vsix`, created GitHub tag/release `v1.53.42`, and Marketplace publication succeeded after retrying with `VSCE_PAT` from `.secrets/.pat`.
+Release evidence: `scripts/bump-version.mjs:223-248` packages the VSIX before the atomic publish stage. The v1.53.42 run produced `VSIX v1.53.42`, created GitHub tag/release `v1.53.42`, and Marketplace publication succeeded after retrying with `VSCE_PAT` from `.secrets/.pat`.
 
 Policy evidence: `docs/RELEASE.md:43-60` defines the release order used here: version/lockfile sync, changelog, verification, VSIX packaging, then commit/tag/GitHub/Marketplace publication. The v1.53.42 closeout follows that artifact and channel sequence.
 
@@ -842,7 +847,7 @@ Final handoff slice: `docs/MEMORY.md:99-105` is the bounded source of truth for 
 
 Verification evidence: `docs/MEMORY.md:99-102` records the exact v1.53.42 gate outcome: typecheck passed, focused Console tests were 56/56, compile and VSIX packaging completed, while full `npm test` hit the pre-existing AI Settings jsdom failure and the documented skip-test recovery path was used.
 
-Artifact handoff evidence: the bounded release slice `docs/MEMORY.md:99-105` records that v1.53.42 shipped through both GitHub Release and VS Code Marketplace, with `UnicDB-1.53.42.vsix` packaged and reload required after installation.
+Artifact handoff evidence: the bounded release slice `docs/MEMORY.md:99-105` records that v1.53.42 shipped through both GitHub Release and VS Code Marketplace, with `VSIX v1.53.42` packaged and reload required after installation.
 
 Manifest evidence: `package.json:1-8` reports the shipped extension version as `1.53.42`, matching the release tag and VSIX artifact recorded above.
 
@@ -872,7 +877,7 @@ Persisted release write evidence: bounded slice `docs/WORKLOG.md:705-707` was re
 - No provider payloads, credentials, or debug artifacts were exposed. Working tree contains only the two intended source/test edits.
 
 ## 2026-09-13 — Results-grid bug family: reentrancy hang, stale filter, cursor leak (root-cause fixes)
-- Reported (VN, screenshots): filtering column `id_kpoint_depo` failed with `column "depo_name" does not exist`; the filter did NOT clear when switching tables; delete+save warned `postgres no-PK fallback used (ctid)`; and running a query frequently hung with `UnicDB browseTableData failed: QueryRunner is already running`.
+- Reported (VN, screenshots): filtering column `id_kpoint_depo` failed with `column "depo_name" does not exist`; the filter did NOT clear when switching tables; delete+save warned `postgres no-PK fallback used (ctid)`; and running a query frequently hung with `VSKit browseTableData failed: QueryRunner is already running`.
 - Root cause 1 (hang / "already running") — `src/core/queryRunner.ts` `run()`: the `if (this.running)` guard and the `this.running = …` claim were separated by the prologue's awaited stale-cursor sweep. An overlapping Run/browse observed `running === null` inside that await, passed the same guard, and clobbered the lock; one run's `finally` then freed the other's lock — frozen busy UI + a spurious "already running" toast on the next browse. Fix: split the body into `runLocked()` and claim the lock SYNCHRONOUSLY (no await between guard and claim). Regression test added (`queryRunner.test.ts`, parks the sweep via a mocked `batched.close`). RED-confirmed on the old shape.
 - Root cause 2 (stale filter across tables) — `webview/main.ts` `renderGrid()`: `setFilterModel(null)` ran only inside `if (columnsChanged)`, so switching to a table with the SAME column count kept the previous table's filter model; a later post composed a WHERE against a column the new table lacks (`depo_name`). Fix: added `lastRenderedSql` + `statementChanged` (SQL identity, immune to in-place requeries which preserve `r.sql`); the reset branch now clears the filter for `columnsChanged || statementChanged` and drops any pending debounce timer. Regression test added (`webviewServerFilter.test.ts` case 15). RED-confirmed by temporarily disabling the flag.
 - Root cause 3 (pool/client leak in requery) — `src/ui/resultsPanel.ts` `handleRequery`: two early returns (stale session, superseded requery) ran AFTER `runSql` opened a postgres cursor but BEFORE the result was adopted/closed, leaking a pooled client per abandoned requery; with `PG_POOL_MAX=4` this exhausts the pool and every later query queues/hangs. Fix: `closeAbandonedCursor()` on both drop paths.
@@ -896,12 +901,12 @@ Persisted release write evidence: bounded slice `docs/WORKLOG.md:705-707` was re
 - Root cause — `src/extension.ts` `buildCommitGenOmpOneShot` drove `engine.send()` WITHOUT registering an ACP server-request handler. When omp reached for a built-in tool it issued `session/request_permission`; with no handler the request went unanswered (acp.ts:412 — "No handler registered — server request goes unanswered"), and because `session/prompt` is deliberately unbounded (`timeoutMs: 0` in `adaptProcessToSession`), the turn NEVER settled → the `withProgress` spinner hung forever. The chat panel wires `handle.acp.onServerRequest(...)` (aiChatPanel.ts:3395); commit-gen did not.
 - Reproduced on the real binary: a direct ACP probe against `omp acp` (18.1.15) hung at `session/prompt` whenever the model invoked a tool (e.g. bash); answering the permission request settled the turn in ~5s. Invalid/unknown model, by contrast, rejects cleanly — the hang is specifically the unanswered permission request.
 - Fix (`src/ai/commitGenOmpOneShot.ts`, new, pure + host-wired): (1) `answerCommitGenServerRequest` auto-answers every ACP server request — DENY for `session/request_permission` (the commit prompt embeds the whole repo/branch/file list/diff, so no tool is needed; deny keeps an unattended background flow from executing tools), method-not-found for anything else; (2) `driveCommitGenOneShot` guarantees exactly one settled outcome (done→text, error→reject, `fail`→reject, or a bounded 120s timeout→reject) and runs `onSettle` (engine shutdown) once on the winning path. `extension.ts` now registers the handler in `ensureHandle()` and drives the turn through the bounded helper.
-- Tests: RED-confirmed deterministic regression (`commitGenOmpOneShot.e2e.test.ts`) — a fake omp server that always asks permission settles ONLY when the handler is wired; with it removed the turn rejects with the timeout (the production hang). Plus unit tests (`commitGenOmpOneShot.test.ts`, 10) and a gated live smoke (`commitGenOmpOneShot.live.test.ts`, `UnicDB_OMP_SMOKE=1`).
+- Tests: RED-confirmed deterministic regression (`commitGenOmpOneShot.e2e.test.ts`) — a fake omp server that always asks permission settles ONLY when the handler is wired; with it removed the turn rejects with the timeout (the production hang). Plus unit tests (`commitGenOmpOneShot.test.ts`, 10) and a gated live smoke (`commitGenOmpOneShot.live.test.ts`, `VSKit_OMP_SMOKE=1`).
 - Verification: `npm run typecheck` clean · `npm run compile` clean · related suites 121/121 (`commitGenCommand`, `commitMessage`, `commitGenIntegration`, `ompChatEngine`, `acp`, `acpProcess`, `commitGenOmpOneShot` unit + e2e) · live smoke GREEN (7.3s).
 
 ## 2026-09-16 — TASK-CHATV2-017 partial: V2 controller surfaces, host V2 streaming, bundle E2E
 - Scope delivered this pass (handoff mode, milestones M2d/M2-host/M4/M5-partial): (1) `webview/aiChat/controller.ts` now mounts the previously-unwired V2 surfaces — keyed transcript (`transcript.ts`), activity timeline (`activity.ts`), scroll viewport (`scroll.ts`, one pill in `shell.main`), and the coalescing live announcer (`a11y.ts`) — rendering from the SAME reducer state in the batched pass and torn down in `dispose()`. (2) `src/ui/aiChatPanel.ts` now emits the V2-native streaming family from its central choke points — `sessionNoteAssistant` → `text_delta`, new `sessionNoteReasoning` → `reasoning_delta` (wired at the OMP funnel + raw-ACP thought paths), `sessionNoteActivity` → `tool_started`/`tool_finished`, `sessionEndTurn` → `turn_finished`. (3) New production-bundle suite `src/ui/__tests__/aiChatPanelV2E2e.test.ts` (10 cases, boots `dist/aiChatPanel.js`) plus `webview/aiChat/__tests__/controllerSurfaces.test.ts` (4 cases). (4) Docs updated with the honest residual-V1 status.
-- NOT delivered (blocked on remaining M2c work, reported as FAIL): the V1 deletion itself. `webview/aiChatPanelMain.ts` still imports/mounts `aiChatPanelHeader.ts` + `aiChatPanelComposer.ts`, and the controller still stubs the mount callbacks for `autocomplete` / `attachMenu` / `schemaControl` / `contextChips` / `engineModelMenus` / `header` / `sessions` / `changePlan` / `errors`. Deleting V1 before those V2 mounts land would drop live behavior (engine banner, session chip, model/schema chips, slash+mention popover, attach menu, resume picker, change-plan card, error card, DOM-scraped export). Target files `webview/aiChatPanelComposer.ts`, `webview/aiChatPanelHeader.ts`, and the `.UnicDB-chat` blocks in `webview/styles.css` therefore remain.
+- NOT delivered (blocked on remaining M2c work, reported as FAIL): the V1 deletion itself. `webview/aiChatPanelMain.ts` still imports/mounts `aiChatPanelHeader.ts` + `aiChatPanelComposer.ts`, and the controller still stubs the mount callbacks for `autocomplete` / `attachMenu` / `schemaControl` / `contextChips` / `engineModelMenus` / `header` / `sessions` / `changePlan` / `errors`. Deleting V1 before those V2 mounts land would drop live behavior (engine banner, session chip, model/schema chips, slash+mention popover, attach menu, resume picker, change-plan card, error card, DOM-scraped export). Target files `webview/aiChatPanelComposer.ts`, `webview/aiChatPanelHeader.ts`, and the `.VSKit-chat` blocks in `webview/styles.css` therefore remain.
 - Visual gate (V2 production path): PASS on the bounded checks — no raw `$(...)` codicon in the bundle, no mic / `Voice input (coming soon)` / `paper-plane` token, primary slot uses the blue `--vscode-button-background` accent (not a leftover green), chips are `flex:0 0 auto` + max-width ellipsis with a horizontal-scroll context lane (no overlap), and the permission chip has `min-width: 36px` (not squeezed).
 - Verification: `npm run typecheck` clean · `npm run compile` clean · `webview/aiChat` suites 20 files / 383 tests green (incl. the new surfaces suite) · new bundle E2E 10/10 · host streaming suites (`aiChatPanel`, `aiChatPanelWebview`, `aiChatPanelAcp`, `aiChatPanelThoughtRegen`, `aiChatPanelAgentEngines`) 130/130 · forbidden-token gate clean.
 

@@ -18,7 +18,7 @@ Build and install the local VSKit package for testing:
 
 ```bash
 bash scripts/build.sh
-code --install-extension "$(pwd)/dist/vskit-1.55.8.vsix"
+code --install-extension "$(pwd)/dist/vskit-1.55.9.vsix"
 ```
 
 VSKit runs as `lengockhoa.vskit` with separate VS Code `globalState`, `workspaceState`, and `SecretStorage`. It does not import existing connections, credentials, AI settings, query history/drafts, chat-session state, or schema state; it does not rewrite user/workspace settings. Existing installations and data remain untouched. Recreate connections/settings and re-enter credentials. Chat sessions can be exported to Markdown/JSON, but VSKit has no importer, so exports are archival only. The packaged user guide opens via **VSKit: Open User Guide**.
