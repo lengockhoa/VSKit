@@ -13,13 +13,54 @@ macOS or **Ctrl+Enter** on Windows/Linux to execute the current statement.
 
 ## Installation
 
-The latest VSKit VSIX is distributed from GitHub Releases; Marketplace listing availability has not been verified.
-Build and install the local VSKit package for testing:
+VSIX downloads are available from **GitHub Releases**. Marketplace listing availability is unverified; publication is paused.
+
+### One-line install (macOS / Linux / Windows git-bash)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/lengockhoa/VSKit/main/scripts/install-vskit.sh | bash
+```
+
+The script resolves your `code` CLI (`VSKIT_CODE_PATH` env → `code` on PATH → platform fallback path), fetches
+the latest release from the GitHub API, downloads the `vskit-<version>.vsix` asset, installs it with
+`code --install-extension --force`, and prints the installed/updated version. Options: `--local <file.vsix>`
+(install a local file), `--dry-run` (resolve the CLI only), `--help`.
+
+### Manual install
+
+Download the `vskit-<version>.vsix` asset from the
+[latest release](https://github.com/lengockhoa/VSKit/releases/latest), then:
+
+macOS / Linux:
+
+```bash
+code --install-extension ~/Downloads/vskit-1.55.9.vsix
+```
+
+Windows (PowerShell):
+
+```powershell
+code --install-extension "$HOME\Downloads\vskit-1.55.9.vsix"
+```
+
+GUI: **Extensions view** (`Cmd+Shift+X` / `Ctrl+Shift+X`) → **…** menu → **Install from VSIX…** → pick the
+downloaded file.
+
+### Update
+
+Re-run the one-line installer — it always fetches the latest release and force-reinstalls, printing
+`Updated lengockhoa.vskit: X → Y` — or install a newer VSIX manually as above. **Reload VS Code after installing
+or updating** (`Cmd+Shift+P` on macOS / `Ctrl+Shift+P` on Windows and Linux → `Developer: Reload Window`): extension updates only load after a window reload.
+
+### Build and install a local package (testing)
 
 ```bash
 bash scripts/build.sh
-code --install-extension "$(pwd)/dist/vskit-1.55.9.vsix"
+version=$(node -p 'require("./package.json").version')
+code --install-extension "dist/vskit-$version.vsix"
 ```
+
+If the `code` CLI is not on PATH, see [`code` CLI not found during install](#code-cli-not-found-during-install).
 
 VSKit runs as `lengockhoa.vskit` with separate VS Code `globalState`, `workspaceState`, and `SecretStorage`. It does not import existing connections, credentials, AI settings, query history/drafts, chat-session state, or schema state; it does not rewrite user/workspace settings. Existing installations and data remain untouched. Recreate connections/settings and re-enter credentials. Chat sessions can be exported to Markdown/JSON, but VSKit has no importer, so exports are archival only. The packaged user guide opens via **VSKit: Open User Guide**.
 
@@ -30,7 +71,7 @@ VSKit runs as `lengockhoa.vskit` with separate VS Code `globalState`, `workspace
 | Step | Action |
 | ---- | -------- |
 | 1    | Open VS Code, open the **VSKit** panel in the activity bar (icon on the left). |
-| 2    | Click the `+` icon at the top corner of the panel → **VSKit: Add Connection** → fill in host/port/user/password → pick the driver (postgres / mysql / mssql) → save. |
+| 2    | Click the `+` icon at the top corner of the panel → **VSKit: Add Connection** → pick a driver (postgres / mysql / mssql / bigquery). For PostgreSQL / MySQL / SQL Server, enter the host, port, user, and password; for BigQuery, enter the billing project (and optional location / dataset project) and use Application Default Credentials. Save the connection. |
 | 3    | Open a `.sql` file, select the connection to use (click the connection name in the status bar or run `VSKit: Select Active Connection` in the Command Palette). |
 | 4    | Place the cursor / highlight a SQL statement → press **Cmd+Enter** (macOS) / **Ctrl+Enter** (Win/Linux). |
 | 5    | Results appear in the **VSKit Results** panel just below the editor. |
@@ -64,7 +105,7 @@ Full user guide (Vietnamese): `docs/vskit-user-guide.md`. Covers connection setu
 
 ## Key features
 
-- **3 drivers**: PostgreSQL (pg), MySQL/MariaDB (mysql2), SQL Server (tedious).
+- **4 drivers**: PostgreSQL (pg), MySQL/MariaDB (mysql2), SQL Server (tedious), Google BigQuery (`@google-cloud/bigquery` via Application Default Credentials — config-only connection, no password).
 - **Schema Explorer tree**: connection → schema → Tables / Views / Routines (with counts) → table / view / column / routine.
   - Shows **every schema** you can access, not only the default schema (`public` / `dbo` / the connected database).
   - Setting `VSKit.hideSystemSchemas` (default `true`): hide system schemas (`pg_catalog`, `information_schema`, `mysql`, `sys`...); turn it off if you want to see them.
@@ -98,7 +139,7 @@ Full user guide (Vietnamese): `docs/vskit-user-guide.md`. Covers connection setu
   - **Analyze / Vacuum**: send `ANALYZE` / `VACUUM` (PostgreSQL-only) to refresh planner stats / clean up dead tuples; the button is hidden for MySQL/MSSQL.
 - **SQL Console (1.7.0)**: run `VSKit: Open Console` from the Command Palette — a DataGrip-style scratchpad panel for ad-hoc SQL that can be closed when done. Run (button, Cmd/Ctrl+Enter, or right-click) sends the entire buffer through the exact same editor pipeline (danger-confirm → keyword qualify) and results show in the existing **VSKit Results** panel; right-click → **Save as SQL file** (or Save button) writes the buffer to a `.sql` file with a suggested name like `console_YYYYMMDD_HHMMSS.sql`. Closing/reopening the console always starts empty — keep content with Save/Copy.
 - **AI Settings (1.5.x)**: run `VSKit: Open AI Settings…` from the Command Palette to open a form configuring an OpenAI-compatible backend (baseUrl, method `responses`/`chat/completions`, timeout, maxSteps, model id for 2 roles `work` (vision) + `smart`, apiKey). The **Test** button smoke-fires a small completion to verify the endpoint is actually alive before the agent uses it.
-- **AI Chat & DB tools (1.5.x)**: chat panel `VSKit: AI Chat` from the Command Palette — multi-turn with an agent loop. The agent has 3 tools: `list_tables`, `describe_table` (PostgreSQL only), and `run_sql`. **Read-only promise**: the `run_sql` tool only accepts `SELECT` / `SHOW` / `EXPLAIN` / `WITH … SELECT` (clean CTEs). Any `INSERT` / `UPDATE` / `DELETE` / `DROP` / `TRUNCATE` / `MERGE` / `INTO` / writable CTE is rejected by the tool on the spot with a specific reason — `adapter.runQuery` never sees DML/DDL. Multi-statement input is also rejected. When `VSKit: Open AI Settings…` hasn't been run yet, the `VSKit: AI Chat` command shows an info "Configure AI settings first" and opens the settings form for you.
+- **AI Chat & DB tools (1.5.x)**: chat panel `VSKit: AI Chat` from the Command Palette — multi-turn with an agent loop. Base tools: `list_tables`, `describe_table`, `run_sql`, `export_structure` (PostgreSQL); policy-gated tools add row samples/counts, read-only query helpers, analysis, and `plan_change` (see [AI](#ai)). All database tools are exposed only for an active PostgreSQL connection. **Read-only promise**: the `run_sql` tool only accepts `SELECT` / `SHOW` / `EXPLAIN` / `WITH … SELECT` (clean CTEs). Any `INSERT` / `UPDATE` / `DELETE` / `DROP` / `TRUNCATE` / `MERGE` / `INTO` / writable CTE is rejected by the tool on the spot with a specific reason — `adapter.runQuery` never sees DML/DDL. Multi-statement input is also rejected. When `VSKit: Open AI Settings…` hasn't been run yet, the `VSKit: AI Chat` command shows an info "Configure AI settings first" and opens the settings form for you.
 
 ---
 
@@ -117,16 +158,19 @@ Open the Command Palette → type `VSKit: Open AI Settings…` → fill in the f
 
 ### AI Chat & DB tools
 
-Open the Command Palette → `VSKit: AI Chat` → the chat panel opens with the multi-turn agent. The agent has 3 tools:
+Open the Command Palette → `VSKit: AI Chat` → the chat panel opens with the multi-turn agent. Base tools:
 
 - `list_tables` — lists `(schema, table)` for the active adapter.
 - `describe_table` — columns + constraints; only supported when the active connection is **PostgreSQL**.
 - `run_sql` — runs **one** read-only statement (SELECT/SHOW/EXPLAIN/clean WITH…SELECT) via `adapter.runQuery`; returns ≤ 50 rows as JSON.
+- `export_structure` — full-database CREATE TABLE DDL text for schema context (PostgreSQL).
+
+With tool permissions granted, the chat also registers policy-gated groups: DB-aware (`list_table_data_sample`, `count_rows`, `run_readonly_query`, `explain_query`, `table_relationships`), analysis (`analyze_table`, `diagnose_query`), and `plan_change` (returns a reviewed migration plan; never executes by itself). The same toolset is registered on every engine path (builtin, omp, Claude Code, Codex).
 
 **Guardrails (defense-in-depth)**:
 
 - **Read-only guard** inside `run_sql`: any `INSERT/UPDATE/DELETE/DROP/TRUNCATE/MERGE/ALTER`, multi-statement, or CTE with a DML branch is rejected on the spot by the tool — `adapter.runQuery` never sees DML. Even if the model "intentionally" calls `run_sql` with `DROP TABLE …`, the tool returns a reject reason, the agent loop continues, and the real DB in production stays untouched.
-- **Adapter scope**: `run_sql` only resolves through the current active connection (driver `postgres`); if no connection is selected or the driver isn't `postgres` → the tool returns `"No active database connection."` instead of throwing.
+- **Adapter scope**: DB tools resolve only through the current active connection and only when its driver is `postgres` (mysql / mssql / bigquery connections are not exposed to the AI); with nothing active, `run_sql` returns `"No active database connection."` and the other tools return their own no-connection message — nothing throws.
 - **Egress**: every AI completion only goes to the `baseUrl` you configured — no third-party endpoint, no telemetry, no fallback.
 - **apiKey hygiene**: `apiKey` only lives in **SecretStorage** (`VSKit.ai.apiKey`); read per request and attached as the `Authorization: Bearer …` header. The provider `scrubApiKey` before throwing `ProviderError` — never appears in error messages, response snippets, logs, or the UI.
 - **Unconfigured fallback**: if AI Settings have not been saved yet, the command shows `VSKit: Configure AI settings first.` then opens `VSKit: Open AI Settings…` for you — no crash, no panel with empty config.
@@ -136,10 +180,12 @@ Open the Command Palette → `VSKit: AI Chat` → the chat panel opens with the 
 
 Beyond the built-in engine (`runAgent` via an OpenAI-compatible backend), VSKit chat can use **oh-my-pi** (`omp`) as the real agent engine — spawn process, RPC JSONL, stream events, host-tool bridge.
 
+Claude Code and Codex CLIs can also drive the chat as engines — run `VSKit: Use AI with Claude Code` or `VSKit: Use AI with Codex`; both host the same gate-wrapped DB toolset and permission flow.
+
 - **Requirement**: `omp >= 17.0.0`. Auto-detected the first time you open the panel; if the binary is old / missing / has an unparseable version, the panel announces `{engine:"builtin", hint: "omp install hint"}` once and falls back to built-in as before.
 - **Install**: `curl -fsSL https://omp.sh/install | sh` (one-time).
 - **Update**: `omp update` (to bump version when a task raises the min-version).
-- **Security note**: omp mode grants the agent workspace tools (read/edit/bash scoped to the active workspace's cwd) via the `set_host_tools` RPC. **DB access remains read-only** — VSKit only hosts the `list_tables` / `describe_table` / `run_sql` tools (the read-only guard inside `run_sql` stays in place), so omp has no tool that can bypass the read-only chokepoint. The agent can modify local SQL files outside of workspace tools, but the real database remains impervious to DML/DDL.
+- **Security note**: omp mode grants the agent workspace tools (read/edit/bash scoped to the active workspace's cwd) via the `set_host_tools` RPC. **DB access remains read-only** — VSKit hosts the same gate-wrapped DB toolset as the built-in path (the read-only guard inside `run_sql` stays in place), so omp has no tool that can bypass the read-only chokepoint. The agent can modify local SQL files outside of workspace tools, but the real database remains impervious to DML/DDL.
 - **Crash fallback**: if the omp process exits mid-turn, the panel posts an error bubble + falls back to builtin for the next turn; it does NOT auto-respawn — the user retries to re-detect.
 
 ---
@@ -147,13 +193,26 @@ Beyond the built-in engine (`runAgent` via an OpenAI-compatible backend), VSKit 
 
 ### `code` CLI not found during install
 
-The script prints instructions, but the summary is:
+The installer needs an executable VS Code `code` CLI. On macOS, install it from VS Code with
+`Cmd+Shift+P` → **Shell Command: Install 'code' command in PATH**. On Linux or Windows, ensure the
+`code` executable is on `PATH` in the shell you use; the installer is intended for macOS/Linux shells
+and Windows Git Bash (PowerShell users can install a downloaded VSIX manually as described above).
 
-- macOS: open VS Code → `Cmd+Shift+P` → **Shell Command: Install 'code' command in PATH** → re-run the installer.
-- Linux: install the extension from the Marketplace manually, or add the VS Code bin to `PATH`.
-- Windows (git-bash): make sure `~/AppData/Local/Programs/Microsoft VS Code/bin` is on `PATH`.
+Check that the CLI resolves before installing:
 
-You can also set `VSKIT_CODE_PATH=/path/to/code` and re-run the script.
+```bash
+command -v code
+```
+
+If it does not, set `VSKIT_CODE_PATH` to the executable file, then run the installer in the same shell:
+
+```bash
+export VSKIT_CODE_PATH="/absolute/path/to/code"
+curl -fsSL https://raw.githubusercontent.com/lengockhoa/VSKit/main/scripts/install-vskit.sh | bash
+```
+
+On Linux, the script's `/usr/share/code` fallback may point to a directory rather than the executable;
+prefer `code` on `PATH` or set `VSKIT_CODE_PATH` explicitly.
 
 ### Conflict with Copilot / other extensions
 
@@ -189,9 +248,8 @@ Build and package:
 bash scripts/build.sh
 # → produces dist/vskit-<version>.vsix
 ```
-VSIX packaging is available for local testing and GitHub release distribution. Marketplace
-listing availability remains unverified and publication is paused. Historical release assets
-and download URLs retain their original names.
+VSIX packaging is available for local testing and GitHub release distribution. Marketplace listing
+availability is unverified; publication is paused.
 
 See `docs/RELEASE.md` for package verification, release steps, and current limitations.
 ---
