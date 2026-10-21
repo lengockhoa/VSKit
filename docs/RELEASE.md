@@ -17,11 +17,11 @@ From the repository root, the build script runs the checks in dependency order
 bash scripts/build.sh
 ```
 
-With the current manifest version `1.55.9`, the expected artifact is
-`dist/vskit-1.55.9.vsix`. Install it only when you choose to test it:
+With the current manifest version `1.55.10`, the expected artifact is
+`dist/vskit-1.55.10.vsix`. Install it only when you choose to test it:
 
 ```bash
-code --install-extension "$(pwd)/dist/vskit-1.55.9.vsix"
+code --install-extension "$(pwd)/dist/vskit-1.55.10.vsix"
 ```
 
 The package identity is `lengockhoa.vskit`; the package name is lowercase

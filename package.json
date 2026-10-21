@@ -2,7 +2,7 @@
   "name": "vskit",
   "displayName": "VSKit — Run SQL from VS Code",
   "description": "Run SQL against PostgreSQL, MySQL/MariaDB and SQL Server directly from VS Code. Cmd+Enter (macOS) / Ctrl+Enter (Win/Linux) executes the selected statement.",
-  "version": "1.55.9",
+  "version": "1.55.10",
   "publisher": "lengockhoa",
   "engines": {
     "vscode": "^1.75.0"
@@ -453,6 +453,12 @@
         "icon": "$(settings-gear)"
       },
       {
+        "command": "VSKit.showCommitMessageDiagnostics",
+        "title": "VSKit: Show Commit Message Diagnostics",
+        "category": "VSKit",
+        "icon": "$(output)"
+      },
+      {
         "command": "VSKit.generateCommitMessage",
         "title": "VSKit: Generate Commit Message",
         "category": "VSKit",
@@ -810,6 +816,11 @@
           "type": "boolean",
           "default": false,
           "description": "Allow AI chat to use workspace files as additional grounding context, limited to the extension's curated allowlist."
+        },
+        "VSKit.ai.commitGenDiagnostics": {
+          "type": "boolean",
+          "default": false,
+          "description": "Write metadata-only commit-message generation timings to the VSKit: Commit Message Diagnostics Output Channel."
         }
       }
     },

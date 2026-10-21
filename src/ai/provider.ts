@@ -80,12 +80,22 @@ export class ProviderError extends Error {
   }
 }
 
+export type ProviderTraceValue = string | number | boolean;
+export interface ProviderTrace {
+  readonly requestId: string;
+  emit(
+    event: string,
+    metadata?: Readonly<Record<string, ProviderTraceValue>>,
+  ): void;
+}
+
 export interface ProviderOptions {
   baseUrl: string;
   apiKey: string;
   method: "responses" | "chat/completions";
   timeoutMs?: number;
   fetch?: FetchLike;
+  trace?: ProviderTrace;
 }
 
 // ---- TASK-001: streaming types -------------------------------------------
@@ -686,6 +696,19 @@ export function createProviderClient(opts: ProviderOptions): {
 
   return {
     async complete(req: ProviderRequest): Promise<ProviderResult> {
+      const trace = opts.trace;
+      const emitTrace = trace
+        ? (
+            event: string,
+            metadata: Readonly<Record<string, ProviderTraceValue>>,
+          ): void => {
+            try {
+              trace.emit(event, metadata);
+            } catch {
+              // Diagnostics must not alter provider behavior.
+            }
+          }
+        : undefined;
       const url = buildUrl(baseUrl, method);
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -724,6 +747,17 @@ export function createProviderClient(opts: ProviderOptions): {
         });
       }
 
+      const requestBody = JSON.stringify(body);
+      const fetchStartedAt = trace ? performance.now() : 0;
+      if (trace) {
+        emitTrace?.("provider.fetch.start", {
+          requestId: trace.requestId,
+          modelId: req.modelId,
+          method,
+          requestBodyChars: requestBody.length,
+          requestBodyBytes: Buffer.byteLength(requestBody, "utf8"),
+        });
+      }
       let resp: Response;
       try {
         resp = await fetchImpl(url, {
@@ -732,10 +766,17 @@ export function createProviderClient(opts: ProviderOptions): {
             "Content-Type": "application/json",
             Authorization: `Bearer ${apiKey}`,
           },
-          body: JSON.stringify(body),
+          body: requestBody,
           signal: controller.signal,
         });
       } catch (e) {
+        if (trace) {
+          emitTrace?.("provider.fetch.error", {
+            requestId: trace.requestId,
+            durationMs: Math.round((performance.now() - fetchStartedAt) * 10) / 10,
+            errorName: e instanceof Error ? e.name : typeof e,
+          });
+        }
         clearTimeout(timer);
         const err = e as Error & { name?: string };
         if (err.name === "AbortError") {
@@ -760,6 +801,15 @@ export function createProviderClient(opts: ProviderOptions): {
           bodySnippet: "",
         });
       }
+      if (trace) {
+        emitTrace?.("provider.headers.received", {
+          requestId: trace.requestId,
+          fetchToHeadersMs: Math.round((performance.now() - fetchStartedAt) * 10) / 10,
+          status: resp.status,
+          ok: resp.ok,
+          contentType: resp.headers.get("content-type") ?? "",
+        });
+      }
       clearTimeout(timer);
 
       if (!resp.ok) {
@@ -770,7 +820,16 @@ export function createProviderClient(opts: ProviderOptions): {
         );
       }
 
+      const bodyReadStartedAt = trace ? performance.now() : 0;
       const raw = await resp.text();
+      if (trace) {
+        emitTrace?.("provider.body.complete", {
+          requestId: trace.requestId,
+          headersToBodyMs: Math.round((performance.now() - bodyReadStartedAt) * 10) / 10,
+          bodyChars: raw.length,
+          firstContentObservable: false,
+        });
+      }
       const snippet = scrubApiKey(raw, apiKey);
       const ctype = (resp.headers.get("content-type") ?? "").toLowerCase();
       const looksLikeSse =

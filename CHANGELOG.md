@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.55.10] — 2026-10-21
+
+- Generate Commit Message has opt-in, metadata-only timing diagnostics. Enable `VSKit.ai.commitGenDiagnostics` (default `false`) and run `VSKit: Show Commit Message Diagnostics` to open `VSKit: Commit Message Diagnostics` in the VS Code Output panel.
+- Preserve the user's SCM input while generation waits; revalidate the originally selected staged/unstaged diff scope immediately before updating SCM, and prefer the command-invocation repository before asking the user to choose.
+- OMP guard retries reuse one engine and dispose it after the complete guarded request; cancellation between attempts prevents a retry.
+- Restore the `U` monogram as the primary toolbar icon with a separate sparkle.
+
 ## [1.55.9] — 2026-10-21
 
 - Documentation hygiene: remove obsolete historical product references from current project files and paths.

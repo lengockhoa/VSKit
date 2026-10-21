@@ -59,6 +59,7 @@ import {
   COMMIT_GEN_TIMEOUT_MS,
   TOAST_GENERATION_IN_PROGRESS,
   type CommitGenDeps,
+  type CommitGenTrace,
   type OmpOneShot,
 } from "./ai/commitGenCommand";
 import { createCommitGenGate } from "./ai/commitGenGate";
@@ -66,7 +67,7 @@ import {
   answerCommitGenServerRequest,
   createCommitGenOmpTurn,
 } from "./ai/commitGenOmpOneShot";
-import { collectCommitDiff, pickRepository, getGitApi } from "./adapters/gitDiff";
+import { collectCommitDiff, getGitApi, isCommitDiffCurrent, pickRepository, repositoryFromCommandArgument, type GitRepositoryLike } from "./adapters/gitDiff";
 import type { AdapterFactory } from "./ai/tools/types";
 import type { AgentDeps } from "./ai/agent";
 import { AiChatPanel, type AcpPanelDeps } from "./ui/aiChatPanel";
@@ -131,6 +132,7 @@ import {
   type DiagCategory,
   type DiagSeverity,
 } from "./core/diagnostics";
+let commitGenDiagnosticsChannel: vscode.OutputChannel | undefined;
 let disposables: vscode.Disposable[] = [];
 let state: ExtensionState | null = null;
 /**
@@ -190,6 +192,48 @@ let schemaTreeRefresher: ReturnType<typeof createDebouncedRefresher> | null = nu
  * second stacked progress notification.
  */
 const commitGenGate = createCommitGenGate();
+let commitGenTraceSequence = 0;
+function normalizeCommitGenDiagnosticEngine(value: unknown): string {
+  if (
+    value === "builtin" || value === "omp" || value === "claude-code" || value === "codex"
+  ) {
+    return value;
+  }
+  return "unknown";
+}
+
+const COMMIT_GEN_TRACE_FIELDS: Record<string, true> = {
+  attempt: true, available: true, configured: true, current: true, diffChars: true,
+  durationMs: true, elapsedMs: true, engine: true, errorName: true, fileCount: true,
+  firstTextObservable: true, hasChanges: true, inputTokens: true, messageChars: true,
+  messageCount: true, originalDiffBytes: true, originalDiffChars: true, outputChars: true,
+  outputTokens: true, promptChars: true, rawChars: true, reason: true, outcome: true,
+  repositoryCount: true, resultChars: true, scope: true, selected: true, sentDiffBytes: true,
+  sentDiffChars: true, staged: true, success: true, truncated: true,
+};
+
+function safeCommitGenTraceMetadata(
+  metadata: Readonly<Record<string, unknown>>,
+): Record<string, string | number | boolean> {
+  const safe: Record<string, string | number | boolean> = {};
+  for (const [key, value] of Object.entries(metadata)) {
+    if (key === "engine") {
+      if (
+        value === "builtin" || value === "omp" || value === "claude-code" || value === "codex"
+      ) {
+        safe.engine = value;
+      }
+      continue;
+    }
+    if (!Object.prototype.hasOwnProperty.call(COMMIT_GEN_TRACE_FIELDS, key)) continue;
+    if (typeof value === "number" && Number.isFinite(value)) safe[key] = value;
+    else if (typeof value === "boolean") safe[key] = value;
+    else if (typeof value === "string" && /^[A-Za-z0-9._:/-]{1,80}$/.test(value)) {
+      safe[key] = value;
+    }
+  }
+  return safe;
+}
 
 // =====================================================================
 // BQ01-001 — narrow DriverType → SqlDialect. BigQuery's path is wired by
@@ -488,6 +532,7 @@ export async function activate(
   context: vscode.ExtensionContext,
 ): Promise<void> {
   disposables = [];
+  commitGenDiagnosticsChannel = undefined;
   // v1.53.32 — fire-and-forget: move VSKit container to Primary Sidebar
   // on first activation. Runs in parallel with the rest of activate();
   // the function itself waits a tick before issuing the move command so
@@ -1287,33 +1332,157 @@ export async function activate(
   disposables.push(
     vscode.commands.registerCommand(
       "VSKit.generateCommitMessage",
-      async () => {
-        // Single-flight (SPEC FR-001): a second click while a run is in
-        // flight gets the frozen toast — never a second stacked spinner.
+      async (...args: unknown[]) => {
+        const handlerStartedAt = performance.now();
+        const correlationId = `commit-gen-${Date.now()}-${++commitGenTraceSequence}`;
+        const configuration = vscode.workspace.getConfiguration("VSKit");
+        const diagnosticsEnabled =
+          configuration.get<boolean>("ai.commitGenDiagnostics", false) === true;
+        const engine = normalizeCommitGenDiagnosticEngine(
+          configuration.get<unknown>("ai.engine", "unknown"),
+        );
+        const version = String(context.extension?.packageJSON?.version ?? "unknown");
+        let generationOutcome = "running";
+        const updateGenerationOutcome = (
+          event: string,
+          metadata: Readonly<Record<string, unknown>>,
+        ) => {
+          if (event === "generation.cancelled") {
+            generationOutcome = "cancelled";
+            return;
+          }
+          if (generationOutcome === "cancelled") return;
+          if (event === "settings.complete" && metadata.configured === false) {
+            generationOutcome = "settings_missing";
+          } else if (event === "diff.complete" && metadata.hasChanges === false) {
+            generationOutcome = "no_changes";
+          } else if (event === "omp.detect.complete" && metadata.available === false) {
+            generationOutcome = "engine_unavailable";
+          } else if (event === "config.complete" && metadata.configured === false) {
+            generationOutcome = "config_missing";
+          } else if (event === "omp.setup.error" || event === "engine.request.error") {
+            generationOutcome = "engine_error";
+          } else if (event === "scm.input.updated") {
+            generationOutcome = "input_updated";
+          } else if (event === "scm.input.not_updated") {
+            generationOutcome = metadata.reason === "input_changed"
+              ? "input_preserved"
+              : "stale_diff_preserved";
+          } else if (event === "scm.input.copy_completed") {
+            generationOutcome = "result_copied";
+          } else if (event === "guard.rejected") {
+            generationOutcome = "guard_rejected";
+          } else if (event === "guard.empty") {
+            generationOutcome = "empty_response";
+          } else if (event === "handler.repository_pick_cancelled") {
+            generationOutcome = "repository_pick_cancelled";
+          } else if (event === "handler.single_flight_busy") {
+            generationOutcome = "busy";
+          }
+        };
+        const trace: CommitGenTrace | undefined = diagnosticsEnabled
+          ? {
+              correlationId,
+              emit: (event, metadata = {}) => {
+                try {
+                  updateGenerationOutcome(event, metadata);
+                  if (!commitGenDiagnosticsChannel) {
+                    commitGenDiagnosticsChannel = vscode.window.createOutputChannel(
+                      "VSKit: Commit Message Diagnostics",
+                    );
+                    disposables.push(commitGenDiagnosticsChannel);
+                  }
+                  commitGenDiagnosticsChannel.appendLine(
+                    JSON.stringify({
+                      timestamp: new Date().toISOString(),
+                      version,
+                      engine,
+                      requestId: correlationId,
+                      event,
+                      elapsedMs: Math.round((performance.now() - handlerStartedAt) * 10) / 10,
+                      ...safeCommitGenTraceMetadata(metadata),
+                      outcome: generationOutcome,
+                    }),
+                  );
+                } catch {
+                  // Diagnostics must not affect generation.
+                }
+              },
+            }
+          : undefined;
+        trace?.emit("handler.start");
+        // Single-flight: a second click is rejected immediately; no queued run.
         const release = commitGenGate.acquire();
         if (release === null) {
-          void vscode.window.showInformationMessage(
-            TOAST_GENERATION_IN_PROGRESS,
-          );
+          trace?.emit("handler.single_flight_busy");
+          void vscode.window.showInformationMessage(TOAST_GENERATION_IN_PROGRESS);
           return;
         }
         try {
+          const gitApi = getGitApi();
+          const repositories = gitApi?.repositories ?? [];
+          const invocationRepo = repositoryFromCommandArgument(gitApi, ...args);
+          let selectedRepo: GitRepositoryLike | null;
+          if (invocationRepo) {
+            selectedRepo = invocationRepo;
+            trace?.emit("repository.invocation.selected", { selected: true });
+          } else if (repositories.length > 1) {
+            const pickerStartedAt = performance.now();
+            trace?.emit("repository.pick.start", { repositoryCount: repositories.length });
+            const selection = await vscode.window.showQuickPick(
+              repositories.map((repository) => {
+                const rootPath = repository.rootUri.fsPath;
+                const label = rootPath.split(/[\\/]/).filter(Boolean).pop() ?? rootPath;
+                return { label, description: rootPath, repository };
+              }),
+              { placeHolder: "Select the Git repository for this commit message" },
+            );
+            trace?.emit("repository.pick.complete", {
+              durationMs: Math.round((performance.now() - pickerStartedAt) * 10) / 10,
+              selected: Boolean(selection),
+            });
+            if (!selection) {
+              trace?.emit("handler.repository_pick_cancelled");
+              return;
+            }
+            selectedRepo = selection.repository;
+          } else {
+            selectedRepo = pickRepository(gitApi);
+          }
           await vscode.window.withProgress(
             {
               location: vscode.ProgressLocation.SourceControl,
               title: "VSKit: generating commit message…",
               cancellable: true,
             },
-            async (progress, token) =>
-              runGenerateCommitMessage(
-                buildCommitGenDeps(aiStore, context, progress, token),
-              ),
+            async (progress, token) => {
+              trace?.emit("handler.progress.started");
+              return await runGenerateCommitMessage(
+                buildCommitGenDeps(aiStore, context, progress, token, trace, selectedRepo),
+              );
+            },
           );
         } finally {
+          const cleanupStartedAt = performance.now();
           release();
+          trace?.emit("cleanup.complete", {
+            durationMs: Math.round((performance.now() - cleanupStartedAt) * 10) / 10,
+          });
+          trace?.emit("handler.complete");
         }
       },
     ),
+  );
+  disposables.push(
+    vscode.commands.registerCommand("VSKit.showCommitMessageDiagnostics", () => {
+      if (!commitGenDiagnosticsChannel) {
+        commitGenDiagnosticsChannel = vscode.window.createOutputChannel(
+          "VSKit: Commit Message Diagnostics",
+        );
+        disposables.push(commitGenDiagnosticsChannel);
+      }
+      commitGenDiagnosticsChannel.show(true);
+    }),
   );
   // 16. VSKit.aiChat — TASK-004: AI chat panel with real deps.
   // Spec: store.loadConfig() (flat AiConfig), createProviderClient per
@@ -1967,6 +2136,7 @@ export async function deactivate(): Promise<void> {
     }
   }
   disposables = [];
+  commitGenDiagnosticsChannel = undefined;
   state = null;
   aiSettingsForm?.dispose();
   aiSettingsForm = null;
@@ -4241,8 +4411,8 @@ async function commandRefreshDbContext(
 //     with `mcpServers: []` the engine never calls `hostMcp.call`)
 // The collected omp one-shot adapter wraps `engine.send(text, events)` by
 // buffering `onDelta` events into a string and resolving on `onDone` (or
-// rejecting on `onError`). Multi-repo is out of scope (PLAN §2) —
-// `pickRepository()` returns `repositories[0]`.
+// rejecting on `onError`). The invocation repository wins; absent one,
+// a sole repository is selected or multiple repositories are picked explicitly.
 // ============================================================================
 
 interface CommitGenOmpHostMcp {
@@ -4286,6 +4456,7 @@ function buildCommitGenNoopHostMcp(): CommitGenOmpHostMcp {
 async function buildCommitGenOmpOneShot(
   ompPath: string,
   modelId: string,
+  trace?: CommitGenTrace,
 ): Promise<OmpOneShot> {
   const cwd =
     vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? process.cwd();
@@ -4298,9 +4469,35 @@ async function buildCommitGenOmpOneShot(
       // unattended commit-gen turn never blocks on a permission prompt that
       // nobody can see. Without this the unbounded session/prompt never
       // settles and the progress spinner hangs forever.
-      handlePromise = acpProcess.start({
+      const setupStartedAt = trace ? performance.now() : 0;
+      const start = acpProcess.start({
         onServerRequest: (call) => answerCommitGenServerRequest(call),
       });
+      handlePromise = trace
+        ? start.then(
+            (handle) => {
+              try {
+                trace.emit("omp.setup.complete", {
+                  durationMs: Math.round((performance.now() - setupStartedAt) * 10) / 10,
+                });
+              } catch {
+                /* instrumentation must not alter OMP startup */
+              }
+              return handle;
+            },
+            (error: unknown) => {
+              try {
+                trace.emit("omp.setup.error", {
+                  durationMs: Math.round((performance.now() - setupStartedAt) * 10) / 10,
+                  errorName: error instanceof Error ? error.name : typeof error,
+                });
+              } catch {
+                /* instrumentation must not alter OMP startup */
+              }
+              throw error;
+            },
+          )
+        : start;
     }
     return handlePromise;
   };
@@ -4320,25 +4517,32 @@ function buildCommitGenDeps(
   context: vscode.ExtensionContext,
   progress: vscode.Progress<{ message?: string }>,
   token: vscode.CancellationToken,
+  trace: CommitGenTrace | undefined,
+  selectedRepo: GitRepositoryLike | null,
 ): CommitGenDeps {
-  // Cached repo handle — pick once per command invocation, not per call.
-  // `pickRepository()` is multi-repo-out-of-scope (PLAN §2); falls back to
-  // the SCM inputBox proxy when the vscode.git API is unavailable so the
-  // toast still surfaces cleanly.
-  const selectedRepo = (() => {
-    const api = getGitApi();
-    return pickRepository(api);
-  })();
+  // The handler chooses the sole repository or asks the user to select one
+  // explicitly when a workspace contains multiple Git roots.
   // Cancel channel (SPEC FR-003/FR-005): the progress token drives an
   // AbortController whose signal reaches the in-flight provider fetch via
   // `deps.signal` → `ProviderRequest.signal`; the same token cancels the omp
   // one-shot driver below.
   const cancelController = new AbortController();
-  token.onCancellationRequested(() => cancelController.abort());
+  let cancellationReported = false;
+  const reportCancellation = () => {
+    if (cancellationReported) return;
+    cancellationReported = true;
+    trace?.emit("generation.cancelled");
+  };
+  token.onCancellationRequested(() => {
+    cancelController.abort();
+    reportCancellation();
+  });
+  const initialInputValue = selectedRepo?.inputBox.value;
 
 
   return {
     loadSettings: () => aiStore.loadSettings(),
+    trace,
     loadConfig: () => aiStore.loadConfig(),
     detectOmp: () => detectOmp(),
     resolveEngine,
@@ -4346,14 +4550,23 @@ function buildCommitGenDeps(
       const oneShot = await buildCommitGenOmpOneShot(
         choice.path ?? "omp",
         modelId,
+        trace,
       );
       // FR-005: a user cancel settles the omp turn early instead of waiting
-      // out the 120s ceiling; the flow then returns silently at the
-      // isCancelled checkpoint.
-      token.onCancellationRequested(() => oneShot.cancel?.());
-      return oneShot;
+      // out the 120s ceiling; the command disposes the engine after settlement.
+      const cancellation = token.onCancellationRequested(() => oneShot.cancel?.());
+      return {
+        ...oneShot,
+        dispose: async () => {
+          try {
+            cancellation.dispose();
+          } finally {
+            await oneShot.dispose?.();
+          }
+        },
+      };
     },
-    builtinComplete: (cfg, req) =>
+    builtinComplete: (cfg, req, providerTrace) =>
       createProviderClient({
         baseUrl: cfg.baseUrl,
         apiKey: cfg.apiKey,
@@ -4361,14 +4574,55 @@ function buildCommitGenDeps(
         // FR-004: the commit-gen flow is capped at COMMIT_GEN_TIMEOUT_MS —
         // this overrides the user's configured timeout for this flow only.
         timeoutMs: COMMIT_GEN_TIMEOUT_MS,
+        trace: providerTrace,
       }).complete(req),
     collectDiff: async () => {
       if (!selectedRepo) return null;
-      return await collectCommitDiff(selectedRepo);
+      return await collectCommitDiff(
+        selectedRepo,
+        trace ? (event, metadata) => trace.emit(event, metadata) : undefined,
+      );
+    },
+    validateDiffFresh: async (diff) => {
+      if (!selectedRepo || !diff.scope || !diff.diffFingerprint) return false;
+      trace?.emit("git.diff.recheck.start", { scope: diff.scope });
+      try {
+        const current = await isCommitDiffCurrent(selectedRepo, {
+          branch: diff.branch,
+          scope: diff.scope,
+          diffFingerprint: diff.diffFingerprint,
+        });
+        trace?.emit("git.diff.recheck.complete", { scope: diff.scope, current });
+        return current;
+      } catch (error) {
+        trace?.emit("git.diff.recheck.error", {
+          scope: diff.scope,
+          errorName: error instanceof Error ? error.name : typeof error,
+        });
+        return false;
+      }
+    },
+    isInputUnchanged: () =>
+      selectedRepo !== null && selectedRepo.inputBox.value === initialInputValue,
+    showInputChanged: async (message: string) => {
+      const choice = await vscode.window.showInformationMessage(
+        message,
+        { modal: false },
+        "Copy generated message",
+      );
+      return choice === "Copy generated message";
+    },
+    copyToClipboard: async (message: string) => {
+      await vscode.env.clipboard.writeText(message);
     },
     setInputBox: (message: string) => {
       if (selectedRepo) {
+        const updateStartedAt = trace ? performance.now() : 0;
         selectedRepo.inputBox.value = message;
+        trace?.emit("scm.input.updated", {
+          durationMs: Math.round((performance.now() - updateStartedAt) * 10) / 10,
+          messageChars: message.length,
+        });
       }
     },
     showInfo: (m: string) => {
@@ -4389,36 +4643,13 @@ function buildCommitGenDeps(
     report: (message: string) => {
       progress.report({ message });
     },
-    isCancelled: () => token.isCancellationRequested,
+    isCancelled: () => {
+      const cancelled = token.isCancellationRequested;
+      if (cancelled) reportCancellation();
+      return cancelled;
+    },
     // FR-003: forwarded onto every ProviderRequest so a cancel reaches the
     // in-flight fetch (complete() links it to its internal AbortController).
     signal: cancelController.signal,
-    writeDebugArtifact: ({ label, body, context: meta }) => {
-      // Persist raw provider payloads to disk so the user can paste them
-      // back for diagnosis without DevTools. Skipped silently if the body
-      // is empty (nothing to debug) or the storage URI is unavailable.
-      if (!body || body.length === 0) return undefined;
-      const folder = context.globalStorageUri;
-      const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-      const fileName = `vskit-${label}-${stamp}.txt`;
-      const fileUri = vscode.Uri.joinPath(folder, fileName);
-      const header =
-        `# VSKit debug artifact\n` +
-        `# label: ${label}\n` +
-        `# timestamp: ${new Date().toISOString()}\n` +
-        (meta ? `# context: ${JSON.stringify(meta, null, 2)}\n` : "") +
-        `# body length: ${body.length}\n` +
-        `# ----- BEGIN BODY -----\n`;
-      const payload = header + body + "\n# ----- END BODY -----\n";
-      try {
-        // Fire-and-forget; we don't want a write failure to mask the real
-        // empty-message error from the notification. The path string is
-        // returned synchronously so the notification can show it.
-        void vscode.workspace.fs.writeFile(fileUri, Buffer.from(payload, "utf8"));
-        return fileUri.fsPath;
-      } catch {
-        return undefined;
-      }
-    },
   };
 }

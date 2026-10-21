@@ -8,6 +8,7 @@
 // the "Generate Commit Message" SCM sparkle.
 //
 // Frozen strings/values: see `docs/AI_HANDOFF/PLAN.md` §1 + TASK-GC-002.
+import { createHash } from "node:crypto";
 import * as vscode from "vscode";
 
 // ---------------------------------------------------------------------------
@@ -46,16 +47,174 @@ export interface CommitDiffInput {
   branch?: string;
   files: string[];
   diffText: string;
+  scope: "staged" | "unstaged";
+  diffFingerprint: string;
 }
+export type GitDiffTraceValue = string | number | boolean;
+export type GitDiffTrace = (
+  event: string,
+  metadata: Readonly<Record<string, GitDiffTraceValue>>,
+) => void;
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-/** Maximum bytes (UTF-16 code units) of diff text carried into the prompt. */
+/** Maximum UTF-8 bytes of diff text carried into the prompt. */
 export const GIT_DIFF_MAX_BYTES = 12_288;
 
-const TRUNCATION_MARKER = "\n… [diff truncated]";
+const SUMMARY_HEADER = "Changed files:\n";
+const SUMMARY_MAX_BYTES = Math.floor(GIT_DIFF_MAX_BYTES / 3);
+
+function diffFilePath(section: string): string {
+  const header = section.match(/^diff --git a\/(.*?) b\/(.*?)$/m);
+  return header ? (header[2] === "/dev/null" ? header[1] : header[2]) : "(unclassified diff)";
+}
+
+function fileClass(path: string): "source" | "docs/config" | "generated" {
+  if (/(?:^|\/)(?:package-lock\.json|yarn\.lock|pnpm-lock\.yaml|Cargo\.lock|Gemfile\.lock|composer\.lock)$|(?:\.min\.(?:js|css)$|(?:^|\/)(?:dist|build|generated)\/)/i.test(path)) return "generated";
+  if (/\.(?:md|mdx|rst|txt|ya?ml|toml|json|ini|cfg|conf)$/i.test(path) || /(?:^|\/)(?:\.github|\.vscode)\//.test(path)) return "docs/config";
+  return "source";
+}
+
+function utf8Bytes(text: string): number {
+  return Buffer.byteLength(text, "utf8");
+}
+
+function takeUtf8Prefix(text: string, maxBytes: number): string {
+  let end = 0;
+  let usedBytes = 0;
+  for (const character of text) {
+    const characterBytes = utf8Bytes(character);
+    if (usedBytes + characterBytes > maxBytes) break;
+    usedBytes += characterBytes;
+    end += character.length;
+  }
+  return text.slice(0, end);
+}
+
+/** Return the longest prefix ending at a complete line and fitting the byte limit. */
+function takeCompleteLines(text: string, maxBytes: number, totalBytes: number): string {
+  if (totalBytes <= maxBytes) return text;
+  let lineStart = 0;
+  let end = 0;
+  let usedBytes = 0;
+  while (lineStart < text.length) {
+    const newline = text.indexOf("\n", lineStart);
+    const lineEnd = newline < 0 ? text.length : newline + 1;
+    const lineBytes = utf8Bytes(text.slice(lineStart, lineEnd));
+    if (usedBytes + lineBytes > maxBytes) break;
+    usedBytes += lineBytes;
+    end = lineEnd;
+    lineStart = lineEnd;
+  }
+  return text.slice(0, end);
+}
+
+function summaryRow(section: string, path: string): string {
+  const hunkStart = section.search(/^@@ /m);
+  const header = hunkStart < 0 ? section : section.slice(0, hunkStart);
+  const status = header.match(/^(?:rename from|rename to|deleted file mode|new file mode|Binary files|GIT binary patch).*$/gm) ?? [];
+  return `- ${path}${status.length ? ` (${status.join("; ")})` : ""}`;
+}
+
+function fileSummary(sections: string[], paths: string[]): string {
+  const rows = sections.map((section, index) => summaryRow(section, paths[index]));
+  const included: string[] = [];
+  let usedBytes = utf8Bytes(SUMMARY_HEADER);
+  let omitted = 0;
+  for (const row of rows) {
+    const rowBytes = utf8Bytes(`${row}\n`);
+    if (usedBytes + rowBytes <= SUMMARY_MAX_BYTES) {
+      included.push(row);
+      usedBytes += rowBytes;
+    } else {
+      omitted++;
+    }
+  }
+  if (omitted) {
+    let marker = `… [${omitted} additional changed file(s) omitted from summary]\n`;
+    while (included.length && usedBytes + utf8Bytes(marker) + 1 > SUMMARY_MAX_BYTES) {
+      const removed = included.pop()!;
+      usedBytes -= utf8Bytes(`${removed}\n`);
+      omitted++;
+      marker = `… [${omitted} additional changed file(s) omitted from summary]\n`;
+    }
+    return `${SUMMARY_HEADER}${included.join("\n")}${included.length ? "\n" : ""}${marker}\n`;
+  }
+  return `${SUMMARY_HEADER}${included.join("\n")}\n\n`;
+}
+
+function boundedDiff(text: string): string {
+  if (utf8Bytes(text) <= GIT_DIFF_MAX_BYTES) return text;
+  const sections = text.split(/(?=^diff --git )/m).filter(Boolean);
+  if (!sections.length) {
+    const marker = "\n… [diff truncated]";
+    return takeUtf8Prefix(text, GIT_DIFF_MAX_BYTES - utf8Bytes(marker)) + marker;
+  }
+
+  const paths = sections.map(diffFilePath);
+  const summary = fileSummary(sections, paths);
+  const truncationMarker = (count: number) => `\n… [partial diff; ${count} file(s) truncated]`;
+  const markerReserve = utf8Bytes(truncationMarker(sections.length));
+  const bodyBudget = Math.max(0, GIT_DIFF_MAX_BYTES - utf8Bytes(summary) - markerReserve);
+  const sectionBytes = sections.map(utf8Bytes);
+  const body = new Array<string>(sections.length).fill("");
+  const bodyBytes = new Array<number>(sections.length).fill(0);
+  let remaining = bodyBudget;
+  let active = sections.map((_, index) => index);
+
+  while (remaining > 0 && active.length) {
+    const totalWeight = active.reduce((sum, index) => sum + (fileClass(paths[index]) === "source" ? 3 : 1), 0);
+    const shares = active.map((index) => Math.floor(remaining * (fileClass(paths[index]) === "source" ? 3 : 1) / totalWeight));
+    let assigned = shares.reduce((sum, share) => sum + share, 0);
+    for (let index = 0; assigned < remaining; index++, assigned++) shares[index]++;
+
+    let consumed = 0;
+    const next: number[] = [];
+    for (let activeIndex = 0; activeIndex < active.length; activeIndex++) {
+      const index = active[activeIndex];
+      const candidate = takeCompleteLines(sections[index], bodyBytes[index] + shares[activeIndex], sectionBytes[index]);
+      const candidateBytes = utf8Bytes(candidate);
+      if (candidateBytes > bodyBytes[index]) {
+        body[index] = candidate;
+        consumed += candidateBytes - bodyBytes[index];
+        bodyBytes[index] = candidateBytes;
+      }
+      if (bodyBytes[index] < sectionBytes[index]) next.push(index);
+    }
+
+    if (!consumed) {
+      let bestIndex = -1;
+      let bestPrefix = "";
+      let bestBytes = 0;
+      for (const index of active) {
+        const candidate = takeCompleteLines(sections[index], bodyBytes[index] + remaining, sectionBytes[index]);
+        const candidateBytes = utf8Bytes(candidate);
+        if (candidateBytes - bodyBytes[index] > bestBytes) {
+          bestIndex = index;
+          bestPrefix = candidate;
+          bestBytes = candidateBytes - bodyBytes[index];
+        }
+      }
+      if (bestIndex < 0) break;
+      body[bestIndex] = bestPrefix;
+      bodyBytes[bestIndex] += bestBytes;
+      remaining -= bestBytes;
+      active = active.filter((index) => bodyBytes[index] < sectionBytes[index]);
+      continue;
+    }
+
+    remaining -= consumed;
+    active = next;
+  }
+
+  const truncatedCount = bodyBytes.filter((bytes, index) => bytes < sectionBytes[index]).length;
+  const marker = truncationMarker(truncatedCount);
+  return summary + body.filter(Boolean).join("") + marker;
+}
+
+
 
 // ---------------------------------------------------------------------------
 // Pure helpers
@@ -79,26 +238,40 @@ function toRelativePath(rootFsPath: string, absoluteFsPath: string): string {
   return abs;
 }
 
-/**
- * Truncate `text` so that the returned value has at most `GIT_DIFF_MAX_BYTES`
- * UTF-16 code units, appending a human-readable marker.
- */
+/** Bound oversized diffs by file, preserving a complete status summary. */
 export function truncateDiff(text: string): string {
-  if (text.length <= GIT_DIFF_MAX_BYTES) return text;
-  // Reserve room for the marker line so callers can rely on `endsWith`.
-  const markerLen = TRUNCATION_MARKER.length;
-  const head = text.slice(0, Math.max(0, GIT_DIFF_MAX_BYTES - markerLen));
-  return head + TRUNCATION_MARKER;
+  return boundedDiff(text);
 }
 
 // ---------------------------------------------------------------------------
 // Repository / API seams
 // ---------------------------------------------------------------------------
 
-/** Multi-repo picker is out of scope (PLAN §2). Returns `repositories[0]`. */
+/** Returns a repository only when selection is unambiguous. */
 export function pickRepository(api: GitApiLike | undefined): GitRepositoryLike | null {
-  if (!api || api.repositories.length === 0) return null;
-  return api.repositories[0];
+  if (!api || api.repositories.length !== 1) return null;
+  return api.repositories[0] ?? null;
+}
+
+/** Prefer the repository (or SCM source control root) supplied by the invoking command. */
+export function repositoryFromCommandArgument(
+  api: GitApiLike | undefined,
+  ...args: readonly unknown[]
+): GitRepositoryLike | null {
+  if (!api) return null;
+  for (const arg of args) {
+    const exactMatch = api.repositories.find((repo) => repo === arg);
+    if (exactMatch) return exactMatch;
+    if (typeof arg !== "object" || arg === null || !("rootUri" in arg)) continue;
+    const rootUri = arg.rootUri;
+    if (typeof rootUri !== "object" || rootUri === null || !("fsPath" in rootUri)) continue;
+    const fsPath = rootUri.fsPath;
+    if (typeof fsPath !== "string") continue;
+    const matches = api.repositories.filter((repo) => repo.rootUri.fsPath === fsPath);
+    if (matches.length === 1) return matches[0] ?? null;
+  }
+  return null;
+
 }
 
 /**
@@ -133,16 +306,39 @@ export function getGitApi(): GitApiLike | undefined {
  */
 export async function collectCommitDiff(
   repo: GitRepositoryLike,
+  trace?: GitDiffTrace,
 ): Promise<CommitDiffInput | null> {
+  const stagedStartedAt = trace ? performance.now() : 0;
   const stagedRaw = await repo.diff(true);
+  trace?.("git.diff.complete", {
+    staged: true,
+    durationMs: Math.round((performance.now() - stagedStartedAt) * 10) / 10,
+    resultChars: typeof stagedRaw === "string" ? stagedRaw.length : 0,
+  });
   let chosen: string;
   let stagedSelected = false;
   if (typeof stagedRaw === "string" && stagedRaw.trim().length > 0) {
     chosen = stagedRaw;
     stagedSelected = true;
   } else {
+    const unstagedStartedAt = trace ? performance.now() : 0;
     const unstagedRaw = await repo.diff(false);
+    trace?.("git.diff.complete", {
+      staged: false,
+      durationMs: Math.round((performance.now() - unstagedStartedAt) * 10) / 10,
+      resultChars: typeof unstagedRaw === "string" ? unstagedRaw.length : 0,
+    });
     if (typeof unstagedRaw !== "string" || unstagedRaw.trim().length === 0) {
+      trace?.("git.diff.selected", {
+        staged: false,
+        hasChanges: false,
+        originalDiffChars: 0,
+        sentDiffChars: 0,
+        originalDiffBytes: 0,
+        sentDiffBytes: 0,
+        truncated: false,
+        fileCount: 0,
+      });
       return null;
     }
     chosen = unstagedRaw;
@@ -166,10 +362,38 @@ export async function collectCommitDiff(
 
   const branch = state.HEAD && typeof state.HEAD.name === "string" ? state.HEAD.name : undefined;
 
+  const diffText = truncateDiff(chosen);
+  const diffFingerprint = createHash("sha256").update(chosen, "utf8").digest("hex");
+  if (trace) {
+    trace("git.diff.selected", {
+      staged: stagedSelected,
+      hasChanges: true,
+      originalDiffChars: chosen.length,
+      sentDiffChars: diffText.length,
+      originalDiffBytes: Buffer.byteLength(chosen, "utf8"),
+      sentDiffBytes: Buffer.byteLength(diffText, "utf8"),
+      truncated: diffText !== chosen,
+      fileCount: files.length,
+    });
+  }
   return {
     repoName: repoNameFromFsPath(rootFsPath),
     branch,
     files,
-    diffText: truncateDiff(chosen),
+    diffText,
+    scope: stagedSelected ? "staged" : "unstaged",
+    diffFingerprint,
   };
+}
+
+/** Re-read only the originally selected Git scope and compare its full hash. */
+export async function isCommitDiffCurrent(
+  repo: GitRepositoryLike,
+  expected: Pick<CommitDiffInput, "branch" | "scope" | "diffFingerprint">,
+): Promise<boolean> {
+  if ((repo.state?.HEAD?.name ?? undefined) !== expected.branch) return false;
+  const current = await repo.diff(expected.scope === "staged");
+  if (typeof current !== "string" || current.trim().length === 0) return false;
+  const fingerprint = createHash("sha256").update(current, "utf8").digest("hex");
+  return fingerprint === expected.diffFingerprint;
 }

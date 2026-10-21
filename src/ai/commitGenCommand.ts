@@ -12,7 +12,12 @@
 import type { AiSettings, AiConfig, AiEngine } from "./settings";
 import type { AgentDetections, EngineChoice } from "./engineChoice";
 import type { OmpDetection } from "./omp/detect";
-import type { ChatMessage, ProviderRequest, ProviderResult } from "./provider";
+import type {
+  ChatMessage,
+  ProviderRequest,
+  ProviderResult,
+  ProviderTrace,
+} from "./provider";
 import {
   buildCommitPrompt,
   buildRetryCommitPrompt,
@@ -30,6 +35,10 @@ export const TOAST_NO_LITE =
 export const ACTION_OPEN_SETTINGS = "Open Settings";
 export const TOAST_NO_CHANGES =
   "VSKit: nothing to commit — this Git repo has no staged or unstaged changes. Stage or modify at least one file, then click again.";
+export const TOAST_DIFF_CHANGED =
+  "VSKit: repository changes changed while the commit message was being generated — review the current diff and try again.";
+export const TOAST_INPUT_CHANGED =
+  "VSKit: commit message was not inserted because the SCM input changed while generation was running.";
 export const TOAST_NO_BACKEND_CONFIG =
   "Configure the AI backend (base URL + API key) in VSKit AI Settings";
 export const ERROR_ENGINE_UNAVAILABLE_PREFIX = "VSKit: ";
@@ -40,8 +49,7 @@ export const ERROR_NON_STRING_TEXT_BUILTIN =
 export const ERROR_NON_STRING_TEXT_OMP =
   "commit-gen: omp one-shot returned non-string";
 
-// Guard-flow frozen strings (SPEC §8.5). The terminal toast is assembled from
-// these two constants plus the last raw preview and an optional debug-dump path.
+// Guard-flow frozen strings (SPEC §8.5). Error messages expose rejection reasons, never raw output.
 export const ERROR_COMMIT_GUARD_FAILED_PREFIX =
   "VSKit: generated commit message failed validation";
 export const ERROR_COMMIT_GUARD_RETRY_NOTE =
@@ -134,17 +142,26 @@ export interface CommitDiffInputLike {
   branch?: string;
   files: readonly string[];
   diffText: string;
+  scope?: "staged" | "unstaged";
+  diffFingerprint?: string;
+}
+
+export type CommitGenTraceValue = string | number | boolean | null;
+
+export interface CommitGenTrace {
+  readonly correlationId: string;
+  emit(event: string, metadata?: Readonly<Record<string, CommitGenTraceValue>>): void;
 }
 
 /** One-shot omp chat engine. The host wires this from `createOmpChatEngine`
  * (src/ai/omp/ompChatEngine.ts) by collecting `onDelta` into a buffer and
  * resolving when the turn ends. */
 export interface OmpOneShot {
-  generate(prompt: string): Promise<string>;
-  /** Cancel the in-flight turn (SPEC FR-005). The host wires this to the
-   *  progress cancellation token; a cancelled turn settles the driver with
-   *  `commit-gen: cancelled` and the flow returns silently. */
+  generate(prompt: string, onFirstText?: () => void): Promise<string>;
+  /** Cancel the in-flight turn; the command disposes the engine after settlement. */
   cancel?(): void;
+  /** Shut down resources after all guard attempts have completed. */
+  dispose?(): Promise<void> | void;
 }
 
 // ---- injected ports ---------------------------------------------------------
@@ -166,9 +183,21 @@ export interface CommitGenDeps {
   /** Build the omp one-shot adapter with the selected Lite model. */
   buildOmpEngine(choice: EngineChoice, modelId: string): Promise<OmpOneShot>;
   /** Provider-port for the builtin path. Mirrors `createProviderClient(...).complete`. */
-  builtinComplete(cfg: AiConfig, req: ProviderRequest): Promise<ProviderResult>;
+  builtinComplete(
+    cfg: AiConfig,
+    req: ProviderRequest,
+    trace?: ProviderTrace,
+  ): Promise<ProviderResult>;
   /** GC-002 collection port. null ⇒ no changes to summarize. */
   collectDiff(): Promise<CommitDiffInputLike | null>;
+  /** Check that the originally selected diff still matches the repository. */
+  validateDiffFresh?(diff: CommitDiffInputLike): Promise<boolean>;
+  /** Check that the user has not edited the SCM input since generation began. */
+  isInputUnchanged?(): boolean;
+  /** Offer the completed result when the user edits SCM input during generation. */
+  showInputChanged?(message: string, result: string): Promise<boolean>;
+  /** Copy the result only after the user explicitly asks for it. */
+  copyToClipboard?(message: string): Promise<void>;
   /** Inject the generated message into the SCM input box. */
   setInputBox(message: string): void;
   /** Light info toast. */
@@ -180,19 +209,11 @@ export interface CommitGenDeps {
   showSettingsToast(m: string, action: string): Promise<string | undefined>;
   /** Open the AI Settings panel — invoked when the user picks the action. */
   openSettings(): void;
-  /**
-   * Optional debug dump: persist a raw provider payload to disk so the user
-   * can paste it back for diagnosis. Returns the absolute file path, or
-   * undefined if writing was skipped (e.g. body is empty).
-   */
-  writeDebugArtifact?(input: {
-    label: string;
-    body: string;
-    context?: Record<string, unknown>;
-  }): string | undefined;
   /** Progress stage reporter (SPEC FR-002). Receives the frozen
    *  `PROGRESS_*` strings; absent ⇒ stages are skipped. */
   report?(message: string): void;
+  /** Opt-in, metadata-only measurements. Undefined in normal runs. */
+  trace?: CommitGenTrace;
   /** Cancellation poll (SPEC FR-002). Checked at the post-diff and
    *  post-outcome checkpoints; `true` ⇒ silent return (no toast, no
    *  injection). */
@@ -224,17 +245,116 @@ export interface CommitGenDeps {
  *      Error rather than letting the object reach the sanitizer / input box.
  *   4. Guard + retry + inject (SPEC §8.4): run the engine string through
  *      `generateWithGuard` (sanitize → `checkCommitMessage`). A guard pass
- *      injects; an empty sanitized message (either attempt) keeps the existing
- *      empty-diagnostic path with the `commit-gen-empty` dump and is NEVER
- *      retried; a non-empty guard failure retries exactly once through
- *      `buildRetryCommitPrompt` on the SAME port/model. A second failure shows
- *      the frozen §8.5 toast, optionally dumps `commit-gen-guard-rejected`, and
- *      leaves the input box untouched. Any engine throw (either attempt)
- *      propagates to the branch's existing catch — no retry on throw.
+ *      injects; an empty sanitized message (either attempt) emits
+ *      metadata-only diagnostics and is NEVER retried; a non-empty guard
+ *      failure retries exactly once through `buildRetryCommitPrompt` on the
+ *      SAME port/model. A second failure shows the frozen §8.5 toast without
+ *      exposing provider text and leaves the input box untouched. Any engine
+ *      throw (either attempt) propagates to the branch's existing catch — no
+ *      retry on throw.
  */
+function traceElapsed(startedAt: number): number {
+  return Math.round((performance.now() - startedAt) * 10) / 10;
+}
+
+function messageCharacters(messages: readonly ChatMessage[]): number {
+  let characters = 0;
+  for (const message of messages) {
+    if (typeof message.content === "string") {
+      characters += message.content.length;
+    } else {
+      for (const part of message.content) {
+        if (typeof part.text === "string") characters += part.text.length;
+      }
+    }
+  }
+  return characters;
+}
+async function callBuiltinWithTrace(
+  deps: CommitGenDeps,
+  cfg: AiConfig,
+  request: ProviderRequest,
+  attempt: number,
+  engine: AiEngine,
+): Promise<ProviderResult> {
+  const trace = deps.trace;
+  const startedAt = trace ? performance.now() : 0;
+  const requestId = trace
+    ? `${trace.correlationId}/request-${attempt}`
+    : undefined;
+  if (trace) {
+    trace.emit("engine.request.start", {
+      engine,
+      attempt,
+      requestId: requestId ?? "",
+      modelId: request.modelId,
+      method: cfg.method,
+      maxOutputTokens: request.maxOutputTokens ?? null,
+      temperature: request.temperature ?? null,
+      promptChars: messageCharacters(request.messages),
+      firstTextObservable: false,
+    });
+  }
+  try {
+    const providerTrace: ProviderTrace | undefined =
+      trace && requestId
+        ? {
+            requestId,
+            emit: (event, metadata = {}) =>
+              trace.emit(event, metadata),
+          }
+        : undefined;
+    const result = await deps.builtinComplete(cfg, request, providerTrace);
+    if (trace) {
+      trace.emit("engine.request.complete", {
+        engine,
+        attempt,
+        requestId: requestId ?? "",
+        durationMs: traceElapsed(startedAt),
+        outputChars: result.text.length,
+        inputTokens: result.usage.inputTokens,
+        outputTokens: result.usage.outputTokens,
+      });
+    }
+    return result;
+  } catch (error) {
+    if (trace) {
+      trace.emit("engine.request.error", {
+        engine,
+        attempt,
+        requestId: requestId ?? "",
+        durationMs: traceElapsed(startedAt),
+        errorName: error instanceof Error ? error.name : typeof error,
+      });
+    }
+    throw error;
+  }
+}
+async function handleChangedScmInput(
+  deps: CommitGenDeps,
+  message: string,
+): Promise<void> {
+  deps.trace?.emit("scm.input.not_updated", { reason: "input_changed" });
+  if (!deps.showInputChanged) {
+    deps.showInfo(TOAST_INPUT_CHANGED);
+    return;
+  }
+  const copy = await deps.showInputChanged(TOAST_INPUT_CHANGED, message);
+  if (!copy) return;
+  await deps.copyToClipboard?.(message);
+  deps.trace?.emit("scm.input.copy_completed", { copied: true });
+}
+
 export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<void> {
   // 1. Lite model must be configured.
+  const settingsStartedAt = deps.trace ? performance.now() : 0;
   const settings = await deps.loadSettings();
+  if (deps.trace) {
+    deps.trace.emit("settings.complete", {
+      durationMs: traceElapsed(settingsStartedAt),
+      configured: Boolean(settings?.models?.lite?.modelId?.trim()),
+    });
+  }
   const lite = settings?.models?.lite;
   if (!settings || !lite || !lite.modelId || lite.modelId.trim() === "") {
     const action = await deps.showSettingsToast(TOAST_NO_LITE, ACTION_OPEN_SETTINGS);
@@ -246,7 +366,15 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
 
   // 2. Diff must exist.
   deps.report?.(PROGRESS_COLLECTING_DIFF);
+  const diffStartedAt = deps.trace ? performance.now() : 0;
   const diff = await deps.collectDiff();
+  if (deps.trace) {
+    deps.trace.emit("diff.complete", {
+      durationMs: traceElapsed(diffStartedAt),
+      hasChanges: diff !== null,
+      ...(diff ? { fileCount: diff.files.length, diffChars: diff.diffText.length } : {}),
+    });
+  }
   if (diff === null) {
     deps.showError(TOAST_NO_CHANGES);
     return;
@@ -267,12 +395,22 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
   //     returns builtin + an install hint so the user can see exactly why
   //     their selection was rejected instead of being silently swapped.
   const selectedEngine: AiEngine = settings.engine;
+  const promptStartedAt = deps.trace ? performance.now() : 0;
   const prompt = buildCommitPrompt({
     repoName: diff.repoName,
     ...(diff.branch !== undefined ? { branch: diff.branch } : {}),
     files: diff.files,
     diffText: diff.diffText,
   });
+  if (deps.trace) {
+    deps.trace.emit("prompt.complete", {
+      durationMs: traceElapsed(promptStartedAt),
+      messageCount: prompt.length,
+      promptChars: messageCharacters(prompt),
+      fileCount: diff.files.length,
+      diffChars: diff.diffText.length,
+    });
+  }
   let outcome: GuardOutcome | null = null;
   let cfg: AiConfig | null = null;
   deps.report?.(PROGRESS_CONTACTING_MODEL);
@@ -285,7 +423,15 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
   // adds a dedicated adapter for one of those engines, add the branch here
   // AND update the JSDoc above to match.
   if (selectedEngine === "omp") {
+    const detectionStartedAt = deps.trace ? performance.now() : 0;
     const detection = await deps.detectOmp();
+    if (deps.trace) {
+      deps.trace.emit("omp.detect.complete", {
+        durationMs: traceElapsed(detectionStartedAt),
+        available: detection.ok,
+        ...(detection.version ? { version: detection.version } : {}),
+      });
+    }
     const choice = deps.resolveEngine({
       engine: selectedEngine,
       detection,
@@ -296,15 +442,59 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
       deps.showError(`${ERROR_OMP_UNAVAILABLE_PREFIX}${hint}`);
       return;
     }
+    let oneShot: OmpOneShot | undefined;
     try {
-      const oneShot = await deps.buildOmpEngine(choice, lite.modelId);
+      const turn = await deps.buildOmpEngine(choice, lite.modelId);
+      oneShot = turn;
+      if (deps.isCancelled?.()) return;
       let attempt = 0;
       outcome = await generateWithGuard(async (messages) => {
+        if (deps.isCancelled?.()) throw new Error("commit-gen: cancelled");
         attempt += 1;
         if (attempt > 1) {
           deps.report?.(PROGRESS_RETRYING);
         }
-        const raw = await oneShot.generate(serializeCommitPrompt(messages));
+        const serializedPrompt = serializeCommitPrompt(messages);
+        const requestStartedAt = deps.trace ? performance.now() : 0;
+        if (deps.trace) {
+          deps.trace.emit("engine.request.start", {
+            engine: "omp",
+            attempt,
+            promptChars: serializedPrompt.length,
+            firstTextObservable: true,
+          });
+        }
+        const onFirstText = deps.trace
+          ? () =>
+              deps.trace?.emit("engine.first_text", {
+                engine: "omp",
+                attempt,
+                elapsedMs: traceElapsed(requestStartedAt),
+              })
+          : undefined;
+        let raw: string;
+        try {
+          raw = await turn.generate(serializedPrompt, onFirstText);
+        } catch (error) {
+          if (deps.trace) {
+            deps.trace.emit("engine.request.error", {
+              engine: "omp",
+              attempt,
+              durationMs: traceElapsed(requestStartedAt),
+              errorName: error instanceof Error ? error.name : typeof error,
+            });
+          }
+          throw error;
+        }
+        if (deps.trace) {
+          deps.trace.emit("engine.request.complete", {
+            engine: "omp",
+            attempt,
+            durationMs: traceElapsed(requestStartedAt),
+            outputChars: typeof raw === "string" ? raw.length : 0,
+            firstTextObservable: true,
+          });
+        }
         if (typeof raw !== "string") {
           throw new Error(ERROR_NON_STRING_TEXT_OMP);
         }
@@ -316,12 +506,33 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
       }
       deps.showError(`VSKit: omp error — ${(e as Error).message ?? String(e)}`);
       return;
+    } finally {
+      if (oneShot?.dispose) {
+        const cleanupStartedAt = deps.trace ? performance.now() : 0;
+        let cleanupSucceeded = true;
+        try {
+          await oneShot.dispose();
+        } catch {
+          cleanupSucceeded = false;
+        }
+        deps.trace?.emit("omp.cleanup.complete", {
+          durationMs: traceElapsed(cleanupStartedAt),
+          success: cleanupSucceeded,
+        });
+      }
     }
   } else if (selectedEngine === "builtin") {
     // resolveEngine is bypassed for "builtin" because the engine is always
     // honored when selected — the only question is whether the global
     // backend config is populated.
+    const configStartedAt = deps.trace ? performance.now() : 0;
     cfg = await deps.loadConfig();
+    if (deps.trace) {
+      deps.trace.emit("config.complete", {
+        durationMs: traceElapsed(configStartedAt),
+        configured: cfg !== null,
+      });
+    }
     if (cfg === null) {
       const action = await deps.showSettingsToast(
         TOAST_NO_BACKEND_CONFIG,
@@ -339,13 +550,13 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
         if (attempt > 1) {
           deps.report?.(PROGRESS_RETRYING);
         }
-        const result = await deps.builtinComplete(cfg as AiConfig, {
+        const result = await callBuiltinWithTrace(deps, cfg as AiConfig, {
           modelId: lite.modelId,
           messages: [...messages],
           maxOutputTokens: 300,
           temperature: 0.2,
           signal: requestSignal,
-        });
+        }, attempt, selectedEngine);
         if (typeof result.text !== "string") {
           throw new Error(ERROR_NON_STRING_TEXT_BUILTIN);
         }
@@ -398,13 +609,13 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
         if (attempt > 1) {
           deps.report?.(PROGRESS_RETRYING);
         }
-        const result = await deps.builtinComplete(cfg as AiConfig, {
+        const result = await callBuiltinWithTrace(deps, cfg as AiConfig, {
           modelId: lite.modelId,
           messages: [...messages],
           maxOutputTokens: 300,
           temperature: 0.2,
           signal: requestSignal,
-        });
+        }, attempt, selectedEngine);
         if (typeof result.text !== "string") {
           throw new Error(ERROR_NON_STRING_TEXT_BUILTIN);
         }
@@ -441,64 +652,60 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
   if (deps.isCancelled?.()) {
     return;
   }
+  const guardStartedAt = deps.trace ? performance.now() : 0;
   if (outcome !== null && outcome.ok) {
+    if (deps.trace) {
+      deps.trace.emit("guard.passed", {
+        durationMs: traceElapsed(guardStartedAt),
+        messageChars: outcome.message.length,
+      });
+    }
+    let diffIsCurrent = true;
+    if (deps.validateDiffFresh) {
+      const freshnessStartedAt = deps.trace ? performance.now() : 0;
+      diffIsCurrent = await deps.validateDiffFresh(diff);
+      deps.trace?.emit("diff.freshness.complete", {
+        durationMs: traceElapsed(freshnessStartedAt),
+        current: diffIsCurrent,
+      });
+      if (deps.isCancelled?.()) return;
+    }
+    // This is deliberately the last asynchronous-boundary check before a write.
+    if (deps.isInputUnchanged && !deps.isInputUnchanged()) {
+      await handleChangedScmInput(deps, outcome.message);
+      return;
+    }
+    if (!diffIsCurrent) {
+      deps.trace?.emit("scm.input.not_updated", { reason: "diff_changed" });
+      deps.showInfo(TOAST_DIFF_CHANGED);
+      return;
+    }
     deps.setInputBox(outcome.message);
     return;
   }
   if (outcome !== null && outcome.kind === "invalid") {
-    // Non-empty, guard-rejected twice. Surface the frozen §8.5 toast and,
-    // when available, dump the last raw payload for diagnosis. We do NOT call
-    // setInputBox — the commit box must not be overwritten with garbage.
-    const preview = outcome.raw.slice(0, 240).replace(/\s+/g, " ");
-    const debugFile = deps.writeDebugArtifact?.({
-      label: "commit-gen-guard-rejected",
-      body: outcome.raw,
-      context: { engine: selectedEngine, reasons: outcome.reasons },
-    });
-    const fileNote = debugFile ? ` Debug dump: ${debugFile}` : "";
+    if (deps.trace) {
+      deps.trace.emit("guard.rejected", {
+        reasons: outcome.reasons.join(","),
+      });
+    }
+    // Non-empty, guard-rejected twice. Surface only rejection metadata; never
+    // persist or display provider response text. Do NOT touch the input box.
     deps.showError(
       `${ERROR_COMMIT_GUARD_FAILED_PREFIX} (reasons: ${outcome.reasons.join(", ")}). ` +
-        `${ERROR_COMMIT_GUARD_RETRY_NOTE} Raw preview: "${preview}".${fileNote}`,
+        ERROR_COMMIT_GUARD_RETRY_NOTE,
     );
     return;
   }
 
-  // Empty (either attempt): keep the existing empty-diagnostic path verbatim —
-  // same toast text, same `commit-gen-empty` dump using the last raw text.
-  const rawProviderText = outcome !== null ? outcome.raw : "";
-  const rawLen = rawProviderText.length;
-  const rawPreview = rawProviderText.slice(0, 240).replace(/\s+/g, " ");
-  const debugFile = deps.writeDebugArtifact?.({
-    label: "commit-gen-empty",
-    body: rawProviderText,
-    context: {
-      engine: selectedEngine,
-      baseUrl: cfg?.baseUrl ?? "",
-      method: cfg?.method ?? "",
-      // The exact request body so the user can compare against Kilo Code's
-      // working call for the same Lite Model — usually the diff is one of:
-      //   (a) stream: false hint ignored → switch to stream:true
-      //   (b) max_output_tokens name / cap mismatch
-      //   (c) extra fields the Lite Model proxy doesn't recognize
-      requestBody: JSON.stringify(
-        cfg
-          ? {
-              model: lite.modelId,
-              input:
-                "<<see prompt from buildCommitPrompt — captured by provider>>",
-              max_output_tokens: 300,
-              temperature: 0.2,
-              stream: false,
-            }
-          : null,
-        null,
-        2,
-      ),
-    },
-  });
-  const fileNote = debugFile ? ` Debug dump: ${debugFile}` : "";
+  // Empty (either attempt): preserve the generic diagnostic while keeping
+  // provider response text out of logs, files, and notifications.
+  const rawLen = outcome !== null ? outcome.raw.length : 0;
+  if (deps.trace) {
+    deps.trace.emit("guard.empty", { rawChars: rawLen });
+  }
   deps.showError(
     `VSKit: provider returned no commit message text (raw length ${rawLen}). ` +
-      `Preview: "${rawPreview}". Check Lite Model config.${fileNote}`,
+      "Check Lite Model config.",
   );
 }

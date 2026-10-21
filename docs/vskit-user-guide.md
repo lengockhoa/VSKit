@@ -13,8 +13,10 @@ bash scripts/build.sh
 For the current package version, install with:
 
 ```bash
-code --install-extension "$(pwd)/dist/vskit-1.55.9.vsix"
+code --install-extension "$(pwd)/dist/vskit-1.55.10.vsix"
 ```
+
+To install on another machine, copy the `.vsix` file there, open VS Code's Command Palette, run `Extensions: Install from VSIX...`, and select the file. Reload VS Code if prompted.
 
 The latest VSKit VSIX is distributed from GitHub Releases; Marketplace listing availability has not been verified.
 

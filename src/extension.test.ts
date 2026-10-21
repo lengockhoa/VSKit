@@ -58,6 +58,7 @@ const state = {
    * path set this to `"omp"` to mirror the user-toggled setting.
    */
   aiEngine: undefined as string | undefined,
+  aiCommitGenDiagnostics: undefined as boolean | undefined,
   /**
    * TASK-AIX07-003 — `vscode.workspace.isTrusted` value seen by the host
    * policy derivation. Toggled per-test.
@@ -114,6 +115,16 @@ vi.mock("vscode", () => {
       showErrorMessage: vi.fn().mockResolvedValue(undefined),
       showInputBox: vi.fn().mockResolvedValue(undefined),
       showQuickPick: vi.fn().mockResolvedValue(undefined),
+      withProgress: vi.fn(async (_options: unknown, task: unknown) => {
+        const run = task as (progress: never, token: never) => Promise<unknown>;
+        return await run(
+          { report: vi.fn() } as never,
+          {
+            isCancellationRequested: false,
+            onCancellationRequested: () => ({ dispose: vi.fn() }),
+          } as never,
+        );
+      }),
       setStatusBarMessage: vi.fn().mockResolvedValue(undefined),
       createStatusBarItem: vi.fn().mockImplementation(() => {
         const item = {
@@ -216,8 +227,8 @@ vi.mock("vscode", () => {
         get: <T>(key: string): T | undefined => {
           if (key === "showRunLens") return true as T;
           if (key === "confirmDestructive") return state.confirmDestructive as T;
+          if (key === "ai.commitGenDiagnostics") return state.aiCommitGenDiagnostics as T;
           if (key === "ai.engine") return (state.aiEngine ?? "builtin") as T;
-          return undefined;
         },
         // TASK-AIX05-103: best-effort engine flip path
         // (flipEngineToBuiltinInSettings / commandOpenAiChat fallback) calls
@@ -279,6 +290,8 @@ vi.mock("vscode", () => {
       }),
       executeCommand: vi.fn().mockResolvedValue(undefined),
     },
+    ProgressLocation: { SourceControl: 1 },
+    extensions: { getExtension: vi.fn(() => undefined) },
     TreeDataProvider: class {},
     TreeItemCollapsibleState: { None: 0, Collapsed: 1, Expanded: 2 },
     ThemeIcon: vi.fn(),
@@ -388,6 +401,7 @@ beforeEach(() => {
     reason: "not-installed",
   });
   state.aiEngine = undefined;
+  state.aiCommitGenDiagnostics = undefined;
 });
 
 // ---- helpers used by TASK-003 case #6 (declared above all uses) ------------
@@ -397,6 +411,7 @@ function makeCtx() {
   const subscriptions: Array<{ dispose: () => void }> = [];
   return {
     subscriptions,
+    extension: { packageJSON: { version: "test-version" } },
     extensionUri: {
       toString: () => "file:///ext",
       fsPath: "/ext",
@@ -713,6 +728,23 @@ describe("TASK-303 — filter command + view/title menu", () => {
       "view == VSKit.schemaTree && VSKit.schemaTreeFilterActive",
     );
     expect(clearMenu!.group).toBe("navigation");
+  });
+  it("contributes opt-in commit diagnostics with the documented command", () => {
+    const commands = pkgJson.contributes.commands as Array<{ command: string; title: string }>;
+    expect(commands).toContainEqual({
+      command: "VSKit.showCommitMessageDiagnostics",
+      title: "VSKit: Show Commit Message Diagnostics",
+      category: "VSKit",
+      icon: "$(output)",
+    });
+    const config = pkgJson.contributes.configuration.properties as Record<
+      string,
+      { type: string; default: unknown }
+    >;
+    expect(config["VSKit.ai.commitGenDiagnostics"]).toMatchObject({
+      type: "boolean",
+      default: false,
+    });
   });
 
   it("register 2 command mới: VSKit.filterSchemaTree + VSKit.clearSchemaTreeFilter", () => {
@@ -5074,6 +5106,39 @@ describe("TASK-ARP09-003 — lazy redacted Output Channel wiring", () => {
   function capturedLines(): string[] {
     return state.createdOutputChannels[0]?.lines ?? [];
   }
+
+  it("keeps commit diagnostics off by default and logs only metadata when enabled", async () => {
+    await activateFresh();
+    const generate = state.registeredCommands.get("VSKit.generateCommitMessage");
+    expect(generate).toBeDefined();
+    await generate!();
+    expect(state.createdOutputChannels).toHaveLength(0);
+
+    state.aiCommitGenDiagnostics = true;
+    state.aiEngine = "private-engine-setting";
+    await generate!();
+    expect(state.createdOutputChannels).toHaveLength(1);
+    const channel = state.createdOutputChannels[0]!;
+    expect(channel.name).toBe("VSKit: Commit Message Diagnostics");
+    const records = channel.lines.map((line) => JSON.parse(line) as Record<string, unknown>);
+    expect(records.length).toBeGreaterThan(0);
+    for (const record of records) {
+      expect(record).toMatchObject({ version: "test-version", engine: "unknown" });
+      expect(record.requestId).toMatch(/^commit-gen-/);
+      expect(typeof record.event).toBe("string");
+      expect(typeof record.elapsedMs).toBe("number");
+      expect(Object.keys(record)).not.toEqual(
+        expect.arrayContaining(["prompt", "diff", "source", "response", "apiKey"]),
+      );
+    }
+    expect(records.some((record) => record.outcome === "settings_missing")).toBe(true);
+    expect(channel.lines.join("\n")).not.toContain("private-engine-setting");
+
+    const show = state.registeredCommands.get("VSKit.showCommitMessageDiagnostics");
+    expect(show).toBeDefined();
+    show!();
+    expect(channel.show).toHaveBeenCalledWith(true);
+  });
 
   it("#20 strict pin: plain activate() with no events/commands creates ZERO output channels", async () => {
     await activateFresh();

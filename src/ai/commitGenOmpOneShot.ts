@@ -75,13 +75,14 @@ export interface CommitGenOneShotDriver {
  *   - `fail`     → reject with the external error
  *   - neither within `timeoutMs` → reject with a timeout error
  *
- * `onSettle` runs once on the winning path (production: `engine.shutdown()`),
- * so every outcome tears down the process. `setTimer`/`clearTimer` are
- * injectable so the timeout path is testable with fake timers.
+ * `onSettle` runs once on the winning path when supplied. Production disposes
+ * the engine after the complete guarded generation, so a guard retry can reuse
+ * the same engine. `setTimer`/`clearTimer` are injectable for timeout tests.
  */
 export function driveCommitGenOneShot(params: {
   timeoutMs: number;
-  onSettle: () => void;
+  onSettle?: () => void;
+  onFirstText?: () => void;
   setTimer?: (fn: () => void, ms: number) => unknown;
   clearTimer?: (handle: unknown) => void;
 }): CommitGenOneShotDriver {
@@ -92,6 +93,7 @@ export function driveCommitGenOneShot(params: {
 
   let buffer = "";
   let settled = false;
+  let firstTextSeen = false;
   let timer: unknown;
   let resolvePromise!: (value: string) => void;
   let rejectPromise!: (error: Error) => void;
@@ -104,7 +106,7 @@ export function driveCommitGenOneShot(params: {
     if (settled) return;
     settled = true;
     if (timer !== undefined) clearTimer(timer);
-    params.onSettle();
+    params.onSettle?.();
     outcome();
   };
 
@@ -121,7 +123,17 @@ export function driveCommitGenOneShot(params: {
   return {
     events: {
       onDelta: (delta) => {
-        if (typeof delta === "string") buffer += delta;
+        if (typeof delta === "string") {
+          if (delta.length > 0 && !firstTextSeen) {
+            firstTextSeen = true;
+            try {
+              params.onFirstText?.();
+            } catch {
+              /* instrumentation must not change turn behavior */
+            }
+          }
+          buffer += delta;
+        }
       },
       onDone: () => settle(() => resolvePromise(buffer)),
       onError: (message) => settle(() => rejectPromise(new Error(message))),
@@ -143,24 +155,28 @@ export function driveCommitGenOneShot(params: {
  * ACP process.
  *
  * `generate()` spawns a fresh driver per call (the settled-outcome contract
- * is unchanged); `cancel()` delegates to the LIVE driver and is a no-op
- * before the first `generate()` or after the turn settled.
+ * is unchanged). The engine remains alive between attempts so guard retry can
+ * open a fresh ACP session; `dispose()` shuts it down once after the flow.
  */
 export function createCommitGenOmpTurn(engine: {
   send(prompt: string, events: CommitGenOneShotEvents): Promise<unknown>;
   shutdown(): Promise<unknown> | void;
-}): { generate(prompt: string): Promise<string>; cancel(): void } {
+}): {
+  generate(prompt: string, onFirstText?: () => void): Promise<string>;
+  cancel(): void;
+  dispose(): Promise<void>;
+} {
   let driver: CommitGenOneShotDriver | null = null;
+  let disposed = false;
+  let shutdownPromise: Promise<void> | null = null;
   return {
-    async generate(prompt: string): Promise<string> {
+    async generate(prompt: string, onFirstText?: () => void): Promise<string> {
+      if (disposed) throw new Error("commit-gen: omp engine is disposed");
       // One settled outcome guaranteed: done → text, error → reject, cancel →
-      // reject, or the bounded timeout → reject. Never an indefinite pending
-      // promise.
+      // reject, or the bounded timeout → reject. The parent owns final cleanup.
       const d = driveCommitGenOneShot({
         timeoutMs: COMMIT_GEN_OMP_TIMEOUT_MS,
-        onSettle: () => {
-          void engine.shutdown();
-        },
+        onFirstText,
       });
       driver = d;
       void engine.send(prompt, d.events).catch((e: unknown) => d.fail(e));
@@ -168,6 +184,14 @@ export function createCommitGenOmpTurn(engine: {
     },
     cancel(): void {
       driver?.cancel();
+    },
+    dispose(): Promise<void> {
+      if (shutdownPromise !== null) return shutdownPromise;
+      disposed = true;
+      shutdownPromise = Promise.resolve()
+        .then(() => engine.shutdown())
+        .then(() => undefined);
+      return shutdownPromise;
     },
   };
 }

@@ -229,6 +229,9 @@ describe("createCommitGenOmpTurn — OmpOneShot.cancel reaches the live driver",
     turn.cancel();
 
     await expect(pending).rejects.toThrow("commit-gen: cancelled");
+    expect(shutdown).not.toHaveBeenCalled();
+    await turn.dispose();
+    await turn.dispose();
     expect(shutdown).toHaveBeenCalledTimes(1);
   });
 

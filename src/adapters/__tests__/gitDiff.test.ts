@@ -20,8 +20,9 @@ import {
   GIT_DIFF_MAX_BYTES,
   collectCommitDiff,
   getGitApi,
+  isCommitDiffCurrent,
   pickRepository,
-  type GitApiLike,
+  repositoryFromCommandArgument,
   type GitRepositoryLike,
 } from "../gitDiff";
 
@@ -171,19 +172,114 @@ describe("gitDiff — collectCommitDiff: fall back to unstaged", () => {
 // ===========================================================================
 // #4 — 12 KB truncation
 // ===========================================================================
-describe("gitDiff — collectCommitDiff: 12 KB truncation", () => {
-  it("truncates oversize diff at GIT_DIFF_MAX_BYTES + marker", async () => {
-    const big = "x".repeat(20 * 1024);
-    const repo = makeRepo({ staged: big });
-    const result = await collectCommitDiff(repo);
+describe("gitDiff — collectCommitDiff: bounded per-file diff", () => {
+  it("keeps a complete file summary and useful hunks from files across an oversized diff", async () => {
+    const first = `diff --git a/src/one.ts b/src/one.ts\nindex 1..2 100644\n--- a/src/one.ts\n+++ b/src/one.ts\n@@ -1 +1 @@\n-${"a".repeat(16000)}\n+first change\n`;
+    const second = `diff --git a/src/two.ts b/src/two.ts\nindex 1..2 100644\n--- a/src/two.ts\n+++ b/src/two.ts\n@@ -1 +1 @@\n-old\n+second change\n`;
+    const third = `diff --git a/README.md b/README.md\nindex 1..2 100644\n--- a/README.md\n+++ b/README.md\n@@ -1 +1 @@\n-old\n+docs change\n`;
+    const result = await collectCommitDiff(makeRepo({ staged: first + second + third }));
     expect(result).not.toBeNull();
-    // body length must be at most GIT_DIFF_MAX_BYTES + marker length
-    const marker = "\n… [diff truncated]";
-    expect(result!.diffText.length).toBeLessThanOrEqual(GIT_DIFF_MAX_BYTES + marker.length);
-    expect(result!.diffText.endsWith("[diff truncated]")).toBe(true);
-    // marker line is included
-    expect(result!.diffText.endsWith(marker)).toBe(true);
+    expect(Buffer.byteLength(result!.diffText, "utf8")).toBeLessThanOrEqual(GIT_DIFF_MAX_BYTES);
+    expect(result!.diffText).toContain("Changed files:");
+    expect(result!.diffText).toContain("src/one.ts");
+    expect(result!.diffText).toContain("src/two.ts");
+    expect(result!.diffText).toContain("README.md");
+    expect(result!.diffText).toContain("second change");
+    expect(result!.diffText).toContain("docs change");
+    expect(result!.diffText).toContain("partial");
+    expect(result!.diffText).toContain("src/one.ts");
   });
+
+  it("preserves rename, deletion, and binary markers when oversized diffs are summarized", async () => {
+    const metadataDiff = `diff --git a/old.txt b/new.txt\nsimilarity index 90%\nrename from old.txt\nrename to new.txt\ndiff --git a/gone.ts b/gone.ts\ndeleted file mode 100644\n--- a/gone.ts\n+++ /dev/null\ndiff --git a/image.png b/image.png\nBinary files a/image.png and b/image.png differ\n`;
+    const largeDiff = `diff --git a/src/large.ts b/src/large.ts\n@@ -1 +1 @@\n+${"x".repeat(GIT_DIFF_MAX_BYTES)}\n`;
+    const result = await collectCommitDiff(makeRepo({ staged: metadataDiff + largeDiff }));
+    expect(result).not.toBeNull();
+    expect(Buffer.byteLength(result!.diffText, "utf8")).toBeLessThanOrEqual(GIT_DIFF_MAX_BYTES);
+    expect(result!.diffText).toContain("old.txt");
+    expect(result!.diffText).toContain("new.txt");
+    expect(result!.diffText).toContain("gone.ts");
+    expect(result!.diffText).toContain("image.png");
+    expect(result!.diffText).toContain("rename from old.txt");
+    expect(result!.diffText).toContain("rename to new.txt");
+    expect(result!.diffText).toContain("deleted file mode 100644");
+    expect(result!.diffText).toContain("Binary files");
+    expect(result!.diffText).toContain("partial diff");
+  });
+
+  it("enforces the context budget in UTF-8 bytes for non-ASCII diffs", async () => {
+    const diff = `diff --git a/src/unicode.ts b/src/unicode.ts\n@@ -1 +1 @@\n+${"界".repeat(GIT_DIFF_MAX_BYTES)}\n`;
+    const events: Array<[string, Record<string, string | number | boolean>]> = [];
+    const result = await collectCommitDiff(makeRepo({ staged: diff }), (event, metadata) => {
+      events.push([event, { ...metadata }]);
+    });
+
+    expect(result).not.toBeNull();
+    expect(Buffer.byteLength(result!.diffText, "utf8")).toBeLessThanOrEqual(GIT_DIFF_MAX_BYTES);
+    expect(result!.diffText).toContain("src/unicode.ts");
+    expect(result!.diffText).toContain("partial diff");
+    const selected = events.find(([event]) => event === "git.diff.selected")?.[1];
+    expect(selected).toMatchObject({
+      originalDiffBytes: Buffer.byteLength(diff, "utf8"),
+      sentDiffBytes: Buffer.byteLength(result!.diffText, "utf8"),
+      truncated: true,
+    });
+    expect(selected).not.toHaveProperty("diffText");
+  });
+
+  it("keeps the final context within budget when file summaries overflow", async () => {
+    const diff = Array.from({ length: 1000 }, (_, index) => {
+      const path = `src/file-${String(index).padStart(4, "0")}-with-a-long-name.ts`;
+      return `diff --git a/${path} b/${path}\nnew file mode 100644\n`;
+    }).join("");
+    const result = await collectCommitDiff(makeRepo({ staged: diff }));
+
+    expect(result).not.toBeNull();
+    expect(Buffer.byteLength(result!.diffText, "utf8")).toBeLessThanOrEqual(GIT_DIFF_MAX_BYTES);
+    expect(result!.diffText).toContain("additional changed file(s) omitted from summary");
+  });
+});
+
+describe("gitDiff — diff freshness fingerprint", () => {
+  it("distinguishes complete diffs even when their sent prefixes are identical", async () => {
+    const prefix = `diff --git a/src/file.ts b/src/file.ts\n${"x".repeat(GIT_DIFF_MAX_BYTES)}`;
+    const first = await collectCommitDiff(makeRepo({ staged: prefix + "first" }));
+    const second = await collectCommitDiff(makeRepo({ staged: prefix + "second" }));
+    expect(first!.diffText).toBe(second!.diffText);
+    expect(first!.scope).toBe("staged");
+    expect(first!.diffFingerprint).not.toBe(second!.diffFingerprint);
+  });
+});
+
+describe("gitDiff — snapshot freshness", () => {
+  it("checks only the selected scope and rejects a changed diff or branch", async () => {
+    const repo = makeRepo({ staged: "diff --git a/a.ts\n+old\n", headName: "main" });
+    const snapshot = await collectCommitDiff(repo);
+    expect(snapshot).not.toBeNull();
+    const diff = vi.spyOn(repo, "diff");
+
+    expect(await isCommitDiffCurrent(repo, snapshot!)).toBe(true);
+    expect(diff).toHaveBeenLastCalledWith(true);
+
+    diff.mockResolvedValue("diff --git a/a.ts\n+new\n");
+    expect(await isCommitDiffCurrent(repo, snapshot!)).toBe(false);
+    diff.mockResolvedValue("diff --git a/a.ts\n+old\n");
+    repo.state.HEAD = { name: "other" };
+    expect(await isCommitDiffCurrent(repo, snapshot!)).toBe(false);
+  });
+  it("rejects an unstaged snapshot after its changes are staged while generation waits", async () => {
+    const change = "diff --git a/a.ts\n+change\n";
+    const repo = makeRepo({ unstaged: change, headName: "main" });
+    const snapshot = await collectCommitDiff(repo);
+    expect(snapshot?.scope).toBe("unstaged");
+
+    const diff = vi.spyOn(repo, "diff").mockImplementation(async (cached?: boolean) =>
+      cached ? change : "",
+    );
+    expect(await isCommitDiffCurrent(repo, snapshot!)).toBe(false);
+    expect(diff).toHaveBeenCalledWith(false);
+  });
+
 });
 
 // ===========================================================================
@@ -259,10 +355,11 @@ describe("gitDiff — getGitApi + pickRepository", () => {
     expect(getGitApi()).toBeUndefined();
   });
 
-  it("pickRepository returns repositories[0] when available", () => {
+  it("pickRepository returns a repository only when exactly one is available", () => {
     const repo = makeRepo({});
     const api: GitApiLike = { repositories: [repo] };
     expect(pickRepository(api)).toBe(repo);
+    expect(pickRepository({ repositories: [repo, makeRepo({ rootFsPath: "/repo/Other" })] })).toBeNull();
   });
 
   it("pickRepository returns null when no repositories", () => {
@@ -272,5 +369,19 @@ describe("gitDiff — getGitApi + pickRepository", () => {
 
   it("pickRepository tolerates undefined api", () => {
     expect(pickRepository(undefined)).toBeNull();
+  });
+  it("resolves the repository carried by a command invocation before a picker", () => {
+    const first = makeRepo({ rootFsPath: "/repo/First" });
+    const second = makeRepo({ rootFsPath: "/repo/Second" });
+    const api: GitApiLike = { repositories: [first, second] };
+
+    expect(repositoryFromCommandArgument(api, second)).toBe(second);
+    expect(
+      repositoryFromCommandArgument(api, {
+        rootUri: second.rootUri,
+        inputBox: second.inputBox,
+      }),
+    ).toBe(second);
+    expect(repositoryFromCommandArgument(api, { rootUri: { fsPath: "/repo/Other" } })).toBeNull();
   });
 });

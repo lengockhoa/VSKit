@@ -19,6 +19,10 @@ import type { AiSettings, AiConfig } from "../settings";
 import type { EngineChoice } from "../engineChoice";
 import type { OmpDetection } from "../omp/detect";
 import type { ProviderRequest, ProviderResult } from "../provider";
+import {
+  createCommitGenOmpTurn,
+  type CommitGenOneShotEvents,
+} from "../commitGenOmpOneShot";
 
 // ---- fake builders ----------------------------------------------------------
 
@@ -193,6 +197,66 @@ describe("ai/commitGenCommand — Test #1 builtin happy path", () => {
     expect(showError).not.toHaveBeenCalled();
     expect(showSettingsToast).not.toHaveBeenCalled();
     expect(buildOmpEngine).not.toHaveBeenCalled();
+  });
+});
+
+describe("ai/commitGenCommand — stale SCM input protection", () => {
+  it("does not inject a valid result when the selected diff changed during generation", async () => {
+    const setInputBox = vi.fn();
+    const showInfo = vi.fn();
+    const validateDiffFresh = vi.fn().mockResolvedValue(false);
+    const deps = makeDeps({
+      builtinComplete: fakeBuiltinComplete(providerResult("sửa core: cập nhật hành vi")),
+      validateDiffFresh,
+      setInputBox,
+      showInfo,
+    });
+
+    await runGenerateCommitMessage(deps);
+
+    expect(validateDiffFresh).toHaveBeenCalledWith(fakeDiff());
+    expect(setInputBox).not.toHaveBeenCalled();
+    expect(showInfo).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not overwrite text entered by the user while generation is running", async () => {
+    const setInputBox = vi.fn();
+    const showInfo = vi.fn();
+    const isInputUnchanged = vi.fn(() => false);
+    const deps = makeDeps({
+      builtinComplete: fakeBuiltinComplete(providerResult("sửa core: cập nhật hành vi")),
+      validateDiffFresh: vi.fn().mockResolvedValue(true),
+      isInputUnchanged,
+      setInputBox,
+      showInfo,
+    });
+
+    await runGenerateCommitMessage(deps);
+
+    expect(isInputUnchanged).toHaveBeenCalledTimes(1);
+    expect(setInputBox).not.toHaveBeenCalled();
+    expect(showInfo).toHaveBeenCalledTimes(1);
+  });
+  it("offers the completed message for copying when the user edited SCM input", async () => {
+    const message = "fix(core): giữ nguyên nội dung SCM của người dùng";
+    const showInputChanged = vi.fn().mockResolvedValue(true);
+    const copyToClipboard = vi.fn().mockResolvedValue(undefined);
+    const setInputBox = vi.fn();
+    const deps = makeDeps({
+      builtinComplete: fakeBuiltinComplete(providerResult(message)),
+      validateDiffFresh: vi.fn().mockResolvedValue(true),
+      isInputUnchanged: () => false,
+      showInputChanged,
+      copyToClipboard,
+      setInputBox,
+    });
+
+    await runGenerateCommitMessage(deps);
+
+    expect(showInputChanged).toHaveBeenCalledTimes(1);
+    expect(showInputChanged.mock.calls[0][1]).toBe(message);
+    expect(copyToClipboard).toHaveBeenCalledWith(message);
+    expect(setInputBox).not.toHaveBeenCalled();
   });
 });
 
@@ -752,8 +816,8 @@ describe("ai/commitGenCommand — guard flow (SPEC §8.4/§8.5)", () => {
     expect(showError).not.toHaveBeenCalled();
   });
 
-  // Row 3a — happy retry (omp): reasoning-leak attempt 1 → VN attempt 2.
-  it("omp: retries once through the same engine and injects attempt 2", async () => {
+  // Row 3a — the real one-shot adapter must survive the guard retry.
+  it("omp: keeps its engine alive through retry and disposes it after the final attempt", async () => {
     const settings = fakeSettings({ engine: "omp", lite: { modelId: "lite-1" } });
     const detection: OmpDetection = {
       available: true,
@@ -767,11 +831,18 @@ describe("ai/commitGenCommand — guard flow (SPEC §8.4/§8.5)", () => {
       path: "/usr/bin/omp",
       version: "18.0.1",
     };
-    const oneShot = fakeOmpSequence([
+    const responses = [
       "We need to examine the staged diff carefully",
       "feat(db): bổ sung chỉ mục cho bảng users",
-    ]);
-    const generate = vi.spyOn(oneShot, "generate");
+    ];
+    let sendCount = 0;
+    const shutdown = vi.fn();
+    const send = vi.fn(async (_prompt: string, events: CommitGenOneShotEvents) => {
+      if (shutdown.mock.calls.length > 0) throw new Error("engine was shut down before retry");
+      events.onDelta(responses[sendCount++]!);
+      events.onDone();
+    });
+    const oneShot = createCommitGenOmpTurn({ send, shutdown });
     const buildOmpEngine = vi.fn(async () => oneShot);
     const setInputBox = vi.fn();
     const showError = vi.fn();
@@ -788,15 +859,48 @@ describe("ai/commitGenCommand — guard flow (SPEC §8.4/§8.5)", () => {
     await runGenerateCommitMessage(deps);
 
     expect(buildOmpEngine).toHaveBeenCalledTimes(1);
-    expect(generate).toHaveBeenCalledTimes(2);
-    // Attempt 2 must carry the corrective retry prompt (serialized).
-    const prompt2 = generate.mock.calls[1][0];
-    expect(typeof prompt2).toBe("string");
-    expect(prompt2).toContain("was rejected for these reasons");
-    expect(prompt2).toContain("reasoning-marker");
-    expect(setInputBox).toHaveBeenCalledTimes(1);
+    expect(send).toHaveBeenCalledTimes(2);
+    expect(shutdown).toHaveBeenCalledTimes(1);
     expect(setInputBox).toHaveBeenCalledWith("feat(db): bổ sung chỉ mục cho bảng users");
     expect(showError).not.toHaveBeenCalled();
+  });
+
+  it("omp: cancellation between guard attempts skips retry and disposes the engine", async () => {
+    const settings = fakeSettings({ engine: "omp", lite: { modelId: "lite-1" } });
+    const detection: OmpDetection = { available: true, ok: true, path: "/usr/bin/omp", version: "18.0.1" };
+    const choice: EngineChoice = { engine: "omp", requiresConfig: false, path: "/usr/bin/omp", version: "18.0.1" };
+    let cancelled = false;
+    let sendCount = 0;
+    const shutdown = vi.fn();
+    const send = vi.fn(async (_prompt: string, events: CommitGenOneShotEvents) => {
+      sendCount += 1;
+      events.onDelta(sendCount === 1 ? HEX_BLOB_72 : "feat(db): retry should not run");
+      events.onDone();
+      cancelled = true;
+    });
+    const oneShot = createCommitGenOmpTurn({ send, shutdown });
+    const setInputBox = vi.fn();
+    const showError = vi.fn();
+    const showInfo = vi.fn();
+    const deps = makeDeps({
+      loadSettings: (async () => settings) as never,
+      loadConfig: (async () => fakeConfig(settings)) as never,
+      detectOmp: (async () => detection) as never,
+      resolveEngine: ((_i: unknown) => choice) as never,
+      buildOmpEngine: (async () => oneShot) as never,
+      isCancelled: () => cancelled,
+      setInputBox,
+      showError,
+      showInfo,
+    });
+
+    await runGenerateCommitMessage(deps);
+
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(shutdown).toHaveBeenCalledTimes(1);
+    expect(setInputBox).not.toHaveBeenCalled();
+    expect(showError).not.toHaveBeenCalled();
+    expect(showInfo).not.toHaveBeenCalled();
   });
 
   // Row 3b — happy retry (claude-code fallback): hint toast fires exactly
@@ -836,19 +940,22 @@ describe("ai/commitGenCommand — guard flow (SPEC §8.4/§8.5)", () => {
     expect(showError.mock.calls[0][0]).toContain("npm i -g @anthropic-ai/claude-code");
   });
 
-  // Row 4 — terminal invalid (72-hex blob ×2): block, frozen toast, no inject.
-  it("builtin: garbage twice blocks with the frozen toast and never injects", async () => {
+  // Row 4 — terminal invalid (72-hex blob ×2): block without persisting or surfacing response text.
+  it("builtin: garbage twice blocks without exposing or persisting raw response text", async () => {
     const builtinComplete = vi.fn(
       fakeBuiltinSequence([providerResult(HEX_BLOB_72), providerResult(HEX_BLOB_72)]),
     );
     const setInputBox = vi.fn();
     const showError = vi.fn();
-    const writeDebugArtifact = vi.fn(() => "/tmp/guard-rejected.txt");
+    const traceRecords: Array<{ event: string; metadata: Readonly<Record<string, unknown>> }> = [];
     const deps = makeDeps({
       builtinComplete: builtinComplete as never,
       setInputBox,
       showError,
-      writeDebugArtifact: writeDebugArtifact as never,
+      trace: {
+        correlationId: "test-request",
+        emit: (event, metadata = {}) => traceRecords.push({ event, metadata }),
+      },
     });
 
     await runGenerateCommitMessage(deps);
@@ -860,16 +967,9 @@ describe("ai/commitGenCommand — guard flow (SPEC §8.4/§8.5)", () => {
     expect(errMsg).toContain("failed validation");
     expect(errMsg).toContain("Retried once");
     expect(errMsg).toContain("unbroken-blob");
-    expect(errMsg).toContain(HEX_BLOB_72);
-    expect(writeDebugArtifact).toHaveBeenCalledTimes(1);
-    const dump = writeDebugArtifact.mock.calls[0][0] as {
-      label: string;
-      body: string;
-      context?: Record<string, unknown>;
-    };
-    expect(dump.label).toBe("commit-gen-guard-rejected");
-    expect(dump.body).toBe(HEX_BLOB_72);
-    expect(dump.context?.engine).toBe("builtin");
+    expect(errMsg).not.toContain(HEX_BLOB_72);
+    expect(JSON.stringify(traceRecords)).not.toContain(HEX_BLOB_72);
+    expect(traceRecords.some((record) => record.event === "guard.rejected")).toBe(true);
   });
 
   // Row 5 — length edge: an over-100-word message fails the cap on both
@@ -918,20 +1018,17 @@ describe("ai/commitGenCommand — guard flow (SPEC §8.4/§8.5)", () => {
     expect(errMsg).not.toContain("failed validation");
   });
 
-  // Row 6b — garbage then empty on attempt 2: same empty diagnostic with the
-  // last raw, no guard toast, no third engine call.
-  it("builtin: garbage then empty on attempt 2 falls into the empty diagnostic (no third call)", async () => {
+  // Row 6b — garbage then empty on attempt 2 remains generic and metadata-only.
+  it("builtin: garbage then empty on attempt 2 avoids response previews and persistence", async () => {
     const builtinComplete = vi.fn(
       fakeBuiltinSequence([providerResult(HEX_BLOB_72), providerResult("")]),
     );
     const setInputBox = vi.fn();
     const showError = vi.fn();
-    const writeDebugArtifact = vi.fn(() => "/tmp/empty.txt");
     const deps = makeDeps({
       builtinComplete: builtinComplete as never,
       setInputBox,
       showError,
-      writeDebugArtifact: writeDebugArtifact as never,
     });
 
     await runGenerateCommitMessage(deps);
@@ -942,10 +1039,7 @@ describe("ai/commitGenCommand — guard flow (SPEC §8.4/§8.5)", () => {
     const errMsg = showError.mock.calls[0][0] as string;
     expect(errMsg).toContain("provider returned no commit message text");
     expect(errMsg).not.toContain("failed validation");
-    expect(writeDebugArtifact).toHaveBeenCalledTimes(1);
-    const dump = writeDebugArtifact.mock.calls[0][0] as { label: string; body: string };
-    expect(dump.label).toBe("commit-gen-empty");
-    expect(dump.body).toBe("");
+    expect(errMsg).not.toContain(HEX_BLOB_72);
   });
 
   // Row 7 — transport: attempt 2 throws; the branch's existing catch wins.

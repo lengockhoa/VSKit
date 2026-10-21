@@ -247,6 +247,7 @@ Build and package:
 ```bash
 bash scripts/build.sh
 # → produces dist/vskit-<version>.vsix
+# Current package (1.55.10): `dist/vskit-1.55.10.vsix`.
 ```
 VSIX packaging is available for local testing and GitHub release distribution. Marketplace listing
 availability is unverified; publication is paused.

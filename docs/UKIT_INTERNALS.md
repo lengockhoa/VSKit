@@ -58,7 +58,7 @@ the root contract is the only carrier — keep both in sync with
 
 ## Skill Quality (maintainer-only)
 
-- When editing a template skill/agent under `templates/.claude/`, read
+- When editing a template skill/agent under `template_project/.claude/`, read
   `.claude/skills/skill-quality/SKILL.md` before shipping the change.
 
 ## Shared Runtime — detail
@@ -127,22 +127,6 @@ the root contract is the only carrier — keep both in sync with
   turn it into an end-user workflow.
 - Always preserve the CoDev priority: quality > safety > speed > token discipline.
 
-## Post-Edit Sidecar Review — detail
-
-- If routed state's `routeSummary.line` includes a `review=code-reviewer(diff)` segment, a
-  `local-build` or `shared-edit` task qualifies for a non-blocking second opinion — this
-  exists because the daily-flow executor model can miss edge cases.
-- Only launch it once write evidence AND verification evidence already exist for the task
-  (never before; never as a substitute for either).
-- Launch the `code-reviewer` agent (see the harness table under 3-Tier Model Routing) with
-  `REVIEW_TARGET_TYPE=diff`, in the background, on the `smart` tier per
-  `subagents.diffReviewModel`. Do not wait for it — continue and report the task as done
-  using the normal completion rules.
-- Its findings are advisory only: never re-open, block, or delay the already-reported
-  completion on their account. Surface them to the user as a follow-up note if/when they
-  arrive.
-- This is internal orchestration — end users never invoke it directly; `ukit install` plus
-  natural language remains the whole surface. No new commands.
 
 ## Selective Subagent Policy — detail
 
@@ -155,6 +139,15 @@ the root contract is the only carrier — keep both in sync with
   required indexed-context step.
 
 ## 3-Tier Model Routing — full detail
+
+`unic-decision` is **not** another LLM tier. The owner built this local,
+near-zero-cost Lava/JEV model in UNIC Provider for fast typed semantic
+decisions; the OpenAI-compatible API is a convenience transport, not a
+generative-LLM or external-hosting claim. When `decisionPlane.stage` enables
+it, use bounded candidate choices/rankings/scores through
+`.claude/ukit/index/unic-decision.mjs`; keep safety, authorization and
+completion gates deterministic. The shipped stage is `off` until explicitly
+promoted. See `docs/pstack/UNIC_DECISION_SPEC.md` in the UKit development repo.
 
 UKit routes tasks to one of three model tiers based on task complexity. The main session
 model never changes mid-turn: a tier only takes effect when work is handed to an agent
@@ -238,3 +231,93 @@ Phase-4 telemetry → advisory tuning loop (FR-206, TASK-232).
   - `learning/suggestions.json` — result of `computeTuningSuggestions(projectRoot)` (`src/learning/tuning.js`).
   - `cache/retriever-lanes.jsonl` — per-query lane hit/weight telemetry consumed by `collectLaneStats`.
 - **Advisory-only contract**: `suggestions` carry `{target, current, suggested, evidence}`; `applied` is always `[]`. `applyMode` is restricted to `manual|off` — **no writer ever mutates `codeIntel.retriever.weights` or `orchestration.escalation.debugLoopThreshold`**. Rules: lane weight ±0.1 step (clamped `[0.1, 2.0]`) when events ≥ 50 with a >0.5 dominant lane and a <0.02 starved lane; `debugLoopThreshold − 1` (min 1) when repeat-stall events ≥ 10. `ukit metrics` prints a `learning` section (pending count + targets; `n/a` when the artifact is absent).
+
+## Permission Modes + Unsafe Eval — detail
+
+C38 unified permission model. `orchestration.permissionMode` (optional-present; absent tolerated for pre-C35 configs) declares one of three reserved modes — only `unattended` is implemented end-to-end today; `interactive`/`safe-auto` are modelled in the compiler so doctor can report on them but are not rendered modes.
+
+- **`interactive`** — prompts are expected; mode fallback for unclassified entries is `prompt`. Doctor reports reachable prompts as INFO, never FAIL.
+- **`safe-auto`** — same `prompt` fallback, modelled as "auto-allow safe classes, prompt the rest"; reachable prompts remain INFO.
+- **`unattended`** — no human in the loop; mode fallback is `allow` for unclassified entries and any reachable `prompt`/`ask` on a managed surface is a doctor FAIL (`unattended-prompt`), because a prompt dead-ends the run.
+- **Unattended ≠ all-destructive-allowed.** The canonical deny set (`CANONICAL_DENY` in `src/core/permissionPolicy.js`) applies in every mode; `hard-deny` entries (root/home/parent/dot recursive deletes, raw-device writes, mkfs, fork-bomb) are denied on every host including report-only codex, and `protected-guard` hooks (release credentials, protected files, stale-spec guard) outrank any host-deny. A deny never becomes a question — the agent picks the next safer alternative that satisfies the intent and records the substitution.
+- **Host-internal waits are unchanged** — announce long waits, surface API/tool errors verbatim, name network/API as the suspect on stalls; the permission model does not alter the Stall & Wait Reporting contract.
+
+`orchestration.allowUnsafeEval` (default `false`, optional-present boolean, migration never enables): only an explicit `true` renders `tools.approval.eval: allow` in `.omp/config.yml` via the `omp.evalApproval` render variable; every other state renders `deny` — fail-closed, never `prompt`. Residual risk stays documented: eval can carry subprocess payloads (`os.remove`, `shutil.rmtree`) that text-level `bash.patterns` denies cannot see.
+
+Internals: `src/core/permissionPolicy.js` compiles the semantic policy (precedence hard-deny > protected-guard > host-deny > explicit-allow > mode-fallback; `UKIT_EPOLICY` on unknown mode). `src/core/permissionDoctor.js` backs `ukit doctor --permissions [--json]` — FAIL classes `unattended-prompt`, `deny-loss`, `unsafe-eval-mismatch`, `unrendered-token` exit 1; JSON shape `{ permissions: { declared, effective, hosts, checks, failures } }`. Template render, doctor, and the no-freeze matrix consume the same compiler so surfaces cannot drift.
+
+## Hook budget
+
+- **Cap: 8 chain steps per hook group** (current max is 6). Any new step must also
+  carry a `:N` suffix with N > 0 — the runner never falls back to an implicit budget
+  for a declared chain.
+- **Outer timeout = Σ(:N) + 10s minimum.** `settings.json` `timeout` is host-enforced
+  and cannot be derived at runtime, so the margin is enforced by
+  `tests/hooks/hookChainBudget.test.js` — forgetting to bump the outer fails loudly.
+  Every shipped group currently sits at exactly +10s.
+- **Why env knobs can't violate the invariant:** `UKIT_HOOK_*_MS` only affect fallback
+  budgets for args that lack `:N`. On all-declared chains the inner budget is Σ:N by
+  construction, so inner ≤ outer − 10s holds regardless of env (the omp bridge shares
+  the `hook-chain-budget.mjs` resolver).
+- **Convention: hot-path hooks ship as `.mjs` module steps, not new `.sh` processes.**
+  Each new `.sh` step costs a fresh spawn (~30–100ms on the hot path); `.mjs` steps run
+  in-proc in the runner with identical `:N` semantics. Keep the `.sh` thin wrapper
+  only when a direct/debug invocation path is needed.
+- **Module-step contract:** a `"<path>.mjs[:N]"` arg is imported in-proc and must
+  export `runHook(ctx) -> {code, stdout, stderr}`; `ctx` =
+  `{payload, payloadText, projectRoot, env, deadlineMs, signal}`. A throw reports
+  `error`; a `deadlineMs`/`signal` breach reports `timeout` + `killed`. Export
+  `hookFailClosed = true` to join the fail-closed registry (infra failure → exit 2,
+  else 1) — the name-based `FAIL_CLOSED_SCRIPTS` list covers
+  `sensitive-data-guard.mjs` + `block-dangerous.mjs`. `isDirectRun()` gates a CLI
+  mode so the same file stays directly invocable; `UKIT_HOOK_DEADLINE_MS` is
+  scrubbed from `process.env`/`ctx.env` around import. Shipped modules:
+  `sensitive-data-guard.mjs`, `block-dangerous.mjs`, `record-execution.mjs`
+  (`hookFailClosed = false`; uses `setLedgerMessageEmitter` on
+  `execution-ledger.mjs` for the `noteSweepFailure` systemMessage).
+- **Failure taxonomy + `--emit-verdict` mapping.** Every `results[]` entry carries a
+  `failureKind` from one closed set — `ok` (child exited 0), `exit-code` (child exited
+  non-zero on its own), `output-overflow` (capture exceeded the 2 MiB maxBuffer and the
+  tree was culled), `timeout` (the runner killed the child at its deadline), `signal`
+  (the child died from a signal the runner did not send), `error` (the child never
+  spawned), `spawn-unavailable` (win32 only: no usable bash could be found or started for
+  a `.sh` script — see the launcher bullet below), `budget-exhausted` (the script never
+  ran — the chain total budget was spent first). The `--emit-verdict` contract maps them onto one exit code: `ok`/`exit-code 0`
+  and any non-fail-closed failure → exit 0 (fail OPEN); a real `exit-code 2` block, or
+  ANY failure on a fail-closed gate (`output-overflow`, `timeout`, `signal`, `error`,
+  `budget-exhausted`) → exit 2 (fail CLOSED). An overflowed capture is dropped whole
+  before it can be replayed, so a truncated stream can never masquerade as a verdict.
+  `tests/hooks/hookChainFailureSurface.test.js` pins these surfaces.
+- **Windows bash launcher.** On win32 a `.sh` hook is not executed directly; the runner
+  launches it through Git Bash. The bash binary is the first hit of: an absolute
+  `UKIT_BASH_BIN` → `CLAUDE_CODE_GIT_BASH_PATH` → the Git for Windows default install
+  paths → absolute `PATH` entries (the System32 and WindowsApps `bash.exe`, i.e. WSL, are
+  skipped; a relative or cwd `bash.exe` is never used). The script path is passed with
+  forward slashes. When no candidate exists or the spawn fails, the entry is
+  `spawn-unavailable`: it warns instead of denying every Edit/Write/Bash. That kind is
+  win32-launcher-only — POSIX spawn errors stay `error` and fail closed, and timeouts,
+  real `exit-code 2` blocks, missing gate files and `block-dangerous.sh` stay fail closed
+  on every platform. `UKIT_HOOK_SHELL_PLATFORM` is a diagnostic override of the platform
+  the launcher assumes.
+- **stderr is a diagnostic channel, not verdict payload.** Under `--emit-verdict` the
+  runner drops the stderr of every non-verdict script: stdout is the verdict and Claude
+  Code parses it as ONE JSON document, so interleaving arbitrary hook diagnostics there
+  would break the contract (and leak whatever a hook happened to log). This is a
+  deliberate decision, not an open gap — stderr is replayed only where it carries the
+  verdict itself: the decision owner's stderr, the last executed script's stderr (block,
+  fail-closed-infra, and pass paths), and the runner's own synthesized diagnostics (the
+  unrun-gate line, `... could not produce a verdict (<failureKind>)`, the empty-chain
+  line). To surface diagnostics from an earlier step, have the step that owns the
+  verdict include them.
+- The same test also guards the settings↔bridge mirror: `HOOK_EVENT_MAP` in
+  `template_project/.omp/hooks/pre/ukit-bridge.js` must equal the settings chain args 1:1
+  per event/matcher.
+
+## Compressed contract detail (cycle 45 diet)
+
+Detail dropped from `template_project/instructions/core.md` during the ~25% system-prompt diet; semantics unchanged.
+
+- **Prompt Caching one-liners** — CTX-01 deterministic segment bytes · CTX-02 keep roles and order · CTX-03 keep tool IDs and continuation state · CTX-04 no clock/random IDs in static blocks · CTX-05 compaction starts a new epoch · CTX-06 never change data to match a cache · CTX-07 no unconfirmed cache fields · CTX-08 tool-result reuse needs valid freshness · CTX-09 missing usage is unknown, not zero · CTX-10 never cut a required check to reduce calls. Full ruleset: `docs/PROMPT_CACHING.md`.
+- **Common skill triggers** — review/audit/diff/PR → `code-review` · bug/error/crash/triage → `debugging-toolkit` · test/spec/coverage → `testing-quality` · docs/README/changelog/`docs/` edits → `docs-quality` · open-ended/status/continue/queued task → `next-step` · wrap up/`docs/STATUS.md` → `update-status` · auth/security/token/permission/risky → `discover-security` · stale workspace/reinstall/cleanup → `repo-maintenance` (all under `.claude/skills/<name>/SKILL.md`).
+- **3-Tier typical tasks** — lite: reads, git queries, bash summaries, small doc edits · code: normal coding, shared edits, builds, debugging, impact mapping · smart: release review/audit, escalated deep reasoning after repeated failure.
+- **UNATTENDED-02 tightened** — `maxAttemptsPerFailure` 5 → 2, `maxRecoveryStrategies` 3 → 2 (retry the same edit, then fix the cause differently; never loop one strategy).
