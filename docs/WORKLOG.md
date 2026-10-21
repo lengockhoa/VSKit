@@ -2,6 +2,14 @@
 
 Track session-level execution details.
 
+## 2026-10-21 — Generate Commit Message diagnostics and v1.55.10 package
+
+- Added opt-in metadata-only timing diagnostics (`VSKit.ai.commitGenDiagnostics`, default off; command `VSKit: Show Commit Message Diagnostics`; channel `VSKit: Commit Message Diagnostics`), SCM-input preservation/final freshness checks, invocation-repository preference, and a monochrome-readable U icon with separate sparkle.
+- OMP guard retry lifecycle regression was reproduced: the first settled turn shut down the reused engine before retry. The minimal lifecycle fix keeps the engine alive across attempts and disposes after the guarded request; focused cancellation, timeout, and disposal cases pass.
+- Verification: `npm run verify:fast` passed; seven focused files passed 326/326. Three previously reported full-suite failures remain unresolved and were not rerun; no flaky claim is made.
+- Package: `dist/vskit-1.55.10.vsix` (23 files, 2.17 MB), SHA-256 `bf7e6828a134695b020152d13ab29dc2b9f60aff509b6c964d513df3a43b589d`. Commit `100f3ba`, tag `v1.55.10`, and GitHub release asset were created. Marketplace publication was not performed.
+- Owner follow-up: install this VSIX on the separate owner machine, enable diagnostics, generate once, copy the Output Channel log, and capture the icon in VS Code. Runtime measurement/UI verification remain pending; no speedup is claimed. No formal handoff cycle is active; `docs/STATUS.md` records the next action.
+
 ## 2026-10-21 — Project-neutral metadata and release-history cleanup
 
 - Reworded `CHANGELOG.md`, this work log, and `docs/RELEASE.md`; updated stale handoff tombstones and removed 308 obsolete ignored editor endpoint snapshots. Current project agent metadata/instructions and remaining editor configuration were scanned. Technical details were retained where useful; no parser, product code, or tests were modified.

@@ -2,10 +2,11 @@
 
 ## Current distribution status
 
-The existing GitHub `v1.55.6` release retains its published VSIX asset; that release artifact remains unchanged. The VSKit `v1.55.7` release carries `vskit-1.55.7.vsix`; the current `v1.55.8` release carries `vskit-1.55.8.vsix`. Marketplace listing availability is unverified; publication is paused.
+The GitHub releases `v1.55.6` through `v1.55.9` retain their existing VSIX assets. The current `v1.55.10` release carries `vskit-1.55.10.vsix`; Marketplace publication is paused.
 
 The package command created only the local VSIX. The separate ship sequence pushed commit `bbab82b` to `main`, pushed tag `v1.55.7`, and created the GitHub release with the VSIX asset. Marketplace publishing, VS Code installation, and reload were not performed.
 The v1.55.8 ship sequence pushed commit `528b279` to `main`, pushed tag `v1.55.8`, and created the GitHub release with the VSIX asset. Marketplace publishing, VS Code installation/reload, and database integration were not performed.
+The `v1.55.10` ship sequence pushed commit `100f3ba` to `main`, pushed tag `v1.55.10`, and created the GitHub release with the VSIX asset. Marketplace publication, VS Code UI verification, and owner-side latency measurement remain pending.
 The release workflow is `.github/workflows/ci.yml`; it runs verification only and does not publish a package.
 
 ## Build and install a local VSIX
@@ -25,8 +26,8 @@ code --install-extension "$(pwd)/dist/vskit-1.55.10.vsix"
 ```
 
 The package identity is `lengockhoa.vskit`; the package name is lowercase
-`vskit`. The `vskit-1.55.8.vsix` artifact is attached to GitHub release
-`v1.55.8`. Marketplace listing availability remains unverified; publication
+`vskit`. The `vskit-1.55.10.vsix` artifact is attached to GitHub release
+`v1.55.10`. Marketplace listing availability remains unverified; publication
 is paused.
 
 ## Version policy during this conversion
