@@ -46,7 +46,7 @@ import type { ProviderRequest, ProviderResult } from "../../ai/provider";
 const NEW_COMMAND_ID = "VSKit.generateCommitMessage";
 const NEW_COMMAND_TITLE = "VSKit: Generate Commit Message";
 const NEW_COMMAND_CATEGORY = "VSKit";
-const NEW_COMMAND_ICON = { light: "media/commit-spark.svg", dark: "media/commit-spark.svg" };
+const NEW_COMMAND_ICON = "$(edit)";
 const SCM_GROUP = "navigation";
 const SCM_WHEN = "scmProvider == git";
 
@@ -113,7 +113,7 @@ function providerOk(text: string): ProviderResult {
 // 1. Manifest scan — command + scm/title menu agree on the frozen id/shape.
 // =============================================================================
 describe("TASK-GC-008 #1 manifest ↔ command id agreement", () => {
-  it("command entry uses the U-plus-sparkle SVG icon/title/category, and the menu entry exists in scm/title with the frozen when clause", () => {
+  it("command entry uses the built-in $(edit) codicon icon/title/category, and the menu entry exists in scm/title with the frozen when clause", () => {
     const json = loadManifest();
     const commands = json.contributes.commands ?? [];
     const menus = json.contributes.menus ?? {};

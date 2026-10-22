@@ -13,14 +13,14 @@ bash scripts/build.sh
 For the current package version, install with:
 
 ```bash
-code --install-extension "$(pwd)/dist/vskit-1.55.13.vsix"
+code --install-extension "$(pwd)/dist/vskit-1.55.14.vsix"
 ```
 
 To install on another machine, copy the `.vsix` file there, open VS Code's Command Palette, run `Extensions: Install from VSIX...`, and select the file. Reload VS Code if prompted.
 
-The current owner diagnostic-capture package is `1.55.13`; Marketplace publication remains paused.
+The current package is `1.55.14` (SCM commit-message button uses the built-in `$(edit)` codicon for clear dark-mode visibility); Marketplace publication remains paused.
 
-### Diagnostics cho nút sparkle
+### Diagnostics cho nút commit-message
 
 Diagnostics are off by default. On the owner machine, enable `VSKit.ai.commitGenDiagnostics` in VS Code Settings, run the sparkle command (`VSKit.generateCommitMessage`) once, then run **VSKit: Show Commit Message Diagnostics** and copy the `VSKit: Commit Message Diagnostics` Output Channel. The channel records metadata and timings only; it does not include prompts, diffs, source, credentials, or generated response text.
 
@@ -147,7 +147,8 @@ Các tùy chọn AI được khai báo gồm:
 ## Generate Commit Message
 
 Trên title bar của panel **Source Control** xuất hiện thêm một nút
-có biểu tượng chữ **U** làm hình chính, kèm sparkle nhỏ tách biệt — bấm vào nút để VSKit tự sinh commit
+có biểu tượng bút chì (`$(edit)`, icon built-in của VS Code, tự theo màu theme —
+hiển thị rõ cả dark mode lẫn light mode) — bấm vào nút để VSKit tự sinh commit
 message theo chuẩn **Conventional Commits** rồi điền thẳng vào ô nhập
 commit của SCM. Bạn chỉ cần review lại rồi bấm Commit.
 
@@ -157,7 +158,7 @@ commit của SCM. Bạn chỉ cần review lại rồi bấm Commit.
 - Tin nhắn được sinh bằng **Lite Model** mà bạn đã cấu hình trong AI
   Settings (mục tiếp theo). Model xử lý diff đã staged (ưu tiên) hoặc
   unstaged, có giới hạn kích thước — repo cực lớn sẽ được truncate.
-- Nếu chưa cấu hình Lite Model, nút sparkle sẽ hiện toast hướng dẫn mở AI
+- Nếu chưa cấu hình Lite Model, nút sẽ hiện toast hướng dẫn mở AI
   Settings (action `Open AI Settings`).
 - Message theo chuẩn Conventional Commits với **type prefix tiếng Anh** và
   **subject/body tiếng Việt**, ví dụ: `feat(db): thêm chỉ mục cho bảng users`.

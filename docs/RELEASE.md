@@ -2,9 +2,11 @@
 
 ## Current distribution status
 
-GitHub releases `v1.55.6` through `v1.55.13` retain their VSIX assets. Marketplace publication is paused.
+GitHub releases `v1.55.6` through `v1.55.14` retain their VSIX assets. Marketplace publication is paused.
 
-The current owner diagnostic-capture package is GitHub release `v1.55.13`: `dist/vskit-1.55.13.vsix` (2,279,284 bytes; SHA-256 `ea9dd821402ba8c8f7e5bd0a4c3f1090cf2dd58b28a0a9ffe6cfc80284eb1db7`). The release asset digest matches the local package. Its manifest confirms the Generate Commit Message SVG command icon and default-off diagnostics. VS Code icon UI verification and owner-side latency measurement remain pending; no runtime speedup is claimed. Release page: https://github.com/lengockhoa/VSKit/releases/tag/v1.55.13
+The current package is GitHub release `v1.55.14`: `dist/vskit-1.55.14.vsix` (2,279,410 bytes; SHA-256 `ef681af7dfdc0016266ee02e6852b27d281bc362b7ffed48eca42715022cc1e8`). The release asset digest matches the local package. Its manifest confirms the Generate Commit Message command uses the built-in `$(edit)` codicon (theme-colored, dark-mode visible); command id, title, SCM menu, and handler are unchanged. VS Code icon UI verification remains pending for the owner; no runtime speedup is claimed. Release page: https://github.com/lengockhoa/VSKit/releases/tag/v1.55.14
+
+Previous package: `v1.55.13` owner diagnostic-capture VSIX (2,279,284 bytes; SHA-256 `ea9dd821402ba8c8f7e5bd0a4c3f1090cf2dd58b28a0a9ffe6cfc80284eb1db7`) — https://github.com/lengockhoa/VSKit/releases/tag/v1.55.13
 
 Earlier ship history: `v1.55.7` pushed commit `bbab82b`; `v1.55.8` pushed commit `528b279`; `v1.55.10` pushed commit `100f3ba`; and `v1.55.11` included `vskit-1.55.11.vsix` (SHA-256 `e017f0a7a08041e815f8272a9c0b0d468388f7006f52d8a31eca434378884ca9`). The release workflow is `.github/workflows/ci.yml`; it runs verification only and does not publish a package.
 
@@ -17,14 +19,14 @@ From the repository root, the build script runs the checks in dependency order
 bash scripts/build.sh
 ```
 
-With the current manifest version `1.55.13`, the expected local artifact is
-`dist/vskit-1.55.13.vsix`. Packaging itself does not publish it.
+With the current manifest version `1.55.14`, the expected local artifact is
+`dist/vskit-1.55.14.vsix`. Packaging itself does not publish it.
 
 ```bash
-code --install-extension "$(pwd)/dist/vskit-1.55.13.vsix"
+code --install-extension "$(pwd)/dist/vskit-1.55.14.vsix"
 ```
 
-The package identity is `lengockhoa.vskit`; the package name is lowercase `vskit`. The current local `dist/vskit-1.55.13.vsix` is the owner-test package and has not been uploaded. The previous published GitHub asset is the original `v1.55.12` package described above. Marketplace listing availability remains unverified; publication is paused.
+The package identity is `lengockhoa.vskit`; the package name is lowercase `vskit`. The current `dist/vskit-1.55.14.vsix` is published on GitHub release `v1.55.14`. Marketplace listing availability remains unverified; publication is paused.
 
 ## Version policy during this conversion
 

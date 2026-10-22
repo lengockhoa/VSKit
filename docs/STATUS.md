@@ -9,14 +9,14 @@
 
 ## Snapshot
 
-- Focus: VSKit `1.55.13` is the owner diagnostic-capture package at `dist/vskit-1.55.13.vsix`. Diagnostics are opt-in; the package contains the U-plus-separated-sparkle SVG. Packaged version, command, default-off setting, owner instructions, and icon/source hash match are verified. Actual VS Code icon UI and owner latency capture remain pending.
-- Verification: focused commit-generation tests passed 47/47 across 3 files; `npm run typecheck` and `npm run compile` passed. The single `npm run verify:release` attempt ran the full suite and failed the 200 KB SQL parser timing threshold (53.47 ms vs <50 ms); 318 test files passed and 2 were skipped. Earlier full-suite failures remain undetermined; no rerun or flaky-test conclusion. Final VSIX: 2,279,284 bytes, SHA-256 `ea9dd821402ba8c8f7e5bd0a4c3f1090cf2dd58b28a0a9ffe6cfc80284eb1db7`.
-- Distribution: GitHub release `v1.55.13` at https://github.com/lengockhoa/VSKit/releases/tag/v1.55.13 carries the verified owner VSIX; Marketplace publication remains paused. No runtime speedup is claimed.
+- Focus: VSKit `1.55.14` is the current package at `dist/vskit-1.55.14.vsix`. The Generate Commit Message SCM button now uses the built-in `$(edit)` codicon (theme-colored, dark-mode visible) instead of the U-plus-sparkle SVG; command id, title, SCM menu, and handler are unchanged. Diagnostics remain opt-in and default-off.
+- Verification: full release gate green (`npm test` 4,832 tests + `typecheck` + `compile`); packaged-manifest inside the final VSIX confirms `icon: "$(edit)"` and zero `commit-spark` references. Final VSIX: 2,279,410 bytes, SHA-256 `ef681af7dfdc0016266ee02e6852b27d281bc362b7ffed48eca42715022cc1e8`. Actual VS Code dark-mode icon UI verification remains pending for the owner.
+- Distribution: GitHub release `v1.55.14` at https://github.com/lengockhoa/VSKit/releases/tag/v1.55.14 carries the verified VSIX; Marketplace publication remains paused. No runtime speedup is claimed.
 
 ## Active Work
 
-- The full-suite gate is not green because of the 200 KB SQL parser timing threshold; its cause remains undetermined and no rerun was performed. Focused commit-generation tests, typecheck, compile, and final VSIX checks passed.
-- Owner follow-up: transfer the final `.vsix` to the separate owner machine; run **Extensions: Install from VSIX...**; enable `VSKit.ai.commitGenDiagnostics`; generate one commit message; run **VSKit: Show Commit Message Diagnostics** and copy the `VSKit: Commit Message Diagnostics` Output Channel; capture the icon in VS Code. UI verification and runtime latency measurement remain pending.
+- The full-suite gate ran green this cycle (the earlier 200 KB SQL parser timing-threshold failure did not recur).
+- Owner follow-up: install `vskit-1.55.14.vsix` from GitHub release `v1.55.14` (or the one-line installer), switch VS Code to dark mode, open a Git repository, and confirm the Source Control title-bar button shows the pencil (`edit`) codicon with tooltip **VSKit: Generate Commit Message**. Runtime latency capture remains pending.
 
 ## Technical notes
 

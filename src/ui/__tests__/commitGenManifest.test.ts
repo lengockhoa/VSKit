@@ -1,10 +1,11 @@
 // src/ui/__tests__/commitGenManifest.test.ts
-// TASK-GC-004 — manifest guards for the U-plus-separated-sparkle Generate Commit Message icon.
+// TASK-GC-004 — manifest guards for the built-in "$(edit)" codicon on the
+// Generate Commit Message command.
 //
 // Asserts that `package.json` declares:
 //   - `contributes.commands` contains
 //     { command: "VSKit.generateCommitMessage", title: "VSKit: Generate Commit Message",
-//       category: "VSKit", icon: { light: "media/commit-spark.svg", dark: "media/commit-spark.svg" } }
+//       category: "VSKit", icon: "$(edit)" }
 //   - `contributes.menus["scm/title"]` contains
 //     { command: "VSKit.generateCommitMessage", group: "navigation",
 //       when: "scmProvider == git" }
@@ -104,7 +105,7 @@ function loadManifest(): Manifest {
 
 describe("TASK-GC-004 — package.json manifest guards for Generate Commit Message", () => {
   // ---- Case 1 — happy ----------------------------------------------------
-  it("case 1: command declared with the U-plus-sparkle SVG icon + category (exact shape)", () => {
+  it("case 1: command declared with the built-in $(edit) codicon + category (exact shape)", () => {
     const json = loadManifest();
     const commands = json.contributes.commands ?? [];
     const entry = commands.find((c) => c.command === NEW_COMMAND_ID);
@@ -113,7 +114,7 @@ describe("TASK-GC-004 — package.json manifest guards for Generate Commit Messa
       command: NEW_COMMAND_ID,
       title: "VSKit: Generate Commit Message",
       category: "VSKit",
-      icon: { light: "media/commit-spark.svg", dark: "media/commit-spark.svg" },
+      icon: "$(edit)",
     });
   });
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.55.14] — 2026-10-22
+
+- Generate Commit Message SCM button now uses the built-in `$(edit)` codicon instead of `media/commit-spark.svg`, so the icon renders with the theme foreground color and stays clearly visible in dark mode. Command id, title, SCM menu entry, and handler are unchanged; no runtime code changes. Marketplace publication remains paused.
+
 ## [1.55.13] — 2026-10-22
 
 - Owner diagnostic-capture package with the U-plus-separated-sparkle command icon restored in the manifest; no runtime code changes. Marketplace publication remains paused.
