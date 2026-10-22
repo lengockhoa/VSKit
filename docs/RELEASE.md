@@ -4,7 +4,7 @@
 
 GitHub releases `v1.55.6` through `v1.55.12` retain their VSIX assets. Marketplace publication is paused.
 
-The `v1.55.12` release carries the owner diagnostic-capture package `vskit-1.55.12.vsix`. It contains the completed diagnostics, SCM/freshness safeguards, OMP retry lifecycle, and U-plus-sparkle icon. No runtime speedup is claimed. Marketplace publication and VS Code UI verification were not performed.
+The `v1.55.12` release carries the owner diagnostic-capture package `vskit-1.55.12.vsix` (2,279,304 bytes; SHA-256 `c409a2c3de82271d05186642bd22de59e5d46d68502aa6fac05defba55d04529`, matching the GitHub asset digest). It contains the completed diagnostics, SCM/freshness safeguards, OMP retry lifecycle, and U-plus-sparkle icon. No runtime speedup is claimed. Marketplace publication remains paused. VS Code icon UI verification is pending; the prior UI attempt showed only the Welcome page.
 
 Earlier ship history: `v1.55.7` pushed commit `bbab82b`; `v1.55.8` pushed commit `528b279`; `v1.55.10` pushed commit `100f3ba`; and `v1.55.11` included `vskit-1.55.11.vsix` (SHA-256 `e017f0a7a08041e815f8272a9c0b0d468388f7006f52d8a31eca434378884ca9`). The release workflow is `.github/workflows/ci.yml`; it runs verification only and does not publish a package.
 

@@ -10,8 +10,7 @@
 ## Snapshot
 
 - Focus: VSKit `1.55.12` is the owner diagnostic-capture package at `dist/vskit-1.55.12.vsix`, distinct from `1.55.11`. Diagnostics are opt-in. The monochrome U-plus-sparkle asset is included and matches the SVG source; actual VS Code icon UI and owner latency capture remain pending.
-- Verification: `npm run verify:fast` passed; focused changed-path coverage passed 263/263 across 5 files; release hygiene passed 19/19; final VSIX packaging and isolated-profile install passed. Earlier three full-suite failures remain unexplained; the full suite was not rerun.
-- Package: `1.55.12`, 2,279,307 bytes. Packaged diagnostics command/setting and default-off state verified; packaged extension JS and SVG hashes match current build/source.
+- Verification: `npm run verify:fast` passed; focused changed-path coverage passed 263/263 across 5 files; release hygiene passed 17/17; VSIX packaging and isolated-profile install passed. The final VSIX is 2,279,304 bytes, SHA-256 `c409a2c3de82271d05186642bd22de59e5d46d68502aa6fac05defba55d04529`; packaged command/default-off setting, extension bundle, and icon asset verified. Three earlier full-suite failures remain unexplained; full suite not rerun.
 - Distribution: GitHub release `v1.55.12` carries this owner-test package. No Marketplace publish. The implementation code was already released as `v1.55.11`. No runtime speedup is claimed.
 
 ## Active Work
