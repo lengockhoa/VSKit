@@ -26,8 +26,8 @@
 ## Active Constraints
 
 <!-- Rules AI must respect during implementation. Non-obvious limits not visible in the code. -->
-- **Distribution status:** Marketplace publishing remains paused. Package identity is `lengockhoa.vskit`, repository `lengockhoa/VSKit`; GitHub release `v1.55.8` carries `vskit-1.55.8.vsix`. No Marketplace listing is verified.
-- **Installer behavior:** `scripts/install-vskit.sh --local <file.vsix>` installs a supplied artifact. The no-argument path queries the latest GitHub release; `v1.55.8` has a matching asset. Verify future latest-release assets before relying on this path.
+- **Distribution status:** GitHub release `v1.55.12` carries `vskit-1.55.12.vsix`. Marketplace publishing remains paused; no Marketplace listing is verified.
+- **Installer behavior:** `scripts/install-vskit.sh --local <file.vsix>` installs a supplied artifact. The no-argument path queries the latest GitHub release; `v1.55.12` has a matching asset. Verify future latest-release assets before relying on this path.
 - **Persistence boundary:** VSKit does not import extension-scoped state or secrets from other installations. Configure connections and credentials in VSKit as needed; never read VS Code storage directories or create credential export files.
 - **Build verification order:** typecheck → compile → tests → VSIX package. Compile first because some tests read generated `dist` bundles during module initialization. Inspect VSIX contents before distribution; do not install it or reload VS Code unless explicitly requested.
 - **Release automation:** `.github/workflows/ci.yml` is verification-only. Follow the project-owner Git commit/push and versioned tag/release steps after local verification; Marketplace publishing remains paused. Do not treat package verification as a publish action.

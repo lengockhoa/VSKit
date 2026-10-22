@@ -18,9 +18,9 @@ Pure logic (SQL parsing, DDL diff/generation, paging, grid filter model) lives d
 under `src/core/` + selected `src/ui/*Model|Messages` modules, keeping tests runnable without
 booting the VS Code extension host or connecting to a database.
 
-The identity-conversion artifact was version `1.55.7`; patch package `1.55.8` passed local
-verification and is available as the GitHub release asset. Marketplace listing availability
-is unverified. See `docs/RELEASE.md` before choosing a distribution path.
+The identity-conversion artifact was version `1.55.7`; the current owner diagnostic-capture
+package is `1.55.12`, distributed as a GitHub release. Marketplace listing availability is
+unverified. See `docs/RELEASE.md` before choosing a distribution path.
 
 ## Key Modules
 
@@ -46,7 +46,7 @@ adapter on pooled clients.
 - AI-chat `run_sql` tool is SELECT/SHOW/EXPLAIN/clean-CTE only — never receives DML/DDL.
 - AI-chat V2 (TASK-CHATV2-017): the webview boots the `.VSKit-ai-chat-v2` shell + single `createChatController` (webview/aiChat/) and posts `ready_v2`; the host emits V2-native `text_delta`/`reasoning_delta`/`tool_started`/`tool_finished`/`turn_finished` frames on the ordered V2 seam. V1 is deleted (Lane 3): `aiChatPanelHeader.ts`/`aiChatPanelComposer.ts` and their tests are gone, the dead `.VSKit-chat` CSS was retired from `webview/styles.css`, and the V2 E2E asserts V1-id absence in the production bundle.
 - Keyset paging may replace OFFSET ONLY when the structural browse gate passes AND no term carries NULLS ordering; every other shape keeps legacy composition byte-identical.
-- This conversion has a separate GitHub release `v1.55.7` with asset `vskit-1.55.7.vsix`; Marketplace listing availability remains unverified.
+- This conversion has a separate GitHub release `v1.55.12` with asset `vskit-1.55.12.vsix`; Marketplace listing availability remains unverified.
 
 ## Known Dangerous Areas
 

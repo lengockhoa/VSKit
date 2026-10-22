@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.55.12] — 2026-10-22
+
+- Owner-side diagnostic-capture VSIX `1.55.12`; no runtime code changes. Distributed as GitHub release `v1.55.12`; Marketplace publication remains paused.
+
 ## [1.55.11] — 2026-10-22
 
 - Generate Commit Message diagnostics now include per-attempt sanitization/guard timings plus the OMP engine setup duration; normalize unaccented Vietnamese text in the commit-message guard.

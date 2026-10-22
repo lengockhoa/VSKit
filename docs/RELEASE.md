@@ -1,13 +1,12 @@
-# VSKit Release and Local Package Status
+# VSKit Release and Package Status
 
 ## Current distribution status
 
-The GitHub releases `v1.55.6` through `v1.55.11` retain their VSIX assets. Marketplace publication is paused.
+GitHub releases `v1.55.6` through `v1.55.12` retain their VSIX assets. Marketplace publication is paused.
 
-The package command created only the local VSIX. The separate ship sequence pushed commit `bbab82b` to `main`, pushed tag `v1.55.7`, and created the GitHub release with the VSIX asset. Marketplace publishing, VS Code installation, and reload were not performed.
-The v1.55.8 ship sequence pushed commit `528b279` to `main`, pushed tag `v1.55.8`, and created the GitHub release with the VSIX asset. Marketplace publishing, VS Code installation/reload, and database integration were not performed.
-The `v1.55.10` ship sequence pushed commit `100f3ba` to `main`, pushed tag `v1.55.10`, and created the GitHub release with the VSIX asset. The `v1.55.11` ship sequence pushed the guard-timing/GitHub-release documentation commit to `main`, pushed tag `v1.55.11`, and created the GitHub release with `vskit-1.55.11.vsix` (SHA-256 `e017f0a7a08041e815f8272a9c0b0d468388f7006f52d8a31eca434378884ca9`). Marketplace publishing and VS Code UI verification were not performed.
-The release workflow is `.github/workflows/ci.yml`; it runs verification only and does not publish a package.
+The `v1.55.12` release carries the owner diagnostic-capture package `vskit-1.55.12.vsix`. It contains the completed diagnostics, SCM/freshness safeguards, OMP retry lifecycle, and U-plus-sparkle icon. No runtime speedup is claimed. Marketplace publication and VS Code UI verification were not performed.
+
+Earlier ship history: `v1.55.7` pushed commit `bbab82b`; `v1.55.8` pushed commit `528b279`; `v1.55.10` pushed commit `100f3ba`; and `v1.55.11` included `vskit-1.55.11.vsix` (SHA-256 `e017f0a7a08041e815f8272a9c0b0d468388f7006f52d8a31eca434378884ca9`). The release workflow is `.github/workflows/ci.yml`; it runs verification only and does not publish a package.
 
 ## Build and install a local VSIX
 
@@ -18,15 +17,17 @@ From the repository root, the build script runs the checks in dependency order
 bash scripts/build.sh
 ```
 
-With the current manifest version `1.55.11`, the expected local artifact is
-`dist/vskit-1.55.11.vsix`. This build does not publish it.
+With the current manifest version `1.55.12`, the expected local artifact is
+`dist/vskit-1.55.12.vsix`. Packaging itself does not publish it.
 
 ```bash
-code --install-extension "$(pwd)/dist/vskit-1.55.11.vsix"
+code --install-extension "$(pwd)/dist/vskit-1.55.12.vsix"
 ```
 
 The package identity is `lengockhoa.vskit`; the package name is lowercase
-`vskit`. The `vskit-1.55.11.vsix` artifact is a local owner-test package, not a GitHub release asset. Marketplace listing availability remains unverified; publication is paused.
+`vskit`. The `vskit-1.55.12.vsix` artifact is the owner diagnostic-capture
+package distributed as GitHub release `v1.55.12`. Marketplace listing
+availability remains unverified; publication is paused.
 
 ## Version policy during this conversion
 

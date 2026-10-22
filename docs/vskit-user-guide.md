@@ -13,12 +13,12 @@ bash scripts/build.sh
 For the current package version, install with:
 
 ```bash
-code --install-extension "$(pwd)/dist/vskit-1.55.11.vsix"
+code --install-extension "$(pwd)/dist/vskit-1.55.12.vsix"
 ```
 
 To install on another machine, copy the `.vsix` file there, open VS Code's Command Palette, run `Extensions: Install from VSIX...`, and select the file. Reload VS Code if prompted.
 
-The latest released VSKit VSIX is distributed from GitHub Releases (`v1.55.11`); the Marketplace listing remains paused/unverified.
+The current owner diagnostic-capture package is `1.55.12` (GitHub release `v1.55.12`), following the implementation release `v1.55.11`; Marketplace listing availability remains unverified and publication is paused.
 
 ### Generate Commit Message diagnostics
 
@@ -147,7 +147,7 @@ Các tùy chọn AI được khai báo gồm:
 ## Generate Commit Message
 
 Trên title bar của panel **Source Control** xuất hiện thêm một nút
-sparkle ✨ (icon `$(sparkle)`) — bấm vào đó để VSKit tự sinh commit
+có biểu tượng chữ **U** làm hình chính, kèm sparkle nhỏ tách biệt — bấm vào nút để VSKit tự sinh commit
 message theo chuẩn **Conventional Commits** rồi điền thẳng vào ô nhập
 commit của SCM. Bạn chỉ cần review lại rồi bấm Commit.
 

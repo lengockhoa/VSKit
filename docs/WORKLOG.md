@@ -2,6 +2,12 @@
 
 Track session-level execution details.
 
+## 2026-10-22 — VSKit v1.55.12 local owner-test package
+
+- Assigned a version distinct from the existing released `1.55.11`; no production-code changes. Kept diagnostics default-off and retained the completed safeguards, OMP retry lifecycle, and monochrome U-plus-sparkle asset.
+- Existing release `v1.55.11` remains untouched. This package is local only: no commit, push, tag, GitHub release, or Marketplace publish.
+- Verification/package evidence will be recorded after rebuilding and inspecting `dist/vskit-1.55.12.vsix`.
+
 ## 2026-10-22 — Generate Commit Message v1.55.11 owner-test package
 
 - Bumped package/lockfile to `1.55.11`; added versioned changelog/release notes and owner diagnostics instructions. Kept existing diagnostics, SCM/freshness/repository safeguards, guard retry lifecycle, and monochrome U-plus-separate-sparkle asset. Added no new production lifecycle workaround.
@@ -934,8 +940,8 @@ Persisted release write evidence: bounded slice `docs/WORKLOG.md:705-707` was re
 - No version bump / package / publish per close-out scope.
 
 ## 2026-10-22 — Generate Commit Message owner latency-capture package
-- Completed metadata-only, default-off diagnostics, SCM input/diff safeguards, invocation-repository selection, context-budgeted diff handling, and the monochrome U-plus-separate-sparkle icon. The OMP guard retry reuses one live engine and disposes once after the guarded flow; the suspected early shutdown is not present in current code.
-- Fresh verification: focused changed-path suites 83/83 passed (commitGenCommand 30, OMP adapter 15, gitDiff 21, commitGenManifest 9, commitGenIntegration 8); release hygiene 27/27 passed; typecheck passed; compile passed; `vsce package` completed. The final v1.55.11 VSIX contains the current manifest, diagnostic command/setting strings, current JS bundle, and exact SVG source asset.
-- Final VSIX SHA-256: `bd756fc100cc7e480088d116b50a6e96c2274422864f240bf6f937ff8cf1a8ee`. Chrome-rendered monochrome icon was checked at 16px and 24px; U is readable and sparkle separated. VS Code UI check and runtime latency measurement remain pending. Three prior full-suite failures remain unexplained; a separate passing run does not establish they were flaky. Local owner-test package only; no commit, push, tag, release, or Marketplace publish.
+- Completed metadata-only, default-off diagnostics, SCM input/diff safeguards, invocation-repository selection, context-budgeted diff handling, and the monochrome U-plus-separate-sparkle icon. The OMP guard retry reuses one live engine and disposes once after the guarded flow; the suspected early shutdown is not present in current lifecycle code.
+- Owner package `1.55.12` rebuilt at `dist/vskit-1.55.12.vsix` (2,279,307 bytes). Packaged manifest confirms `VSKit.showCommitMessageDiagnostics`, `VSKit.ai.commitGenDiagnostics` default `false`, and the Generate Commit command; bundled JS and SVG hashes match current source/build.
+- Verification: `npm run verify:fast` passed; focused changed-path tests 263/263 across 5 files; release hygiene 19/19; `vsce package` succeeded; final VSIX published as the `v1.55.12` GitHub release. Full suite not rerun; three prior failures remain unexplained. UI icon verification could not reach the target surface because Orca could not focus the VS Code window; the captured screenshot showed only Welcome. Chrome icon renders at 16px/24px were readable with separated sparkle. Owner-side latency measurement pending; no speedup claimed. Marketplace publish not performed.
 
 <!-- Entries before 2026-09 archived to docs/WORKLOG_ARCHIVE.md. Keep this file < 600 lines. -->

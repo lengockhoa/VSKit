@@ -9,14 +9,14 @@
 
 ## Snapshot
 
-- Focus: VSKit `1.55.11` is a local owner-test package at `dist/vskit-1.55.11.vsix`. Diagnostics are opt-in. Monochrome icon render checked at 16px/24px; actual VS Code UI and owner-side latency capture remain pending.
-- Verification: fresh focused changed-path suites 83/83 and release hygiene 27/27 passed; `npm run typecheck`, `npm run compile`, and `npm run package -- --out dist/vskit-1.55.11.vsix` passed. An earlier `npm test` run passed (319 files, 4,827 tests; 2 files / 5 tests skipped), but three previously reported full-suite failures remain unexplained; the pass does not establish they were flaky. Full suite not rerun for this package refresh.
-- Package: version `1.55.11`; SHA-256 `e017f0a7a08041e815f8272a9c0b0d468388f7006f52d8a31eca434378884ca9` (fresh `vsce package` with guard-trace tests; embedded bundle hash equals current `dist/extension.js` `e2600421bedc6f584b765f451ecad4e8a0ae82337c880decd868aaa7abc3eff8`, SVG asset `18bea04a684732499dcb8edc785d4480484c71fe3f26ea35bd6f68c581da77ba`). Packaged manifest has diagnostics default `false`, command `VSKit.showCommitMessageDiagnostics`, and the monochrome U-plus-sparkle icon.
-- Distribution: Git commit/push, tag `v1.55.11`, and GitHub release with this VSIX asset were created. Marketplace publication is paused by owner instruction. No runtime speedup is claimed.
+- Focus: VSKit `1.55.12` is the owner diagnostic-capture package at `dist/vskit-1.55.12.vsix`, distinct from `1.55.11`. Diagnostics are opt-in. The monochrome U-plus-sparkle asset is included and matches the SVG source; actual VS Code icon UI and owner latency capture remain pending.
+- Verification: `npm run verify:fast` passed; focused changed-path coverage passed 263/263 across 5 files; release hygiene passed 19/19; final VSIX packaging and isolated-profile install passed. Earlier three full-suite failures remain unexplained; the full suite was not rerun.
+- Package: `1.55.12`, 2,279,307 bytes. Packaged diagnostics command/setting and default-off state verified; packaged extension JS and SVG hashes match current build/source.
+- Distribution: GitHub release `v1.55.12` carries this owner-test package. No Marketplace publish. The implementation code was already released as `v1.55.11`. No runtime speedup is claimed.
 
 ## Active Work
 
-- Owner follow-up: transfer `dist/vskit-1.55.11.vsix` to the separate owner machine; run **Extensions: Install from VSIX...**; enable `VSKit.ai.commitGenDiagnostics`; generate one commit message; run **VSKit: Show Commit Message Diagnostics** and copy the `VSKit: Commit Message Diagnostics` log; capture the icon in VS Code. UI verification and latency measurement remain pending.
+- Owner follow-up: transfer `dist/vskit-1.55.12.vsix` to the separate owner machine; run **Extensions: Install from VSIX...**; enable `VSKit.ai.commitGenDiagnostics`; generate one commit message; run **VSKit: Show Commit Message Diagnostics** and copy the `VSKit: Commit Message Diagnostics` log; capture the icon in VS Code. UI verification is pending: the isolated VS Code screenshot showed only the welcome page; Orca reported `window_not_focused` despite granted accessibility/screenshot permissions, so the target icon surface could not be reached. Runtime latency measurement remains pending.
 
 ## Technical notes
 
