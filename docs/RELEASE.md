@@ -2,9 +2,9 @@
 
 ## Current distribution status
 
-GitHub releases `v1.55.6` through `v1.55.12` retain their VSIX assets. Marketplace publication is paused.
+GitHub releases `v1.55.6` through `v1.55.13` retain their VSIX assets. Marketplace publication is paused.
 
-The current locally packaged owner diagnostic-capture candidate is `1.55.13`: `dist/vskit-1.55.13.vsix` (2,279,284 bytes; SHA-256 `ea9dd821402ba8c8f7e5bd0a4c3f1090cf2dd58b28a0a9ffe6cfc80284eb1db7`). Its packaged manifest confirms the Generate Commit Message SVG command icon and default-off diagnostics. The v1.55.13 GitHub release has not yet been created; the v1.55.12 published asset remains unchanged. VS Code icon UI verification and owner-side latency measurement are pending; no runtime speedup is claimed.
+The current owner diagnostic-capture package is GitHub release `v1.55.13`: `dist/vskit-1.55.13.vsix` (2,279,284 bytes; SHA-256 `ea9dd821402ba8c8f7e5bd0a4c3f1090cf2dd58b28a0a9ffe6cfc80284eb1db7`). The release asset digest matches the local package. Its manifest confirms the Generate Commit Message SVG command icon and default-off diagnostics. VS Code icon UI verification and owner-side latency measurement remain pending; no runtime speedup is claimed. Release page: https://github.com/lengockhoa/VSKit/releases/tag/v1.55.13
 
 Earlier ship history: `v1.55.7` pushed commit `bbab82b`; `v1.55.8` pushed commit `528b279`; `v1.55.10` pushed commit `100f3ba`; and `v1.55.11` included `vskit-1.55.11.vsix` (SHA-256 `e017f0a7a08041e815f8272a9c0b0d468388f7006f52d8a31eca434378884ca9`). The release workflow is `.github/workflows/ci.yml`; it runs verification only and does not publish a package.
 

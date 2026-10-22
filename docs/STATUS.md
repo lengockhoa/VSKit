@@ -11,7 +11,7 @@
 
 - Focus: VSKit `1.55.13` is the owner diagnostic-capture package at `dist/vskit-1.55.13.vsix`. Diagnostics are opt-in; the package contains the U-plus-separated-sparkle SVG. Packaged version, command, default-off setting, owner instructions, and icon/source hash match are verified. Actual VS Code icon UI and owner latency capture remain pending.
 - Verification: focused commit-generation tests passed 47/47 across 3 files; `npm run typecheck` and `npm run compile` passed. The single `npm run verify:release` attempt ran the full suite and failed the 200 KB SQL parser timing threshold (53.47 ms vs <50 ms); 318 test files passed and 2 were skipped. Earlier full-suite failures remain undetermined; no rerun or flaky-test conclusion. Final VSIX: 2,279,284 bytes, SHA-256 `ea9dd821402ba8c8f7e5bd0a4c3f1090cf2dd58b28a0a9ffe6cfc80284eb1db7`.
-- Distribution: package is ready for owner transfer; Marketplace publication remains paused. No speedup is claimed.
+- Distribution: GitHub release `v1.55.13` at https://github.com/lengockhoa/VSKit/releases/tag/v1.55.13 carries the verified owner VSIX; Marketplace publication remains paused. No runtime speedup is claimed.
 
 ## Active Work
 
