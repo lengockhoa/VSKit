@@ -101,10 +101,18 @@ export type GuardOutcome =
 export async function generateWithGuard(
   call: (messages: readonly ChatMessage[]) => Promise<string>,
   prompt: readonly ChatMessage[],
+  trace?: CommitGenTrace,
 ): Promise<GuardOutcome> {
   const raw = await call(prompt);
+  const firstGuardStartedAt = trace ? performance.now() : 0;
   const message = sanitizeCommitMessage(raw);
   const first = checkCommitMessage(message);
+  trace?.emit("guard.attempt.complete", {
+    attempt: 1,
+    outcome: first.ok ? "passed" : message.length === 0 ? "empty" : "rejected",
+    durationMs: traceElapsed(firstGuardStartedAt),
+    messageChars: message.length,
+  });
   if (first.ok) {
     return { ok: true, message };
   }
@@ -115,8 +123,15 @@ export async function generateWithGuard(
 
   const retryPrompt = buildRetryCommitPrompt(prompt, message, first.reasons);
   const raw2 = await call(retryPrompt);
+  const secondGuardStartedAt = trace ? performance.now() : 0;
   const message2 = sanitizeCommitMessage(raw2);
   const second = checkCommitMessage(message2);
+  trace?.emit("guard.attempt.complete", {
+    attempt: 2,
+    outcome: second.ok ? "passed" : message2.length === 0 ? "empty" : "rejected",
+    durationMs: traceElapsed(secondGuardStartedAt),
+    messageChars: message2.length,
+  });
   if (second.ok) {
     return { ok: true, message: message2 };
   }
@@ -443,9 +458,22 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
       return;
     }
     let oneShot: OmpOneShot | undefined;
+    const setupStartedAt = deps.trace ? performance.now() : 0;
     try {
       const turn = await deps.buildOmpEngine(choice, lite.modelId);
       oneShot = turn;
+      deps.trace?.emit("omp.setup.complete", {
+        durationMs: traceElapsed(setupStartedAt),
+        success: true,
+      });
+    } catch (setupError) {
+      deps.trace?.emit("omp.setup.complete", {
+        durationMs: traceElapsed(setupStartedAt),
+        success: false,
+      });
+      throw setupError;
+    }
+    try {
       if (deps.isCancelled?.()) return;
       let attempt = 0;
       outcome = await generateWithGuard(async (messages) => {
@@ -474,7 +502,7 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
           : undefined;
         let raw: string;
         try {
-          raw = await turn.generate(serializedPrompt, onFirstText);
+          raw = await oneShot.generate(serializedPrompt, onFirstText);
         } catch (error) {
           if (deps.trace) {
             deps.trace.emit("engine.request.error", {
@@ -499,7 +527,7 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
           throw new Error(ERROR_NON_STRING_TEXT_OMP);
         }
         return raw;
-      }, prompt);
+      }, prompt, deps.trace);
     } catch (e) {
       if (deps.isCancelled?.()) {
         return;
@@ -561,7 +589,7 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
           throw new Error(ERROR_NON_STRING_TEXT_BUILTIN);
         }
         return result.text;
-      }, prompt);
+      }, prompt, deps.trace);
     } catch (e) {
       if (deps.isCancelled?.()) {
         return;
@@ -629,7 +657,7 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
           // informational so they know their engine selection didn't take.
         }
         return result.text;
-      }, prompt);
+      }, prompt, deps.trace);
     } catch (e) {
       if (deps.isCancelled?.()) {
         return;

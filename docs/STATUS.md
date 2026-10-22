@@ -2,22 +2,26 @@
 
 ## Freshness
 
-- Last meaningful update: 2026-10-21 16:21
+- Last meaningful update: 2026-10-22
 - Updated by: omp
 - Status confidence: high
 - Stale after: 72h
 
 ## Snapshot
 
-- Focus: VSKit `1.55.10` is released on GitHub with `vskit-1.55.10.vsix` (23 files, 2.17 MB). Owner-side latency capture and real VS Code icon/UI verification remain pending.
-- Persistence: `lengockhoa.vskit` does not import prior global/workspace state or SecretStorage; existing extension data and Docker volumes remain untouched. No VS Code install/reload or database integration smoke test was run.
-- Verification: `npm run verify:fast` passed (`tsc --noEmit`, esbuild); the focused 7-file suite passed 326/326. Three previously reported full-suite failures remain unresolved and were not rerun; focused passes do not establish flakiness.
-- Git: commit `100f3ba` is on `origin/main`; tag/release `v1.55.10` and its VSIX asset are created. Marketplace publication and VS Code installation/reload were not performed.
-- Artifact: `dist/vskit-1.55.10.vsix`; SHA-256 `bf7e6828a134695b020152d13ab29dc2b9f60aff509b6c964d513df3a43b589d`.
+- Focus: VSKit `1.55.11` is a local owner-test package at `dist/vskit-1.55.11.vsix`. Diagnostics are opt-in. Monochrome icon render checked at 16px/24px; actual VS Code UI and owner-side latency capture remain pending.
+- Verification: fresh focused changed-path suites 83/83 and release hygiene 27/27 passed; `npm run typecheck`, `npm run compile`, and `npm run package -- --out dist/vskit-1.55.11.vsix` passed. An earlier `npm test` run passed (319 files, 4,827 tests; 2 files / 5 tests skipped), but three previously reported full-suite failures remain unexplained; the pass does not establish they were flaky. Full suite not rerun for this package refresh.
+- Package: version `1.55.11`; SHA-256 `e017f0a7a08041e815f8272a9c0b0d468388f7006f52d8a31eca434378884ca9` (fresh `vsce package` with guard-trace tests; embedded bundle hash equals current `dist/extension.js` `e2600421bedc6f584b765f451ecad4e8a0ae82337c880decd868aaa7abc3eff8`, SVG asset `18bea04a684732499dcb8edc785d4480484c71fe3f26ea35bd6f68c581da77ba`). Packaged manifest has diagnostics default `false`, command `VSKit.showCommitMessageDiagnostics`, and the monochrome U-plus-sparkle icon.
+- Distribution: Git commit/push, tag `v1.55.11`, and GitHub release with this VSIX asset were created. Marketplace publication is paused by owner instruction. No runtime speedup is claimed.
 
 ## Active Work
 
-- Owner-side validation pending: transfer/install the VSIX, enable diagnostics, generate one commit message, copy the Output Channel log, and capture a VS Code icon screenshot. No runtime latency improvement is claimed.
+- Owner follow-up: transfer `dist/vskit-1.55.11.vsix` to the separate owner machine; run **Extensions: Install from VSIX...**; enable `VSKit.ai.commitGenDiagnostics`; generate one commit message; run **VSKit: Show Commit Message Diagnostics** and copy the `VSKit: Commit Message Diagnostics` log; capture the icon in VS Code. UI verification and latency measurement remain pending.
+
+## Technical notes
+
+- Commit generation diagnostics are metadata-only and must stay default-off. Keep phase timings and request correlation IDs; never log secrets, prompt, diff, source, or response.
+- OMP retry lifecycle regression: the current guarded generation reuses one one-shot engine across attempt 1 and attempt 2, then disposes once; cancellation/timeout cleanup remains covered. No additional lifecycle change was warranted.
 
 ## Recent AI Chat maintenance
 

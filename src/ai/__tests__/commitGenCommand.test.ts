@@ -846,6 +846,7 @@ describe("ai/commitGenCommand — guard flow (SPEC §8.4/§8.5)", () => {
     const buildOmpEngine = vi.fn(async () => oneShot);
     const setInputBox = vi.fn();
     const showError = vi.fn();
+    const traceEvents: Array<{ event: string; metadata?: Readonly<Record<string, unknown>> }> = [];
     const deps = makeDeps({
       loadSettings: (async () => settings) as never,
       loadConfig: (async () => fakeConfig(settings)) as never,
@@ -854,6 +855,10 @@ describe("ai/commitGenCommand — guard flow (SPEC §8.4/§8.5)", () => {
       buildOmpEngine: buildOmpEngine as never,
       setInputBox,
       showError,
+      trace: {
+        correlationId: "retry-timing-test",
+        emit: (event, metadata) => traceEvents.push({ event, metadata }),
+      },
     });
 
     await runGenerateCommitMessage(deps);
@@ -863,6 +868,17 @@ describe("ai/commitGenCommand — guard flow (SPEC §8.4/§8.5)", () => {
     expect(shutdown).toHaveBeenCalledTimes(1);
     expect(setInputBox).toHaveBeenCalledWith("feat(db): bổ sung chỉ mục cho bảng users");
     expect(showError).not.toHaveBeenCalled();
+    const guardAttempts = traceEvents.filter(({ event }) => event === "guard.attempt.complete");
+    expect(guardAttempts).toEqual([
+      expect.objectContaining({
+        metadata: expect.objectContaining({ attempt: 1, outcome: "rejected", durationMs: expect.any(Number) }),
+      }),
+      expect.objectContaining({
+        metadata: expect.objectContaining({ attempt: 2, outcome: "passed", durationMs: expect.any(Number) }),
+      }),
+    ]);
+    expect(guardAttempts[0]?.metadata).not.toHaveProperty("message");
+    expect(guardAttempts[0]?.metadata).not.toHaveProperty("response");
   });
 
   it("omp: cancellation between guard attempts skips retry and disposes the engine", async () => {

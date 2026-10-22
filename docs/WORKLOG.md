@@ -2,6 +2,14 @@
 
 Track session-level execution details.
 
+## 2026-10-22 — Generate Commit Message v1.55.11 owner-test package
+
+- Bumped package/lockfile to `1.55.11`; added versioned changelog/release notes and owner diagnostics instructions. Kept existing diagnostics, SCM/freshness/repository safeguards, guard retry lifecycle, and monochrome U-plus-separate-sparkle asset. Added no new production lifecycle workaround.
+- OMP retry regression evidence: the test drives rejected attempt 1 then successful attempt 2 through one constructed one-shot engine, confirms two sends and exactly one shutdown after completion, and checks cancellation cleanup separately. Current lifecycle is correct; no lifecycle fix was warranted. Added metadata-only `omp.setup.complete` (durationMs + success) emission around `buildOmpEngine` inside the existing trace guard.
+- Verification: focused commit-generation, message-guard, extension diagnostics, release-hygiene, OMP one-shot/e2e, and git-diff tests passed. `npm test`: 319 files passed, 2 skipped; 4,827 tests passed, 5 skipped. `npm run typecheck`, `npm run compile`, and VSIX packaging passed. Three failures reported by an earlier full-suite run remain unexplained; the current pass does not establish flakiness.
+- Local artifact: `dist/vskit-1.55.11.vsix`; SHA-256 `e017f0a7a08041e815f8272a9c0b0d468388f7006f52d8a31eca434378884ca9` (repackaged after guard-timing/trace test additions; embedded bundle and SVG hash unchanged). Packaged manifest has diagnostics default `false`, command `VSKit.showCommitMessageDiagnostics`; icon asset is included. Git commit/push/tag/release created; Marketplace publication paused. VS Code UI and owner-side latency capture remain pending; no speedup claimed.
+- Handoff: no formal AI_HANDOFF cycle is active; `docs/STATUS.md` carries the exact owner next steps.
+
 ## 2026-10-21 — Generate Commit Message diagnostics and v1.55.10 package
 
 - Added opt-in metadata-only timing diagnostics (`VSKit.ai.commitGenDiagnostics`, default off; command `VSKit: Show Commit Message Diagnostics`; channel `VSKit: Commit Message Diagnostics`), SCM-input preservation/final freshness checks, invocation-repository preference, and a monochrome-readable U icon with separate sparkle.
@@ -924,5 +932,10 @@ Persisted release write evidence: bounded slice `docs/WORKLOG.md:705-707` was re
 - Files: `docs/AI_HANDOFF/INDEX.md` (17 rows → done), `docs/STATUS.md` (compact shipped state), `docs/WORKLOG_ARCHIVE.md` (new; pre-2026-09 entries archived per Budget Rules).
 - Verification: typecheck + compile clean · full suite 4637 pass / 5 skip / 0 fail · forbidden-token + file-absence gates pass.
 - No version bump / package / publish per close-out scope.
+
+## 2026-10-22 — Generate Commit Message owner latency-capture package
+- Completed metadata-only, default-off diagnostics, SCM input/diff safeguards, invocation-repository selection, context-budgeted diff handling, and the monochrome U-plus-separate-sparkle icon. The OMP guard retry reuses one live engine and disposes once after the guarded flow; the suspected early shutdown is not present in current code.
+- Fresh verification: focused changed-path suites 83/83 passed (commitGenCommand 30, OMP adapter 15, gitDiff 21, commitGenManifest 9, commitGenIntegration 8); release hygiene 27/27 passed; typecheck passed; compile passed; `vsce package` completed. The final v1.55.11 VSIX contains the current manifest, diagnostic command/setting strings, current JS bundle, and exact SVG source asset.
+- Final VSIX SHA-256: `bd756fc100cc7e480088d116b50a6e96c2274422864f240bf6f937ff8cf1a8ee`. Chrome-rendered monochrome icon was checked at 16px and 24px; U is readable and sparkle separated. VS Code UI check and runtime latency measurement remain pending. Three prior full-suite failures remain unexplained; a separate passing run does not establish they were flaky. Local owner-test package only; no commit, push, tag, release, or Marketplace publish.
 
 <!-- Entries before 2026-09 archived to docs/WORKLOG_ARCHIVE.md. Keep this file < 600 lines. -->

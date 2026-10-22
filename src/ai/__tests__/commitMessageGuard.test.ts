@@ -115,6 +115,17 @@ describe("ai/commitMessageGuard — Test #6 edge (language detection)", () => {
       reasons: [],
     });
   });
+  it("accepts a clear Vietnamese commit phrase without diacritics", () => {
+    expect(
+      checkCommitMessage("feat(db): them chi muc cho bang users"),
+    ).toEqual({ ok: true, reasons: [] });
+  });
+
+  it("accepts decomposed Vietnamese diacritics after canonical normalization", () => {
+    expect(
+      checkCommitMessage("feat(db): thêm chỉ mục cho bảng users".normalize("NFD")),
+    ).toEqual({ ok: true, reasons: [] });
+  });
 });
 
 describe("ai/commitMessageGuard — Test #7 edge (word boundaries 12/13, 100/101)", () => {

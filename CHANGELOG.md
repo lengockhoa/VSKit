@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.55.11] — 2026-10-22
+
+- Generate Commit Message diagnostics now include per-attempt sanitization/guard timings plus the OMP engine setup duration; normalize unaccented Vietnamese text in the commit-message guard.
+- Package the completed diagnostics, SCM/freshness safeguards, OMP retry lifecycle, and U-plus-sparkle icon for owner-side latency capture.
+
 ## [1.55.10] — 2026-10-21
 
 - Generate Commit Message has opt-in, metadata-only timing diagnostics. Enable `VSKit.ai.commitGenDiagnostics` (default `false`) and run `VSKit: Show Commit Message Diagnostics` to open `VSKit: Commit Message Diagnostics` in the VS Code Output panel.

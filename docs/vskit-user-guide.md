@@ -13,12 +13,16 @@ bash scripts/build.sh
 For the current package version, install with:
 
 ```bash
-code --install-extension "$(pwd)/dist/vskit-1.55.10.vsix"
+code --install-extension "$(pwd)/dist/vskit-1.55.11.vsix"
 ```
 
 To install on another machine, copy the `.vsix` file there, open VS Code's Command Palette, run `Extensions: Install from VSIX...`, and select the file. Reload VS Code if prompted.
 
-The latest VSKit VSIX is distributed from GitHub Releases; Marketplace listing availability has not been verified.
+The latest released VSKit VSIX is distributed from GitHub Releases (`v1.55.11`); the Marketplace listing remains paused/unverified.
+
+### Generate Commit Message diagnostics
+
+Diagnostics are off by default. On the owner machine, enable `VSKit.ai.commitGenDiagnostics` in VS Code Settings, run **VSKit: Generate Commit Message** once, then run **VSKit: Show Commit Message Diagnostics** and copy the `VSKit: Commit Message Diagnostics` Output Channel. The channel records metadata and timings only; it does not include prompts, diffs, source, credentials, or generated response text.
 
 ### Dữ liệu từ cài đặt trước
 

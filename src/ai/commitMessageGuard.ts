@@ -57,6 +57,7 @@ const VN_WORD_MARKERS: readonly string[] = [
   "kien truc",
   "phan mem",
   "ung dung",
+  "them chi muc",
 ];
 
 /** Reasoning line-openers — SPEC §7 rule 5b. */
@@ -131,10 +132,12 @@ function hasReasoningMarker(candidate: string): boolean {
 }
 
 function isNotVietnamese(candidate: string): boolean {
-  if (VN_DIACRITIC_RE.test(candidate)) return false;
+  const normalized = candidate.normalize("NFC");
+  if (VN_DIACRITIC_RE.test(normalized)) return false;
+  const lowered = normalized.toLocaleLowerCase("vi");
   for (const marker of VN_WORD_MARKERS) {
     const re = new RegExp(`\\b${marker}\\b`, "i");
-    if (re.test(candidate)) return false;
+    if (re.test(lowered)) return false;
   }
   return true;
 }
