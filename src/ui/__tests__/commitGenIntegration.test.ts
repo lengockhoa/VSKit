@@ -113,7 +113,7 @@ function providerOk(text: string): ProviderResult {
 // 1. Manifest scan — command + scm/title menu agree on the frozen id/shape.
 // =============================================================================
 describe("TASK-GC-008 #1 manifest ↔ command id agreement", () => {
-  it("command entry has $(sparkle)/title/category, and the menu entry exists in scm/title with the frozen when clause", () => {
+  it("command entry uses the U-plus-sparkle SVG icon/title/category, and the menu entry exists in scm/title with the frozen when clause", () => {
     const json = loadManifest();
     const commands = json.contributes.commands ?? [];
     const menus = json.contributes.menus ?? {};

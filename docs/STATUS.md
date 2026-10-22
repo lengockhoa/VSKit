@@ -9,18 +9,19 @@
 
 ## Snapshot
 
-- Focus: VSKit `1.55.12` is the owner diagnostic-capture package at `dist/vskit-1.55.12.vsix`, distinct from `1.55.11`. Diagnostics are opt-in. The monochrome U-plus-sparkle asset is included and matches the SVG source; actual VS Code icon UI and owner latency capture remain pending.
-- Verification: `npm run verify:fast` passed; focused changed-path coverage passed 263/263 across 5 files; release hygiene passed 17/17; VSIX packaging and isolated-profile install passed. The final VSIX is 2,279,304 bytes, SHA-256 `c409a2c3de82271d05186642bd22de59e5d46d68502aa6fac05defba55d04529`; packaged command/default-off setting, extension bundle, and icon asset verified. Three earlier full-suite failures remain unexplained; full suite not rerun.
-- Distribution: GitHub release `v1.55.12` carries this owner-test package. No Marketplace publish. The implementation code was already released as `v1.55.11`. No runtime speedup is claimed.
+- Focus: VSKit `1.55.13` is the owner diagnostic-capture package at `dist/vskit-1.55.13.vsix`. Diagnostics are opt-in; the package contains the U-plus-separated-sparkle SVG. Packaged version, command, default-off setting, owner instructions, and icon/source hash match are verified. Actual VS Code icon UI and owner latency capture remain pending.
+- Verification: focused commit-generation tests passed 47/47 across 3 files; `npm run typecheck` and `npm run compile` passed. The single `npm run verify:release` attempt ran the full suite and failed the 200 KB SQL parser timing threshold (53.47 ms vs <50 ms); 318 test files passed and 2 were skipped. Earlier full-suite failures remain undetermined; no rerun or flaky-test conclusion. Final VSIX: 2,279,284 bytes, SHA-256 `ea9dd821402ba8c8f7e5bd0a4c3f1090cf2dd58b28a0a9ffe6cfc80284eb1db7`.
+- Distribution: package is ready for owner transfer; Marketplace publication remains paused. No speedup is claimed.
 
 ## Active Work
 
-- Owner follow-up: transfer `dist/vskit-1.55.12.vsix` to the separate owner machine; run **Extensions: Install from VSIX...**; enable `VSKit.ai.commitGenDiagnostics`; generate one commit message; run **VSKit: Show Commit Message Diagnostics** and copy the `VSKit: Commit Message Diagnostics` log; capture the icon in VS Code. UI verification is pending: the isolated VS Code screenshot showed only the welcome page; Orca reported `window_not_focused` despite granted accessibility/screenshot permissions, so the target icon surface could not be reached. Runtime latency measurement remains pending.
+- The full-suite gate is not green because of the 200 KB SQL parser timing threshold; its cause remains undetermined and no rerun was performed. Focused commit-generation tests, typecheck, compile, and final VSIX checks passed.
+- Owner follow-up: transfer the final `.vsix` to the separate owner machine; run **Extensions: Install from VSIX...**; enable `VSKit.ai.commitGenDiagnostics`; generate one commit message; run **VSKit: Show Commit Message Diagnostics** and copy the `VSKit: Commit Message Diagnostics` Output Channel; capture the icon in VS Code. UI verification and runtime latency measurement remain pending.
 
 ## Technical notes
 
 - Commit generation diagnostics are metadata-only and must stay default-off. Keep phase timings and request correlation IDs; never log secrets, prompt, diff, source, or response.
-- OMP retry lifecycle regression: the current guarded generation reuses one one-shot engine across attempt 1 and attempt 2, then disposes once; cancellation/timeout cleanup remains covered. No additional lifecycle change was warranted.
+- OMP retry lifecycle regression was reproduced against pre-fix code and passes against current code: one engine is reused across guard retries and disposed once after the guarded flow; cancellation/timeout cleanup remains covered.
 
 ## Recent AI Chat maintenance
 

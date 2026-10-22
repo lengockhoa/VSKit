@@ -13,16 +13,16 @@ bash scripts/build.sh
 For the current package version, install with:
 
 ```bash
-code --install-extension "$(pwd)/dist/vskit-1.55.12.vsix"
+code --install-extension "$(pwd)/dist/vskit-1.55.13.vsix"
 ```
 
 To install on another machine, copy the `.vsix` file there, open VS Code's Command Palette, run `Extensions: Install from VSIX...`, and select the file. Reload VS Code if prompted.
 
-The current owner diagnostic-capture package is `1.55.12` (GitHub release `v1.55.12`), following the implementation release `v1.55.11`; Marketplace listing availability remains unverified and publication is paused.
+The current owner diagnostic-capture package is `1.55.13`; Marketplace publication remains paused.
 
-### Generate Commit Message diagnostics
+### Diagnostics cho nút sparkle
 
-Diagnostics are off by default. On the owner machine, enable `VSKit.ai.commitGenDiagnostics` in VS Code Settings, run **VSKit: Generate Commit Message** once, then run **VSKit: Show Commit Message Diagnostics** and copy the `VSKit: Commit Message Diagnostics` Output Channel. The channel records metadata and timings only; it does not include prompts, diffs, source, credentials, or generated response text.
+Diagnostics are off by default. On the owner machine, enable `VSKit.ai.commitGenDiagnostics` in VS Code Settings, run the sparkle command (`VSKit.generateCommitMessage`) once, then run **VSKit: Show Commit Message Diagnostics** and copy the `VSKit: Commit Message Diagnostics` Output Channel. The channel records metadata and timings only; it does not include prompts, diffs, source, credentials, or generated response text.
 
 ### Dữ liệu từ cài đặt trước
 

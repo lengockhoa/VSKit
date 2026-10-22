@@ -4,7 +4,7 @@
 
 GitHub releases `v1.55.6` through `v1.55.12` retain their VSIX assets. Marketplace publication is paused.
 
-The `v1.55.12` release carries the owner diagnostic-capture package `vskit-1.55.12.vsix` (2,279,304 bytes; SHA-256 `c409a2c3de82271d05186642bd22de59e5d46d68502aa6fac05defba55d04529`, matching the GitHub asset digest). It contains the completed diagnostics, SCM/freshness safeguards, OMP retry lifecycle, and U-plus-sparkle icon. No runtime speedup is claimed. Marketplace publication remains paused. VS Code icon UI verification is pending; the prior UI attempt showed only the Welcome page.
+The current locally packaged owner diagnostic-capture candidate is `1.55.13`: `dist/vskit-1.55.13.vsix` (2,279,284 bytes; SHA-256 `ea9dd821402ba8c8f7e5bd0a4c3f1090cf2dd58b28a0a9ffe6cfc80284eb1db7`). Its packaged manifest confirms the Generate Commit Message SVG command icon and default-off diagnostics. The v1.55.13 GitHub release has not yet been created; the v1.55.12 published asset remains unchanged. VS Code icon UI verification and owner-side latency measurement are pending; no runtime speedup is claimed.
 
 Earlier ship history: `v1.55.7` pushed commit `bbab82b`; `v1.55.8` pushed commit `528b279`; `v1.55.10` pushed commit `100f3ba`; and `v1.55.11` included `vskit-1.55.11.vsix` (SHA-256 `e017f0a7a08041e815f8272a9c0b0d468388f7006f52d8a31eca434378884ca9`). The release workflow is `.github/workflows/ci.yml`; it runs verification only and does not publish a package.
 
@@ -17,17 +17,14 @@ From the repository root, the build script runs the checks in dependency order
 bash scripts/build.sh
 ```
 
-With the current manifest version `1.55.12`, the expected local artifact is
-`dist/vskit-1.55.12.vsix`. Packaging itself does not publish it.
+With the current manifest version `1.55.13`, the expected local artifact is
+`dist/vskit-1.55.13.vsix`. Packaging itself does not publish it.
 
 ```bash
-code --install-extension "$(pwd)/dist/vskit-1.55.12.vsix"
+code --install-extension "$(pwd)/dist/vskit-1.55.13.vsix"
 ```
 
-The package identity is `lengockhoa.vskit`; the package name is lowercase
-`vskit`. The `vskit-1.55.12.vsix` artifact is the owner diagnostic-capture
-package distributed as GitHub release `v1.55.12`. Marketplace listing
-availability remains unverified; publication is paused.
+The package identity is `lengockhoa.vskit`; the package name is lowercase `vskit`. The current local `dist/vskit-1.55.13.vsix` is the owner-test package and has not been uploaded. The previous published GitHub asset is the original `v1.55.12` package described above. Marketplace listing availability remains unverified; publication is paused.
 
 ## Version policy during this conversion
 

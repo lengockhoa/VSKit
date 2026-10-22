@@ -817,6 +817,8 @@ describe("ai/commitGenCommand — guard flow (SPEC §8.4/§8.5)", () => {
   });
 
   // Row 3a — the real one-shot adapter must survive the guard retry.
+  // UKIT_EVIDENCE root-cause — REJECTED: shutdown on attempt 1 would make the retry mock throw before it can return attempt 2.
+  // UKIT_EVIDENCE root-cause — SURVIVING: both guard attempts reuse one OMP turn; the outer finally disposes it once after the guarded flow settles.
   it("omp: keeps its engine alive through retry and disposes it after the final attempt", async () => {
     const settings = fakeSettings({ engine: "omp", lite: { modelId: "lite-1" } });
     const detection: OmpDetection = {

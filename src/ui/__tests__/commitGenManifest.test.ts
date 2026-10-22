@@ -1,13 +1,13 @@
 // src/ui/__tests__/commitGenManifest.test.ts
-// TASK-GC-004 — manifest guards for the "Generate Commit Message" sparkle.
+// TASK-GC-004 — manifest guards for the U-plus-separated-sparkle Generate Commit Message icon.
 //
 // Asserts that `package.json` declares:
 //   - `contributes.commands` contains
-//     { command: "VSKit.generateCommitMessage", title: "Generate Commit Message",
-//       category: "VSKit", icon: "$(sparkle)" }
+//     { command: "VSKit.generateCommitMessage", title: "VSKit: Generate Commit Message",
+//       category: "VSKit", icon: { light: "media/commit-spark.svg", dark: "media/commit-spark.svg" } }
 //   - `contributes.menus["scm/title"]` contains
 //     { command: "VSKit.generateCommitMessage", group: "navigation",
-//       when: "scmProvider == git && scmProviderHasChanges" }
+//       when: "scmProvider == git" }
 //   - The full set of locked command ids is still fully present (superset guard, not a
 //     frozen count — unrelated command churn must not false-fail).
 //   - The new command id appears exactly once.
@@ -102,9 +102,9 @@ function loadManifest(): Manifest {
   return JSON.parse(raw) as Manifest;
 }
 
-describe("TASK-GC-004 — package.json manifest guards for the Generate Commit Message sparkle", () => {
+describe("TASK-GC-004 — package.json manifest guards for Generate Commit Message", () => {
   // ---- Case 1 — happy ----------------------------------------------------
-  it("case 1: command declared with icon + category (exact shape)", () => {
+  it("case 1: command declared with the U-plus-sparkle SVG icon + category (exact shape)", () => {
     const json = loadManifest();
     const commands = json.contributes.commands ?? [];
     const entry = commands.find((c) => c.command === NEW_COMMAND_ID);

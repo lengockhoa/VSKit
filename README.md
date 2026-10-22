@@ -34,13 +34,13 @@ Download the `vskit-<version>.vsix` asset from the
 macOS / Linux:
 
 ```bash
-code --install-extension ~/Downloads/vskit-1.55.12.vsix
+code --install-extension ~/Downloads/vskit-1.55.13.vsix
 ```
 
 Windows (PowerShell):
 
 ```powershell
-code --install-extension "$HOME\Downloads\vskit-1.55.12.vsix"
+code --install-extension "$HOME\Downloads\vskit-1.55.13.vsix"
 ```
 
 GUI: **Extensions view** (`Cmd+Shift+X` / `Ctrl+Shift+X`) → **…** menu → **Install from VSIX…** → pick the
@@ -247,12 +247,11 @@ Build and package:
 ```bash
 bash scripts/build.sh
 # Artifact naming convention: `dist/vskit-<version>.vsix`.
-# Current owner diagnostic-capture package (1.55.12): `dist/vskit-1.55.12.vsix`.
+# Current owner diagnostic-capture package (1.55.13): `dist/vskit-1.55.13.vsix`.
 ```
 
 VSIX packaging supports local testing and GitHub release distribution. The current owner diagnostic-capture
-artifact is `dist/vskit-1.55.12.vsix` (GitHub release `v1.55.12`). Marketplace listing availability is
-unverified and publication is paused.
+artifact is `dist/vskit-1.55.13.vsix` (GitHub release `v1.55.13`). Marketplace publication remains paused.
 
 See `docs/RELEASE.md` for package verification, release steps, and current limitations.
 ---

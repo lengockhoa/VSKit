@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.55.13] — 2026-10-22
+
+- Owner diagnostic-capture package with the U-plus-separated-sparkle command icon restored in the manifest; no runtime code changes. Marketplace publication remains paused.
+
 ## [1.55.12] — 2026-10-22
 
 - Owner-side diagnostic-capture VSIX `1.55.12`; no runtime code changes. Distributed as GitHub release `v1.55.12`; Marketplace publication remains paused.
