@@ -9,27 +9,20 @@
 
 ## Snapshot
 
-- Focus: VSKit `1.55.14` is the current package at `dist/vskit-1.55.14.vsix`. The Generate Commit Message SCM button now uses the built-in `$(edit)` codicon (theme-colored, dark-mode visible) instead of the U-plus-sparkle SVG; command id, title, SCM menu, and handler are unchanged. Diagnostics remain opt-in and default-off.
-- Verification: full release gate green (`npm test` 4,832 tests + `typecheck` + `compile`); packaged-manifest inside the final VSIX confirms `icon: "$(edit)"` and zero `commit-spark` references. Final VSIX: 2,279,410 bytes, SHA-256 `ef681af7dfdc0016266ee02e6852b27d281bc362b7ffed48eca42715022cc1e8`. Actual VS Code dark-mode icon UI verification remains pending for the owner.
-- Distribution: GitHub release `v1.55.14` at https://github.com/lengockhoa/VSKit/releases/tag/v1.55.14 carries the verified VSIX; Marketplace publication remains paused. No runtime speedup is claimed.
+- Focus: VSKit `1.55.15` ships the measured Generate Commit Message (omp engine) speed fix: the one-shot `omp acp` spawn pins `defaultThinkingLevel: low` via a `--config` overlay for that process only and adds `--no-session`; `which omp`/`omp --version` are cached per activation; the ACP startup version probe runs parallel to the handshake; an omp build rejecting the flags falls back once without them (traced `omp.overlay.unsupported`).
+- Verification: `bash scripts/build.sh` green end-to-end (typecheck + compile + 4,834 tests passed / 5 skipped + package). Final VSIX `dist/vskit-1.55.15.vsix`, 2,280,302 bytes, SHA-256 `e81c71eecbb2a3b7fba95017891ea0ca63670551ef756c19ed6671a498156ebc`; packaged manifest `lengockhoa.vskit` `1.55.15` with `VSKit.generateCommitMessage` intact.
+- Distribution: GitHub release `v1.55.15` carries the verified VSIX; Marketplace publication remains paused.
 
 ## Active Work
 
-- The full-suite gate ran green this cycle (the earlier 200 KB SQL parser timing-threshold failure did not recur).
-- Owner follow-up: install `vskit-1.55.14.vsix` from GitHub release `v1.55.14` (or the one-line installer), switch VS Code to dark mode, open a Git repository, and confirm the Source Control title-bar button shows the pencil (`edit`) codicon with tooltip **VSKit: Generate Commit Message**. Runtime latency capture remains pending.
+- Owner follow-up: install `vskit-1.55.15.vsix` from GitHub release `v1.55.15` (or `bash scripts/install-vskit.sh --local <file>`), then re-test Generate Commit Message latency on the real machine with `VSKit.ai.commitGenDiagnostics` enabled if desired. Expected: a few seconds for small diffs (measured 2.1–3.5s omp turn + ~0.3–0.7s wiring on the dev machine; upstream floor 1.7–2.5s). User-machine numbers still pending — no claim about their exact upstream.
+- If the user's configured engine is `builtin`, the flow was already a single bounded request; no changes were needed there.
 
 ## Technical notes
 
-- Commit generation diagnostics are metadata-only and must stay default-off. Keep phase timings and request correlation IDs; never log secrets, prompt, diff, source, or response.
-- OMP retry lifecycle regression was reproduced against pre-fix code and passes against current code: one engine is reused across guard retries and disposed once after the guarded flow; cancellation/timeout cleanup remains covered.
-
-## Recent AI Chat maintenance
-
-- Composer uses explicit grid-row placement to stay compact and pinned above the hint row; transcript remains the scroll region.
-- Auto-scroll follows render updates while respecting user scroll-up and composer focus.
-- Tool activity timeline uses status indicators, Bash input/output blocks, and text-only rendering.
-- Copy/edit/retry/message menu actions use the live message snapshot and existing draft/retry flows.
-- Relevant implementation areas: `webview/aiChat/`, `webview/aiChatPanelMain.ts`, and `src/ui/aiChatPanel.ts`.
+- Measurement evidence (dev machine, omp 18.12.5, unic-lite, 4-line diff, tiny repo): omp default `defaultThinkingLevel: high` → 4.2–7.5s/click; thinking `low` → 2.1–3.5s; raw single-shot request to the same model+input → 1.7–2.5s; warm session reuse does NOT help (history grows). VSKit wiring overhead per click ≈ 0.6–0.7s (spawn+handshake+session/new+teardown 20–35ms).
+- Diff input stays capped at 12 KB (`GIT_DIFF_MAX_BYTES`); guard retry-once and 120s timeout/cancel semantics unchanged. No secrets, diff, or prompt content enters logs (metadata-only diagnostics, default-off).
+- Full-suite run in this cycle had one unrelated timing-sensitive failure (`webviewServerSort` debounce race under parallel load) that passed 14/14 in isolation with zero webview files in the diff; the final build gate ran fully green.
 
 ## Technical notes
 

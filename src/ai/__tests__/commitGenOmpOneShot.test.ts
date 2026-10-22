@@ -7,9 +7,11 @@
 import { describe, it, expect, vi } from "vitest";
 import {
   answerCommitGenServerRequest,
+  buildCommitGenOmpExtraArgs,
   driveCommitGenOneShot,
   createCommitGenOmpTurn,
   COMMIT_GEN_OMP_TIMEOUT_MS,
+  COMMIT_GEN_THINKING_OVERLAY_YML,
   type CommitGenOneShotEvents,
 } from "../commitGenOmpOneShot";
 import type { AcpServerRequest } from "../omp/acp";
@@ -242,5 +244,25 @@ describe("createCommitGenOmpTurn — OmpOneShot.cancel reaches the live driver",
 
     expect(() => turn.cancel()).not.toThrow();
     expect(shutdown).not.toHaveBeenCalled();
+  });
+});
+
+// ---- commit-gen speed argv ---------------------------------------------------
+
+describe("buildCommitGenOmpExtraArgs — commit-gen speed argv", () => {
+  it("with an overlay path: --config=<path> first, then --no-session", () => {
+    const args = buildCommitGenOmpExtraArgs("/tmp/vskit-commitgen-thinking.yml");
+    expect(args).toEqual([
+      "--config=/tmp/vskit-commitgen-thinking.yml",
+      "--no-session",
+    ]);
+  });
+
+  it("without an overlay path (unwritable tmp): only --no-session", () => {
+    expect(buildCommitGenOmpExtraArgs(null)).toEqual(["--no-session"]);
+  });
+
+  it("overlay pins defaultThinkingLevel low without touching the user model", () => {
+    expect(COMMIT_GEN_THINKING_OVERLAY_YML).toBe("defaultThinkingLevel: low\n");
   });
 });

@@ -81,6 +81,14 @@ export interface AcpProcessOptions {
    * every existing caller/test that omits it keeps today's behavior exactly.
    */
   mcpServers?: ReadonlyArray<Record<string, unknown>>;
+  /**
+   * Commit-gen speed: extra CLI args appended verbatim after the model/cwd
+   * tokens (e.g. `--config=<overlay>`, `--no-session`). Callers that omit it
+   * keep today's argv exactly. Old omp builds that reject an unknown flag
+   * fail during the handshake — the commit-gen host retries once without
+   * extras, so the worst case is one failed spawn, never a hang.
+   */
+  extraArgs?: ReadonlyArray<string>;
 }
 
 export interface AcpStartHandlers {
@@ -228,6 +236,9 @@ export class AcpProcess {
     if (this.opts.supportCwdFlag) {
       args.push("--cwd", this.opts.cwd);
     }
+    if (this.opts.extraArgs && this.opts.extraArgs.length > 0) {
+      args.push(...this.opts.extraArgs);
+    }
 
     const isWin32 = process.platform === "win32";
     // Review Finding 1 (fix round 2): with `shell: true` on win32, Node
@@ -334,6 +345,15 @@ export class AcpProcess {
     // fired on real exit.
     this.acp = acp;
 
+    // Commit-gen speed: kick the best-effort `omp --version` probe off NOW,
+    // in parallel with the handshake, instead of after `session/new`. It is
+    // independent of the wire flow; the value is consumed below exactly as
+    // before (agent-reported version still wins). Best-effort — any failure
+    // resolves to "" and the version stays "unknown".
+    const versionProbe: Promise<string> = Promise.resolve()
+      .then(() => this.execFn(`${ompPath} --version`))
+      .catch(() => "");
+
     try {
       const initResult = (await Promise.race([
         acp.request("initialize", {
@@ -383,15 +403,16 @@ export class AcpProcess {
         : "";
 
       // Surface omp version through execFn (best-effort; ignored on failure).
+      // The probe started in parallel with the handshake above — by the time
+      // `session/new` has settled it is almost always already resolved, so
+      // this await no longer sits on the ready critical path.
       let version = "unknown";
-      try {
-        const raw = await this.execFn(`${ompPath} --version`);
-        const match = raw.match(/omp\/(\S+)/);
+      const probed = await versionProbe;
+      if (probed) {
+        const match = probed.match(/omp\/(\S+)/);
         if (match !== null && match[1] !== undefined) {
           version = match[1];
         }
-      } catch {
-        /* keep "unknown" */
       }
       // Prefer agent-reported version if available.
       const agentVersion = initResult.agentInfo?.version;

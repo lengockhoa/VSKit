@@ -5,6 +5,7 @@ import {
   OMP_INSTALL_HINT,
   OMP_UPDATE_HINT,
   compareVersions,
+  createCachedOmpDetector,
   detectOmp,
   type OmpDetection,
 } from "../detect";
@@ -169,5 +170,53 @@ describe("constants — frozen values", () => {
   });
   it("OMP_UPDATE_HINT is 'omp update'", () => {
     expect(OMP_UPDATE_HINT).toBe("omp update");
+  });
+});
+
+describe("createCachedOmpDetector — commit-gen speed cache", () => {
+  const okDetection: OmpDetection = {
+    available: true,
+    ok: true,
+    path: "/usr/local/bin/omp",
+    version: "18.12.5",
+  };
+
+  it("caches an ok detection — the probe runs exactly once across calls", async () => {
+    let probeCalls = 0;
+    const probe = vi.fn(async () => {
+      probeCalls += 1;
+      return okDetection;
+    });
+    const cached = createCachedOmpDetector(probe);
+
+    const first = await cached();
+    const second = await cached();
+    const third = await cached();
+
+    expect(probeCalls).toBe(1);
+    expect(first).toEqual(okDetection);
+    expect(second).toEqual(okDetection);
+    expect(third).toEqual(okDetection);
+  });
+
+  it("does NOT cache failures — a not-installed result is re-probed next click", async () => {
+    const notInstalled: OmpDetection = {
+      available: false,
+      ok: false,
+      reason: "not-installed",
+    };
+    let probeCalls = 0;
+    const probe = vi.fn(async () => {
+      probeCalls += 1;
+      return probeCalls === 1 ? notInstalled : okDetection;
+    });
+    const cached = createCachedOmpDetector(probe);
+
+    const first = await cached();
+    const second = await cached();
+
+    expect(probeCalls).toBe(2);
+    expect(first).toEqual(notInstalled);
+    expect(second).toEqual(okDetection);
   });
 });

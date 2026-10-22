@@ -65,6 +65,9 @@ import {
 import { createCommitGenGate } from "./ai/commitGenGate";
 import {
   answerCommitGenServerRequest,
+  buildCommitGenOmpExtraArgs,
+  COMMIT_GEN_THINKING_OVERLAY_FILENAME,
+  COMMIT_GEN_THINKING_OVERLAY_YML,
   createCommitGenOmpTurn,
 } from "./ai/commitGenOmpOneShot";
 import { collectCommitDiff, getGitApi, isCommitDiffCurrent, pickRepository, repositoryFromCommandArgument, type GitRepositoryLike } from "./adapters/gitDiff";
@@ -78,7 +81,7 @@ import {
 } from "./ui/statementErrorMarks";
 import { HelpGridPanel } from "./ui/helpGridPanel";
 import { AcpProcess, type AcpProcessHandle, type OmpEngineState } from "./ai/omp/acpProcess";
-import { detectOmp, OMP_INSTALL_HINT, OMP_UPDATE_HINT } from "./ai/omp/detect";
+import { createCachedOmpDetector, detectOmp, OMP_INSTALL_HINT, OMP_UPDATE_HINT } from "./ai/omp/detect";
 import {
   detectClaudeCode,
   CLAUDE_CODE_INSTALL_HINT,
@@ -101,6 +104,7 @@ import { createCodexChatEngine } from "./ai/codex/codexChatEngine";
 import { createClaudeCodeProcess } from "./ai/claudeCode/claudeCodeProcess";
 import { CodexProcess } from "./ai/codex/codexProcess";
 import { promises as fsp } from "node:fs";
+import * as os from "node:os";
 import * as path from "node:path";
 import { createMcpBridge } from "./ai/omp/mcpBridge";
 import {
@@ -192,6 +196,10 @@ let schemaTreeRefresher: ReturnType<typeof createDebouncedRefresher> | null = nu
  * second stacked progress notification.
  */
 const commitGenGate = createCommitGenGate();
+// Commit-gen speed: `which omp` + `omp --version` run once per activation
+// (first click), not on every click. Only ok-detections are cached, so a
+// fresh install/upgrade is picked up on the next click without a reload.
+const detectOmpCached = createCachedOmpDetector(() => detectOmp());
 let commitGenTraceSequence = 0;
 function normalizeCommitGenDiagnosticEngine(value: unknown): string {
   if (
@@ -2282,6 +2290,7 @@ function buildAcpDepsCreate(
   cwd: string,
   mcpServers?: ReadonlyArray<Record<string, unknown>>,
   modelId?: string,
+  extraArgs?: ReadonlyArray<string>,
 ): AcpProcess {
   return new AcpProcess({
     ompPath,
@@ -2289,6 +2298,7 @@ function buildAcpDepsCreate(
     supportCwdFlag: true,
     mcpServers,
     modelId,
+    extraArgs,
   });
 }
 async function commandOpenAiChat(
@@ -2622,7 +2632,7 @@ async function buildOmpChatEngine(
   };
   let handlePromise: Promise<AcpProcessHandle> | null = null;
   return createOmpChatEngine({
-    acp: adaptProcessToSession(acpProcess, ensureHandle),
+    acp: adaptProcessToSession(() => acpProcess, ensureHandle),
     hostMcp,
     cwd,
     mcpServers,
@@ -2775,7 +2785,10 @@ async function writeClaudeMcpConfigFile(
  * contract that cancel() before a session is a no-op latch).
  */
 function adaptProcessToSession(
-  acpProcess: AcpProcess,
+  // Getter, not a fixed instance: the commit-gen fallback path may start a
+  // second AcpProcess (without speed extras) when the first spawn fails, and
+  // dispose must target whichever process actually owns the live session.
+  getProcess: () => AcpProcess,
   ensureHandle: () => Promise<AcpProcessHandle>,
 ): AcpSession {
   const withHandle = async <T>(
@@ -2830,7 +2843,7 @@ function adaptProcessToSession(
         // AcpProcess.dispose is private; the public idempotent cancel() is
         // the pinned teardown seam — it transitions to "stopped", sends
         // the terminal signal, and settles the bounded teardown.
-        acpProcess.cancel();
+        getProcess().cancel();
       } catch {
         /* best-effort */
       }
@@ -4452,7 +4465,15 @@ function buildCommitGenNoopHostMcp(): CommitGenOmpHostMcp {
 
 /** One-shot omp adapter: spawns a fresh AcpProcess, drives
  * `createOmpChatEngine(...).send(...)`, buffers `onDelta` events, returns
- * the joined text on `onDone`. Throws on `onError`. */
+ * the joined text on `onDone`. Throws on `onError`.
+ *
+ * Commit-gen speed: the spawned process gets `--config=<overlay>` (thinking
+ * pinned low for this one-line task — measured 4.2–7.5s → 2.1–3.5s) and
+ * `--no-session` (one-shot turns are ephemeral; the diff-embedding prompt is
+ * never persisted to omp's session store). An omp build that rejects the
+ * unknown flag fails during the handshake; `ensureHandle` retries ONCE
+ * without the extras (traced), so old builds keep working at their old
+ * speed instead of erroring. */
 async function buildCommitGenOmpOneShot(
   ompPath: string,
   modelId: string,
@@ -4460,18 +4481,57 @@ async function buildCommitGenOmpOneShot(
 ): Promise<OmpOneShot> {
   const cwd =
     vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? process.cwd();
-  // Fresh AcpProcess per invocation; the engine owns its own lifecycle.
-  const acpProcess = buildAcpDepsCreate(ompPath, cwd, [], modelId);
+  // Best-effort overlay write: a read-only temp dir degrades to no overlay
+  // (plain --no-session) instead of failing the flow.
+  let overlayPath: string | null = null;
+  try {
+    const overlayFile = path.join(os.tmpdir(), COMMIT_GEN_THINKING_OVERLAY_FILENAME);
+    await fsp.writeFile(overlayFile, COMMIT_GEN_THINKING_OVERLAY_YML);
+    overlayPath = overlayFile;
+  } catch {
+    overlayPath = null;
+  }
+  const extraArgs = buildCommitGenOmpExtraArgs(overlayPath);
+  let overlayRejected = false;
+  // The process that owns the live session — reassigned when the compat
+  // fallback starts a fresh one without the speed extras.
+  let activeProcess: AcpProcess = buildAcpDepsCreate(
+    ompPath,
+    cwd,
+    [],
+    modelId,
+    extraArgs,
+  );
+  const startProcess = (
+    processToStart: AcpProcess,
+  ): Promise<AcpProcessHandle> => {
+    // Auto-answer ACP server requests (session/request_permission) so an
+    // unattended commit-gen turn never blocks on a permission prompt that
+    // nobody can see. Without this the unbounded session/prompt never
+    // settles and the progress spinner hangs forever.
+    return processToStart.start({
+      onServerRequest: (call) => answerCommitGenServerRequest(call),
+    });
+  };
   let handlePromise: Promise<AcpProcessHandle> | null = null;
   const ensureHandle = (): Promise<AcpProcessHandle> => {
     if (handlePromise === null) {
-      // Auto-answer ACP server requests (session/request_permission) so an
-      // unattended commit-gen turn never blocks on a permission prompt that
-      // nobody can see. Without this the unbounded session/prompt never
-      // settles and the progress spinner hangs forever.
       const setupStartedAt = trace ? performance.now() : 0;
-      const start = acpProcess.start({
-        onServerRequest: (call) => answerCommitGenServerRequest(call),
+      const start = startProcess(activeProcess).catch((error: unknown) => {
+        if (!overlayRejected) {
+          // Bounded compatibility fallback: the speed extras are the only
+          // behavioral delta of this spawn, so a pre-handshake failure is
+          // retried exactly once without them (old omp builds). Real auth /
+          // model errors pay one extra failed spawn (~hundreds of ms) and
+          // then surface unchanged.
+          overlayRejected = true;
+          trace?.emit("omp.overlay.unsupported", {
+            errorName: error instanceof Error ? error.name : typeof error,
+          });
+          activeProcess = buildAcpDepsCreate(ompPath, cwd, [], modelId);
+          return startProcess(activeProcess);
+        }
+        throw error;
       });
       handlePromise = trace
         ? start.then(
@@ -4501,7 +4561,7 @@ async function buildCommitGenOmpOneShot(
     }
     return handlePromise;
   };
-  const acp = adaptProcessToSession(acpProcess, ensureHandle);
+  const acp = adaptProcessToSession(() => activeProcess, ensureHandle);
   const noopHostMcp = buildCommitGenNoopHostMcp();
   const engine = createOmpChatEngine({
     acp,
@@ -4544,7 +4604,7 @@ function buildCommitGenDeps(
     loadSettings: () => aiStore.loadSettings(),
     trace,
     loadConfig: () => aiStore.loadConfig(),
-    detectOmp: () => detectOmp(),
+    detectOmp: () => detectOmpCached(),
     resolveEngine,
     buildOmpEngine: async (choice, modelId) => {
       const oneShot = await buildCommitGenOmpOneShot(

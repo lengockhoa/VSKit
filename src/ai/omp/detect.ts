@@ -131,3 +131,24 @@ export async function detectOmp(
 
   return { available: true, ok: true, path, version };
 }
+
+/**
+ * Commit-gen speed: memoize a probe so repeated Generate Commit Message
+ * clicks don't re-pay the two shell spawns (`which omp` + `omp --version`)
+ * on every invocation. Only `ok: true` results are cached — a missing/too-old
+ * binary is re-probed each time so a fresh install (or upgrade) is picked up
+ * on the very next click without an extension reload. Pure wrapper; the
+ * probe itself is injected so tests exercise the cache without spawning.
+ */
+export function createCachedOmpDetector(
+  probe: () => Promise<OmpDetection>,
+): () => Promise<OmpDetection> {
+  let cached: OmpDetection | null = null;
+  return () => {
+    if (cached !== null) return Promise.resolve(cached);
+    return probe().then((detection) => {
+      if (detection.ok) cached = detection;
+      return detection;
+    });
+  };
+}

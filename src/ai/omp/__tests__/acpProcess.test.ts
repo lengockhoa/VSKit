@@ -191,6 +191,57 @@ describe("AcpProcess", () => {
 
     expect(captured.args).toContain("--model=configured-lite-model");
   });
+  it("start appends extraArgs verbatim after the model/cwd tokens", async () => {
+    const proc = new AcpProcess(
+      {
+        ompPath: "omp",
+        cwd: "/tmp/proj",
+        supportCwdFlag: true,
+        modelId: "configured-lite-model",
+        extraArgs: ["--config=/tmp/vskit-commitgen-thinking.yml", "--no-session"],
+        execFn: async () => "omp/18.0.1\n",
+      },
+      captureSpawn(child, captured),
+    );
+
+    const startPromise = proc.start();
+    queueMicrotask(() => {
+      void driveHandshake(child);
+    });
+    await startPromise;
+
+    const args = captured.args ?? [];
+    expect(args).toContain("--config=/tmp/vskit-commitgen-thinking.yml");
+    expect(args).toContain("--no-session");
+    // Speed extras must land AFTER the model/cwd tokens so they remain the
+    // trailing, clearly-attributable segment of the argv.
+    const cwdIdx = args.indexOf("--cwd");
+    const noSessionIdx = args.indexOf("--no-session");
+    expect(cwdIdx).toBeGreaterThan(0);
+    expect(noSessionIdx).toBeGreaterThan(cwdIdx);
+  });
+  it("start omits extraArgs when the option is absent (argv unchanged)", async () => {
+    const proc = new AcpProcess(
+      {
+        ompPath: "omp",
+        cwd: "/tmp/proj",
+        supportCwdFlag: true,
+        modelId: "configured-lite-model",
+        execFn: async () => "omp/18.0.1\n",
+      },
+      captureSpawn(child, captured),
+    );
+
+    const startPromise = proc.start();
+    queueMicrotask(() => {
+      void driveHandshake(child);
+    });
+    await startPromise;
+
+    const args = captured.args ?? [];
+    expect(args).not.toContain("--no-session");
+    expect(args.some((a) => a.startsWith("--config="))).toBe(false);
+  });
 
   // `shell: true` (CVE-2024-27980 mitigation), so a detected-usable omp
   // would die with ENOENT on every real session start. `shell` must mirror

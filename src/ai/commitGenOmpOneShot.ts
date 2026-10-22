@@ -20,6 +20,38 @@ import type { AcpServerRequest } from "./omp/acp";
  *  point is that the turn ALWAYS settles (done, error, or this timeout). */
 export const COMMIT_GEN_OMP_TIMEOUT_MS = 120_000;
 
+// ---- speed: one-line task must not pay agent-tier reasoning -----------------
+//
+// Measured (2026-10-22, unic-lite over omp 18.12.5 ACP, 4-line diff, tiny
+// repo): a commit-gen turn at the profile default `defaultThinkingLevel: high`
+// took 4.2–7.5s end-to-end; the SAME turn at thinking `low` took 2.1–3.5s, and
+// a raw single-shot request to the same model+input (no omp scaffold) took
+// 1.7–2.5s. The commit prompt embeds the whole diff, so the reasoning pass is
+// pure latency for a one-line answer — commit-gen therefore spawns omp with a
+// `--config` overlay that pins `defaultThinkingLevel: low` for THIS process
+// only. The user's chat panel keeps their own setting.
+export const COMMIT_GEN_THINKING_OVERLAY_FILENAME = "vskit-commitgen-thinking.yml";
+export const COMMIT_GEN_THINKING_OVERLAY_YML = "defaultThinkingLevel: low\n";
+
+/**
+ * Pure argv tail appended to `omp acp` for commit-gen turns:
+ *   - `--config=<overlay>` pins thinking low for this process only (null
+ *     path ⇒ omitted: overlay file could not be written, e.g. read-only tmp).
+ *   - `--no-session` keeps one-shot commit turns ephemeral — nothing to
+ *     resume, so omp skips persisting the diff-embedding prompt to its
+ *     session store.
+ * Old omp builds that reject an unknown flag fail during the handshake; the
+ * host retries once WITHOUT extras (`withoutExtras`), so the worst case is
+ * one failed spawn, never a hang.
+ */
+export function buildCommitGenOmpExtraArgs(
+  overlayPath: string | null,
+): readonly string[] {
+  return overlayPath === null
+    ? ["--no-session"]
+    : [`--config=${overlayPath}`, "--no-session"];
+}
+
 /**
  * Answer one ACP server request from the commit-gen one-shot. The flow runs
  * unattended (progress spinner, no permission UI), so any request left

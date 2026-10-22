@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.55.15] — 2026-10-22
+
+- Generate Commit Message (omp engine) speed: the one-shot `omp acp` spawn now pins `defaultThinkingLevel: low` via a `--config` overlay for that process only (measured 4.2–7.5s → 2.1–3.5s per click on a reasoning Lite model) and adds `--no-session` so the diff-embedding one-shot prompt is never persisted to omp's session store. An omp build that rejects the unknown flags falls back once to the previous spawn (traced as `omp.overlay.unsupported`), so behavior never hangs or errors.
+- Commit-gen no longer re-runs `which omp` + `omp --version` on every click — ok-detections are cached for the activation; the best-effort version probe inside ACP startup now runs in parallel with the handshake instead of after `session/new`. Chat panel behavior unchanged.
+- Marketplace publication remains paused.
+
 ## [1.55.14] — 2026-10-22
 
 - Generate Commit Message SCM button now uses the built-in `$(edit)` codicon instead of `media/commit-spark.svg`, so the icon renders with the theme foreground color and stays clearly visible in dark mode. Command id, title, SCM menu entry, and handler are unchanged; no runtime code changes. Marketplace publication remains paused.
