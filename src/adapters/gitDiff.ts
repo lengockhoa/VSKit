@@ -7,7 +7,7 @@
 // `pickRepository()` + `collectCommitDiff()` + `repo.inputBox.value` to drive
 // the "Generate Commit Message" SCM sparkle.
 //
-// Frozen strings/values: see `docs/AI_HANDOFF/PLAN.md` §1 + TASK-GC-002.
+// Owner contract (2026-10-27): 4 KiB byte budget, bounded file/path lists, generated hunks omitted when source exists.
 import { createHash } from "node:crypto";
 import * as vscode from "vscode";
 
@@ -60,8 +60,10 @@ export type GitDiffTrace = (
 // Constants
 // ---------------------------------------------------------------------------
 
-/** Maximum UTF-8 bytes of diff text carried into the prompt. */
-export const GIT_DIFF_MAX_BYTES = 12_288;
+/** 2–4 KiB owner budget, measured in UTF-8 bytes (not tokens). */
+export const GIT_DIFF_MAX_BYTES = 4_096;
+export const MAX_COMMIT_FILES = 40;
+export const MAX_COMMIT_PATH_CHARS = 100;
 
 const SUMMARY_HEADER = "Changed files:\n";
 const SUMMARY_MAX_BYTES = Math.floor(GIT_DIFF_MAX_BYTES / 3);
@@ -111,15 +113,20 @@ function takeCompleteLines(text: string, maxBytes: number, totalBytes: number): 
   return text.slice(0, end);
 }
 
-function summaryRow(section: string, path: string): string {
+function summaryRow(section: string, path: string, generatedOmitted = false): string {
   const hunkStart = section.search(/^@@ /m);
   const header = hunkStart < 0 ? section : section.slice(0, hunkStart);
   const status = header.match(/^(?:rename from|rename to|deleted file mode|new file mode|Binary files|GIT binary patch).*$/gm) ?? [];
-  return `- ${path}${status.length ? ` (${status.join("; ")})` : ""}`;
+  const details = [...status, ...(generatedOmitted ? ["generated — content omitted"] : [])];
+  return `- ${path}${details.length ? ` (${details.join("; ")})` : ""}`;
 }
 
-function fileSummary(sections: string[], paths: string[]): string {
-  const rows = sections.map((section, index) => summaryRow(section, paths[index]));
+function fileSummary(sections: string[], paths: string[], omitGenerated = false): string {
+  const rows = sections.map((section, index) => summaryRow(
+    section,
+    paths[index],
+    omitGenerated && fileClass(paths[index]) === "generated",
+  ));
   const included: string[] = [];
   let usedBytes = utf8Bytes(SUMMARY_HEADER);
   let omitted = 0;
@@ -154,7 +161,8 @@ function boundedDiff(text: string): string {
   }
 
   const paths = sections.map(diffFilePath);
-  const summary = fileSummary(sections, paths);
+  const omitGenerated = paths.some((path) => fileClass(path) === "source");
+  const summary = fileSummary(sections, paths, omitGenerated);
   const truncationMarker = (count: number) => `\n… [partial diff; ${count} file(s) truncated]`;
   const markerReserve = utf8Bytes(truncationMarker(sections.length));
   const bodyBudget = Math.max(0, GIT_DIFF_MAX_BYTES - utf8Bytes(summary) - markerReserve);
@@ -162,7 +170,14 @@ function boundedDiff(text: string): string {
   const body = new Array<string>(sections.length).fill("");
   const bodyBytes = new Array<number>(sections.length).fill(0);
   let remaining = bodyBudget;
-  let active = sections.map((_, index) => index);
+  let active = sections.map((_, index) => index).filter((index) =>
+    !(omitGenerated && fileClass(paths[index]) === "generated"),
+  );
+  if (omitGenerated) {
+    sections.forEach((_, index) => {
+      if (fileClass(paths[index]) === "generated") bodyBytes[index] = sectionBytes[index];
+    });
+  }
 
   while (remaining > 0 && active.length) {
     const totalWeight = active.reduce((sum, index) => sum + (fileClass(paths[index]) === "source" ? 3 : 1), 0);
@@ -338,6 +353,8 @@ export async function collectCommitDiff(
         sentDiffBytes: 0,
         truncated: false,
         fileCount: 0,
+        filesOmitted: 0,
+        filesCapped: false,
       });
       return null;
     }
@@ -353,13 +370,17 @@ export async function collectCommitDiff(
     const rel = toRelativePath(rootFsPath, change.uri.fsPath);
     if (!rel || seen.has(rel)) return;
     seen.add(rel);
-    files.push(rel);
+    files.push(rel.length > MAX_COMMIT_PATH_CHARS
+      ? `${rel.slice(0, MAX_COMMIT_PATH_CHARS - 1)}…`
+      : rel);
   };
   const selectedChanges = stagedSelected
     ? state.indexChanges
     : [...(state.workingTreeChanges ?? []), ...(state.mergeChanges ?? [])];
   for (const c of selectedChanges ?? []) push(c);
 
+  const filesOmitted = Math.max(0, files.length - MAX_COMMIT_FILES);
+  const filesCapped = files.slice(0, MAX_COMMIT_FILES);
   const branch = state.HEAD && typeof state.HEAD.name === "string" ? state.HEAD.name : undefined;
 
   const diffText = truncateDiff(chosen);
@@ -373,13 +394,15 @@ export async function collectCommitDiff(
       originalDiffBytes: Buffer.byteLength(chosen, "utf8"),
       sentDiffBytes: Buffer.byteLength(diffText, "utf8"),
       truncated: diffText !== chosen,
-      fileCount: files.length,
+      fileCount: filesCapped.length,
+      filesOmitted,
+      filesCapped: filesOmitted > 0,
     });
   }
   return {
     repoName: repoNameFromFsPath(rootFsPath),
     branch,
-    files,
+    files: filesCapped,
     diffText,
     scope: stagedSelected ? "staged" : "unstaged",
     diffFingerprint,

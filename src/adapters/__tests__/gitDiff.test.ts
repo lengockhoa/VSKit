@@ -18,11 +18,14 @@ vi.mock("vscode", () => ({
 import * as vscode from "vscode";
 import {
   GIT_DIFF_MAX_BYTES,
+  MAX_COMMIT_FILES,
+  MAX_COMMIT_PATH_CHARS,
   collectCommitDiff,
   getGitApi,
   isCommitDiffCurrent,
   pickRepository,
   repositoryFromCommandArgument,
+  truncateDiff,
   type GitRepositoryLike,
 } from "../gitDiff";
 
@@ -173,6 +176,36 @@ describe("gitDiff — collectCommitDiff: fall back to unstaged", () => {
 // #4 — 12 KB truncation
 // ===========================================================================
 describe("gitDiff — collectCommitDiff: bounded per-file diff", () => {
+  it("enforces a 4 KiB UTF-8 byte budget", () => {
+    expect(GIT_DIFF_MAX_BYTES).toBe(4_096);
+  });
+
+  it("caps file paths by count and character length", async () => {
+    const changes = Array.from({ length: MAX_COMMIT_FILES + 5 }, (_, i) => ({ uri: { fsPath: `/repo/VSKit/src/${String(i).padStart(3, "0")}-${"x".repeat(MAX_COMMIT_PATH_CHARS + 20)}.ts` } }));
+    const events: Array<[string, Record<string, string | number | boolean>]> = [];
+    const result = await collectCommitDiff(makeRepo({ staged: "diff --git a/a.ts\n+change\n", indexChanges: changes }), (event, metadata) => events.push([event, { ...metadata }]));
+    expect(result?.files).toHaveLength(MAX_COMMIT_FILES);
+    expect(result?.files.every((file) => file.length <= MAX_COMMIT_PATH_CHARS)).toBe(true);
+    expect(events.find(([event]) => event === "git.diff.selected")?.[1]).toMatchObject({ filesOmitted: 5, filesCapped: true });
+  });
+
+  it("omits generated hunks when source hunks are available", () => {
+    const generated = `diff --git a/package-lock.json b/package-lock.json\n@@ -1 +1 @@\n+${"lock-content\n".repeat(1000)}`;
+    const source = `diff --git a/src/main.ts b/src/main.ts\n@@ -1 +1 @@\n+${"source-content\n".repeat(1000)}`;
+    const bounded = truncateDiff(generated + source);
+    expect(Buffer.byteLength(bounded, "utf8")).toBeLessThanOrEqual(GIT_DIFF_MAX_BYTES);
+    expect(bounded).toContain("package-lock.json (generated — content omitted)");
+    expect(bounded).toContain("src/main.ts");
+    expect(bounded).not.toContain("lock-content");
+    expect(bounded).toContain("source-content");
+  });
+
+  it("handles empty-diff trace with zero file-cap metadata", async () => {
+    const events: Array<[string, Record<string, string | number | boolean>]> = [];
+    await collectCommitDiff(makeRepo({ staged: "", unstaged: "" }), (event, metadata) => events.push([event, { ...metadata }]));
+    expect(events.find(([event]) => event === "git.diff.selected")?.[1]).toMatchObject({ fileCount: 0, filesOmitted: 0, filesCapped: false });
+  });
+
   it("keeps a complete file summary and useful hunks from files across an oversized diff", async () => {
     const first = `diff --git a/src/one.ts b/src/one.ts\nindex 1..2 100644\n--- a/src/one.ts\n+++ b/src/one.ts\n@@ -1 +1 @@\n-${"a".repeat(16000)}\n+first change\n`;
     const second = `diff --git a/src/two.ts b/src/two.ts\nindex 1..2 100644\n--- a/src/two.ts\n+++ b/src/two.ts\n@@ -1 +1 @@\n-old\n+second change\n`;

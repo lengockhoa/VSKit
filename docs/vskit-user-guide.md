@@ -13,16 +13,16 @@ bash scripts/build.sh
 For the current package version, install with:
 
 ```bash
-code --install-extension "$(pwd)/dist/vskit-1.55.14.vsix"
+code --install-extension "$(pwd)/dist/vskit-1.55.16.vsix"
 ```
 
 To install on another machine, copy the `.vsix` file there, open VS Code's Command Palette, run `Extensions: Install from VSIX...`, and select the file. Reload VS Code if prompted.
 
-The current package is `1.55.14` (SCM commit-message button uses the built-in `$(edit)` codicon for clear dark-mode visibility); Marketplace publication remains paused.
+The current package is `1.55.16` (commit-message sparkle reworked for speed: single-line output, one model call per click, direct-provider-first routing); Marketplace publication remains paused.
 
 ### Diagnostics cho nút commit-message
 
-Diagnostics are off by default. On the owner machine, enable `VSKit.ai.commitGenDiagnostics` in VS Code Settings, run the sparkle command (`VSKit.generateCommitMessage`) once, then run **VSKit: Show Commit Message Diagnostics** and copy the `VSKit: Commit Message Diagnostics` Output Channel. The channel records metadata and timings only; it does not include prompts, diffs, source, credentials, or generated response text.
+Diagnostics are off by default. On the owner machine, enable `VSKit.ai.commitGenDiagnostics` in VS Code Settings, run the sparkle command (`VSKit.generateCommitMessage`) once, then run **VSKit: Show Commit Message Diagnostics** and copy the `VSKit: Commit Message Diagnostics` Output Channel. The channel records metadata and timings only; it does not include prompts, diffs, source, credentials, or generated response text. Mỗi dòng ghi rõ route thực tế của lượt đó (`builtin-direct` = gọi thẳng provider, `omp-print` = omp one-shot) cùng timings theo phase (git/diff, setup, request, first_text, guard) — dùng để định vị đúng chỗ chậm nếu có timeout.
 
 ### Dữ liệu từ cài đặt trước
 
@@ -148,25 +148,41 @@ Các tùy chọn AI được khai báo gồm:
 
 Trên title bar của panel **Source Control** xuất hiện thêm một nút
 có biểu tượng bút chì (`$(edit)`, icon built-in của VS Code, tự theo màu theme —
-hiển thị rõ cả dark mode lẫn light mode) — bấm vào nút để VSKit tự sinh commit
-message theo chuẩn **Conventional Commits** rồi điền thẳng vào ô nhập
+hiển thị rõ cả dark mode lẫn light mode) — bấm vào nút để VSKit tự sinh một
+dòng commit message rồi điền thẳng vào ô nhập
 commit của SCM. Bạn chỉ cần review lại rồi bấm Commit.
 
 - Nút chỉ hiện khi repository đang có thay đổi git (file staged hoặc
   unstaged).
 - Nếu repo sạch, nút được disable và tooltip nhắc lý do.
-- Tin nhắn được sinh bằng **Lite Model** mà bạn đã cấu hình trong AI
-  Settings (mục tiếp theo). Model xử lý diff đã staged (ưu tiên) hoặc
-  unstaged, có giới hạn kích thước — repo cực lớn sẽ được truncate.
+- Ưu tiên diff đã staged; không có staged mới dùng unstaged. Diff được cắt
+  gọn còn khoảng 4 KiB (ưu tiên file source, giảm nội dung
+  lockfile/generated khi đã có file source trong changeset), nên lượt sinh
+  rất nhanh.
+- Tin nhắn được sinh bằng **Lite model** mà bạn đã cấu hình trong AI
+  Settings (mục tiếp theo).
+- Output là **một dòng ngắn** (mục tiêu 8–16 từ, tối đa 72 ký tự), ưu tiên
+  tiếng Việt, prefix Conventional Commits (`feat:`, `fix:`, …) khi phù hợp —
+  ví dụ: `feat(db): thêm chỉ mục cho bảng users`. Không có body, không
+  giải thích, không nhiều lựa chọn.
+- VSKit gọi model đúng **một lượt** cho mỗi lần bấm — không tự động thử
+  lại. Output rỗng hoặc nội dung rõ ràng không phải commit message (blob
+  hash, câu suy luận…) bị loại và báo toast, **KHÔNG điền** vào ô commit
+  để bạn không commit nhầm.
 - Nếu chưa cấu hình Lite Model, nút sẽ hiện toast hướng dẫn mở AI
   Settings (action `Open AI Settings`).
-- Message theo chuẩn Conventional Commits với **type prefix tiếng Anh** và
-  **subject/body tiếng Việt**, ví dụ: `feat(db): thêm chỉ mục cho bảng users`.
-- Giới hạn độ dài để message gọn: subject tối đa **12 từ** (72 ký tự), toàn
-  bộ message tối đa **100 từ** (600 ký tự).
-- Nếu model trả về chuỗi rác (blob hash, câu suy luận, message tiếng Anh…),
-  VSKit **tự động thử lại đúng 1 lần**; vẫn không hợp lệ thì hiện toast lỗi
-  và **KHÔNG điền** vào ô commit để bạn không commit nhầm.
+
+### Đường sinh message (routing)
+
+Nút sparkle tự chọn đường nhanh nhất, **tách riêng** khỏi engine chat:
+
+- Đã cấu hình AI backend (base URL + API key) trong AI Settings → gọi
+  thẳng OpenAI-compatible provider với Lite model — nhanh nhất, không
+  spawn process (`builtin-direct`).
+- Chưa có backend → dùng omp one-shot chế độ print (`omp-print`): prompt
+  gửi qua stdin, thinking `low`, tắt tools/extensions/skills/rules, phiên
+  ephemeral (`--no-session`), tự giới hạn thời gian bên trong omp.
+- Route thực tế luôn được ghi trong diagnostics (xem mục trên).
 
 Trong panel **VSKit AI Settings** có một subsection riêng tên là
 "Lite model" — đây là model thứ tư trong taxonomy
@@ -175,16 +191,15 @@ Source Control.
 
 - **Model ID** — bắt buộc điền. Bỏ trống = tính năng của nút sparkle bị
   disable (nút sẽ báo toast khi bấm).
-> Lite section không còn dropdown Engine riêng. Nút sparkle dùng **đúng
-> engine global** đang chọn ở panel trên (xem mục dưới). Nếu global là
-> `omp` và omp khả dụng, sparkle sẽ chạy qua omp; nếu global là
-> `builtin`, sparkle sẽ gọi OpenAI-compatible provider luôn (nhanh nhất
-> cho commit message ngắn).
+> Lite section không có dropdown Engine riêng. Nút sparkle tự chọn đường
+> nhanh nhất (xem "Đường sinh message" ở trên): đã có backend → gọi
+> provider trực tiếp; chưa có backend → omp print-mode one-shot. Dropdown
+> Engine bên dưới chỉ quyết định engine cho **chat panel**.
 
 ### Engine dropdown (global)
 
-Trên cùng panel AI Settings có một dropdown **Engine** chung cho cả
-chat panel và nút sparkle:
+Trên cùng panel AI Settings có một dropdown **Engine** — quyết định engine
+cho **chat panel** (nút sparkle có routing riêng, xem mục trên):
 
   - `omp` (mặc định cho fresh install) — dùng omp chat engine khi omp
     CLI đã cài; nếu không sẽ tự rơi về `builtin`.

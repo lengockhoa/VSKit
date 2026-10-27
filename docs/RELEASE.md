@@ -2,9 +2,11 @@
 
 ## Current distribution status
 
-GitHub releases `v1.55.6` through `v1.55.15` retain their VSIX assets. Marketplace publication is paused.
+GitHub releases `v1.55.6` through `v1.55.16` retain their VSIX assets. Marketplace publication is paused.
 
-The current package is GitHub release `v1.55.15`: `dist/vskit-1.55.15.vsix` (2,280,302 bytes; SHA-256 `e81c71eecbb2a3b7fba95017891ea0ca63670551ef756c19ed6671a498156ebc`). Its manifest confirms `lengockhoa.vskit` `1.55.15` with `VSKit.generateCommitMessage` intact. The Generate Commit Message omp path now pins `defaultThinkingLevel: low` for its one-shot spawn and adds `--no-session`; ok-detections are cached per activation and the ACP startup version probe runs in parallel with the handshake (measured 4.2–7.5s → 2.1–3.5s per click on a reasoning Lite model; upstream floor 1.7–2.5s). Release page: https://github.com/lengockhoa/VSKit/releases/tag/v1.55.15
+The current package is GitHub release `v1.55.16`: `dist/vskit-1.55.16.vsix` (2,279,646 bytes; SHA-256 `70dbe8b0af1f52e62ed78b4314ee128f876cc62482186720d5fc7236b1831bef`). Its manifest confirms `lengockhoa.vskit` `1.55.16` with `VSKit.generateCommitMessage` intact (built-in `$(edit)` icon). Generate Commit Message now calls the model exactly once per click: a direct provider request when a backend and the Lite model are configured (`builtin-direct`), otherwise a bounded `omp -p` print-mode one-shot (`omp-print`) — the ACP-based one-shot behind the "omp did not finish within 120000" timeout is deleted. Git context is capped at a 4 KiB UTF-8 budget. Release page: https://github.com/lengockhoa/VSKit/releases/tag/v1.55.16
+
+Previous package: `v1.55.15` (2,280,302 bytes; SHA-256 `e81c71eecbb2a3b7fba95017891ea0ca63670551ef756c19ed6671a498156ebc`) — omp one-shot pinned `defaultThinkingLevel: low` + `--no-session`, cached omp detection. Release page: https://github.com/lengockhoa/VSKit/releases/tag/v1.55.15
 
 Previous package: `v1.55.14` (2,279,410 bytes; SHA-256 `ef681af7dfdc0016266ee02e6852b27d281bc362b7ffed48eca42715022cc1e8`) — Generate Commit Message SCM button switched to the built-in `$(edit)` codicon. Release page: https://github.com/lengockhoa/VSKit/releases/tag/v1.55.14
 
@@ -21,14 +23,14 @@ From the repository root, the build script runs the checks in dependency order
 bash scripts/build.sh
 ```
 
-With the current manifest version `1.55.15`, the expected local artifact is
-`dist/vskit-1.55.15.vsix`. Packaging itself does not publish it.
+With the current manifest version `1.55.16`, the expected local artifact is
+`dist/vskit-1.55.16.vsix`. Packaging itself does not publish it.
 
 ```bash
-code --install-extension "$(pwd)/dist/vskit-1.55.15.vsix"
+code --install-extension "$(pwd)/dist/vskit-1.55.16.vsix"
 ```
 
-The package identity is `lengockhoa.vskit`; the package name is lowercase `vskit`. The current `dist/vskit-1.55.15.vsix` is published on GitHub release `v1.55.15`. Marketplace listing availability remains unverified; publication is paused.
+The package identity is `lengockhoa.vskit`; the package name is lowercase `vskit`. The current `dist/vskit-1.55.16.vsix` is published on GitHub release `v1.55.16`. Marketplace listing availability remains unverified; publication is paused.
 
 ## Version policy during this conversion
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.55.16] — 2026-10-27
+
+- Generate Commit Message speed rework (owner directive): output is now ONE short line (target 8–16 words, max 72 chars, Vietnamese preferred, Conventional Commits prefix when it fits) and the model is called EXACTLY ONCE per click — the corrective retry pass (`buildRetryCommitPrompt` + second engine call) is removed. The guard now rejects only empty or clearly-non-commit output (blobs, reasoning markers); Vietnamese-ness, length and style no longer reject.
+- Git context shrunk from 12 KB to a 4 KiB UTF-8 budget including the file list and markers, with file-count (40) and path-length (100 chars) caps; lockfile/generated hunks are suppressed when source files exist (dependency/docs-only commits keep full summaries).
+- Commit-gen routing decoupled from the shared chat engine: when an AI backend (base URL + API key) and the Lite model are configured, the sparkle calls the provider directly (`builtin-direct` — fastest, no process spawn); only without a backend does it fall back to omp, now as a print-mode one-shot (`omp -p`, prompt via stdin, `--thinking low`, `--no-tools --no-extensions --no-skills --no-rules`, `--no-session`, internal `--max-time`). The previous ACP-based one-shot path — the architecture behind the reported "omp did not finish within 120000" timeout — is deleted along with its `--config` overlay mechanism. Chat panel behavior unchanged.
+- `VSKit: Commit Message Diagnostics` now records the actual route (`builtin-direct` / `omp-print`) on every line, keeping the existing phase timings (git/diff, setup, request, first_text, guard). VSKit identity, the `$(edit)` sparkle icon and the single-flight gate are unchanged. Marketplace publication remains paused.
+
 ## [1.55.15] — 2026-10-22
 
 - Generate Commit Message (omp engine) speed: the one-shot `omp acp` spawn now pins `defaultThinkingLevel: low` via a `--config` overlay for that process only (measured 4.2–7.5s → 2.1–3.5s per click on a reasoning Lite model) and adds `--no-session` so the diff-embedding one-shot prompt is never persisted to omp's session store. An omp build that rejects the unknown flags falls back once to the previous spawn (traced as `omp.overlay.unsupported`), so behavior never hangs or errors.

@@ -34,13 +34,13 @@ Download the `vskit-<version>.vsix` asset from the
 macOS / Linux:
 
 ```bash
-code --install-extension ~/Downloads/vskit-1.55.15.vsix
+code --install-extension ~/Downloads/vskit-1.55.16.vsix
 ```
 
 Windows (PowerShell):
 
 ```powershell
-code --install-extension "$HOME\Downloads\vskit-1.55.15.vsix"
+code --install-extension "$HOME\Downloads\vskit-1.55.16.vsix"
 ```
 
 GUI: **Extensions view** (`Cmd+Shift+X` / `Ctrl+Shift+X`) → **…** menu → **Install from VSIX…** → pick the
@@ -247,11 +247,11 @@ Build and package:
 ```bash
 bash scripts/build.sh
 # Artifact naming convention: `dist/vskit-<version>.vsix`.
-# Current SCM-button fix package (1.55.15): `dist/vskit-1.55.15.vsix`.
+# Current commit-message speedup package (1.55.16): `dist/vskit-1.55.16.vsix`.
 ```
 
 VSIX packaging supports local testing and GitHub release distribution. The current
-artifact is `dist/vskit-1.55.15.vsix` (GitHub release `v1.55.15`). Marketplace publication remains paused.
+artifact is `dist/vskit-1.55.16.vsix` (GitHub release `v1.55.16`). Marketplace publication remains paused.
 
 See `docs/RELEASE.md` for package verification, release steps, and current limitations.
 ---

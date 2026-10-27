@@ -1,3 +1,5 @@
+> **SUPERSEDED 2026-10-27 (owner directive):** Generate Commit Message contract changed — one-line 8–16-word output (max 72 chars), ONE model call per click (no guard retry), 4 KiB git-context budget + file-count/path caps + generated-hunk suppression, commit-gen routing decoupled from `settings.engine` (builtin-direct first, `omp -p` print-mode fallback), guard reduced to garbage-only rejection. Source of truth: `src/ai/commitGenCommand.ts`, `src/ai/commitMessage.ts`, `src/ai/commitMessageGuard.ts`, `src/adapters/gitDiff.ts`. Do NOT resurrect frozen rules from this archived doc.
+
 # TASK-CG2-002 — SYSTEM_PROMPT tiếng Việt + `buildRetryCommitPrompt` trong `commitMessage.ts`
 
 **Status:** ready

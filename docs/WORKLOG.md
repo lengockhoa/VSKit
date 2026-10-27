@@ -2,6 +2,14 @@
 
 Track session-level execution details.
 
+## 2026-10-27 — Generate Commit Message speed rework, v1.55.16
+
+- Owner directive: fastest possible usable draft. Implemented: ONE model call per click (guard retry pass deleted); ONE short line output (8–16 words, ≤72 chars, Vietnamese preferred, Conventional Commits prefix when it fits); guard now rejects only empty/clearly-non-commit output. Routing decoupled from the chat engine: `builtin-direct` provider request when backend + Lite model are configured, else `omp -p` print-mode one-shot (`--thinking low`, `--no-tools/--no-extensions/--no-skills/--no-rules/--no-session`, `--max-time 100`), verified live on omp 18.12.6 before adoption. Git context shrunk to 4 KiB UTF-8 (`GIT_DIFF_MAX_BYTES`), file cap 40, path cap 100 chars; lockfile/generated hunks suppressed when a source section exists. Diagnostics record the real route per line; `route.selected` + phase timings kept.
+- Timeout root cause closed with receipts (`/tmp/commitgen-repro/ROOT-CAUSE.md`): the deleted ACP one-shot left an unanswered `session/request_permission` with no settle path; repro-before reproduced the owner's verbatim failure (`omp did not finish within 120000ms…` at 120003 ms) against HEAD `ee9fe3a`, plus the mechanism repro at 3004 ms with `PERMISSION_ANSWERED: false`. Repro-after: the print port settles bounded on every failure path (exit / spawn error / timeout / abort), pinned by `commitGenOmpPrint.test.ts` including a never-responds analog. ACP commit-gen module + tests deleted.
+- Verification: `bash scripts/build.sh` green end-to-end — npm ci, typecheck, compile, **4,777 tests passed / 4 skipped (318 files), 0 failed**, then packaging. Earlier full-suite failure (`releaseHygiene.test.ts:72`) was a stale version-pinned README artifact reference, fixed by updating README to `vskit-1.55.16`.
+- Package: `dist/vskit-1.55.16.vsix`, 2,279,646 bytes, SHA-256 `70dbe8b0af1f52e62ed78b4314ee128f876cc62482186720d5fc7236b1831bef`; packaged manifest `lengockhoa.vskit` `1.55.16` with `VSKit.generateCommitMessage` + `$(edit)` icon intact.
+- Docs: CHANGELOG 1.55.16 entry; user guide routing section rewritten; 13 archived handoff specs marked SUPERSEDED; RELEASE.md/STATUS.md updated with the numbers above.
+
 ## 2026-10-22 — VSKit v1.55.12 local owner-test package
 
 - Assigned a version distinct from the existing released `1.55.11`; no production-code changes. Kept diagnostics default-off and retained the completed safeguards, OMP retry lifecycle, and monochrome U-plus-sparkle asset.

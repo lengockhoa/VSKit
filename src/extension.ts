@@ -60,16 +60,13 @@ import {
   TOAST_GENERATION_IN_PROGRESS,
   type CommitGenDeps,
   type CommitGenTrace,
-  type OmpOneShot,
 } from "./ai/commitGenCommand";
 import { createCommitGenGate } from "./ai/commitGenGate";
 import {
-  answerCommitGenServerRequest,
-  buildCommitGenOmpExtraArgs,
-  COMMIT_GEN_THINKING_OVERLAY_FILENAME,
-  COMMIT_GEN_THINKING_OVERLAY_YML,
-  createCommitGenOmpTurn,
-} from "./ai/commitGenOmpOneShot";
+  buildCommitGenOmpPrintArgs,
+  createCommitGenOmpPrintPort,
+  COMMIT_GEN_OMP_MAX_TIME,
+} from "./ai/commitGenOmpPrint";
 import { collectCommitDiff, getGitApi, isCommitDiffCurrent, pickRepository, repositoryFromCommandArgument, type GitRepositoryLike } from "./adapters/gitDiff";
 import type { AdapterFactory } from "./ai/tools/types";
 import type { AgentDeps } from "./ai/agent";
@@ -213,6 +210,7 @@ function normalizeCommitGenDiagnosticEngine(value: unknown): string {
 const COMMIT_GEN_TRACE_FIELDS: Record<string, true> = {
   attempt: true, available: true, configured: true, current: true, diffChars: true,
   durationMs: true, elapsedMs: true, engine: true, errorName: true, fileCount: true,
+  filesCapped: true, filesOmitted: true, route: true,
   firstTextObservable: true, hasChanges: true, inputTokens: true, messageChars: true,
   messageCount: true, originalDiffBytes: true, originalDiffChars: true, outputChars: true,
   outputTokens: true, promptChars: true, rawChars: true, reason: true, outcome: true,
@@ -4415,163 +4413,7 @@ async function commandRefreshDbContext(
   }
 }
 
-// ============================================================================
-// TASK-GC-007 — vscode-bound deps factory for the Generate Commit Message
-// command. Mirrors `buildOmpChatEngine` (above) but with:
-//   - no DB tools (commit-gen does not need them)
-//   - `mcpServers: []` (zero tools advertised, no HostMcp tool routing)
-//   - no-op HostMcp stub (engine contract requires a non-null `hostMcp`;
-//     with `mcpServers: []` the engine never calls `hostMcp.call`)
-// The collected omp one-shot adapter wraps `engine.send(text, events)` by
-// buffering `onDelta` events into a string and resolving on `onDone` (or
-// rejecting on `onError`). The invocation repository wins; absent one,
-// a sole repository is selected or multiple repositories are picked explicitly.
-// ============================================================================
-
-interface CommitGenOmpHostMcp {
-  port: number;
-  url: string;
-  sessionId: string;
-  start(): Promise<void>;
-  stop(): Promise<void>;
-  respond: (requestId: string, optionId: string | undefined) => boolean;
-  handle(
-    req: { method: string; params?: unknown; id?: unknown },
-  ): Promise<{ result?: unknown; error?: { code: number; message: string } }>;
-  call(
-    name: string,
-    args: Record<string, unknown>,
-  ): Promise<{ result: string; isError: boolean }>;
-}
-
-/** No-op HostMcp stub — required by the engine's `hostMcp` slot but never
- * reached at runtime when `mcpServers: []` is threaded through. */
-function buildCommitGenNoopHostMcp(): CommitGenOmpHostMcp {
-  return {
-    port: 0,
-    url: "http://127.0.0.1:0",
-    sessionId: "commit-gen",
-    async start() {
-      /* no-op */
-    },
-    async stop() {
-      /* no-op */
-    },
-    respond: () => false,
-    handle: async () => ({}),
-    call: async () => ({ result: "", isError: true }),
-  };
-}
-
-/** One-shot omp adapter: spawns a fresh AcpProcess, drives
- * `createOmpChatEngine(...).send(...)`, buffers `onDelta` events, returns
- * the joined text on `onDone`. Throws on `onError`.
- *
- * Commit-gen speed: the spawned process gets `--config=<overlay>` (thinking
- * pinned low for this one-line task — measured 4.2–7.5s → 2.1–3.5s) and
- * `--no-session` (one-shot turns are ephemeral; the diff-embedding prompt is
- * never persisted to omp's session store). An omp build that rejects the
- * unknown flag fails during the handshake; `ensureHandle` retries ONCE
- * without the extras (traced), so old builds keep working at their old
- * speed instead of erroring. */
-async function buildCommitGenOmpOneShot(
-  ompPath: string,
-  modelId: string,
-  trace?: CommitGenTrace,
-): Promise<OmpOneShot> {
-  const cwd =
-    vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? process.cwd();
-  // Best-effort overlay write: a read-only temp dir degrades to no overlay
-  // (plain --no-session) instead of failing the flow.
-  let overlayPath: string | null = null;
-  try {
-    const overlayFile = path.join(os.tmpdir(), COMMIT_GEN_THINKING_OVERLAY_FILENAME);
-    await fsp.writeFile(overlayFile, COMMIT_GEN_THINKING_OVERLAY_YML);
-    overlayPath = overlayFile;
-  } catch {
-    overlayPath = null;
-  }
-  const extraArgs = buildCommitGenOmpExtraArgs(overlayPath);
-  let overlayRejected = false;
-  // The process that owns the live session — reassigned when the compat
-  // fallback starts a fresh one without the speed extras.
-  let activeProcess: AcpProcess = buildAcpDepsCreate(
-    ompPath,
-    cwd,
-    [],
-    modelId,
-    extraArgs,
-  );
-  const startProcess = (
-    processToStart: AcpProcess,
-  ): Promise<AcpProcessHandle> => {
-    // Auto-answer ACP server requests (session/request_permission) so an
-    // unattended commit-gen turn never blocks on a permission prompt that
-    // nobody can see. Without this the unbounded session/prompt never
-    // settles and the progress spinner hangs forever.
-    return processToStart.start({
-      onServerRequest: (call) => answerCommitGenServerRequest(call),
-    });
-  };
-  let handlePromise: Promise<AcpProcessHandle> | null = null;
-  const ensureHandle = (): Promise<AcpProcessHandle> => {
-    if (handlePromise === null) {
-      const setupStartedAt = trace ? performance.now() : 0;
-      const start = startProcess(activeProcess).catch((error: unknown) => {
-        if (!overlayRejected) {
-          // Bounded compatibility fallback: the speed extras are the only
-          // behavioral delta of this spawn, so a pre-handshake failure is
-          // retried exactly once without them (old omp builds). Real auth /
-          // model errors pay one extra failed spawn (~hundreds of ms) and
-          // then surface unchanged.
-          overlayRejected = true;
-          trace?.emit("omp.overlay.unsupported", {
-            errorName: error instanceof Error ? error.name : typeof error,
-          });
-          activeProcess = buildAcpDepsCreate(ompPath, cwd, [], modelId);
-          return startProcess(activeProcess);
-        }
-        throw error;
-      });
-      handlePromise = trace
-        ? start.then(
-            (handle) => {
-              try {
-                trace.emit("omp.setup.complete", {
-                  durationMs: Math.round((performance.now() - setupStartedAt) * 10) / 10,
-                });
-              } catch {
-                /* instrumentation must not alter OMP startup */
-              }
-              return handle;
-            },
-            (error: unknown) => {
-              try {
-                trace.emit("omp.setup.error", {
-                  durationMs: Math.round((performance.now() - setupStartedAt) * 10) / 10,
-                  errorName: error instanceof Error ? error.name : typeof error,
-                });
-              } catch {
-                /* instrumentation must not alter OMP startup */
-              }
-              throw error;
-            },
-          )
-        : start;
-    }
-    return handlePromise;
-  };
-  const acp = adaptProcessToSession(() => activeProcess, ensureHandle);
-  const noopHostMcp = buildCommitGenNoopHostMcp();
-  const engine = createOmpChatEngine({
-    acp,
-    hostMcp: noopHostMcp,
-    cwd,
-    mcpServers: [],
-  });
-  return createCommitGenOmpTurn(engine);
-}
-
+// Commit-generation host bindings use the single-use omp print adapter.
 function buildCommitGenDeps(
   aiStore: AiConfigStore,
   context: vscode.ExtensionContext,
@@ -4585,7 +4427,7 @@ function buildCommitGenDeps(
   // Cancel channel (SPEC FR-003/FR-005): the progress token drives an
   // AbortController whose signal reaches the in-flight provider fetch via
   // `deps.signal` → `ProviderRequest.signal`; the same token cancels the omp
-  // one-shot driver below.
+  // print-mode process below.
   const cancelController = new AbortController();
   let cancellationReported = false;
   const reportCancellation = () => {
@@ -4606,26 +4448,13 @@ function buildCommitGenDeps(
     loadConfig: () => aiStore.loadConfig(),
     detectOmp: () => detectOmpCached(),
     resolveEngine,
-    buildOmpEngine: async (choice, modelId) => {
-      const oneShot = await buildCommitGenOmpOneShot(
-        choice.path ?? "omp",
-        modelId,
-        trace,
-      );
-      // FR-005: a user cancel settles the omp turn early instead of waiting
-      // out the 120s ceiling; the command disposes the engine after settlement.
-      const cancellation = token.onCancellationRequested(() => oneShot.cancel?.());
-      return {
-        ...oneShot,
-        dispose: async () => {
-          try {
-            cancellation.dispose();
-          } finally {
-            await oneShot.dispose?.();
-          }
-        },
-      };
-    },
+    buildOmpPrintPort: async (choice, modelId) => createCommitGenOmpPrintPort({
+      command: choice.path ?? "omp",
+      args: buildCommitGenOmpPrintArgs(modelId),
+      cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? process.cwd(),
+      timeoutMs: Math.min(COMMIT_GEN_TIMEOUT_MS, Number(COMMIT_GEN_OMP_MAX_TIME) * 1000),
+      signal: cancelController.signal,
+    }),
     builtinComplete: (cfg, req, providerTrace) =>
       createProviderClient({
         baseUrl: cfg.baseUrl,

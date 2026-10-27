@@ -2,27 +2,27 @@
 
 ## Freshness
 
-- Last meaningful update: 2026-10-22
+- Last meaningful update: 2026-10-27
 - Updated by: omp
 - Status confidence: high
 - Stale after: 72h
 
 ## Snapshot
 
-- Focus: VSKit `1.55.15` ships the measured Generate Commit Message (omp engine) speed fix: the one-shot `omp acp` spawn pins `defaultThinkingLevel: low` via a `--config` overlay for that process only and adds `--no-session`; `which omp`/`omp --version` are cached per activation; the ACP startup version probe runs parallel to the handshake; an omp build rejecting the flags falls back once without them (traced `omp.overlay.unsupported`).
-- Verification: `bash scripts/build.sh` green end-to-end (typecheck + compile + 4,834 tests passed / 5 skipped + package). Final VSIX `dist/vskit-1.55.15.vsix`, 2,280,302 bytes, SHA-256 `e81c71eecbb2a3b7fba95017891ea0ca63670551ef756c19ed6671a498156ebc`; packaged manifest `lengockhoa.vskit` `1.55.15` with `VSKit.generateCommitMessage` intact.
-- Distribution: GitHub release `v1.55.15` carries the verified VSIX; Marketplace publication remains paused.
+- Focus: VSKit `1.55.16` ships the Generate Commit Message speed rework: ONE model call per click, ONE short line output (8–16 words, max 72 chars, Vietnamese preferred, Conventional Commits prefix when it fits); routing decoupled from the chat engine — `builtin-direct` (provider request via the configured backend + Lite model) preferred, `omp -p` print-mode one-shot fallback (`--thinking low --no-tools --no-extensions --no-skills --no-rules --no-session`, internal `--max-time 100`); the ACP one-shot behind the "omp did not finish within 120000" timeout is deleted. Git context capped at 4 KiB UTF-8 with file-count (40) and path-length (100) caps; generated/lockfile hunks suppressed when source files exist. Diagnostics record the actual route per click.
+- Verification: `bash scripts/build.sh` green end-to-end (npm ci + typecheck + compile + 4,777 tests passed / 4 skipped + package). Final VSIX `dist/vskit-1.55.16.vsix`, 2,279,646 bytes, SHA-256 `70dbe8b0af1f52e62ed78b4314ee128f876cc62482186720d5fc7236b1831bef`; packaged manifest `lengockhoa.vskit` `1.55.16` with `VSKit.generateCommitMessage` intact (`$(edit)` icon).
+- Distribution: GitHub release `v1.55.16` carries the verified VSIX; Marketplace publication remains paused.
 
 ## Active Work
 
-- Owner follow-up: install `vskit-1.55.15.vsix` from GitHub release `v1.55.15` (or `bash scripts/install-vskit.sh --local <file>`), then re-test Generate Commit Message latency on the real machine with `VSKit.ai.commitGenDiagnostics` enabled if desired. Expected: a few seconds for small diffs (measured 2.1–3.5s omp turn + ~0.3–0.7s wiring on the dev machine; upstream floor 1.7–2.5s). User-machine numbers still pending — no claim about their exact upstream.
-- If the user's configured engine is `builtin`, the flow was already a single bounded request; no changes were needed there.
+- Owner follow-up: install `vskit-1.55.16.vsix` from GitHub release `v1.55.16` (or `bash scripts/install-vskit.sh --local <file>`), then re-test Generate Commit Message latency on the real machine with `VSKit.ai.commitGenDiagnostics` enabled if desired — the trace now names the route (`builtin-direct` vs `omp-print`) and keeps per-phase timings. No claim about user-machine upstream latency yet.
+- Timeout root cause is closed with receipts: repro-before reproduced the verbatim 120000ms failure against HEAD `ee9fe3a` (`/tmp/commitgen-repro/ROOT-CAUSE.md` — unanswered ACP `session/request_permission` left the turn with no settle path); the replacement print port settles bounded on every failure path (exit / spawn error / timeout / abort), pinned by tests.
 
 ## Technical notes
 
-- Measurement evidence (dev machine, omp 18.12.5, unic-lite, 4-line diff, tiny repo): omp default `defaultThinkingLevel: high` → 4.2–7.5s/click; thinking `low` → 2.1–3.5s; raw single-shot request to the same model+input → 1.7–2.5s; warm session reuse does NOT help (history grows). VSKit wiring overhead per click ≈ 0.6–0.7s (spawn+handshake+session/new+teardown 20–35ms).
-- Diff input stays capped at 12 KB (`GIT_DIFF_MAX_BYTES`); guard retry-once and 120s timeout/cancel semantics unchanged. No secrets, diff, or prompt content enters logs (metadata-only diagnostics, default-off).
-- Full-suite run in this cycle had one unrelated timing-sensitive failure (`webviewServerSort` debounce race under parallel load) that passed 14/14 in isolation with zero webview files in the diff; the final build gate ran fully green.
+- The commit-gen guard rejects only empty or clearly-non-commit output (blobs, reasoning markers); Vietnamese-ness, length, and style no longer trigger a second model call — there is no retry pass at all (single call per click).
+- Git diff context: `GIT_DIFF_MAX_BYTES = 4_096` (was 12 KB), `MAX_COMMIT_FILES = 40`, `MAX_COMMIT_PATH_CHARS = 100`; bytes are the budget unit (no token estimation). Host ceiling `COMMIT_GEN_TIMEOUT_MS` 120s still bounds the whole click; the print port itself caps at `--max-time 100`.
+- No secrets, diff, or prompt content enters logs (metadata-only diagnostics, default-off). stderr content of the omp print child is never surfaced (tests pin this).
 
 ## Technical notes
 

@@ -1,8 +1,8 @@
 // src/ai/commitGenCommand.ts — TASK-GC-007
 //
 // Pure orchestration behind the SCM sparkle: collect the diff (GC-002),
-// resolve the Lite Model + engine (GC-001), generate the message (GC-003
-// via builtin provider or omp one-shot), and inject the sanitized text
+// resolve the Lite Model, generate the message (GC-003 via builtin provider
+// or omp print mode), and inject the sanitized text
 // into `repository.inputBox.value`. Every vscode interaction is a port —
 // this module never imports `vscode`. Privacy invariant: apiKey /
 // credentials never appear in any prompt or log line.
@@ -20,10 +20,10 @@ import type {
 } from "./provider";
 import {
   buildCommitPrompt,
-  buildRetryCommitPrompt,
   sanitizeCommitMessage,
   serializeCommitPrompt,
 } from "./commitMessage";
+import type { CommitGenOmpPrintPort } from "./commitGenOmpPrint";
 import {
   checkCommitMessage,
   type CommitMessageIssue,
@@ -49,11 +49,11 @@ export const ERROR_NON_STRING_TEXT_BUILTIN =
 export const ERROR_NON_STRING_TEXT_OMP =
   "commit-gen: omp one-shot returned non-string";
 
-// Guard-flow frozen strings (SPEC §8.5). Error messages expose rejection reasons, never raw output.
+// Guard-flow frozen strings. Error messages expose rejection reasons, never raw output.
 export const ERROR_COMMIT_GUARD_FAILED_PREFIX =
   "VSKit: generated commit message failed validation";
 export const ERROR_COMMIT_GUARD_RETRY_NOTE =
-  "Retried once and still invalid — nothing was injected into the commit box.";
+  "Nothing was injected into the commit box.";
 
 // Progress/cancel frozen strings (SPEC FR-002 / §8.2). Stage text is reported
 // through `deps.report`; the in-progress toast is shown by the host when the
@@ -64,19 +64,9 @@ export const TOAST_GENERATION_IN_PROGRESS =
 export const PROGRESS_COLLECTING_DIFF = "Collecting diff…";
 export const PROGRESS_CONTACTING_MODEL = "Contacting model…";
 export const PROGRESS_VALIDATING = "Validating message…";
-export const PROGRESS_RETRYING = "Retrying with corrective prompt…";
 
-// ---- guard + retry-1 orchestration (SPEC §8.4) ------------------------------
-/**
- * Outcome of the sanitize → guard → (retry once) pipeline.
- *
- * - `ok`               — a sanitized, guard-approved message is ready to inject.
- * - `kind: "empty"`    — the model produced no usable text (after sanitize).
- *                        NEVER retried: the caller keeps the existing empty
- *                        diagnostic and dump. `raw` is the offending raw text.
- * - `kind: "invalid"`  — non-empty but guard-rejected twice. The caller shows
- *                        the frozen §8.5 toast and does NOT inject.
- */
+// ---- single-attempt guard orchestration --------------------------------------
+/** Outcome of the one-call sanitize → guard pipeline. */
 export type GuardOutcome =
   | { ok: true; message: string }
   | { ok: false; kind: "empty"; raw: string }
@@ -88,63 +78,25 @@ export type GuardOutcome =
       reasons: readonly CommitMessageIssue[];
     };
 
-/**
- * Run the sanitize → guard pipeline with at most one corrective retry.
- *
- * Pure: touches no ports and never imports `vscode`. `call` is a per-branch
- * closure that performs one engine request for the given messages — any throw
- * (transport, non-string payload) propagates to the caller's existing catch so
- * the branch-specific error mapping is preserved. An empty sanitized message is
- * never retried (SPEC FR-007); a non-empty guard failure triggers exactly one
- * retry through `buildRetryCommitPrompt(prompt, message, reasons)`.
- */
+/** Single model call per click; transport errors retain the branch catch behavior. */
 export async function generateWithGuard(
   call: (messages: readonly ChatMessage[]) => Promise<string>,
   prompt: readonly ChatMessage[],
   trace?: CommitGenTrace,
 ): Promise<GuardOutcome> {
   const raw = await call(prompt);
-  const firstGuardStartedAt = trace ? performance.now() : 0;
+  const guardStartedAt = trace ? performance.now() : 0;
   const message = sanitizeCommitMessage(raw);
-  const first = checkCommitMessage(message);
+  const check = checkCommitMessage(message);
   trace?.emit("guard.attempt.complete", {
     attempt: 1,
-    outcome: first.ok ? "passed" : message.length === 0 ? "empty" : "rejected",
-    durationMs: traceElapsed(firstGuardStartedAt),
+    outcome: check.ok ? "passed" : message.length === 0 ? "empty" : "rejected",
+    durationMs: traceElapsed(guardStartedAt),
     messageChars: message.length,
   });
-  if (first.ok) {
-    return { ok: true, message };
-  }
-  if (message.length === 0) {
-    // Empty (whitespace-only / stripped) — no retry.
-    return { ok: false, kind: "empty", raw };
-  }
-
-  const retryPrompt = buildRetryCommitPrompt(prompt, message, first.reasons);
-  const raw2 = await call(retryPrompt);
-  const secondGuardStartedAt = trace ? performance.now() : 0;
-  const message2 = sanitizeCommitMessage(raw2);
-  const second = checkCommitMessage(message2);
-  trace?.emit("guard.attempt.complete", {
-    attempt: 2,
-    outcome: second.ok ? "passed" : message2.length === 0 ? "empty" : "rejected",
-    durationMs: traceElapsed(secondGuardStartedAt),
-    messageChars: message2.length,
-  });
-  if (second.ok) {
-    return { ok: true, message: message2 };
-  }
-  if (message2.length === 0) {
-    return { ok: false, kind: "empty", raw: raw2 };
-  }
-  return {
-    ok: false,
-    kind: "invalid",
-    raw: raw2,
-    message: message2,
-    reasons: second.reasons,
-  };
+  if (check.ok) return { ok: true, message };
+  if (message.length === 0) return { ok: false, kind: "empty", raw };
+  return { ok: false, kind: "invalid", raw, message, reasons: check.reasons };
 }
 
 // ---- structural types -------------------------------------------------------
@@ -168,17 +120,6 @@ export interface CommitGenTrace {
   emit(event: string, metadata?: Readonly<Record<string, CommitGenTraceValue>>): void;
 }
 
-/** One-shot omp chat engine. The host wires this from `createOmpChatEngine`
- * (src/ai/omp/ompChatEngine.ts) by collecting `onDelta` into a buffer and
- * resolving when the turn ends. */
-export interface OmpOneShot {
-  generate(prompt: string, onFirstText?: () => void): Promise<string>;
-  /** Cancel the in-flight turn; the command disposes the engine after settlement. */
-  cancel?(): void;
-  /** Shut down resources after all guard attempts have completed. */
-  dispose?(): Promise<void> | void;
-}
-
 // ---- injected ports ---------------------------------------------------------
 
 export interface CommitGenDeps {
@@ -195,8 +136,8 @@ export interface CommitGenDeps {
     detection?: OmpDetection;
     config: unknown | null;
   }): EngineChoice;
-  /** Build the omp one-shot adapter with the selected Lite model. */
-  buildOmpEngine(choice: EngineChoice, modelId: string): Promise<OmpOneShot>;
+  /** Build a one-shot omp print-mode port with the selected Lite model. */
+  buildOmpPrintPort(choice: EngineChoice, modelId: string): Promise<CommitGenOmpPrintPort>;
   /** Provider-port for the builtin path. Mirrors `createProviderClient(...).complete`. */
   builtinComplete(
     cfg: AiConfig,
@@ -245,28 +186,10 @@ export interface CommitGenDeps {
  * state. The host (`src/extension.ts`) supplies real vscode-backed deps;
  * tests inject fakes.
  *
- * Frozen flow (PLAN §2):
- *   1. settings = loadSettings(); if null or lite.modelId empty → settings
- *      toast; if action picked → openSettings(); return.
- *   2. diff = collectDiff(); null → info toast; return.
- *   3. Resolve the engine via `resolveEngine({ engine: settings.engine, … })`.
- *      The user's choice is the single source of truth:
- *        - resolves to "omp"     → buildOmpEngine + oneShot.generate
- *        - resolves to "builtin" → loadConfig + builtinComplete
- *        - selected engine unavailable → showError with the engine-specific
- *          install/update hint from resolveEngine (no silent fallback).
- *      Defend the typed contract: both builtinComplete and oneShot.generate
- *      MUST return a string. If a port ever violates it, surface a structured
- *      Error rather than letting the object reach the sanitizer / input box.
- *   4. Guard + retry + inject (SPEC §8.4): run the engine string through
- *      `generateWithGuard` (sanitize → `checkCommitMessage`). A guard pass
- *      injects; an empty sanitized message (either attempt) emits
- *      metadata-only diagnostics and is NEVER retried; a non-empty guard
- *      failure retries exactly once through `buildRetryCommitPrompt` on the
- *      SAME port/model. A second failure shows the frozen §8.5 toast without
- *      exposing provider text and leaves the input box untouched. Any engine
- *      throw (either attempt) propagates to the branch's existing catch — no
- *      retry on throw.
+ * Routing is independent of shared chat settings: configured backend uses the
+ * builtin provider directly; otherwise an available omp uses print mode. Each
+ * click makes one model call, validates the returned subject, then injects only
+ * on success.
  */
 function traceElapsed(startedAt: number): number {
   return Math.round((performance.now() - startedAt) * 10) / 10;
@@ -400,16 +323,7 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
     return;
   }
 
-  // 3. Engine selection. The global `settings.engine` is the single source
-  // of truth — chat panel and the Generate Commit Message sparkle share it.
-  // Per-model engine override was removed; the Lite section in the AI
-  // Settings form no longer exposes an Engine dropdown.
-  //   "omp"         → resolveEngine keeps it if the binary is installed.
-  //   "builtin"     → always honored; config may be missing (toast opens Settings).
-  //   "claude-code" / "codex" → no commit-gen adapter today; resolveEngine
-  //     returns builtin + an install hint so the user can see exactly why
-  //     their selection was rejected instead of being silently swapped.
-  const selectedEngine: AiEngine = settings.engine;
+  // Construct the one-shot prompt after the selected repository diff is known.
   const promptStartedAt = deps.trace ? performance.now() : 0;
   const prompt = buildCommitPrompt({
     repoName: diff.repoName,
@@ -427,246 +341,141 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
     });
   }
   let outcome: GuardOutcome | null = null;
-  let cfg: AiConfig | null = null;
+  const selectedEngine: AiEngine = settings.engine;
+  const configStartedAt = deps.trace ? performance.now() : 0;
+  const cfg = await deps.loadConfig();
+  deps.trace?.emit("config.complete", {
+    durationMs: traceElapsed(configStartedAt),
+    configured: cfg !== null,
+  });
   deps.report?.(PROGRESS_CONTACTING_MODEL);
-  // Cancel channel (SPEC FR-003): forward the host's signal onto every
-  // ProviderRequest so a cancel reaches the in-flight fetch. When the host
-  // supplies none, a fresh non-aborting signal keeps the field populated.
   const requestSignal: AbortSignal = deps.signal ?? new AbortController().signal;
-  // Engine routing — closed three-way classification so the validator
-  // (`aiSettingsErrors`) gates unknown values upstream. If a future cycle
-  // adds a dedicated adapter for one of those engines, add the branch here
-  // AND update the JSDoc above to match.
-  if (selectedEngine === "omp") {
+
+  const runBuiltin = async (choice?: EngineChoice): Promise<boolean> => {
+    if (cfg === null) return false;
+    deps.trace?.emit("route.selected", {
+      route: "builtin-direct",
+      reason: "backend_configured",
+      settingsEngine: selectedEngine,
+    });
+    try {
+      outcome = await generateWithGuard(async (messages) => {
+        const result = await callBuiltinWithTrace(deps, cfg, {
+          modelId: lite.modelId,
+          messages: [...messages],
+          maxOutputTokens: 300,
+          temperature: 0.2,
+          signal: requestSignal,
+        }, 1, selectedEngine);
+        if (typeof result.text !== "string") throw new Error(ERROR_NON_STRING_TEXT_BUILTIN);
+        if (choice?.hint && (selectedEngine === "claude-code" || selectedEngine === "codex")) {
+          deps.showError(`${ERROR_ENGINE_UNAVAILABLE_PREFIX}${selectedEngine}${ERROR_ENGINE_UNAVAILABLE_SUFFIX}${choice.hint}`);
+        }
+        return result.text;
+      }, prompt, deps.trace);
+      return true;
+    } catch (error) {
+      if (deps.isCancelled?.()) return true;
+      const err = error as Error & { bodySnippet?: string };
+      const detail = err.bodySnippet ? `: ${err.bodySnippet}` : "";
+      deps.showError(`VSKit: provider error — ${err.message ?? String(error)}${detail}`);
+      return true;
+    }
+  };
+
+  if (cfg !== null) {
+    let choice: EngineChoice | undefined;
+    if (selectedEngine === "claude-code" || selectedEngine === "codex") {
+      choice = deps.resolveEngine({ engine: selectedEngine, detections: {}, config: cfg });
+    }
+    await runBuiltin(choice);
+  } else {
     const detectionStartedAt = deps.trace ? performance.now() : 0;
     const detection = await deps.detectOmp();
-    if (deps.trace) {
-      deps.trace.emit("omp.detect.complete", {
-        durationMs: traceElapsed(detectionStartedAt),
-        available: detection.ok,
-        ...(detection.version ? { version: detection.version } : {}),
-      });
-    }
-    const choice = deps.resolveEngine({
-      engine: selectedEngine,
-      detection,
-      config: null,
+    deps.trace?.emit("omp.detect.complete", {
+      durationMs: traceElapsed(detectionStartedAt),
+      available: detection.ok,
+      ...(detection.version ? { version: detection.version } : {}),
     });
+    const choice = deps.resolveEngine({ engine: selectedEngine, detection, config: null });
     if (choice.engine !== "omp") {
-      const hint = choice.hint ?? "install omp";
-      deps.showError(`${ERROR_OMP_UNAVAILABLE_PREFIX}${hint}`);
+      deps.trace?.emit("route.selected", {
+        route: "unavailable",
+        reason: "no_backend_config",
+        settingsEngine: selectedEngine,
+      });
+      if (selectedEngine === "omp") {
+        deps.showError(`${ERROR_OMP_UNAVAILABLE_PREFIX}${choice.hint ?? "install omp"}`);
+      } else {
+        const action = await deps.showSettingsToast(TOAST_NO_BACKEND_CONFIG, ACTION_OPEN_SETTINGS);
+        if (action === ACTION_OPEN_SETTINGS) deps.openSettings();
+      }
       return;
     }
-    let oneShot: OmpOneShot | undefined;
+    deps.trace?.emit("route.selected", {
+      route: "omp-print",
+      reason: "no_backend_config",
+      settingsEngine: selectedEngine,
+    });
     const setupStartedAt = deps.trace ? performance.now() : 0;
+    let port: CommitGenOmpPrintPort;
     try {
-      const turn = await deps.buildOmpEngine(choice, lite.modelId);
-      oneShot = turn;
-      deps.trace?.emit("omp.setup.complete", {
+      port = await deps.buildOmpPrintPort(choice, lite.modelId);
+      deps.trace?.emit("omp.setup.complete", { durationMs: traceElapsed(setupStartedAt), success: true });
+    } catch (error) {
+      deps.trace?.emit("omp.setup.error", {
         durationMs: traceElapsed(setupStartedAt),
-        success: true,
+        errorName: error instanceof Error ? error.name : typeof error,
       });
-    } catch (setupError) {
-      deps.trace?.emit("omp.setup.complete", {
-        durationMs: traceElapsed(setupStartedAt),
-        success: false,
-      });
-      throw setupError;
+      deps.trace?.emit("omp.setup.complete", { durationMs: traceElapsed(setupStartedAt), success: false });
+      deps.showError(`VSKit: omp error — ${(error as Error).message ?? String(error)}`);
+      return;
     }
+    if (deps.isCancelled?.()) return;
+    const serializedPrompt = serializeCommitPrompt(prompt);
+    const requestStartedAt = deps.trace ? performance.now() : 0;
+    deps.trace?.emit("engine.request.start", {
+      engine: "omp-print",
+      attempt: 1,
+      promptChars: serializedPrompt.length,
+      firstTextObservable: true,
+    });
+    let firstTextReported = false;
+    const onFirstText = () => {
+      if (firstTextReported) return;
+      firstTextReported = true;
+      deps.trace?.emit("engine.first_text", {
+        engine: "omp-print",
+        attempt: 1,
+        elapsedMs: traceElapsed(requestStartedAt),
+      });
+    };
     try {
-      if (deps.isCancelled?.()) return;
-      let attempt = 0;
-      outcome = await generateWithGuard(async (messages) => {
-        if (deps.isCancelled?.()) throw new Error("commit-gen: cancelled");
-        attempt += 1;
-        if (attempt > 1) {
-          deps.report?.(PROGRESS_RETRYING);
-        }
-        const serializedPrompt = serializeCommitPrompt(messages);
-        const requestStartedAt = deps.trace ? performance.now() : 0;
-        if (deps.trace) {
-          deps.trace.emit("engine.request.start", {
-            engine: "omp",
-            attempt,
-            promptChars: serializedPrompt.length,
+      outcome = await generateWithGuard(async () => {
+        try {
+          const raw: unknown = await port.complete(serializedPrompt, onFirstText);
+          if (typeof raw !== "string") throw new Error(ERROR_NON_STRING_TEXT_OMP);
+          deps.trace?.emit("engine.request.complete", {
+            engine: "omp-print",
+            attempt: 1,
+            durationMs: traceElapsed(requestStartedAt),
+            outputChars: raw.length,
             firstTextObservable: true,
           });
-        }
-        const onFirstText = deps.trace
-          ? () =>
-              deps.trace?.emit("engine.first_text", {
-                engine: "omp",
-                attempt,
-                elapsedMs: traceElapsed(requestStartedAt),
-              })
-          : undefined;
-        let raw: string;
-        try {
-          raw = await oneShot.generate(serializedPrompt, onFirstText);
+          return raw;
         } catch (error) {
-          if (deps.trace) {
-            deps.trace.emit("engine.request.error", {
-              engine: "omp",
-              attempt,
-              durationMs: traceElapsed(requestStartedAt),
-              errorName: error instanceof Error ? error.name : typeof error,
-            });
-          }
+          deps.trace?.emit("engine.request.error", {
+            engine: "omp-print",
+            attempt: 1,
+            durationMs: traceElapsed(requestStartedAt),
+            errorName: error instanceof Error ? error.name : typeof error,
+          });
           throw error;
         }
-        if (deps.trace) {
-          deps.trace.emit("engine.request.complete", {
-            engine: "omp",
-            attempt,
-            durationMs: traceElapsed(requestStartedAt),
-            outputChars: typeof raw === "string" ? raw.length : 0,
-            firstTextObservable: true,
-          });
-        }
-        if (typeof raw !== "string") {
-          throw new Error(ERROR_NON_STRING_TEXT_OMP);
-        }
-        return raw;
       }, prompt, deps.trace);
-    } catch (e) {
-      if (deps.isCancelled?.()) {
-        return;
-      }
-      deps.showError(`VSKit: omp error — ${(e as Error).message ?? String(e)}`);
-      return;
-    } finally {
-      if (oneShot?.dispose) {
-        const cleanupStartedAt = deps.trace ? performance.now() : 0;
-        let cleanupSucceeded = true;
-        try {
-          await oneShot.dispose();
-        } catch {
-          cleanupSucceeded = false;
-        }
-        deps.trace?.emit("omp.cleanup.complete", {
-          durationMs: traceElapsed(cleanupStartedAt),
-          success: cleanupSucceeded,
-        });
-      }
-    }
-  } else if (selectedEngine === "builtin") {
-    // resolveEngine is bypassed for "builtin" because the engine is always
-    // honored when selected — the only question is whether the global
-    // backend config is populated.
-    const configStartedAt = deps.trace ? performance.now() : 0;
-    cfg = await deps.loadConfig();
-    if (deps.trace) {
-      deps.trace.emit("config.complete", {
-        durationMs: traceElapsed(configStartedAt),
-        configured: cfg !== null,
-      });
-    }
-    if (cfg === null) {
-      const action = await deps.showSettingsToast(
-        TOAST_NO_BACKEND_CONFIG,
-        ACTION_OPEN_SETTINGS,
-      );
-      if (action === ACTION_OPEN_SETTINGS) {
-        deps.openSettings();
-      }
-      return;
-    }
-    try {
-      let attempt = 0;
-      outcome = await generateWithGuard(async (messages) => {
-        attempt += 1;
-        if (attempt > 1) {
-          deps.report?.(PROGRESS_RETRYING);
-        }
-        const result = await callBuiltinWithTrace(deps, cfg as AiConfig, {
-          modelId: lite.modelId,
-          messages: [...messages],
-          maxOutputTokens: 300,
-          temperature: 0.2,
-          signal: requestSignal,
-        }, attempt, selectedEngine);
-        if (typeof result.text !== "string") {
-          throw new Error(ERROR_NON_STRING_TEXT_BUILTIN);
-        }
-        return result.text;
-      }, prompt, deps.trace);
-    } catch (e) {
-      if (deps.isCancelled?.()) {
-        return;
-      }
-      const err = e as Error & { bodySnippet?: string };
-      const detail = err.bodySnippet ? `: ${err.bodySnippet}` : "";
-      deps.showError(`VSKit: provider error — ${err.message ?? String(e)}${detail}`);
-      return;
-    }
-  } else {
-    // "claude-code" | "codex" — commit-gen only ships omp + builtin today.
-    // resolveEngine hands us back "builtin" with a selected-engine install
-    // hint when the user's choice isn't usable, so we still run the request
-    // through the OpenAI-compatible backend AND tell them why their engine
-    // selection wasn't honored.
-    const cfgForChoice = await deps.loadConfig();
-    if (cfgForChoice === null) {
-      const action = await deps.showSettingsToast(
-        TOAST_NO_BACKEND_CONFIG,
-        ACTION_OPEN_SETTINGS,
-      );
-      if (action === ACTION_OPEN_SETTINGS) {
-        deps.openSettings();
-      }
-      return;
-    }
-    cfg = cfgForChoice;
-    const choice = deps.resolveEngine({
-      engine: selectedEngine,
-      detections: {},
-      config: cfg,
-    });
-    const hint = choice.hint;
-    const hintSuffix = hint ? ` (${hint})` : "";
-    // The hint toast is informational: it explains why the user's engine
-    // selection wasn't honored. Fire it exactly ONCE — after the first
-    // successful engine string, before inject — and never again on the guard
-    // retry (the retry reuses the same fallback provider, so a second toast
-    // would be noise and would break the observed count === 1 contract).
-    let hintShown = false;
-    try {
-      let attempt = 0;
-      outcome = await generateWithGuard(async (messages) => {
-        attempt += 1;
-        if (attempt > 1) {
-          deps.report?.(PROGRESS_RETRYING);
-        }
-        const result = await callBuiltinWithTrace(deps, cfg as AiConfig, {
-          modelId: lite.modelId,
-          messages: [...messages],
-          maxOutputTokens: 300,
-          temperature: 0.2,
-          signal: requestSignal,
-        }, attempt, selectedEngine);
-        if (typeof result.text !== "string") {
-          throw new Error(ERROR_NON_STRING_TEXT_BUILTIN);
-        }
-        if (hint && !hintShown) {
-          hintShown = true;
-          deps.showError(
-            `${ERROR_ENGINE_UNAVAILABLE_PREFIX}${selectedEngine}${ERROR_ENGINE_UNAVAILABLE_SUFFIX}${hint}`,
-          );
-          // We still inject the sanitized message — the user explicitly asked
-          // for a generated git message and we can produce one. The toast is
-          // informational so they know their engine selection didn't take.
-        }
-        return result.text;
-      }, prompt, deps.trace);
-    } catch (e) {
-      if (deps.isCancelled?.()) {
-        return;
-      }
-      const err = e as Error & { bodySnippet?: string };
-      const detail = err.bodySnippet ? `: ${err.bodySnippet}` : "";
-      deps.showError(
-        `VSKit: ${selectedEngine} commit-gen fell back to provider error — ${err.message ?? String(e)}${detail}${hintSuffix}`,
-      );
+    } catch (error) {
+      if (deps.isCancelled?.()) return;
+      deps.showError(`VSKit: omp error — ${(error as Error).message ?? String(error)}`);
       return;
     }
   }
@@ -675,8 +484,7 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
   // early on error or assigns it above.
   deps.report?.(PROGRESS_VALIDATING);
   // Post-outcome cancel checkpoint (SPEC FR-002): a cancel that landed while
-  // the engine ran (including mid-retry) closes silently — no injection, no
-  // toast — even when the outcome itself is usable.
+  // the engine ran closes silently — no injection, no toast — even when usable.
   if (deps.isCancelled?.()) {
     return;
   }
@@ -717,7 +525,7 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
         reasons: outcome.reasons.join(","),
       });
     }
-    // Non-empty, guard-rejected twice. Surface only rejection metadata; never
+    // Non-empty, guard-rejected. Surface only rejection metadata; never
     // persist or display provider response text. Do NOT touch the input box.
     deps.showError(
       `${ERROR_COMMIT_GUARD_FAILED_PREFIX} (reasons: ${outcome.reasons.join(", ")}). ` +
@@ -726,7 +534,7 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
     return;
   }
 
-  // Empty (either attempt): preserve the generic diagnostic while keeping
+  // Empty: preserve the generic diagnostic while keeping
   // provider response text out of logs, files, and notifications.
   const rawLen = outcome !== null ? outcome.raw.length : 0;
   if (deps.trace) {
