@@ -418,7 +418,7 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
         const result = await withDeadline(callBuiltinWithTrace(deps, cfg, {
           modelId: lite.modelId,
           messages: [...messages],
-          maxOutputTokens: 120,
+          maxOutputTokens: 200,
           temperature: 0.2,
           signal: requestSignal,
         }, 1, selectedEngine), remainingDeadline(), onDeadline);

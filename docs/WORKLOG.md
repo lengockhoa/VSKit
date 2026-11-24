@@ -973,3 +973,6 @@ Persisted release write evidence: bounded slice `docs/WORKLOG.md:705-707` was re
 
 ## 2026-11-24 — VSKit 1.55.17 speed-first commit message
 - 4.5s model deadline + instant file-name fallback; >20 files → file-list prompt without `git diff`; tests + build green; GitHub release v1.55.17.
+
+## 2026-11-24 — VSKit 1.55.18 full commit sentences
+- Word-boundary clamp (cap 150) + dangling connector trim + Vietnamese-only complete-sentence prompt; build green; GitHub release v1.55.18.

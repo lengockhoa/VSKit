@@ -82,8 +82,8 @@ describe("Generate Commit Message integration contract", () => {
     expect(buildOmpPrintPort).not.toHaveBeenCalled();
   });
 
-  it("sanitizes a fenced subject to the 72-character boundary", () => {
-    const output = sanitizeCommitMessage("```text\n" + "x".repeat(90) + "\n```");
+  it("sanitizes a fenced subject to the safety-cap boundary", () => {
+    const output = sanitizeCommitMessage("```text\n" + "x".repeat(200) + "\n```");
     expect(output).toHaveLength(COMMIT_SUBJECT_MAX_CHARS);
     expect(output).not.toContain("```");
     expect(output).not.toContain("body");

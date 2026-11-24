@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.55.18] — 2026-11-24
+
+- Generate Commit Message no longer cuts sentences mid-word: the 72-char hard slice is replaced by a word-boundary clamp (safety cap 150 chars) that also drops dangling connectors (`và`, `cho`, `của`, `and`, `for`, …). The prompt now asks for one complete, meaningful sentence of 10–20 words (~60–100 chars), Vietnamese only (no French/other-language drift); trailing non-Latin glitch tokens are stripped. `maxOutputTokens` 200. The 4.5s deadline + instant file-name fallback is unchanged.
+
 ## [1.55.17] — 2026-11-24
 
 - Generate Commit Message is now speed-first: a hard 4.5s model deadline per click. If the model is slow, errors, or returns unusable text, VSKit instantly injects a file-name message (e.g. `chore: cập nhật a.ts, b.ts và 12 file khác`) instead of an error — the button always fills the commit box.

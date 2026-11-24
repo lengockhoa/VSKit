@@ -1,6 +1,6 @@
 // Pure prompt and normalization tests for SCM commit generation.
 import { describe, expect, it } from "vitest";
-import { buildCommitPrompt, buildFallbackCommitMessage, extractChangedPaths, sanitizeCommitMessage, COMMIT_SUBJECT_MAX_CHARS } from "../commitMessage";
+import { buildCommitPrompt, buildFallbackCommitMessage, clampAtWord, extractChangedPaths, sanitizeCommitMessage, COMMIT_SUBJECT_MAX_CHARS } from "../commitMessage";
 
 describe("buildCommitPrompt", () => {
   it("includes repository, branch, changed paths, and diff", () => {
@@ -29,9 +29,12 @@ describe("sanitizeCommitMessage", () => {
     expect(sanitizeCommitMessage(" \n\n feat: update  \nbody")).toBe("feat: update");
   });
 
-  it("clamps only the subject to the 72-character limit", () => {
-    expect(COMMIT_SUBJECT_MAX_CHARS).toBe(72);
-    expect(sanitizeCommitMessage("x".repeat(90))).toHaveLength(72);
+  it("keeps full sentences and never cuts mid-word", () => {
+    const full = "fix(credit): cập nhật quyền truy cập và chuẩn hóa đường dẫn hạn mức tín dụng";
+    expect(full.length).toBeGreaterThan(72);
+    expect(sanitizeCommitMessage(full)).toBe(full);
+    expect(COMMIT_SUBJECT_MAX_CHARS).toBe(150);
+    expect(sanitizeCommitMessage("x".repeat(200))).toHaveLength(COMMIT_SUBJECT_MAX_CHARS);
   });
 
   it("returns empty for empty or whitespace-only input", () => {
@@ -82,5 +85,22 @@ describe("buildFallbackCommitMessage", () => {
     const [, user] = buildCommitPrompt({ repoName: "VSKit", files: [], diffText: "Large change set: 300 files", mode: "files" });
     expect(user.content).toContain("Large change set: 300 files");
     expect(user.content).not.toContain("Diff:");
+  });
+});
+
+describe("sanitizeCommitMessage — stray scripts", () => {
+  it("drops trailing non-Latin glitch tokens but keeps Vietnamese", () => {
+    expect(sanitizeCommitMessage("feat(git): giữ thông tin khi vượt ngân sách byte ગુજરાતી")).toBe("feat(git): giữ thông tin khi vượt ngân sách byte");
+    expect(sanitizeCommitMessage("fix: sửa lỗi đường dẫn $(edit) ở giao diện tối")).toBe("fix: sửa lỗi đường dẫn $(edit) ở giao diện tối");
+  });
+});
+
+describe("clampAtWord", () => {
+  it("cuts at a word boundary and drops dangling connectors", () => {
+    const text = "fix(credit): cập nhật quyền truy cập và chuẩn hóa đường dẫn hạn mức tín dụng";
+    expect(clampAtWord(text, 69)).toBe("fix(credit): cập nhật quyền truy cập và chuẩn hóa đường dẫn hạn mức");
+    expect(clampAtWord("feat: thêm bảng users và", 23)).toBe("feat: thêm bảng users");
+    expect(clampAtWord("feat: add cache for the", 22)).toBe("feat: add cache");
+    expect(clampAtWord("short", 72)).toBe("short");
   });
 });

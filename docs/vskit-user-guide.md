@@ -13,12 +13,12 @@ bash scripts/build.sh
 For the current package version, install with:
 
 ```bash
-code --install-extension "$(pwd)/dist/vskit-1.55.17.vsix"
+code --install-extension "$(pwd)/dist/vskit-1.55.18.vsix"
 ```
 
 To install on another machine, copy the `.vsix` file there, open VS Code's Command Palette, run `Extensions: Install from VSIX...`, and select the file. Reload VS Code if prompted.
 
-The current package is `1.55.17` (speed-first commit message: 4.5s model deadline with instant file-name fallback; large change sets send file names only); Marketplace publication remains paused.
+The current package is `1.55.18` (speed-first commit message with full, word-boundary-safe sentences; 4.5s deadline with instant file-name fallback); Marketplace publication remains paused.
 
 ### Diagnostics cho nút commit-message
 

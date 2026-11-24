@@ -7,11 +7,15 @@
 import type { ChatMessage } from "./provider";
 
 // ---- constants --------------------------------------------------------------
-export const COMMIT_SUBJECT_MAX_CHARS = 72;
+/** Hard safety cap. The model is asked for ≤100 chars; cutting only happens
+ *  past this cap and always at a word boundary (never mid-word). */
+export const COMMIT_SUBJECT_MAX_CHARS = 150;
+/** Fallback (file-name) subjects stay short. */
+export const COMMIT_FALLBACK_MAX_CHARS = 72;
 
 // ---- frozen system prompt (owner contract, 2026-10-27) -----------------------
 const SYSTEM_PROMPT =
-  "You generate ONE git commit message subject line. Reply with ONLY that single line: no body, no explanation, no code fences, no quotes, no alternatives, no reasoning. Prefer Vietnamese (tiếng Việt). Start with a Conventional Commits type prefix (feat, fix, refactor, chore, docs, test, ...) when it fits. Target 8–16 words, max 72 characters. Example: feat(db): thêm chỉ mục cho bảng users";
+  "You generate ONE git commit message subject line. Reply with ONLY that single line: no body, no explanation, no code fences, no quotes, no alternatives, no reasoning. Write in Vietnamese (tiếng Việt) only — never French or other languages; keep code identifiers as-is. Start with a Conventional Commits type prefix (feat, fix, refactor, chore, docs, test, ...) when it fits. Write ONE complete, meaningful sentence that says what changed and why it matters: 10–20 words, about 60–100 characters. Never stop mid-word or mid-phrase. Example: fix(credit): chuẩn hóa đường dẫn hạn mức tín dụng và cập nhật quyền truy cập API";
 
 // ---- types -----------------------------------------------------------------
 export interface CommitPromptInput {
@@ -128,13 +132,11 @@ export function buildFallbackCommitMessage(files: readonly string[]): string {
     return prefix + list.join(", ") + (rest > 0 ? ` và ${rest} file khác` : "");
   };
   let message = build(shown);
-  while (message.length > COMMIT_SUBJECT_MAX_CHARS && shown.length > 1) {
+  while (message.length > COMMIT_FALLBACK_MAX_CHARS && shown.length > 1) {
     shown = shown.slice(0, -1);
     message = build(shown);
   }
-  return message.length > COMMIT_SUBJECT_MAX_CHARS
-    ? message.slice(0, COMMIT_SUBJECT_MAX_CHARS)
-    : message;
+  return clampAtWord(message, COMMIT_FALLBACK_MAX_CHARS);
 }
 
 // ---- sanitizeCommitMessage -------------------------------------------------
@@ -171,5 +173,31 @@ export function sanitizeCommitMessage(raw: string): string {
   ) {
     out = out.slice(1, -1).trim();
   }
-  return out.slice(0, COMMIT_SUBJECT_MAX_CHARS);
+  // Drop trailing stray tokens in non-Latin scripts (model glitches such as
+  // "… ngân sách byte ગુજરાતી"); Vietnamese is Latin script and is kept.
+  out = out.replace(/(?:\s+\S*[^\s\p{Script=Latin}\p{N}\p{P}\p{S}\p{M}]\S*)+$/u, "").trim();
+  return clampAtWord(out, COMMIT_SUBJECT_MAX_CHARS);
+}
+
+// Vietnamese/English connectors that must not end a subject after a cut.
+const DANGLING_TAIL_RE =
+  /(?:[\s,;:–-]+(?:và|cho|của|với|để|các|những|trong|khi|từ|đến|tới|theo|hoặc|nhưng|là|một|and|or|for|of|to|with|in|on|the|a|an|by|from))+[\s,;:–-]*$/iu;
+
+/**
+ * Shorten `text` to at most `max` characters without ever splitting a word,
+ * then drop trailing connectors/punctuation so the subject still reads as a
+ * complete phrase. A single over-long token is the only case cut mid-token.
+ */
+export function clampAtWord(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const head = text.slice(0, max + 1);
+  const lastSpace = head.lastIndexOf(" ");
+  let out = lastSpace > 0 ? head.slice(0, lastSpace) : text.slice(0, max);
+  out = out.replace(/[\s,;:–-]+$/u, "");
+  for (let i = 0; i < 4 && DANGLING_TAIL_RE.test(out); i++) {
+    const trimmed = out.replace(DANGLING_TAIL_RE, "");
+    if (trimmed.length === 0 || trimmed === out) break;
+    out = trimmed;
+  }
+  return out.trim();
 }
