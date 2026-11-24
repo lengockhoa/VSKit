@@ -9,13 +9,10 @@
 
 ## Snapshot
 
-- Focus: VSKit `1.55.16` ships the Generate Commit Message speed rework: ONE model call per click, ONE short line output (8–16 words, max 72 chars, Vietnamese preferred, Conventional Commits prefix when it fits); routing decoupled from the chat engine — `builtin-direct` (provider request via the configured backend + Lite model) preferred, `omp -p` print-mode one-shot fallback (`--thinking low --no-tools --no-extensions --no-skills --no-rules --no-session`, internal `--max-time 100`); the ACP one-shot behind the "omp did not finish within 120000" timeout is deleted. Git context capped at 4 KiB UTF-8 with file-count (40) and path-length (100) caps; generated/lockfile hunks suppressed when source files exist. Diagnostics record the actual route per click.
-- Verification: `bash scripts/build.sh` green end-to-end (npm ci + typecheck + compile + 4,777 tests passed / 4 skipped + package). Final VSIX `dist/vskit-1.55.16.vsix`, 2,279,646 bytes, SHA-256 `70dbe8b0af1f52e62ed78b4314ee128f876cc62482186720d5fc7236b1831bef`; packaged manifest `lengockhoa.vskit` `1.55.16` with `VSKit.generateCommitMessage` intact (`$(edit)` icon).
-- Distribution: GitHub release `v1.55.16` carries the verified VSIX; Marketplace publication remains paused.
-
-## Active Work
-
-- Owner follow-up: install `vskit-1.55.16.vsix` from GitHub release `v1.55.16` (or `bash scripts/install-vskit.sh --local <file>`), then re-test Generate Commit Message latency on the real machine with `VSKit.ai.commitGenDiagnostics` enabled if desired — the trace now names the route (`builtin-direct` vs `omp-print`) and keeps per-phase timings. No claim about user-machine upstream latency yet.
+- Focus: VSKit `1.55.17` makes Generate Commit Message speed-first (owner: speed > message quality). Hard model deadline `COMMIT_GEN_MODEL_DEADLINE_MS = 4_500`; on deadline / provider error / omp error / guard reject / no engine, an instant file-name subject (`chore: cập nhật a.ts, b.ts và N file khác`, docs/test type detection) is injected instead of an error. Change sets > `FILE_LIST_MODE_THRESHOLD` (20) files never call `repo.diff()` — prompt = file names + status counts + top dirs + file types (≤4 KiB); freshness for those snapshots hashes git state only. Raw diff capped at 256 KB before budgeting; `maxOutputTokens` 120. Deadline aborts the in-flight fetch / omp process. New trace events `engine.deadline`, `fallback.used`.
+- Verification: `bash scripts/build.sh` green (4,785 tests passed / 4 skipped + package). VSIX `dist/vskit-1.55.17.vsix`, 2,282,142 bytes, SHA-256 `335159a13d3c82616942e15f831b2a9cf8510222e540232e076548251df4d46e`; manifest `lengockhoa.vskit` `1.55.17`, command intact. Live timing on owner machine (omp-print, `unic/unic-lite`): 300-file file-list prompt 1.8–2.8s; normal diff prompt 2.1–3.3s; summary build 0.4ms.
+- Distribution: GitHub release `v1.55.17` carries the VSIX; Marketplace publication remains paused.
+- Owner follow-up: install `vskit-1.55.17.vsix`; worst-case click is now bounded at ~5s (4.5s deadline + git/status) regardless of file count.
 - Timeout root cause is closed with receipts: repro-before reproduced the verbatim 120000ms failure against HEAD `ee9fe3a` (`/tmp/commitgen-repro/ROOT-CAUSE.md` — unanswered ACP `session/request_permission` left the turn with no settle path); the replacement print port settles bounded on every failure path (exit / spawn error / timeout / abort), pinned by tests.
 
 ## Technical notes

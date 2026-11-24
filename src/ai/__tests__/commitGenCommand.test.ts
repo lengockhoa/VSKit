@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { runGenerateCommitMessage, COMMIT_GEN_TIMEOUT_MS, PROGRESS_COLLECTING_DIFF, PROGRESS_CONTACTING_MODEL, PROGRESS_VALIDATING, type CommitGenDeps, type CommitDiffInputLike } from "../commitGenCommand";
+import { runGenerateCommitMessage, COMMIT_GEN_TIMEOUT_MS, COMMIT_GEN_MODEL_DEADLINE_MS, PROGRESS_COLLECTING_DIFF, PROGRESS_CONTACTING_MODEL, PROGRESS_VALIDATING, type CommitGenDeps, type CommitDiffInputLike } from "../commitGenCommand";
 import type { AiConfig, AiSettings } from "../settings";
 import type { ProviderRequest, ProviderResult } from "../provider";
 import type { OmpDetection } from "../omp/detect";
@@ -54,16 +54,55 @@ describe("runGenerateCommitMessage", () => {
     expect(traceEvents).toContainEqual(["route.selected", expect.objectContaining({ route: "omp-print" })]);
   });
 
-  it("does not retry rejected garbage", async () => {
+  it("does not retry rejected garbage and injects the file-name fallback instead", async () => {
     const builtinComplete = vi.fn(async () => providerResult("a".repeat(50)));
     const setInputBox = vi.fn();
     const showError = vi.fn();
     await runGenerateCommitMessage(makeDeps({ builtinComplete, setInputBox, showError }));
     expect(builtinComplete).toHaveBeenCalledOnce();
-    expect(setInputBox).not.toHaveBeenCalled();
-    expect(showError).toHaveBeenCalledOnce();
-    expect(showError.mock.calls[0][0]).toContain("unbroken-blob");
-    expect(showError.mock.calls[0][0]).not.toContain("a".repeat(50));
+    expect(setInputBox).toHaveBeenCalledWith("chore: cập nhật a.ts");
+    expect(showError).not.toHaveBeenCalled();
+  });
+
+  it("falls back to a file-name message when the model misses the deadline", async () => {
+    vi.useFakeTimers();
+    try {
+      let aborted = false;
+      const builtinComplete = vi.fn((_cfg: AiConfig, req: ProviderRequest) => new Promise<ProviderResult>((_resolve, reject) => {
+        req.signal?.addEventListener("abort", () => { aborted = true; reject(new Error("aborted")); });
+      }));
+      const setInputBox = vi.fn();
+      const run = runGenerateCommitMessage(makeDeps({ builtinComplete, setInputBox, collectDiff: async () => ({ ...diff, files: ["src/a.ts", "README.md"] }) }));
+      await vi.advanceTimersByTimeAsync(COMMIT_GEN_MODEL_DEADLINE_MS + 10);
+      await run;
+      expect(aborted).toBe(true);
+      expect(setInputBox).toHaveBeenCalledWith("chore: cập nhật a.ts, README.md");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("keeps the model deadline within the 5s owner budget", () => {
+    expect(COMMIT_GEN_MODEL_DEADLINE_MS).toBeLessThanOrEqual(5_000);
+  });
+
+  it("omp-print also falls back on deadline and passes an abortable signal", async () => {
+    vi.useFakeTimers();
+    try {
+      let signal: AbortSignal | undefined;
+      const buildOmpPrintPort = vi.fn(async (_c: EngineChoice, _m: string, s?: AbortSignal) => {
+        signal = s;
+        return { complete: () => new Promise<string>(() => undefined) };
+      });
+      const setInputBox = vi.fn();
+      const run = runGenerateCommitMessage(makeDeps({ loadConfig: async () => null, buildOmpPrintPort, setInputBox }));
+      await vi.advanceTimersByTimeAsync(COMMIT_GEN_MODEL_DEADLINE_MS + 10);
+      await run;
+      expect(signal?.aborted).toBe(true);
+      expect(setInputBox).toHaveBeenCalledWith("chore: cập nhật a.ts");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("shows settings prompt when no backend config and omp unavailable", async () => {
@@ -87,12 +126,12 @@ describe("runGenerateCommitMessage", () => {
     expect(builtinComplete).not.toHaveBeenCalled();
   });
 
-  it("preserves provider errors and never injects on transport failure", async () => {
+  it("surfaces provider errors but still injects the instant fallback", async () => {
     const setInputBox = vi.fn();
     const showError = vi.fn();
     await runGenerateCommitMessage(makeDeps({ builtinComplete: async () => { throw new Error("network failure"); }, setInputBox, showError }));
     expect(showError.mock.calls[0][0]).toContain("network failure");
-    expect(setInputBox).not.toHaveBeenCalled();
+    expect(setInputBox).toHaveBeenCalledWith("chore: cập nhật a.ts");
   });
 
   it("reports the expected progress stages", async () => {

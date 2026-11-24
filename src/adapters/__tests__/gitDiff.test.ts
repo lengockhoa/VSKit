@@ -23,6 +23,7 @@ import {
   collectCommitDiff,
   getGitApi,
   isCommitDiffCurrent,
+  FILE_LIST_MODE_THRESHOLD,
   pickRepository,
   repositoryFromCommandArgument,
   truncateDiff,
@@ -180,13 +181,34 @@ describe("gitDiff — collectCommitDiff: bounded per-file diff", () => {
     expect(GIT_DIFF_MAX_BYTES).toBe(4_096);
   });
 
-  it("caps file paths by count and character length", async () => {
-    const changes = Array.from({ length: MAX_COMMIT_FILES + 5 }, (_, i) => ({ uri: { fsPath: `/repo/VSKit/src/${String(i).padStart(3, "0")}-${"x".repeat(MAX_COMMIT_PATH_CHARS + 20)}.ts` } }));
+  it("switches to file-list mode for large change sets without reading the diff", async () => {
+    const changes = Array.from({ length: FILE_LIST_MODE_THRESHOLD + 200 }, (_, i) => ({ uri: { fsPath: `/repo/VSKit/src/mod${i % 3}/${String(i).padStart(3, "0")}-${"x".repeat(MAX_COMMIT_PATH_CHARS + 20)}.ts` }, status: i % 2 ? 1 : 5 }));
+    const repo = makeRepo({ staged: "diff --git a/a.ts\n+change\n", indexChanges: changes, headName: "main" });
+    const diff = vi.spyOn(repo, "diff");
     const events: Array<[string, Record<string, string | number | boolean>]> = [];
-    const result = await collectCommitDiff(makeRepo({ staged: "diff --git a/a.ts\n+change\n", indexChanges: changes }), (event, metadata) => events.push([event, { ...metadata }]));
-    expect(result?.files).toHaveLength(MAX_COMMIT_FILES);
+    const result = await collectCommitDiff(repo, (event, metadata) => events.push([event, { ...metadata }]));
+    expect(diff).not.toHaveBeenCalled();
+    expect(result?.mode).toBe("files");
+    expect(result?.scope).toBe("staged");
+    expect(result?.files).toEqual([]);
+    expect(result?.diffText).toContain(`Large change set: ${FILE_LIST_MODE_THRESHOLD + 200} files`);
+    expect(result?.diffText).toContain("added 110");
+    expect(result?.diffText).toMatch(/more file\(s\)/);
+    expect(Buffer.byteLength(result!.diffText, "utf8")).toBeLessThanOrEqual(GIT_DIFF_MAX_BYTES);
+    expect(events.find(([event]) => event === "git.diff.selected")?.[1]).toMatchObject({ mode: "files" });
+    // Freshness for file-list snapshots compares git state only.
+    expect(await isCommitDiffCurrent(repo, result!)).toBe(true);
+    expect(diff).not.toHaveBeenCalled();
+    repo.state.indexChanges = changes.slice(1);
+    expect(await isCommitDiffCurrent(repo, result!)).toBe(false);
+  });
+
+  it("keeps the diff path (with path caps) at or below the file-list threshold", async () => {
+    const changes = Array.from({ length: FILE_LIST_MODE_THRESHOLD }, (_, i) => ({ uri: { fsPath: `/repo/VSKit/src/${String(i).padStart(3, "0")}-${"x".repeat(MAX_COMMIT_PATH_CHARS + 20)}.ts` } }));
+    const result = await collectCommitDiff(makeRepo({ staged: "diff --git a/a.ts\n+change\n", indexChanges: changes }));
+    expect(result?.mode).toBeUndefined();
+    expect(result?.files).toHaveLength(FILE_LIST_MODE_THRESHOLD);
     expect(result?.files.every((file) => file.length <= MAX_COMMIT_PATH_CHARS)).toBe(true);
-    expect(events.find(([event]) => event === "git.diff.selected")?.[1]).toMatchObject({ filesOmitted: 5, filesCapped: true });
   });
 
   it("omits generated hunks when source hunks are available", () => {

@@ -19,13 +19,21 @@ export interface CommitPromptInput {
   branch?: string;
   files: readonly string[];
   diffText: string;
+  /** "files" ⇒ diffText is already a file-list summary (large change set). */
+  mode?: "diff" | "files";
 }
 
 // ---- buildCommitPrompt -----------------------------------------------------
 export function buildCommitPrompt(input: CommitPromptInput): ChatMessage[] {
+  const branchLine = input.branch ? `Branch: ${input.branch}\n` : "";
+  if (input.mode === "files") {
+    return [
+      { role: "system", content: SYSTEM_PROMPT },
+      { role: "user", content: `Repo: ${input.repoName}\n${branchLine}${input.diffText}` },
+    ];
+  }
   const fileList =
     input.files.length > 0 ? input.files.map((f) => `- ${f}`).join("\n") : "- (none)";
-  const branchLine = input.branch ? `Branch: ${input.branch}\n` : "";
   const userContent =
     `Repo: ${input.repoName}\n` +
     branchLine +
@@ -76,6 +84,57 @@ export function serializeCommitPrompt(messages: readonly ChatMessage[]): string 
 ${content}`;
     })
     .join("\n\n");
+}
+
+// ---- buildFallbackCommitMessage ---------------------------------------------
+/** Paths named by `diff --git a/x b/y` headers or `<status> <path>` summary rows. */
+export function extractChangedPaths(diffText: string): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  const add = (p: string) => {
+    const path = p.trim();
+    if (path && path !== "/dev/null" && !seen.has(path)) {
+      seen.add(path);
+      out.push(path);
+    }
+  };
+  for (const m of diffText.matchAll(/^diff --git a\/(\S+)(?: b\/(\S+))?/gm)) add(m[2] ?? m[1]);
+  if (out.length === 0) {
+    for (const m of diffText.matchAll(/^[AMDRCT] (\S.*)$/gm)) add(m[1]);
+  }
+  return out;
+}
+
+function baseName(path: string): string {
+  const parts = path.replace(/\\/g, "/").split("/").filter(Boolean);
+  return parts[parts.length - 1] ?? path;
+}
+
+/**
+ * Instant, model-free commit subject built from changed file names. Used when
+ * the model is slow, fails, or returns unusable text — speed beats quality.
+ */
+export function buildFallbackCommitMessage(files: readonly string[]): string {
+  const unique = [...new Set(files.filter((f) => typeof f === "string" && f.trim() !== ""))];
+  if (unique.length === 0) return "chore: cập nhật mã nguồn";
+  const isDoc = (f: string) => /\.(?:md|mdx|rst|txt)$/i.test(f) || /(?:^|\/)docs\//i.test(f);
+  const isTest = (f: string) => /(?:^|\/)(?:__tests__|tests?)\/|\.(?:test|spec)\.[a-z0-9]+$/i.test(f);
+  const type = unique.every(isDoc) ? "docs" : unique.every(isTest) ? "test" : "chore";
+  const names = [...new Set(unique.map(baseName))];
+  const prefix = `${type}: cập nhật `;
+  let shown = names.slice(0, 3);
+  const build = (list: string[]) => {
+    const rest = unique.length - list.length;
+    return prefix + list.join(", ") + (rest > 0 ? ` và ${rest} file khác` : "");
+  };
+  let message = build(shown);
+  while (message.length > COMMIT_SUBJECT_MAX_CHARS && shown.length > 1) {
+    shown = shown.slice(0, -1);
+    message = build(shown);
+  }
+  return message.length > COMMIT_SUBJECT_MAX_CHARS
+    ? message.slice(0, COMMIT_SUBJECT_MAX_CHARS)
+    : message;
 }
 
 // ---- sanitizeCommitMessage -------------------------------------------------

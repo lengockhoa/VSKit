@@ -23,6 +23,8 @@ export interface GitUriLike {
 
 export interface GitChangeLike {
   uri: GitUriLike;
+  /** vscode.git `Status` enum value (optional — fakes may omit it). */
+  status?: number;
 }
 
 export interface GitRepositoryLike {
@@ -49,6 +51,8 @@ export interface CommitDiffInput {
   diffText: string;
   scope: "staged" | "unstaged";
   diffFingerprint: string;
+  /** "files" ⇒ large change set: only file names/status were sent (no diff read). */
+  mode?: "diff" | "files";
 }
 export type GitDiffTraceValue = string | number | boolean;
 export type GitDiffTrace = (
@@ -64,6 +68,10 @@ export type GitDiffTrace = (
 export const GIT_DIFF_MAX_BYTES = 4_096;
 export const MAX_COMMIT_FILES = 40;
 export const MAX_COMMIT_PATH_CHARS = 100;
+/** Above this many changed files the diff is never read: file names + status only (speed). */
+export const FILE_LIST_MODE_THRESHOLD = 20;
+/** Raw diff text beyond this is cut before budgeting so huge diffs stay O(cap). */
+export const RAW_DIFF_SCAN_MAX_CHARS = 256 * 1024;
 
 const SUMMARY_HEADER = "Changed files:\n";
 const SUMMARY_MAX_BYTES = Math.floor(GIT_DIFF_MAX_BYTES / 3);
@@ -253,6 +261,112 @@ function toRelativePath(rootFsPath: string, absoluteFsPath: string): string {
   return abs;
 }
 
+// vscode.git `Status` enum → short label (unknown values fall back to "M").
+const STATUS_LABEL: Readonly<Record<number, string>> = {
+  0: "M", 1: "A", 2: "D", 3: "R", 4: "C", 5: "M", 6: "D", 7: "A", 9: "A", 10: "R", 11: "T",
+};
+
+function changesForScope(repo: GitRepositoryLike, scope: "staged" | "unstaged"): GitChangeLike[] {
+  const state = repo.state;
+  return scope === "staged"
+    ? [...(state?.indexChanges ?? [])]
+    : [...(state?.workingTreeChanges ?? []), ...(state?.mergeChanges ?? [])];
+}
+
+function fileListRows(repo: GitRepositoryLike, scope: "staged" | "unstaged"): string[] {
+  const root = repo.rootUri?.fsPath ?? "";
+  const seen = new Set<string>();
+  const rows: string[] = [];
+  for (const change of changesForScope(repo, scope)) {
+    if (!change?.uri || typeof change.uri.fsPath !== "string") continue;
+    const rel = toRelativePath(root, change.uri.fsPath);
+    if (!rel || seen.has(rel)) continue;
+    seen.add(rel);
+    rows.push(`${STATUS_LABEL[change.status ?? 5] ?? "M"} ${rel}`);
+  }
+  return rows;
+}
+
+/** Cheap fingerprint of the change set (status + path) — no diff read. */
+export function fileListFingerprint(repo: GitRepositoryLike, scope: "staged" | "unstaged"): string {
+  return createHash("sha256").update(`files:${scope}\n${fileListRows(repo, scope).join("\n")}`, "utf8").digest("hex");
+}
+
+/**
+ * Large change set summary: status counts, top directories and a bounded
+ * file list. Never calls `repo.diff()`, so it is O(file count) and instant.
+ */
+export function buildFileListSummary(rows: readonly string[]): string {
+  const counts = new Map<string, number>();
+  const dirs = new Map<string, number>();
+  const exts = new Map<string, number>();
+  for (const row of rows) {
+    const [status, path] = [row.slice(0, 1), row.slice(2)];
+    counts.set(status, (counts.get(status) ?? 0) + 1);
+    const parts = path.split("/");
+    const dir = parts.length > 2 ? `${parts[0]}/${parts[1]}` : parts.length > 1 ? parts[0] : ".";
+    dirs.set(dir, (dirs.get(dir) ?? 0) + 1);
+    const ext = /\.([A-Za-z0-9]+)$/.exec(path)?.[1]?.toLowerCase() ?? "(none)";
+    exts.set(ext, (exts.get(ext) ?? 0) + 1);
+  }
+  const top = (map: Map<string, number>, n: number) =>
+    [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, n).map(([k, v]) => `${k} (${v})`).join(", ");
+  const statusNames: Record<string, string> = { A: "added", M: "modified", D: "deleted", R: "renamed", C: "copied", T: "type-changed" };
+  const header =
+    `Large change set: ${rows.length} files (diff omitted for speed).\n` +
+    `Status: ${[...counts.entries()].map(([k, v]) => `${statusNames[k] ?? k} ${v}`).join(", ")}\n` +
+    `Top directories: ${top(dirs, 8)}\n` +
+    `File types: ${top(exts, 8)}\n` +
+    "Files (status path):\n";
+  const marker = (n: number) => `… [${n} more file(s)]\n`;
+  let out = header;
+  let used = utf8Bytes(out);
+  const reserve = utf8Bytes(marker(rows.length));
+  let index = 0;
+  for (; index < rows.length; index++) {
+    const line = `${rows[index].length > MAX_COMMIT_PATH_CHARS + 2 ? `${rows[index].slice(0, MAX_COMMIT_PATH_CHARS + 1)}…` : rows[index]}\n`;
+    const bytes = utf8Bytes(line);
+    if (used + bytes + reserve > GIT_DIFF_MAX_BYTES) break;
+    out += line;
+    used += bytes;
+  }
+  if (index < rows.length) out += marker(rows.length - index);
+  return out;
+}
+
+function fileListInput(
+  repo: GitRepositoryLike,
+  scope: "staged" | "unstaged",
+  trace?: GitDiffTrace,
+): CommitDiffInput {
+  const rows = fileListRows(repo, scope);
+  const diffText = buildFileListSummary(rows);
+  const head = repo.state?.HEAD;
+  trace?.("git.diff.selected", {
+    staged: scope === "staged",
+    hasChanges: true,
+    mode: "files",
+    originalDiffChars: 0,
+    sentDiffChars: diffText.length,
+    originalDiffBytes: 0,
+    sentDiffBytes: utf8Bytes(diffText),
+    truncated: false,
+    fileCount: rows.length,
+    filesOmitted: 0,
+    filesCapped: false,
+  });
+  return {
+    repoName: repoNameFromFsPath(repo.rootUri?.fsPath ?? ""),
+    branch: head && typeof head.name === "string" ? head.name : undefined,
+    // The summary already lists files; keep the prompt's separate list empty.
+    files: [],
+    diffText,
+    scope,
+    diffFingerprint: fileListFingerprint(repo, scope),
+    mode: "files",
+  };
+}
+
 /** Bound oversized diffs by file, preserving a complete status summary. */
 export function truncateDiff(text: string): string {
   return boundedDiff(text);
@@ -323,6 +437,20 @@ export async function collectCommitDiff(
   repo: GitRepositoryLike,
   trace?: GitDiffTrace,
 ): Promise<CommitDiffInput | null> {
+  // Speed fast path: a large change set never reads `git diff` (can be MBs
+  // and seconds long). File names + status are enough for a commit subject.
+  const fastState = repo.state;
+  const stagedChanges = fastState?.indexChanges ?? [];
+  const unstagedChanges = [
+    ...(fastState?.workingTreeChanges ?? []),
+    ...(fastState?.mergeChanges ?? []),
+  ];
+  if (stagedChanges.length > FILE_LIST_MODE_THRESHOLD) {
+    return fileListInput(repo, "staged", trace);
+  }
+  if (stagedChanges.length === 0 && unstagedChanges.length > FILE_LIST_MODE_THRESHOLD) {
+    return fileListInput(repo, "unstaged", trace);
+  }
   const stagedStartedAt = trace ? performance.now() : 0;
   const stagedRaw = await repo.diff(true);
   trace?.("git.diff.complete", {
@@ -383,7 +511,9 @@ export async function collectCommitDiff(
   const filesCapped = files.slice(0, MAX_COMMIT_FILES);
   const branch = state.HEAD && typeof state.HEAD.name === "string" ? state.HEAD.name : undefined;
 
-  const diffText = truncateDiff(chosen);
+  const diffText = truncateDiff(
+    chosen.length > RAW_DIFF_SCAN_MAX_CHARS ? chosen.slice(0, RAW_DIFF_SCAN_MAX_CHARS) : chosen,
+  );
   const diffFingerprint = createHash("sha256").update(chosen, "utf8").digest("hex");
   if (trace) {
     trace("git.diff.selected", {
@@ -412,9 +542,13 @@ export async function collectCommitDiff(
 /** Re-read only the originally selected Git scope and compare its full hash. */
 export async function isCommitDiffCurrent(
   repo: GitRepositoryLike,
-  expected: Pick<CommitDiffInput, "branch" | "scope" | "diffFingerprint">,
+  expected: Pick<CommitDiffInput, "branch" | "scope" | "diffFingerprint" | "mode">,
 ): Promise<boolean> {
   if ((repo.state?.HEAD?.name ?? undefined) !== expected.branch) return false;
+  if (expected.mode === "files") {
+    // File-list snapshots compare the git state only — never re-read the diff.
+    return fileListFingerprint(repo, expected.scope) === expected.diffFingerprint;
+  }
   const current = await repo.diff(expected.scope === "staged");
   if (typeof current !== "string" || current.trim().length === 0) return false;
   const fingerprint = createHash("sha256").update(current, "utf8").digest("hex");

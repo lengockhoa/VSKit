@@ -4448,12 +4448,12 @@ function buildCommitGenDeps(
     loadConfig: () => aiStore.loadConfig(),
     detectOmp: () => detectOmpCached(),
     resolveEngine,
-    buildOmpPrintPort: async (choice, modelId) => createCommitGenOmpPrintPort({
+    buildOmpPrintPort: async (choice, modelId, signal) => createCommitGenOmpPrintPort({
       command: choice.path ?? "omp",
       args: buildCommitGenOmpPrintArgs(modelId),
       cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? process.cwd(),
       timeoutMs: Math.min(COMMIT_GEN_TIMEOUT_MS, Number(COMMIT_GEN_OMP_MAX_TIME) * 1000),
-      signal: cancelController.signal,
+      signal: signal ?? cancelController.signal,
     }),
     builtinComplete: (cfg, req, providerTrace) =>
       createProviderClient({
@@ -4480,6 +4480,7 @@ function buildCommitGenDeps(
           branch: diff.branch,
           scope: diff.scope,
           diffFingerprint: diff.diffFingerprint,
+          mode: diff.mode,
         });
         trace?.emit("git.diff.recheck.complete", { scope: diff.scope, current });
         return current;

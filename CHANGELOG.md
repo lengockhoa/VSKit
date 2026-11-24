@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.55.17] — 2026-11-24
+
+- Generate Commit Message is now speed-first: a hard 4.5s model deadline per click. If the model is slow, errors, or returns unusable text, VSKit instantly injects a file-name message (e.g. `chore: cập nhật a.ts, b.ts và 12 file khác`) instead of an error — the button always fills the commit box.
+- Large change sets (more than 20 files) never read `git diff`: the prompt carries file names, status counts, top directories and file types only (≤4 KiB), so hundreds of files stay ~2–3s. File-list snapshots check freshness from git state only (no diff re-read).
+- Raw diffs are capped at 256 KB before budgeting; `maxOutputTokens` lowered to 120. Deadline aborts the in-flight request / omp process. Diagnostics add `engine.deadline` and `fallback.used`.
+
 ## [1.55.16] — 2026-10-27
 
 - Generate Commit Message speed rework (owner directive): output is now ONE short line (target 8–16 words, max 72 chars, Vietnamese preferred, Conventional Commits prefix when it fits) and the model is called EXACTLY ONCE per click — the corrective retry pass (`buildRetryCommitPrompt` + second engine call) is removed. The guard now rejects only empty or clearly-non-commit output (blobs, reasoning markers); Vietnamese-ness, length and style no longer reject.

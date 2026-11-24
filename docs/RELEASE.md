@@ -2,9 +2,9 @@
 
 ## Current distribution status
 
-GitHub releases `v1.55.6` through `v1.55.16` retain their VSIX assets. Marketplace publication is paused.
+GitHub releases `v1.55.6` through `v1.55.17` retain their VSIX assets. Marketplace publication is paused.
 
-The current package is GitHub release `v1.55.16`: `dist/vskit-1.55.16.vsix` (2,279,646 bytes; SHA-256 `70dbe8b0af1f52e62ed78b4314ee128f876cc62482186720d5fc7236b1831bef`). Its manifest confirms `lengockhoa.vskit` `1.55.16` with `VSKit.generateCommitMessage` intact (built-in `$(edit)` icon). Generate Commit Message now calls the model exactly once per click: a direct provider request when a backend and the Lite model are configured (`builtin-direct`), otherwise a bounded `omp -p` print-mode one-shot (`omp-print`) — the ACP-based one-shot behind the "omp did not finish within 120000" timeout is deleted. Git context is capped at a 4 KiB UTF-8 budget. Release page: https://github.com/lengockhoa/VSKit/releases/tag/v1.55.16
+The current package is GitHub release `v1.55.17`: `dist/vskit-1.55.17.vsix` (2,282,142 bytes; SHA-256 `335159a13d3c82616942e15f831b2a9cf8510222e540232e076548251df4d46e`). Its manifest confirms `lengockhoa.vskit` `1.55.17` with `VSKit.generateCommitMessage` intact (built-in `$(edit)` icon). Generate Commit Message is speed-first: a hard 4.5s model deadline per click with an instant file-name fallback (slow/error/unusable output never leaves the box empty); change sets over 20 files skip `git diff` and send file names + status only. Release page: https://github.com/lengockhoa/VSKit/releases/tag/v1.55.17
 
 Previous package: `v1.55.15` (2,280,302 bytes; SHA-256 `e81c71eecbb2a3b7fba95017891ea0ca63670551ef756c19ed6671a498156ebc`) — omp one-shot pinned `defaultThinkingLevel: low` + `--no-session`, cached omp detection. Release page: https://github.com/lengockhoa/VSKit/releases/tag/v1.55.15
 
@@ -23,14 +23,14 @@ From the repository root, the build script runs the checks in dependency order
 bash scripts/build.sh
 ```
 
-With the current manifest version `1.55.16`, the expected local artifact is
-`dist/vskit-1.55.16.vsix`. Packaging itself does not publish it.
+With the current manifest version `1.55.17`, the expected local artifact is
+`dist/vskit-1.55.17.vsix`. Packaging itself does not publish it.
 
 ```bash
-code --install-extension "$(pwd)/dist/vskit-1.55.16.vsix"
+code --install-extension "$(pwd)/dist/vskit-1.55.17.vsix"
 ```
 
-The package identity is `lengockhoa.vskit`; the package name is lowercase `vskit`. The current `dist/vskit-1.55.16.vsix` is published on GitHub release `v1.55.16`. Marketplace listing availability remains unverified; publication is paused.
+The package identity is `lengockhoa.vskit`; the package name is lowercase `vskit`. The current `dist/vskit-1.55.17.vsix` is published on GitHub release `v1.55.17`. Marketplace listing availability remains unverified; publication is paused.
 
 ## Version policy during this conversion
 

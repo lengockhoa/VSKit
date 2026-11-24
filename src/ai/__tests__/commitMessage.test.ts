@@ -1,6 +1,6 @@
 // Pure prompt and normalization tests for SCM commit generation.
 import { describe, expect, it } from "vitest";
-import { buildCommitPrompt, sanitizeCommitMessage, COMMIT_SUBJECT_MAX_CHARS } from "../commitMessage";
+import { buildCommitPrompt, buildFallbackCommitMessage, extractChangedPaths, sanitizeCommitMessage, COMMIT_SUBJECT_MAX_CHARS } from "../commitMessage";
 
 describe("buildCommitPrompt", () => {
   it("includes repository, branch, changed paths, and diff", () => {
@@ -55,5 +55,32 @@ describe("sanitizeCommitMessage", () => {
 
   it("handles CRLF and never returns body text", () => {
     expect(sanitizeCommitMessage("fix: update\r\nsecret body")).toBe("fix: update");
+  });
+});
+
+describe("buildFallbackCommitMessage", () => {
+  it("names up to three files and counts the rest within 72 chars", () => {
+    expect(buildFallbackCommitMessage(["src/a.ts"])).toBe("chore: cập nhật a.ts");
+    const many = Array.from({ length: 300 }, (_, i) => `src/dir/file-with-long-name-${i}.ts`);
+    const message = buildFallbackCommitMessage(many);
+    expect(message.length).toBeLessThanOrEqual(COMMIT_SUBJECT_MAX_CHARS);
+    expect(message).toMatch(/^chore: cập nhật .+ và \d+ file khác$/);
+  });
+
+  it("picks docs/test types and handles no files", () => {
+    expect(buildFallbackCommitMessage(["docs/a.md", "README.md"])).toBe("docs: cập nhật a.md, README.md");
+    expect(buildFallbackCommitMessage(["src/__tests__/x.test.ts"])).toBe("test: cập nhật x.test.ts");
+    expect(buildFallbackCommitMessage([])).toBe("chore: cập nhật mã nguồn");
+  });
+
+  it("extracts paths from diff headers and file-list rows", () => {
+    expect(extractChangedPaths("diff --git a/src/a.ts b/src/a.ts\n+x\ndiff --git a/b.md b/b.md\n")).toEqual(["src/a.ts", "b.md"]);
+    expect(extractChangedPaths("Files (status path):\nA src/x.ts\nM docs/y.md\n")).toEqual(["src/x.ts", "docs/y.md"]);
+  });
+
+  it("file-list mode prompt carries the summary without a Diff section", () => {
+    const [, user] = buildCommitPrompt({ repoName: "VSKit", files: [], diffText: "Large change set: 300 files", mode: "files" });
+    expect(user.content).toContain("Large change set: 300 files");
+    expect(user.content).not.toContain("Diff:");
   });
 });

@@ -20,6 +20,8 @@ import type {
 } from "./provider";
 import {
   buildCommitPrompt,
+  buildFallbackCommitMessage,
+  extractChangedPaths,
   sanitizeCommitMessage,
   serializeCommitPrompt,
 } from "./commitMessage";
@@ -59,6 +61,27 @@ export const ERROR_COMMIT_GUARD_RETRY_NOTE =
 // through `deps.report`; the in-progress toast is shown by the host when the
 // single-flight gate refuses a second run.
 export const COMMIT_GEN_TIMEOUT_MS = 120_000;
+/**
+ * Hard model deadline per click (owner directive: speed above message
+ * quality). When the model has not answered by then — or errors, or returns
+ * unusable text — a file-name based message is injected instead.
+ */
+export const COMMIT_GEN_MODEL_DEADLINE_MS = 4_500;
+export const ERROR_COMMIT_GEN_DEADLINE = "commit-gen: model deadline exceeded";
+
+/** Reject with ERROR_COMMIT_GEN_DEADLINE when `work` outlives `ms`. */
+export function withDeadline<T>(work: Promise<T>, ms: number, onTimeout?: () => void): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      onTimeout?.();
+      reject(new Error(ERROR_COMMIT_GEN_DEADLINE));
+    }, ms);
+    work.then(
+      (value) => { clearTimeout(timer); resolve(value); },
+      (error) => { clearTimeout(timer); reject(error); },
+    );
+  });
+}
 export const TOAST_GENERATION_IN_PROGRESS =
   "VSKit: a commit message is already being generated — wait for it to finish or cancel it.";
 export const PROGRESS_COLLECTING_DIFF = "Collecting diff…";
@@ -111,6 +134,7 @@ export interface CommitDiffInputLike {
   diffText: string;
   scope?: "staged" | "unstaged";
   diffFingerprint?: string;
+  mode?: "diff" | "files";
 }
 
 export type CommitGenTraceValue = string | number | boolean | null;
@@ -137,7 +161,11 @@ export interface CommitGenDeps {
     config: unknown | null;
   }): EngineChoice;
   /** Build a one-shot omp print-mode port with the selected Lite model. */
-  buildOmpPrintPort(choice: EngineChoice, modelId: string): Promise<CommitGenOmpPrintPort>;
+  buildOmpPrintPort(
+    choice: EngineChoice,
+    modelId: string,
+    signal?: AbortSignal,
+  ): Promise<CommitGenOmpPrintPort>;
   /** Provider-port for the builtin path. Mirrors `createProviderClient(...).complete`. */
   builtinComplete(
     cfg: AiConfig,
@@ -330,6 +358,7 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
     ...(diff.branch !== undefined ? { branch: diff.branch } : {}),
     files: diff.files,
     diffText: diff.diffText,
+    ...(diff.mode ? { mode: diff.mode } : {}),
   });
   if (deps.trace) {
     deps.trace.emit("prompt.complete", {
@@ -349,7 +378,33 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
     configured: cfg !== null,
   });
   deps.report?.(PROGRESS_CONTACTING_MODEL);
-  const requestSignal: AbortSignal = deps.signal ?? new AbortController().signal;
+  // One controller per click: aborted by user cancel OR by the model deadline,
+  // so a slow request/process is torn down the moment we fall back.
+  const modelAbort = new AbortController();
+  if (deps.signal) {
+    if (deps.signal.aborted) modelAbort.abort();
+    else deps.signal.addEventListener("abort", () => modelAbort.abort(), { once: true });
+  }
+  const requestSignal: AbortSignal = modelAbort.signal;
+  const deadlineStartedAt = performance.now();
+  const remainingDeadline = () =>
+    Math.max(0, COMMIT_GEN_MODEL_DEADLINE_MS - (performance.now() - deadlineStartedAt));
+  const onDeadline = () => {
+    deps.trace?.emit("engine.deadline", { deadlineMs: COMMIT_GEN_MODEL_DEADLINE_MS });
+    modelAbort.abort();
+  };
+  // Instant file-name based message: the speed-first answer whenever the
+  // model cannot deliver a usable line within the deadline.
+  let fallbackReason: string | null = null;
+  const useFallback = (reason: string): void => {
+    fallbackReason = reason;
+    outcome = {
+      ok: true,
+      message: buildFallbackCommitMessage(
+        diff.files.length > 0 ? diff.files : extractChangedPaths(diff.diffText),
+      ),
+    };
+  };
 
   const runBuiltin = async (choice?: EngineChoice): Promise<boolean> => {
     if (cfg === null) return false;
@@ -360,13 +415,13 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
     });
     try {
       outcome = await generateWithGuard(async (messages) => {
-        const result = await callBuiltinWithTrace(deps, cfg, {
+        const result = await withDeadline(callBuiltinWithTrace(deps, cfg, {
           modelId: lite.modelId,
           messages: [...messages],
-          maxOutputTokens: 300,
+          maxOutputTokens: 120,
           temperature: 0.2,
           signal: requestSignal,
-        }, 1, selectedEngine);
+        }, 1, selectedEngine), remainingDeadline(), onDeadline);
         if (typeof result.text !== "string") throw new Error(ERROR_NON_STRING_TEXT_BUILTIN);
         if (choice?.hint && (selectedEngine === "claude-code" || selectedEngine === "codex")) {
           deps.showError(`${ERROR_ENGINE_UNAVAILABLE_PREFIX}${selectedEngine}${ERROR_ENGINE_UNAVAILABLE_SUFFIX}${choice.hint}`);
@@ -377,8 +432,13 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
     } catch (error) {
       if (deps.isCancelled?.()) return true;
       const err = error as Error & { bodySnippet?: string };
+      if (err.message === ERROR_COMMIT_GEN_DEADLINE) {
+        useFallback("deadline");
+        return true;
+      }
       const detail = err.bodySnippet ? `: ${err.bodySnippet}` : "";
       deps.showError(`VSKit: provider error — ${err.message ?? String(error)}${detail}`);
+      useFallback("provider_error");
       return true;
     }
   };
@@ -407,81 +467,96 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
       if (selectedEngine === "omp") {
         deps.showError(`${ERROR_OMP_UNAVAILABLE_PREFIX}${choice.hint ?? "install omp"}`);
       } else {
-        const action = await deps.showSettingsToast(TOAST_NO_BACKEND_CONFIG, ACTION_OPEN_SETTINGS);
-        if (action === ACTION_OPEN_SETTINGS) deps.openSettings();
+        // Non-blocking: the fallback message is injected right away.
+        void deps.showSettingsToast(TOAST_NO_BACKEND_CONFIG, ACTION_OPEN_SETTINGS).then(
+          (action) => { if (action === ACTION_OPEN_SETTINGS) deps.openSettings(); },
+          () => undefined,
+        );
       }
-      return;
-    }
-    deps.trace?.emit("route.selected", {
-      route: "omp-print",
-      reason: "no_backend_config",
-      settingsEngine: selectedEngine,
-    });
-    const setupStartedAt = deps.trace ? performance.now() : 0;
-    let port: CommitGenOmpPrintPort;
-    try {
-      port = await deps.buildOmpPrintPort(choice, lite.modelId);
-      deps.trace?.emit("omp.setup.complete", { durationMs: traceElapsed(setupStartedAt), success: true });
-    } catch (error) {
-      deps.trace?.emit("omp.setup.error", {
-        durationMs: traceElapsed(setupStartedAt),
-        errorName: error instanceof Error ? error.name : typeof error,
+      useFallback("engine_unavailable");
+    } else {
+      deps.trace?.emit("route.selected", {
+        route: "omp-print",
+        reason: "no_backend_config",
+        settingsEngine: selectedEngine,
       });
-      deps.trace?.emit("omp.setup.complete", { durationMs: traceElapsed(setupStartedAt), success: false });
-      deps.showError(`VSKit: omp error — ${(error as Error).message ?? String(error)}`);
-      return;
-    }
-    if (deps.isCancelled?.()) return;
-    const serializedPrompt = serializeCommitPrompt(prompt);
-    const requestStartedAt = deps.trace ? performance.now() : 0;
-    deps.trace?.emit("engine.request.start", {
-      engine: "omp-print",
-      attempt: 1,
-      promptChars: serializedPrompt.length,
-      firstTextObservable: true,
-    });
-    let firstTextReported = false;
-    const onFirstText = () => {
-      if (firstTextReported) return;
-      firstTextReported = true;
-      deps.trace?.emit("engine.first_text", {
+      const setupStartedAt = deps.trace ? performance.now() : 0;
+      let port: CommitGenOmpPrintPort;
+      try {
+        port = await deps.buildOmpPrintPort(choice, lite.modelId, requestSignal);
+        deps.trace?.emit("omp.setup.complete", { durationMs: traceElapsed(setupStartedAt), success: true });
+      } catch (error) {
+        deps.trace?.emit("omp.setup.error", {
+          durationMs: traceElapsed(setupStartedAt),
+          errorName: error instanceof Error ? error.name : typeof error,
+        });
+        deps.trace?.emit("omp.setup.complete", { durationMs: traceElapsed(setupStartedAt), success: false });
+        deps.showError(`VSKit: omp error — ${(error as Error).message ?? String(error)}`);
+        port = { complete: () => Promise.reject(new Error("commit-gen: omp setup failed")) };
+      }
+      if (deps.isCancelled?.()) return;
+      const serializedPrompt = serializeCommitPrompt(prompt);
+      const requestStartedAt = deps.trace ? performance.now() : 0;
+      deps.trace?.emit("engine.request.start", {
         engine: "omp-print",
         attempt: 1,
-        elapsedMs: traceElapsed(requestStartedAt),
+        promptChars: serializedPrompt.length,
+        firstTextObservable: true,
       });
-    };
-    try {
-      outcome = await generateWithGuard(async () => {
-        try {
-          const raw: unknown = await port.complete(serializedPrompt, onFirstText);
-          if (typeof raw !== "string") throw new Error(ERROR_NON_STRING_TEXT_OMP);
-          deps.trace?.emit("engine.request.complete", {
-            engine: "omp-print",
-            attempt: 1,
-            durationMs: traceElapsed(requestStartedAt),
-            outputChars: raw.length,
-            firstTextObservable: true,
-          });
-          return raw;
-        } catch (error) {
-          deps.trace?.emit("engine.request.error", {
-            engine: "omp-print",
-            attempt: 1,
-            durationMs: traceElapsed(requestStartedAt),
-            errorName: error instanceof Error ? error.name : typeof error,
-          });
-          throw error;
+      let firstTextReported = false;
+      const onFirstText = () => {
+        if (firstTextReported) return;
+        firstTextReported = true;
+        deps.trace?.emit("engine.first_text", {
+          engine: "omp-print",
+          attempt: 1,
+          elapsedMs: traceElapsed(requestStartedAt),
+        });
+      };
+      try {
+        outcome = await generateWithGuard(async () => {
+          try {
+            const raw: unknown = await withDeadline(
+              port.complete(serializedPrompt, onFirstText),
+              remainingDeadline(),
+              onDeadline,
+            );
+            if (typeof raw !== "string") throw new Error(ERROR_NON_STRING_TEXT_OMP);
+            deps.trace?.emit("engine.request.complete", {
+              engine: "omp-print",
+              attempt: 1,
+              durationMs: traceElapsed(requestStartedAt),
+              outputChars: raw.length,
+              firstTextObservable: true,
+            });
+            return raw;
+          } catch (error) {
+            deps.trace?.emit("engine.request.error", {
+              engine: "omp-print",
+              attempt: 1,
+              durationMs: traceElapsed(requestStartedAt),
+              errorName: error instanceof Error ? error.name : typeof error,
+            });
+            throw error;
+          }
+        }, prompt, deps.trace);
+      } catch (error) {
+        if (deps.isCancelled?.()) return;
+        const message = (error as Error).message ?? String(error);
+        if (message === ERROR_COMMIT_GEN_DEADLINE) {
+          useFallback("deadline");
+        } else {
+          if (message !== "commit-gen: omp setup failed") {
+            deps.showError(`VSKit: omp error — ${message}`);
+          }
+          useFallback("engine_error");
         }
-      }, prompt, deps.trace);
-    } catch (error) {
-      if (deps.isCancelled?.()) return;
-      deps.showError(`VSKit: omp error — ${(error as Error).message ?? String(error)}`);
-      return;
+      }
     }
   }
 
-  // 4. Guard verdict. `outcome` is always set: every branch either returns
-  // early on error or assigns it above.
+  // 4. Verdict. Every failure path above already swapped in the instant
+  // file-name fallback, so a usable message is always injected (speed first).
   deps.report?.(PROGRESS_VALIDATING);
   // Post-outcome cancel checkpoint (SPEC FR-002): a cancel that landed while
   // the engine ran closes silently — no injection, no toast — even when usable.
@@ -489,59 +564,45 @@ export async function runGenerateCommitMessage(deps: CommitGenDeps): Promise<voi
     return;
   }
   const guardStartedAt = deps.trace ? performance.now() : 0;
-  if (outcome !== null && outcome.ok) {
-    if (deps.trace) {
-      deps.trace.emit("guard.passed", {
-        durationMs: traceElapsed(guardStartedAt),
-        messageChars: outcome.message.length,
-      });
+  const verdict = outcome as GuardOutcome | null;
+  if (verdict === null) {
+    useFallback("no_outcome");
+  } else if (!verdict.ok) {
+    if (verdict.kind === "invalid") {
+      deps.trace?.emit("guard.rejected", { reasons: verdict.reasons.join(",") });
+    } else {
+      deps.trace?.emit("guard.empty", { rawChars: verdict.raw.length });
     }
-    let diffIsCurrent = true;
-    if (deps.validateDiffFresh) {
-      const freshnessStartedAt = deps.trace ? performance.now() : 0;
-      diffIsCurrent = await deps.validateDiffFresh(diff);
-      deps.trace?.emit("diff.freshness.complete", {
-        durationMs: traceElapsed(freshnessStartedAt),
-        current: diffIsCurrent,
-      });
-      if (deps.isCancelled?.()) return;
-    }
-    // This is deliberately the last asynchronous-boundary check before a write.
-    if (deps.isInputUnchanged && !deps.isInputUnchanged()) {
-      await handleChangedScmInput(deps, outcome.message);
-      return;
-    }
-    if (!diffIsCurrent) {
-      deps.trace?.emit("scm.input.not_updated", { reason: "diff_changed" });
-      deps.showInfo(TOAST_DIFF_CHANGED);
-      return;
-    }
-    deps.setInputBox(outcome.message);
+    useFallback(`guard_${verdict.kind}`);
+  }
+  if (fallbackReason !== null) {
+    deps.trace?.emit("fallback.used", { reason: fallbackReason });
+  }
+  const final = outcome as GuardOutcome | null;
+  if (final === null || !final.ok) return; // unreachable: useFallback always sets ok
+  deps.trace?.emit("guard.passed", {
+    durationMs: traceElapsed(guardStartedAt),
+    messageChars: final.message.length,
+  });
+  let diffIsCurrent = true;
+  if (deps.validateDiffFresh) {
+    const freshnessStartedAt = deps.trace ? performance.now() : 0;
+    diffIsCurrent = await deps.validateDiffFresh(diff);
+    deps.trace?.emit("diff.freshness.complete", {
+      durationMs: traceElapsed(freshnessStartedAt),
+      current: diffIsCurrent,
+    });
+    if (deps.isCancelled?.()) return;
+  }
+  // This is deliberately the last asynchronous-boundary check before a write.
+  if (deps.isInputUnchanged && !deps.isInputUnchanged()) {
+    await handleChangedScmInput(deps, final.message);
     return;
   }
-  if (outcome !== null && outcome.kind === "invalid") {
-    if (deps.trace) {
-      deps.trace.emit("guard.rejected", {
-        reasons: outcome.reasons.join(","),
-      });
-    }
-    // Non-empty, guard-rejected. Surface only rejection metadata; never
-    // persist or display provider response text. Do NOT touch the input box.
-    deps.showError(
-      `${ERROR_COMMIT_GUARD_FAILED_PREFIX} (reasons: ${outcome.reasons.join(", ")}). ` +
-        ERROR_COMMIT_GUARD_RETRY_NOTE,
-    );
+  if (!diffIsCurrent) {
+    deps.trace?.emit("scm.input.not_updated", { reason: "diff_changed" });
+    deps.showInfo(TOAST_DIFF_CHANGED);
     return;
   }
-
-  // Empty: preserve the generic diagnostic while keeping
-  // provider response text out of logs, files, and notifications.
-  const rawLen = outcome !== null ? outcome.raw.length : 0;
-  if (deps.trace) {
-    deps.trace.emit("guard.empty", { rawChars: rawLen });
-  }
-  deps.showError(
-    `VSKit: provider returned no commit message text (raw length ${rawLen}). ` +
-      "Check Lite Model config.",
-  );
+  deps.setInputBox(final.message);
 }
