@@ -51,7 +51,27 @@ import { NewTableForm } from "./newTableForm";
 import { RenameForm } from "./renameForm";
 import { SchemaForm } from "./schemaForm";
 import { buildPostmanPayload } from "./postmanPayload";
-import { buildTableStructure, buildViewStructure, buildDatabaseStructure, type ExportColumn } from "./exportStructure";
+import {
+  buildTableStructure,
+  buildViewStructure,
+  buildDatabaseStructure,
+  collectStructureSql,
+  type ExportColumn,
+} from "./exportStructure";
+
+/** Copy structure SQL to the clipboard and open it in an untitled SQL editor. */
+async function deliverStructure(sql: string): Promise<void> {
+  await vscode.env.clipboard.writeText(sql);
+  try {
+    const doc = await vscode.workspace.openTextDocument({
+      language: "sql",
+      content: sql,
+    });
+    await vscode.window.showTextDocument(doc, { preview: false });
+  } catch {
+    // Editor open is best-effort; clipboard already holds the DDL.
+  }
+}
 import {
   SchemaTreeProvider,
   revealTableNode,
@@ -803,38 +823,75 @@ export function registerTableCommands(deps: RegisterDeps): void {
       },
     ),
   );
-  // Export Structure — copy CREATE TABLE DDL (table) / column list (view)
-  // cho node table/view. Postgres-only, giống postmanPayload guard.
+  // Export Structure — table node: full CREATE TABLE incl. PK/UNIQUE/CHECK/
+  // FK + every index; "Tables" folder: every table of the schema (keys +
+  // indexes + sequences); view node: column list. Result → clipboard and an
+  // untitled SQL editor (agent context / migration source).
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "VSKit.exportStructure",
       async (arg?: unknown) => {
         if (!arg || typeof arg !== "object") return;
         const node = arg as { contextValue?: string };
-        const guarded = await guardPostgres(
-          mgr,
-          resolveTableNode(arg),
-          "exportStructure",
-        );
+        const resolved = resolveTableNode(arg);
+        const guarded = await guardPostgres(mgr, resolved, "exportStructure");
         if (!guarded) return;
         const { conn, schema, table: name } = guarded;
-        if (name === "") return;
+        const isTablesFolder =
+          node.contextValue === "category" && resolved?.category === "tables";
+        if (name === "" && !isTablesFolder) return;
 
         try {
           const adapter = await mgr.getAdapterFor(conn);
-          const columns = (await adapter.listColumns(name, schema)).map(
-            (c) => ({
+          if (node.contextValue === "view") {
+            const columns = (await adapter.listColumns(name, schema)).map(
+              (c) => ({
+                name: c.name,
+                dataType: c.dataType,
+                nullable: c.nullable,
+                isPrimaryKey: c.isPrimaryKey,
+              }),
+            );
+            await vscode.env.clipboard.writeText(
+              buildViewStructure(schema, name, columns),
+            );
+            void vscode.window.setStatusBarMessage(
+              "VSKit: structure copied",
+              2000,
+            );
+            return;
+          }
+          const full = await collectStructureSql(adapter, {
+            schemas: [schema],
+            tables: isTablesFolder ? undefined : [name],
+            includeViews: false,
+            title: isTablesFolder
+              ? `${conn.name} / ${schema} (all tables)`
+              : `${conn.name} / ${schema}.${name}`,
+          });
+          if (full) {
+            await deliverStructure(full.sql);
+            void vscode.window.setStatusBarMessage(
+              `VSKit: structure copied (${full.tables} tables, ${full.indexes} indexes, ${full.foreignKeys} FKs)`,
+              3000,
+            );
+            return;
+          }
+          // Adapter without bulk catalog API → column-only fallback.
+          const tableNames = isTablesFolder
+            ? (await adapter.listTables(schema)).map((t) => t.name)
+            : [name];
+          const blocks: string[] = [];
+          for (const t of tableNames) {
+            const columns = (await adapter.listColumns(t, schema)).map((c) => ({
               name: c.name,
               dataType: c.dataType,
               nullable: c.nullable,
               isPrimaryKey: c.isPrimaryKey,
-            }),
-          );
-          const text =
-            node.contextValue === "view"
-              ? buildViewStructure(schema, name, columns)
-              : buildTableStructure(schema, name, columns);
-          await vscode.env.clipboard.writeText(text);
+            }));
+            blocks.push(buildTableStructure(schema, t, columns));
+          }
+          await vscode.env.clipboard.writeText(blocks.join("\n\n"));
           void vscode.window.setStatusBarMessage(
             "VSKit: structure copied",
             2000,
@@ -896,6 +953,22 @@ export function registerTableCommands(deps: RegisterDeps): void {
           const schemas = targetSchema
             ? allSchemas.filter((s) => s.name === targetSchema)
             : allSchemas;
+
+          // Full DDL (keys + indexes + sequences + view definitions) when the
+          // adapter exposes the bulk catalog API.
+          const full = await collectStructureSql(adapter, {
+            schemas: schemas.map((s) => s.name),
+            includeViews: true,
+            title: targetSchema ? `${conn.name} / ${targetSchema}` : conn.name,
+          });
+          if (full) {
+            await deliverStructure(full.sql);
+            void vscode.window.setStatusBarMessage(
+              `VSKit: database structure copied (${full.tables + full.views} objects, ${full.indexes} indexes, ${full.foreignKeys} FKs)`,
+              3000,
+            );
+            return;
+          }
           const tables: Array<{ schema: string; name: string }> = [];
           const views: Array<{ schema: string; name: string }> = [];
           const columns: Record<string, ExportColumn[]> = {};

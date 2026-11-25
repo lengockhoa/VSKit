@@ -976,3 +976,6 @@ Persisted release write evidence: bounded slice `docs/WORKLOG.md:705-707` was re
 
 ## 2026-11-24 — VSKit 1.55.18 full commit sentences
 - Word-boundary clamp (cap 150) + dangling connector trim + Vietnamese-only complete-sentence prompt; build green; GitHub release v1.55.18.
+
+## 2026-11-25 — VSKit 1.55.19 Export Structure with keys + indexes
+- Tables-folder `VSKit: Export Structure` exports all tables of the schema; table/schema/connection exports now include PK/UQ/CHECK/EXCLUDE/FK, indexes, sequences, partitions, comments, view definitions (`src/core/ddl/pgStructure.ts`, `CatalogApi.schemaStructure`). Fixed `objectDdl("view")` regclass cast. Live replay round-trip identical on PG15; full suite green.

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.55.19] — 2026-11-25
+
+- **Export Structure now emits keys and indexes.** Right-click the **Tables** folder of a schema → `VSKit: Export Structure` exports every table of that schema as migration-ready PostgreSQL DDL; on a single table it exports that table. Output includes column defaults, identity and generated columns, `PRIMARY KEY` / `UNIQUE` / `CHECK` / `EXCLUDE` constraints, every index (unique, partial, expression, any method), `FOREIGN KEY`s with `ON DELETE/UPDATE` actions (emitted last as `ALTER TABLE … ADD CONSTRAINT` so the script replays in any order), sequences + `OWNED BY`, partitioned tables and partitions, unlogged tables and table/column/index comments. The DDL is copied to the clipboard and opened in an untitled SQL editor.
+- `VSKit: Export All Structures` (connection/schema node) and the AI agent's `export_structure` tool use the same full DDL, and views now export their real `CREATE OR REPLACE VIEW` definition.
+- Fixed: view DDL lookup (`pg_get_viewdef`) failed with `missing FROM-clause entry` for every view; it now casts a quoted literal to `regclass`.
+- Verified live on PostgreSQL 15: the exported script replays into an empty database and re-exporting that copy yields identical DDL. Marketplace publication remains paused.
+
 ## [1.55.18] — 2026-11-24
 
 - Generate Commit Message no longer cuts sentences mid-word: the 72-char hard slice is replaced by a word-boundary clamp (safety cap 150 chars) that also drops dangling connectors (`và`, `cho`, `của`, `and`, `for`, …). The prompt now asks for one complete, meaningful sentence of 10–20 words (~60–100 chars), Vietnamese only (no French/other-language drift); trailing non-Latin glitch tokens are stripped. `maxOutputTokens` 200. The 4.5s deadline + instant file-name fallback is unchanged.

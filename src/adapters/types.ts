@@ -346,6 +346,16 @@ export interface CatalogApi {
     name: string,
     schema?: string,
   ): Promise<string>;
+  /**
+   * Bulk structure introspection for Export Structure — every table of
+   * `schema` (or only `tables` when given): columns, constraints (PK/UQ/FK/
+   * CHECK/EXCLUDE), indexes, sequences, partitions, comments. Optional so
+   * fixtures that predate it stay valid; callers fall back to listColumns.
+   */
+  schemaStructure?(
+    schema: string,
+    tables?: readonly string[],
+  ): Promise<import("../core/ddl/pgStructure").SchemaStructureRows>;
 }
 
 

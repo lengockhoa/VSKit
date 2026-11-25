@@ -3343,7 +3343,7 @@ describe("TASK-003 — VSKit.openConsole wiring", () => {
       (m) => m.command === "VSKit.openConsoleForObject",
     );
     expect(objectShortcut?.when).toBe(
-      "view == VSKit.schemaTree && (viewItem == connection || viewItem == schema || viewItem == category || viewItem == table || viewItem == view)",
+      "view == VSKit.schemaTree && (viewItem == connection || viewItem == schema || viewItem == category || viewItem == category-tables || viewItem == table || viewItem == view)",
     );
     const evts = pkgJson.activationEvents as string[];
     expect(evts).toContain("onCommand:VSKit.openConsole");
@@ -5864,7 +5864,7 @@ describe("VSKit.openConsoleForObject — right-click table/view → Console tab"
     );
     expect(menu).toBeDefined();
     expect(menu!.when).toBe(
-      "view == VSKit.schemaTree && (viewItem == connection || viewItem == schema || viewItem == category || viewItem == table || viewItem == view)",
+      "view == VSKit.schemaTree && (viewItem == connection || viewItem == schema || viewItem == category || viewItem == category-tables || viewItem == table || viewItem == view)",
     );
     expect(menu!.group).toBe("inline");
   });
@@ -6143,7 +6143,7 @@ describe("MENU — table-node context menu: New Table #1, Modify Table #2", () =
     expect(newTable).toBeDefined();
     expect(newTable!.group).toBe("1_table@01");
     expect(newTable!.when).toBe(
-      "view == VSKit.schemaTree && (viewItem == schema || viewItem == category || viewItem == table)",
+      "view == VSKit.schemaTree && (viewItem == schema || viewItem == category || viewItem == category-tables || viewItem == table)",
     );
 
     expect(modifyTable).toBeDefined();

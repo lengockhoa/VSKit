@@ -242,7 +242,13 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<VSKitNode> {
     if (node.description !== undefined) item.description = node.description;
     if (node.tooltip !== undefined) item.tooltip = node.tooltip;
     if (node.command) item.command = node.command;
-    item.contextValue = node.contextValue;
+    // "Tables" category gets its own menu context key so table-wide actions
+    // (Export Structure) don't leak onto Views/Routines/Indexes folders.
+    // Internal node.contextValue stays "category" for getChildren/getParent.
+    item.contextValue =
+      node.contextValue === "category" && node.meta?.category === "tables"
+        ? "category-tables"
+        : node.contextValue;
     return item;
   }
 

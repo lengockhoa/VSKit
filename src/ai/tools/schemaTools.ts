@@ -16,6 +16,7 @@ import type { AdapterFactory } from "./types";
 import { NotImplementedError } from "../../adapters/types";
 import {
   buildDatabaseStructure,
+  collectStructureSql,
   type ExportColumn,
 } from "../../ui/exportStructure";
 
@@ -103,7 +104,7 @@ export function createExportStructureTool(f: AdapterFactory): AgentTool {
   return {
     name: "export_structure",
     description:
-      "Export the FULL database structure (all schemas, tables, views) as CREATE TABLE DDL text. Use when the schema summary above is truncated or when you need complete context to advise the user.",
+      "Export the FULL database structure (all schemas, tables, views) as migration-ready DDL text: columns, primary/unique/foreign keys, checks, indexes, sequences, view definitions. Use when the schema summary above is truncated or when you need complete context to advise the user.",
     parameters: {
       type: "object",
       properties: {},
@@ -114,6 +115,25 @@ export function createExportStructureTool(f: AdapterFactory): AgentTool {
         if (!adapter) return NO_CONNECTION_MSG;
 
         const schemas = await adapter.listSchemas(false);
+
+        // Full DDL with PK/FK/UNIQUE/CHECK + indexes when available.
+        const full = await collectStructureSql(adapter, {
+          schemas: schemas.map((s) => s.name),
+          includeViews: true,
+          title: "agent export",
+        });
+        if (full) {
+          return jsonCompact({
+            ddl: full.sql,
+            schemas: schemas.length,
+            tables: full.tables,
+            views: full.views,
+            indexes: full.indexes,
+            foreignKeys: full.foreignKeys,
+            skipped: 0,
+          });
+        }
+
         const tables: Array<{ schema: string; name: string }> = [];
         const views: Array<{ schema: string; name: string }> = [];
         const columns: Record<string, ExportColumn[]> = {};

@@ -1856,3 +1856,71 @@ describe("tableCommands — VSKit.generateSampleData (TASK-UX1-003 console templ
     expect(typeof mod.parseInsertStatements).toBe("function");
   });
 });
+
+// =============================================================================
+// Export Structure on the "Tables" folder → whole schema with keys + indexes.
+// =============================================================================
+describe("tableCommands — VSKit.exportStructure on Tables folder", () => {
+  it("category(tables) node → catalog.schemaStructure(schema, undefined) → clipboard + SQL editor", async () => {
+    const mgr = makeFakeMgr();
+    const schemaStructure = vi.fn(async () => ({
+      tables: [{ oid: 1, relname: "users", relkind: "r", relpersistence: "p", relispartition: false, partkey: null, parent: null, partbound: null, comment: null }],
+      columns: [{ oid: 1, attname: "id", type: "integer", attnotnull: true, def: null, attidentity: "", attgenerated: "", attislocal: true, comment: null }],
+      constraints: [{ oid: 1, conname: "users_pkey", contype: "p", def: "PRIMARY KEY (id)", ref_display: null, ref_qualified: null }],
+      indexes: [{ oid: 1, indexname: "users_x", def: "CREATE INDEX users_x ON public.users USING btree (id)", comment: null }],
+      sequences: [],
+    }));
+    (mgr.adapter as unknown as { catalog: unknown }).catalog = { schemaStructure, objectDdl: vi.fn() };
+    const { provider, treeView } = makeTreeWithAdapter(mgr.adapter);
+    registerSchemaTreeProvider(provider);
+    registerTableCommands({
+      mgr: mgr.stub as unknown as ConnectionManager,
+      tree: provider,
+      treeView: treeView as unknown as TreeView<unknown>,
+      context: { subscriptions: [] } as unknown as ExtensionContext,
+    });
+    const tablesNode: VSKitNode = {
+      label: "Tables",
+      contextValue: "category",
+      collapsible: 1,
+      meta: { connection: mgr.cfg, schema: "public", category: "tables" },
+    };
+    vscode.env.clipboard.writeText.mockClear();
+    await state.registeredCommands.get("VSKit.exportStructure")!(tablesNode);
+    expect(schemaStructure).toHaveBeenCalledWith("public", undefined);
+    const text = (vscode.env.clipboard.writeText as Mock).mock.calls[0][0] as string;
+    expect(text).toContain("CONSTRAINT users_pkey PRIMARY KEY (id)");
+    expect(text).toContain("CREATE INDEX users_x ON public.users USING btree (id);");
+    expect(vscode.workspace.openTextDocument).toHaveBeenCalledWith({ language: "sql", content: text });
+    expect(state.errorMessages).toHaveLength(0);
+  });
+
+  it("table node → schemaStructure filtered to that table", async () => {
+    const mgr = makeFakeMgr();
+    const schemaStructure = vi.fn(async () => ({ tables: [], columns: [], constraints: [], indexes: [], sequences: [] }));
+    (mgr.adapter as unknown as { catalog: unknown }).catalog = { schemaStructure, objectDdl: vi.fn() };
+    const { provider, treeView } = makeTreeWithAdapter(mgr.adapter);
+    registerSchemaTreeProvider(provider);
+    registerTableCommands({
+      mgr: mgr.stub as unknown as ConnectionManager,
+      tree: provider,
+      treeView: treeView as unknown as TreeView<unknown>,
+      context: { subscriptions: [] } as unknown as ExtensionContext,
+    });
+    await state.registeredCommands.get("VSKit.exportStructure")!({
+      label: "users",
+      contextValue: "table",
+      collapsible: 0,
+      meta: { connection: mgr.cfg, schema: "public", objectName: "users" },
+    });
+    expect(schemaStructure).toHaveBeenCalledWith("public", ["users"]);
+  });
+
+  it("package.json: exportStructure menu covers category-tables", () => {
+    const pkgPath = path.join(__dirname, "..", "..", "..", "package.json");
+    const menuItems = JSON.parse(fs.readFileSync(pkgPath, "utf8"))
+      .contributes.menus["view/item/context"] as Array<{ command: string; when: string }>;
+    const entry = menuItems.find((m) => m.command === "VSKit.exportStructure");
+    expect(entry!.when).toMatch(/viewItem == category-tables/);
+  });
+});

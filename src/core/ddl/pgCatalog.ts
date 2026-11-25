@@ -270,7 +270,7 @@ export function objectDdlSql(
   if (kind === "view") {
     return `
       SELECT pg_get_viewdef(
-               ${quoteIdent(safeSchema)}.${quoteIdent(name)}::regclass,
+               ${quoteLiteral(`${quoteIdent(safeSchema)}.${quoteIdent(name)}`)}::regclass,
                true
              ) AS ddl
     `;

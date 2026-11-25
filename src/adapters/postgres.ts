@@ -67,6 +67,19 @@ import {
   rowCountSql,
 } from "../core/ddl/pgCatalog";
 import {
+  STRUCTURE_TABLES_SQL,
+  STRUCTURE_COLUMNS_SQL,
+  STRUCTURE_CONSTRAINTS_SQL,
+  STRUCTURE_INDEXES_SQL,
+  STRUCTURE_SEQUENCES_SQL,
+  type SchemaStructureRows,
+  type StructureTableRow,
+  type StructureColumnRow,
+  type StructureConstraintRow,
+  type StructureIndexRow,
+  type StructureSequenceRow,
+} from "../core/ddl/pgStructure";
+import {
   listRolesSql,
   listRoleGrantsSql,
   listSessionsSql,
@@ -1146,6 +1159,28 @@ export class PostgresAdapter implements DbAdapter {
         throw objectNotFoundError(kind, name, schema);
       }
       return r.rows[0].ddl;
+    },
+
+    schemaStructure: async (
+      schema: string,
+      tables?: readonly string[],
+    ): Promise<SchemaStructureRows> => {
+      const filter = tables && tables.length > 0 ? [...tables] : null;
+      const params = [schema, filter];
+      const [t, c, k, i, s] = await Promise.all([
+        this.query<StructureTableRow>(STRUCTURE_TABLES_SQL, params),
+        this.query<StructureColumnRow>(STRUCTURE_COLUMNS_SQL, params),
+        this.query<StructureConstraintRow>(STRUCTURE_CONSTRAINTS_SQL, params),
+        this.query<StructureIndexRow>(STRUCTURE_INDEXES_SQL, params),
+        this.query<StructureSequenceRow>(STRUCTURE_SEQUENCES_SQL, [schema]),
+      ]);
+      return {
+        tables: t.rows,
+        columns: c.rows,
+        constraints: k.rows,
+        indexes: i.rows,
+        sequences: s.rows,
+      };
     },
   };
 
